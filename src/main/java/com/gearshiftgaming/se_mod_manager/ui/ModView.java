@@ -1,0 +1,45 @@
+package com.gearshiftgaming.se_mod_manager.ui;
+
+import com.gearshiftgaming.se_mod_manager.models.utility.FileChooserAndOption;
+import com.gearshiftgaming.se_mod_manager.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+public class ModView {
+
+    FileNameExtensionFilter textFileFilter = new FileNameExtensionFilter("Text Files (.txt, .doc)", "txt", "doc");
+    FileNameExtensionFilter sbcFileFilter = new FileNameExtensionFilter("SBC Files", "sbc");
+
+    public FileChooserAndOption getModListFile(String filePath) {
+        JFileChooser fc = new JFileChooser(filePath);
+
+        JOptionPane.showMessageDialog(null, "Select a mod list to import. This should be a list of steam workshop urls with each url on its own line.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+        fc.setAcceptAllFileFilterUsed(false);
+        fc.setFileFilter(textFileFilter);
+
+        FileChooserAndOption fileChooserAndOption = new FileChooserAndOption();
+        fileChooserAndOption.setOption(fc.showOpenDialog(null));
+        fileChooserAndOption.setFc(fc);
+
+        return fileChooserAndOption;
+    }
+
+    public void displayResult(Result result) {
+        switch (result.getType()) {
+            case ResultType.INVALID ->
+                    JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Error", JOptionPane.ERROR_MESSAGE);
+            case ResultType.SUCCESS ->
+                    JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Success", JOptionPane.INFORMATION_MESSAGE);
+            default -> {
+                result.addMessage("Failed to open mod list file.", ResultType.FAILED);
+                JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public void displayCancellation() {
+        JOptionPane.showMessageDialog(null, "Operation cancelled by user.", "Error", JOptionPane.INFORMATION_MESSAGE);
+    }
+}
