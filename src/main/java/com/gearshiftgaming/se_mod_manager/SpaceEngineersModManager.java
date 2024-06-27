@@ -5,13 +5,22 @@ import com.gearshiftgaming.se_mod_manager.models.utility.FileChooserAndOption;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.ui.ModController;
 import com.gearshiftgaming.se_mod_manager.ui.ModView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-public class Main {
-    public static void main(String[] args) throws IOException {
+import java.util.concurrent.ExecutionException;
+
+//TODO:Move to a spring boot framework. Create a startup class
+public class SpaceEngineersModManager {
+
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+
+        final Logger log = LoggerFactory.getLogger(SpaceEngineersModManager.class);
+        log.info("Started application...");
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
@@ -22,12 +31,12 @@ public class Main {
         List<Mod> modList = new ArrayList<>();
         ModView modView = new ModView();
         ModService modService = new ModService();
-        FileChooserAndOption ojfc = new FileChooserAndOption();
+        FileChooserAndOption fileChooserAndOption = new FileChooserAndOption();
 
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-        ModController modController = new ModController(modList, modView, modService, ojfc, DESKTOP_PATH, APP_DATA_PATH);
+        ModController modController = new ModController(modList, modView, modService, fileChooserAndOption, DESKTOP_PATH, APP_DATA_PATH);
 
         modController.injectModList();
     }

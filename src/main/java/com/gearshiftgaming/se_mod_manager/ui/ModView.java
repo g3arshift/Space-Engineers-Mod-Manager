@@ -15,7 +15,6 @@ public class ModView {
     public FileChooserAndOption getModListFile(String filePath) {
         JFileChooser fc = new JFileChooser(filePath);
 
-        JOptionPane.showMessageDialog(null, "Select a mod list to import. This should be a list of steam workshop urls with each url on its own line.", "Notification", JOptionPane.INFORMATION_MESSAGE);
         fc.setAcceptAllFileFilterUsed(false);
         fc.setFileFilter(textFileFilter);
 
@@ -26,11 +25,15 @@ public class ModView {
         return fileChooserAndOption;
     }
 
+    public void displayWelcome() {
+        JOptionPane.showMessageDialog(null, "Select a mod list to import. This should be a list of steam workshop urls with each url on its own line.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     public void displayResult(Result result) {
         switch (result.getType()) {
-            case ResultType.INVALID ->
+            case INVALID ->
                     JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Error", JOptionPane.ERROR_MESSAGE);
-            case ResultType.SUCCESS ->
+            case SUCCESS ->
                     JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Success", JOptionPane.INFORMATION_MESSAGE);
             default -> {
                 result.addMessage("Failed to open mod list file.", ResultType.FAILED);
@@ -40,6 +43,6 @@ public class ModView {
     }
 
     public void displayCancellation() {
-        JOptionPane.showMessageDialog(null, "Operation cancelled by user.", "Error", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, "Operation cancelled by user.", "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 }
