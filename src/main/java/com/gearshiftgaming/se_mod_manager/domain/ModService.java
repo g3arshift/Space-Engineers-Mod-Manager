@@ -4,13 +4,10 @@ import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
 import org.apache.commons.io.FilenameUtils;
+import org.jsoup.Jsoup;
 
 import javax.swing.*;
-import javax.swing.text.html.HTMLDocument;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.parser.ParserDelegator;
 import java.io.*;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -23,6 +20,7 @@ public class ModService {
     private final Pattern STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile("([0-9])\\d*");
     private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
+    //TODO: Move to repository
     public Result getModListFile(JFileChooser fc) {
 
         Result modFileResult = new Result();
@@ -60,16 +58,7 @@ public class ModService {
 
     //TODO: We need to make this sometimes not return true. Probably do it with the internet check?
     //Scrape the workshop HTML pages for their titles, which are our friendly names
-    public Callable<String> generateModFriendlyName(Mod mod) {
-        return () -> {
-            //TODO: This is slow as sin. Replace it.
-            HTMLEditorKit htmlKit = new HTMLEditorKit();
-            HTMLDocument htmlDoc = (HTMLDocument) htmlKit.createDefaultDocument();
-            HTMLEditorKit.Parser parser = new ParserDelegator();
-            parser.parse(new InputStreamReader(new URI(STEAM_WORKSHOP_URL + mod.getModId()).toURL().openStream()),
-                    htmlDoc.getReader(0), true);
-
-            return(htmlDoc.getProperty("title").toString());
-        };
+    public Callable<String> scrapeModFriendlyName(Mod mod) {
+        return () -> Jsoup.connect(STEAM_WORKSHOP_URL + mod.getModId()).get().title();
     }
 }

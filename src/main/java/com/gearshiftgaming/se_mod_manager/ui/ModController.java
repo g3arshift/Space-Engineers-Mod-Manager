@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -38,7 +36,7 @@ public class ModController {
         this.APP_DATA_PATH = appDataPath;
     }
 
-    public void injectModList() throws IOException, ExecutionException, InterruptedException {
+    public void injectModList() {
 
         Result modFileResult = new Result(ResultType.NOT_INITIALIZED);
 
@@ -71,13 +69,8 @@ public class ModController {
             try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 
                 for (Mod m : modList) {
-                    futures.add(executorService.submit(modService.generateModFriendlyName(m)));
+                    futures.add(executorService.submit(modService.scrapeModFriendlyName(m)));
                 }
-            }
-
-            for(int i = 0; i < modList.size(); i++) {
-                modList.get(i).setFriendlyName(futures.get(i).get());
-                System.out.println(modList.get(i).getFriendlyName());
             }
 
         }

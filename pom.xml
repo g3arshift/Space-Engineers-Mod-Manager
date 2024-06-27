@@ -76,6 +76,13 @@
             <version>2.0.13</version>
         </dependency>
 
+        <!-- jsoup for webscraping -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.17.2</version>
+        </dependency>
+
     </dependencies>
 
 </project>
