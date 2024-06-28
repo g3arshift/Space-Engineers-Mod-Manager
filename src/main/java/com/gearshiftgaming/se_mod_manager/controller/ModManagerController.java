@@ -26,8 +26,6 @@ public class ModManagerController {
     private final String APP_DATA_PATH;
     static final Logger log = LoggerFactory.getLogger(ModManagerController.class);
 
-    private final int MAX_RETRIES = 3;
-
 
     public ModManagerController(List<Mod> modList, ModView modView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) {
         this.modList = modList;
@@ -93,6 +91,10 @@ public class ModManagerController {
 
                 //TODO: While we have a fail and the user isn't choosing to exit, run the below line
                 Result<Boolean> sandboxInjectionResult = sandboxService.addModsToSandboxConfig(sandboxFileResult.getPayload(), modList);
+
+                if (sandboxInjectionResult.isSuccess()) {
+                    log.info("Successfully injected mod list into save.");
+                }
             }
 
             //TODO: Generate new Sandbox_config.sbc based on existing file
@@ -105,6 +107,7 @@ public class ModManagerController {
     private boolean checkWorkshopConnectivity() {
         int attempt = 0;
         boolean success = false;
+        int MAX_RETRIES = 3;
         while (attempt < MAX_RETRIES && !success) {
             try {
                 Document doc = Jsoup.connect("https://steamcommunity.com/sharedfiles/filedetails/?id=2135416557")
