@@ -5,7 +5,7 @@ import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.FileChooserAndOption;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.ui.ModView;
+import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -14,12 +14,13 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.*;
 
 public class ModManagerController {
     List<Mod> modList;
-    private final ModView modView;
+    private final ModManagerView modManagerView;
     private final ModService modService;
     private final SandboxService sandboxService;
     private final String DESKTOP_PATH;
@@ -27,9 +28,9 @@ public class ModManagerController {
     static final Logger log = LoggerFactory.getLogger(ModManagerController.class);
 
 
-    public ModManagerController(List<Mod> modList, ModView modView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) {
+    public ModManagerController(List<Mod> modList, ModManagerView modManagerView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) {
         this.modList = modList;
-        this.modView = modView;
+        this.modManagerView = modManagerView;
         this.modService = modService;
         this.sandboxService = sandboxService;
         this.DESKTOP_PATH = desktopPath;
@@ -38,72 +39,107 @@ public class ModManagerController {
 
     public void injectModList() throws ExecutionException, InterruptedException, IOException {
 
-        if (checkWorkshopConnectivity()) {
-            Result<File> modFileResult = new Result<>();
+        if (!checkWorkshopConnectivity()) {
+            if (modManagerView.getConnectionErrorOption() != JFileChooser.APPROVE_OPTION) {
+                log.error("User opted to not continue with no Steam Workshop connection. Exiting.");
+                return;
+            } else modService.setWorkshopConnectionActive(false);
+        }
 
-            modView.displayWelcome();
+        Result<File> modFileResult = new Result<>();
 
-            FileChooserAndOption fileChooserAndOption;
+        modManagerView.displayWelcomeDialog();
 
-            //Grab the list of mod ID's from our file and fill out the rest of the information it needs
+        FileChooserAndOption fileChooserAndOption;
+
+        //Grab the list of mod ID's from our file, then scrape the friendly name and the service we retrieved it from
+        do {
+            fileChooserAndOption = modManagerView.getModListFromFile(DESKTOP_PATH);
+            if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
+                modFileResult = modService.getModListFromFile(fileChooserAndOption.getFc());
+
+                if (!modFileResult.isSuccess()) {
+                    log.warn(modFileResult.getMessages().getLast());
+                    modManagerView.displayResult(modFileResult);
+                }
+
+                log.info("Grabbing mods from " + (modFileResult.getPayload()).getPath());
+            } else {
+                modManagerView.displayCancellationDialog();
+                log.info("Program closed by user.");
+            }
+        } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !modFileResult.isSuccess());
+
+
+        //Get our Sandbox_config file that we want to modify from the user, then write the new mod list to it
+        if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
+            modList = modService.generateModListSteam(modFileResult.getPayload(), log);
+
+            Result<File> sandboxFileResult = new Result<>();
+
+            modManagerView.displaySandboxInjectDialog();
+
             do {
-                fileChooserAndOption = modView.getModListFromFile(DESKTOP_PATH);
+                fileChooserAndOption = modManagerView.getSandboxConfigFromFile(APP_DATA_PATH);
+
                 if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                    modFileResult = modService.getModListFromFile(fileChooserAndOption.getFc());
+                    sandboxFileResult = sandboxService.getSandboxConfigFromFile(fileChooserAndOption.getFc());
 
-                    if (!modFileResult.isSuccess()) {
-                        log.warn(modFileResult.getMessages().getLast());
-                        modView.displayResult(modFileResult);
+                    if (!sandboxFileResult.isSuccess()) {
+                        log.warn(sandboxFileResult.getMessages().getLast());
+                        modManagerView.displayResult(sandboxFileResult);
                     }
-
-                    log.info((modFileResult.getPayload()).getName());
+                    log.info("Injecting mods into " + (sandboxFileResult.getPayload()).getPath());
                 } else {
-                    modView.displayCancellation();
+                    modManagerView.displayCancellationDialog();
                     log.info("Program closed by user.");
                 }
-            } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !modFileResult.isSuccess());
+            } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !sandboxFileResult.isSuccess());
 
-
-            //Get our Sandbox_config file from the user, then write the new modlist to it
+            //Get the location the user wants to save the modified Sandbox_config.sbc file and then save it there
             if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                modList = modService.generateModListSteam(modFileResult.getPayload(), log);
+                Path savePath;
+                Result<Boolean> sandboxInjectionResult = new Result<>();
 
-                Result<File> sandboxFileResult = new Result<>();
-
-                modView.displaySandboxDialog();
-
+                modManagerView.displaySaveLocationDialog();
                 do {
-                    fileChooserAndOption = modView.getSandboxConfigFromFile(APP_DATA_PATH);
+
+                    fileChooserAndOption = modManagerView.getSavePath(DESKTOP_PATH);
 
                     if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                        sandboxFileResult = sandboxService.getSandboxConfigFromFile(fileChooserAndOption.getFc());
+                        savePath = fileChooserAndOption.getFc().getSelectedFile().toPath();
 
-                        if (!sandboxFileResult.isSuccess()) {
-                            log.warn(sandboxFileResult.getMessages().getLast());
-                            modView.displayResult(sandboxFileResult);
-                        }
-                        log.info((sandboxFileResult.getPayload()).getName());
-                    } else {
-                        modView.displayCancellation();
-                        log.info("Program closed by user.");
+                        //Check if the file exists and let the user choose if they want to overwrite it
+                        if (new File(savePath.toString()).exists()) {
+                            int option;
+                            option = modManagerView.getOverwriteOption();
+
+                            if (option == JFileChooser.APPROVE_OPTION) {
+                                sandboxInjectionResult = sandboxService.addModsToSandboxConfig(sandboxFileResult.getPayload(), savePath, modList);
+                            } else if (option == JOptionPane.CANCEL_OPTION) {
+                                modManagerView.displayCancellationDialog();
+                                fileChooserAndOption.setOption(option);
+                            } else modManagerView.displayCancellationDialog();
+                        } else
+                            sandboxInjectionResult = sandboxService.addModsToSandboxConfig(sandboxFileResult.getPayload(), savePath, modList);
                     }
-                } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !sandboxFileResult.isSuccess());
+                } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !sandboxInjectionResult.isSuccess());
 
-                //TODO: While we have a fail and the user isn't choosing to exit, run the below line
-                Result<Boolean> sandboxInjectionResult = sandboxService.addModsToSandboxConfig(sandboxFileResult.getPayload(), modList);
-
-                if (sandboxInjectionResult.isSuccess()) {
-                    log.info("Successfully injected mod list into save.");
+                switch (sandboxInjectionResult.getType()) {
+                    case SUCCESS -> {
+                        log.info("Successfully injected mod list into save.");
+                        modManagerView.displayResult(sandboxInjectionResult);
+                    }
+                    case FAILED -> {
+                        log.info(sandboxInjectionResult.getMessages().getLast());
+                        modManagerView.displayResult(sandboxInjectionResult);
+                    }
                 }
             }
-
-            //TODO: Generate new Sandbox_config.sbc based on existing file
-            //TODO: Save file. Ask user if they want to overwrite the existing file, or save to a new location
-
-            //TODO: Change this so it gives the user the option of continuing
-        } else modView.displayConnectionError();
+        }
     }
 
+    //Query if a known workshop item is reachable and if it isn't then we can assume the workshop is not reachable.
     private boolean checkWorkshopConnectivity() {
         int attempt = 0;
         boolean success = false;
@@ -114,7 +150,7 @@ public class ModManagerController {
                         .timeout(5000)
                         .get();
                 success = doc.title().equals("Steam Workshop::Halo Mod - Weapons");
-                if(!success) {
+                if (!success) {
                     attempt++;
                 }
             } catch (Exception e) {
@@ -122,9 +158,10 @@ public class ModManagerController {
                 log.warn("Attempt " + attempt + ": Failed to connect to Steam Workshop. Retrying...");
             }
         }
-        if(!success) {
+        if (!success) {
             log.error("Failed to connect to Steam Workshop.");
         } else log.info("Successfully connected to Steam Workshop.");
+        modService.setWorkshopConnectionActive(true);
         return success;
     }
 }

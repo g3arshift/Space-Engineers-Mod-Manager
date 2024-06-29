@@ -6,7 +6,7 @@ import com.gearshiftgaming.se_mod_manager.domain.ModService;
 import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
-import com.gearshiftgaming.se_mod_manager.ui.ModView;
+import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-//TODO:Move to a spring boot framework. Create a startup class
 public class SpaceEngineersModManager {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
@@ -31,14 +30,14 @@ public class SpaceEngineersModManager {
         }
 
         List<Mod> modList = new ArrayList<>();
-        ModView modView = new ModView();
+        ModManagerView modManagerView = new ModManagerView();
         ModService modService = new ModService(new ModFileRepository());
         SandboxService sandboxService = new SandboxService(new SandboxConfigFileRepository());
 
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-        ModManagerController modController = new ModManagerController(modList, modView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
+        ModManagerController modController = new ModManagerController(modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
 
         modController.injectModList();
     }

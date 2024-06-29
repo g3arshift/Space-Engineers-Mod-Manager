@@ -8,10 +8,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class SandboxConfigFileRepository implements SandboxConfigRepository{
     @Override
-    public Result<File> getAll(File sandboxConfigFile) {
+    public Result<File> getSandboxConfig(File sandboxConfigFile) {
         Result<File> result = new Result<>();
         if (!sandboxConfigFile.exists()) {
             result.addMessage("File does not exist.", ResultType.INVALID);
@@ -24,34 +25,26 @@ public class SandboxConfigFileRepository implements SandboxConfigRepository{
         return result;
     }
 
-    //TODO: Implement
     @Override
-    public Result getSandboxConfig(File sandBoxConfigFile) {
-        return null;
-    }
-
-    @Override
-    public Result<Boolean> saveSandboxConfig(File sandboxConfig, String modifiedSandboxConfig) throws IOException {
+    public Result<Boolean> saveSandboxConfig(Path savePath, String modifiedSandboxConfig) throws IOException {
         Result<Boolean> result = new Result<>();
-        String savePath;
 
-        if(!FilenameUtils.getExtension(sandboxConfig.getName()).equals("sbc")) {
-            savePath = sandboxConfig.getPath() + ".sbc";
-        } else savePath = sandboxConfig.getPath();
+        if(!FilenameUtils.getExtension(savePath.getFileName().toString()).equals("sbc")) {
+            savePath = Path.of(savePath + ".sbc");
+        }
 
-        File file = new File(savePath);
-
-        if(!sandboxConfig.exists()) {
-            boolean fileCreationResult = (sandboxConfig.createNewFile());
+        if(!savePath.toFile().exists()) {
+            boolean fileCreationResult = (savePath.toFile().createNewFile());
             if(!fileCreationResult){
                 result.addMessage("Failed to create modified Sandbox_config.sbc file.", ResultType.FAILED);
                 return result;
             }
         }
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(sandboxConfig))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(savePath.toFile()))) {
             bw.write(modifiedSandboxConfig);
         }
+        result.addMessage("Successfully injected mod list into save", ResultType.SUCCESS);
         return result;
     }
 }

@@ -13,6 +13,8 @@ public class Mod {
 
     public Mod(String modId) {
         this.modId = modId;
+        friendlyName = "UNKNOWN_NAME";
+        publishedServiceName = "UNKNOWN_SERVICE";
     }
 
 }
