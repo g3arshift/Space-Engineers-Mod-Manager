@@ -39,6 +39,8 @@ public class SpaceEngineersModManager {
 
         ModManagerController modController = new ModManagerController(modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
 
+        //Get the party started
         modController.injectModList();
+        log.info("Application finished. Closing.");
     }
 }

@@ -7,9 +7,7 @@ import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import lombok.Getter;
 import lombok.Setter;
 import org.jsoup.Jsoup;
-import org.slf4j.Logger;
 
-import javax.swing.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,15 +28,11 @@ public class ModService {
     }
 
     //TODO: This is too tightly coupled to the structure of the original mod file. Modify it so it returns a list of mod objects.
-    public Result<File> getModListFromFile(JFileChooser fc) {
-        return modFileRepository.getModFile(fc.getSelectedFile());
+    public Result<List<Mod>> getInjectableModListFromFile(File modFile) {
+        return modFileRepository.getModList(modFile);
     }
 
-    public List<Mod> generateModListSteam(File modListFile, Logger log) throws ExecutionException, InterruptedException {
-        List<Mod> modList = modFileRepository.generateModListIds(modListFile);
-
-        log.info("Number of mods in " + (modListFile.getName() + ": " + modList.size()));
-
+    public void generateModListSteam(List<Mod> modList) throws ExecutionException, InterruptedException {
         List<Future<String>> futures = new ArrayList<>(modList.size());
 
         //Check if our workshop connection is active.
@@ -56,8 +50,6 @@ public class ModService {
                 modList.get(i).setFriendlyName(modInfo[1]);
             }
         }
-
-        return modList;
     }
 
     //Scrape the Steam Workshop HTML pages for their titles, which are our friendly names

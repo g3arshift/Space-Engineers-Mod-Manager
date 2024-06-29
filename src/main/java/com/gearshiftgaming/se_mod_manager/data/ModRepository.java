@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ModRepository {
 
-    Result getModFile(File modFile);
+    Result<List<Mod>> getModList(File modFile);
 
-    List<Mod> generateModListIds(File modListFile);
+    List<Mod> getModListModIds(File modListFile);
 }

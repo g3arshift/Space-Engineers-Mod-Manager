@@ -4,7 +4,6 @@ import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
 import org.apache.commons.io.FilenameUtils;
-import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,13 +24,13 @@ public class ModFileRepository implements ModRepository {
     }
 
     @Override
-    public Result<File> getModFile(File modFile) {
-        Result<File> result = new Result<>();
+    public Result<List<Mod>> getModList(File modFile) {
+        Result<List<Mod>> result = new Result<>();
         if (!modFile.exists()) {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(modFile.getName()).equals("txt") || FilenameUtils.getExtension(modFile.getName()).equals("doc")) {
             result.addMessage(modFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(modFile);
+            result.setPayload(getModListModIds(modFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .txt or .doc file.", ResultType.INVALID);
         }
@@ -39,7 +38,7 @@ public class ModFileRepository implements ModRepository {
     }
 
     @Override
-    public List<Mod> generateModListIds(File modListFile) {
+    public List<Mod> getModListModIds(File modListFile) {
         List<Mod> modList = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(modListFile))) {
             String modUrl;

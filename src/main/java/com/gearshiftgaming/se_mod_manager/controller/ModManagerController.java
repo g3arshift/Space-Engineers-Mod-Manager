@@ -46,7 +46,7 @@ public class ModManagerController {
             } else modService.setWorkshopConnectionActive(false);
         }
 
-        Result<File> modFileResult = new Result<>();
+        Result<List<Mod>> modListResult = new Result<>();
 
         modManagerView.displayWelcomeDialog();
 
@@ -56,24 +56,24 @@ public class ModManagerController {
         do {
             fileChooserAndOption = modManagerView.getModListFromFile(DESKTOP_PATH);
             if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                modFileResult = modService.getModListFromFile(fileChooserAndOption.getFc());
+                log.info("Grabbing mods from " + (fileChooserAndOption.getFc().getSelectedFile()));
+                modListResult = modService.getInjectableModListFromFile(fileChooserAndOption.getFc().getSelectedFile());
 
-                if (!modFileResult.isSuccess()) {
-                    log.warn(modFileResult.getMessages().getLast());
-                    modManagerView.displayResult(modFileResult);
-                }
-
-                log.info("Grabbing mods from " + (modFileResult.getPayload()).getPath());
+                if (!modListResult.isSuccess()) {
+                    log.warn(modListResult.getMessages().getLast());
+                    modManagerView.displayResult(modListResult);
+                } else modList = modListResult.getPayload();
             } else {
                 modManagerView.displayCancellationDialog();
                 log.info("Program closed by user.");
             }
-        } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !modFileResult.isSuccess());
+        } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !modListResult.isSuccess());
 
 
         //Get our Sandbox_config file that we want to modify from the user, then write the new mod list to it
         if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-            modList = modService.generateModListSteam(modFileResult.getPayload(), log);
+            log.info("Number of mods to inject is " + modListResult.getPayload().size());
+            modService.generateModListSteam(modList);
 
             Result<File> sandboxFileResult = new Result<>();
 
