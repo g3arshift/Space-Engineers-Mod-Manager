@@ -6,11 +6,9 @@ import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.FileChooserAndOption;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
@@ -25,10 +23,11 @@ public class ModManagerController {
     private final SandboxService sandboxService;
     private final String DESKTOP_PATH;
     private final String APP_DATA_PATH;
-    static final Logger log = LoggerFactory.getLogger(ModManagerController.class);
+    private final Logger logger;
 
 
-    public ModManagerController(List<Mod> modList, ModManagerView modManagerView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) {
+    public ModManagerController(Logger logger, List<Mod> modList, ModManagerView modManagerView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) {
+        this.logger = logger;
         this.modList = modList;
         this.modManagerView = modManagerView;
         this.modService = modService;
@@ -41,7 +40,7 @@ public class ModManagerController {
 
         if (!checkWorkshopConnectivity()) {
             if (modManagerView.getConnectionErrorOption() != JFileChooser.APPROVE_OPTION) {
-                log.error("User opted to not continue with no Steam Workshop connection. Exiting.");
+                logger.error("User opted to not continue with no Steam Workshop connection. Exiting.");
                 return;
             } else modService.setWorkshopConnectionActive(false);
         }
@@ -56,23 +55,23 @@ public class ModManagerController {
         do {
             fileChooserAndOption = modManagerView.getModListFromFile(DESKTOP_PATH);
             if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                log.info("Grabbing mods from " + (fileChooserAndOption.getFc().getSelectedFile()));
+                logger.info("Grabbing mods from " + (fileChooserAndOption.getFc().getSelectedFile()));
                 modListResult = modService.getInjectableModListFromFile(fileChooserAndOption.getFc().getSelectedFile());
 
                 if (!modListResult.isSuccess()) {
-                    log.warn(modListResult.getMessages().getLast());
+                    logger.warn(modListResult.getMessages().getLast());
                     modManagerView.displayResult(modListResult);
                 } else modList = modListResult.getPayload();
             } else {
                 modManagerView.displayCancellationDialog();
-                log.info("Program closed by user.");
+                logger.info("Program closed by user.");
             }
         } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !modListResult.isSuccess());
 
 
         //Get our Sandbox_config file that we want to modify from the user, then write the new mod list to it
         if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-            log.info("Number of mods to inject is " + modListResult.getPayload().size());
+            logger.info("Number of mods to inject is " + modListResult.getPayload().size());
             modService.generateModListSteam(modList);
 
             Result<File> sandboxFileResult = new Result<>();
@@ -86,13 +85,13 @@ public class ModManagerController {
                     sandboxFileResult = sandboxService.getSandboxConfigFromFile(fileChooserAndOption.getFc());
 
                     if (!sandboxFileResult.isSuccess()) {
-                        log.warn(sandboxFileResult.getMessages().getLast());
+                        logger.warn(sandboxFileResult.getMessages().getLast());
                         modManagerView.displayResult(sandboxFileResult);
                     }
-                    log.info("Injecting mods into " + (sandboxFileResult.getPayload()).getPath());
+                    logger.info("Injecting mods into " + (sandboxFileResult.getPayload()).getPath());
                 } else {
                     modManagerView.displayCancellationDialog();
-                    log.info("Program closed by user.");
+                    logger.info("Program closed by user.");
                 }
             } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !sandboxFileResult.isSuccess());
 
@@ -127,11 +126,11 @@ public class ModManagerController {
 
                 switch (sandboxInjectionResult.getType()) {
                     case SUCCESS -> {
-                        log.info("Successfully injected mod list into save.");
+                        logger.info("Successfully injected mod list into save.");
                         modManagerView.displayResult(sandboxInjectionResult);
                     }
                     case FAILED -> {
-                        log.info(sandboxInjectionResult.getMessages().getLast());
+                        logger.info(sandboxInjectionResult.getMessages().getLast());
                         modManagerView.displayResult(sandboxInjectionResult);
                     }
                 }
@@ -155,12 +154,12 @@ public class ModManagerController {
                 }
             } catch (Exception e) {
                 attempt++;
-                log.warn("Attempt " + attempt + ": Failed to connect to Steam Workshop. Retrying...");
+                logger.warn("Attempt " + attempt + ": Failed to connect to Steam Workshop. Retrying...");
             }
         }
         if (!success) {
-            log.error("Failed to connect to Steam Workshop.");
-        } else log.info("Successfully connected to Steam Workshop.");
+            logger.error("Failed to connect to Steam Workshop.");
+        } else logger.info("Successfully connected to Steam Workshop.");
         modService.setWorkshopConnectionActive(true);
         return success;
     }

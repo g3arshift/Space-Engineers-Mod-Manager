@@ -7,8 +7,8 @@ import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
 import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -20,8 +20,8 @@ public class SpaceEngineersModManager {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
 
-        final Logger log = LoggerFactory.getLogger(SpaceEngineersModManager.class);
-        log.info("Started application...");
+        final Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
+        logger.info("Started application...");
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
@@ -37,10 +37,10 @@ public class SpaceEngineersModManager {
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-        ModManagerController modController = new ModManagerController(modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
+        ModManagerController modController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
 
         //Get the party started
         modController.injectModList();
-        log.info("Application finished. Closing.");
+        logger.info("Application finished. Closing.");
     }
 }
