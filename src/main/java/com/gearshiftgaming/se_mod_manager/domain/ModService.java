@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.jsoup.Jsoup;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -28,8 +29,8 @@ public class ModService {
     }
 
     //TODO: This is too tightly coupled to the structure of the original mod file. Modify it so it returns a list of mod objects.
-    public Result<List<Mod>> getInjectableModListFromFile(File modFile) {
-        return modFileRepository.getModList(modFile);
+    public Result<List<Mod>> getInjectableModListFromFile(String modFilePath) {
+        return modFileRepository.getModList(modFilePath);
     }
 
     public void generateModListSteam(List<Mod> modList) throws ExecutionException, InterruptedException {

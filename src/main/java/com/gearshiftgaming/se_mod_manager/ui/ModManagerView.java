@@ -1,53 +1,53 @@
 package com.gearshiftgaming.se_mod_manager.ui;
 
-import com.gearshiftgaming.se_mod_manager.models.utility.FileChooserAndOption;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+import java.nio.file.Path;
 
 public class ModManagerView {
 
+    //TODO: We really should just be passing back the String themselves, not this weird FileChooserAndOption object.
     FileNameExtensionFilter textFileFilter = new FileNameExtensionFilter("Text Files (.txt, .doc)", "txt", "doc");
     FileNameExtensionFilter sbcFileFilter = new FileNameExtensionFilter("SBC Files", "sbc");
 
-    public FileChooserAndOption getModListFromFile(String filePath) {
-        return getFilePath(filePath, textFileFilter);
-    }
+    public String getModListFromFile(String rootFilePath) { return getFilePath(rootFilePath, textFileFilter); }
 
-    public FileChooserAndOption getSandboxConfigFromFile(String filePath) {
+    public String getSandboxConfigFromFile(String filePath) {
         return getFilePath(filePath, sbcFileFilter);
     }
 
-    public FileChooserAndOption getSavePath(String filePath) {
+    public String getSavePath(String filePath) {
         return getSaveLocation(filePath, sbcFileFilter);
     }
 
-    private FileChooserAndOption getFilePath(String filePath, FileNameExtensionFilter fileFilter) {
-        JFileChooser fc = new JFileChooser(filePath);
+    private String getFilePath(String rootFilePath, FileNameExtensionFilter fileFilter) {
+        JFileChooser fc = new JFileChooser(new File(rootFilePath));
 
         fc.setAcceptAllFileFilterUsed(false);
         fc.setFileFilter(fileFilter);
 
-        FileChooserAndOption fileChooserAndOption = new FileChooserAndOption();
-        fileChooserAndOption.setOption(fc.showOpenDialog(null));
-        fileChooserAndOption.setFc(fc);
+        int choice = fc.showOpenDialog(null);
 
-        return fileChooserAndOption;
+        if(choice != JOptionPane.NO_OPTION) {
+            return fc.getSelectedFile().toPath().toString();
+        } else return "1";
     }
 
-    private FileChooserAndOption getSaveLocation (String filePath, FileNameExtensionFilter sbcFileFilter) {
+    private String getSaveLocation (String filePath, FileNameExtensionFilter fileFilter) {
         JFileChooser fc = new JFileChooser(filePath);
 
         fc.setAcceptAllFileFilterUsed(true);
-        fc.setFileFilter(sbcFileFilter);
+        fc.setFileFilter(fileFilter);
 
-        FileChooserAndOption fileChooserAndOption = new FileChooserAndOption();
-        fileChooserAndOption.setOption(fc.showSaveDialog(null));
-        fileChooserAndOption.setFc(fc);
+        int choice = fc.showSaveDialog(null);
 
-        return fileChooserAndOption;
+        if(choice != JOptionPane.NO_OPTION) {
+            return fc.getSelectedFile().toPath().toString();
+        } else return "1";
     }
 
     public void displayResult(Result<?> result) {
@@ -85,5 +85,9 @@ public class ModManagerView {
 
     public int getConnectionErrorOption() {
         return JOptionPane.showOptionDialog(null, "Cannot connect to the Steam Workshop. This may cause unexpected behavior. Continue anyways?", "Workshop Error", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, "No");
+    }
+
+    public void displayOverwriteAbortDialog() {
+        JOptionPane.showMessageDialog(null, "Sandbox_config.sbc saving aborted. Please select another file.", "Save aborted", JOptionPane.INFORMATION_MESSAGE);
     }
 }

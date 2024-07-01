@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 public interface SandboxConfigRepository {
 
-    Result<File> getSandboxConfig(File sandboxConfigFile);
+    Result<File> getSandboxConfig(String sandboxConfigPath);
 
-    Result<Boolean> saveSandboxConfig(Path savePath, String modifiedSandboxConfig) throws IOException;
+    Result<Boolean> saveSandboxConfig(String savePath, String modifiedSandboxConfig) throws IOException;
 }

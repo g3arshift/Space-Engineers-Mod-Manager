@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -22,7 +23,8 @@ public class ModFileRepository implements ModRepository {
     }
 
     @Override
-    public Result<List<Mod>> getModList(File modFile) {
+    public Result<List<Mod>> getModList(String modFilePath) {
+        File modFile = new File(modFilePath);
         Result<List<Mod>> result = new Result<>();
         if (!modFile.exists()) {
             result.addMessage("File does not exist.", ResultType.INVALID);
@@ -38,6 +40,7 @@ public class ModFileRepository implements ModRepository {
     @Override
     public List<Mod> getModListModIds(File modListFile) {
         //We use a set to prevent duplicate lines from being added
+        //TODO: Check for correct pattern of the workshop url, and its variants. Only add if it matches.
         Set<Mod> modSet = new LinkedHashSet<>();
         try (BufferedReader br = new BufferedReader(new FileReader(modListFile))) {
             String modUrl;
@@ -53,7 +56,6 @@ public class ModFileRepository implements ModRepository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         return new ArrayList<>(modSet);
     }
 }

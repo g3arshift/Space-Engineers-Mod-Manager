@@ -6,11 +6,9 @@ import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 public class SandboxService {
@@ -20,12 +18,11 @@ public class SandboxService {
         this.sandboxConfigFileRepository = sandboxConfigRepository;
     }
 
-    public Result<File> getSandboxConfigFromFile(JFileChooser fc) {
-        File sandboxConfig = fc.getSelectedFile();
-        return sandboxConfigFileRepository.getSandboxConfig(sandboxConfig);
+    public Result<File> getSandboxConfigFromFile(String sandboxConfigPath) {
+        return sandboxConfigFileRepository.getSandboxConfig(sandboxConfigPath);
     }
 
-    public Result<Boolean> addModsToSandboxConfig(File sandboxConfig, Path savePath, List<Mod> modList) throws IOException {
+    public Result<Boolean> addModsToSandboxConfigFile(File sandboxConfig, String savePath, List<Mod> modList) throws IOException {
         String modifiedSandboxConfig = injectModsIntoSandboxConfig(sandboxConfig, modList);
         return sandboxConfigFileRepository.saveSandboxConfig(savePath, modifiedSandboxConfig);
     }

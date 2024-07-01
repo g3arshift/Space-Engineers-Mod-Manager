@@ -3,7 +3,6 @@ package com.gearshiftgaming.se_mod_manager.controller;
 import com.gearshiftgaming.se_mod_manager.domain.ModService;
 import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.models.utility.FileChooserAndOption;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
 import org.apache.logging.log4j.Logger;
@@ -12,7 +11,6 @@ import org.jsoup.nodes.Document;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -49,14 +47,15 @@ public class ModManagerController {
 
         modManagerView.displayWelcomeDialog();
 
-        FileChooserAndOption fileChooserAndOption;
+        //TODO: Rewrite to work with strings?
+        String modListPath;
 
         //Grab the list of mod ID's from our file, then scrape the friendly name and the service we retrieved it from
         do {
-            fileChooserAndOption = modManagerView.getModListFromFile(DESKTOP_PATH);
-            if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                logger.info("Grabbing mods from " + (fileChooserAndOption.getFc().getSelectedFile()));
-                modListResult = modService.getInjectableModListFromFile(fileChooserAndOption.getFc().getSelectedFile());
+            modListPath = modManagerView.getModListFromFile(DESKTOP_PATH);
+            if (!modListPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
+                logger.info("Grabbing mods from " + (modListPath));
+                modListResult = modService.getInjectableModListFromFile(modListPath);
 
                 if (!modListResult.isSuccess()) {
                     logger.warn(modListResult.getMessages().getLast());
@@ -66,11 +65,14 @@ public class ModManagerController {
                 modManagerView.displayCancellationDialog();
                 logger.info("Program closed by user.");
             }
-        } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !modListResult.isSuccess());
+        } while (!modListPath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !modListResult.isSuccess());
 
 
+
+        //TODO: Adapt the below to using paths, not files
+        String sandboxConfigPath;
         //Get our Sandbox_config file that we want to modify from the user, then write the new mod list to it
-        if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
+        if (!modListPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
             logger.info("Number of mods to inject is " + modListResult.getPayload().size());
             modService.generateModListSteam(modList);
 
@@ -79,10 +81,10 @@ public class ModManagerController {
             modManagerView.displaySandboxInjectDialog();
 
             do {
-                fileChooserAndOption = modManagerView.getSandboxConfigFromFile(APP_DATA_PATH);
+                sandboxConfigPath = modManagerView.getSandboxConfigFromFile(APP_DATA_PATH);
 
-                if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                    sandboxFileResult = sandboxService.getSandboxConfigFromFile(fileChooserAndOption.getFc());
+                if (!sandboxConfigPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
+                    sandboxFileResult = sandboxService.getSandboxConfigFromFile(sandboxConfigPath);
 
                     if (!sandboxFileResult.isSuccess()) {
                         logger.warn(sandboxFileResult.getMessages().getLast());
@@ -93,36 +95,34 @@ public class ModManagerController {
                     modManagerView.displayCancellationDialog();
                     logger.info("Program closed by user.");
                 }
-            } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !sandboxFileResult.isSuccess());
+            } while (!sandboxConfigPath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !sandboxFileResult.isSuccess());
+
 
             //Get the location the user wants to save the modified Sandbox_config.sbc file and then save it there
-            if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                Path savePath;
+            if (!sandboxConfigPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
+                String savePath;
                 Result<Boolean> sandboxInjectionResult = new Result<>();
 
                 modManagerView.displaySaveLocationDialog();
                 do {
 
-                    fileChooserAndOption = modManagerView.getSavePath(DESKTOP_PATH);
+                    savePath = modManagerView.getSavePath(DESKTOP_PATH);
 
-                    if (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION) {
-                        savePath = fileChooserAndOption.getFc().getSelectedFile().toPath();
+                    if (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
 
                         //Check if the file exists and let the user choose if they want to overwrite it
-                        if (new File(savePath.toString()).exists()) {
-                            int option;
-                            option = modManagerView.getOverwriteOption();
-
-                            if (option == JFileChooser.APPROVE_OPTION) {
-                                sandboxInjectionResult = sandboxService.addModsToSandboxConfig(sandboxFileResult.getPayload(), savePath, modList);
-                            } else if (option == JOptionPane.CANCEL_OPTION) {
+                        if (new File(savePath).exists()) {
+                            int overwriteChoice = modManagerView.getOverwriteOption();
+                            if (overwriteChoice == JFileChooser.APPROVE_OPTION) {
+                                sandboxInjectionResult = sandboxService.addModsToSandboxConfigFile(sandboxFileResult.getPayload(), savePath, modList);
+                            } else if (overwriteChoice == JOptionPane.CANCEL_OPTION) {
                                 modManagerView.displayCancellationDialog();
-                                fileChooserAndOption.setOption(option);
-                            } else modManagerView.displayCancellationDialog();
+                                savePath = "1";
+                            } else modManagerView.displayOverwriteAbortDialog();
                         } else
-                            sandboxInjectionResult = sandboxService.addModsToSandboxConfig(sandboxFileResult.getPayload(), savePath, modList);
+                            sandboxInjectionResult = sandboxService.addModsToSandboxConfigFile(sandboxFileResult.getPayload(), savePath, modList);
                     }
-                } while (fileChooserAndOption.getOption() == JFileChooser.APPROVE_OPTION && !sandboxInjectionResult.isSuccess());
+                } while (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !sandboxInjectionResult.isSuccess());
 
                 switch (sandboxInjectionResult.getType()) {
                     case SUCCESS -> {

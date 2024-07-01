@@ -40,3 +40,11 @@ build/
 ### Etc ###
 /Todo.md
 !/logs/
+*.log
+/.idea/encodings.xml
+/src/main/resources/META-INF/MANIFEST.MF
+/.idea/misc.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/uiDesigner.xml
+/.idea/vcs.xml
+/out/artifacts/Space_Engineers_Mod_Manager_jar/Space-Engineers-Mod-Manager.jar
