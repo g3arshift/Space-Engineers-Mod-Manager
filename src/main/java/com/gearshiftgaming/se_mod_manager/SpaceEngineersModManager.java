@@ -1,11 +1,11 @@
 package com.gearshiftgaming.se_mod_manager;
 
+import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
 import com.gearshiftgaming.se_mod_manager.data.ModFileRepository;
 import com.gearshiftgaming.se_mod_manager.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.domain.ModService;
 import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
 import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -8,11 +8,12 @@ import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
 
 public class ModManagerController {
     List<Mod> modList;
@@ -66,7 +67,6 @@ public class ModManagerController {
                 logger.info("Program closed by user.");
             }
         } while (!modListPath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !modListResult.isSuccess());
-
 
 
         //TODO: Adapt the below to using paths, not files

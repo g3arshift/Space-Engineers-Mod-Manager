@@ -34,7 +34,7 @@ public class SandboxService {
         String[] preModSandboxContent;
         String[] postModSandboxContent;
 
-        if(StringUtils.contains(sandboxFileContent, "<Mods />")) {
+        if (StringUtils.contains(sandboxFileContent, "<Mods />")) {
             preModSandboxContent = StringUtils.substringBefore(sandboxFileContent, "<Mods />").split(System.lineSeparator());
             postModSandboxContent = StringUtils.substringAfter(sandboxFileContent, "<Mods />").split(System.lineSeparator());
         } else {

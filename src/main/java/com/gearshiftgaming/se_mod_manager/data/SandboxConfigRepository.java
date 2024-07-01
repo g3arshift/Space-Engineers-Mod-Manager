@@ -4,7 +4,6 @@ import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public interface SandboxConfigRepository {
 

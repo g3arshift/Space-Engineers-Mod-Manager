@@ -6,7 +6,6 @@ import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.nio.file.Path;
 
 public class ModManagerView {
 
@@ -14,7 +13,9 @@ public class ModManagerView {
     FileNameExtensionFilter textFileFilter = new FileNameExtensionFilter("Text Files (.txt, .doc)", "txt", "doc");
     FileNameExtensionFilter sbcFileFilter = new FileNameExtensionFilter("SBC Files", "sbc");
 
-    public String getModListFromFile(String rootFilePath) { return getFilePath(rootFilePath, textFileFilter); }
+    public String getModListFromFile(String rootFilePath) {
+        return getFilePath(rootFilePath, textFileFilter);
+    }
 
     public String getSandboxConfigFromFile(String filePath) {
         return getFilePath(filePath, sbcFileFilter);
@@ -32,12 +33,12 @@ public class ModManagerView {
 
         int choice = fc.showOpenDialog(null);
 
-        if(choice != JOptionPane.NO_OPTION) {
+        if (choice != JOptionPane.NO_OPTION) {
             return fc.getSelectedFile().toPath().toString();
         } else return "1";
     }
 
-    private String getSaveLocation (String filePath, FileNameExtensionFilter fileFilter) {
+    private String getSaveLocation(String filePath, FileNameExtensionFilter fileFilter) {
         JFileChooser fc = new JFileChooser(filePath);
 
         fc.setAcceptAllFileFilterUsed(true);
@@ -45,7 +46,7 @@ public class ModManagerView {
 
         int choice = fc.showSaveDialog(null);
 
-        if(choice != JOptionPane.NO_OPTION) {
+        if (choice != JOptionPane.NO_OPTION) {
             return fc.getSelectedFile().toPath().toString();
         } else return "1";
     }
