@@ -37,6 +37,23 @@
         <url>https://github.com/g3arshift/Space-Engineers-Mod-Manager</url>
     </scm>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>SpaceEngineersModManager.jar</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <properties>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
@@ -76,7 +93,7 @@
             <version>2.23.1</version>
         </dependency>
 
-        <!-- jsoup for webscraping -->
+        <!-- jsoup for web scraping -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
