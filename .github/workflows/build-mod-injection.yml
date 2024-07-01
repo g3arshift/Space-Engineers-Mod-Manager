@@ -1,6 +1,6 @@
 # This workflow will build a Java project with Maven and AdoptOpen JDK 21 on the mod-injection branch, and cache/restore any dependencies to improve the workflow execution time
 
-name: Java CI with Maven
+name: Build mod-injection with maven
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 21
-    - uses: actions/setup-java@v4.2.1
+      uses: actions/setup-java@v4.2.1
       with:
         java-version: '21'
         distribution: 'adopt'
