@@ -11,9 +11,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class SpaceEngineersModManager {
@@ -31,13 +34,26 @@ public class SpaceEngineersModManager {
 
         List<Mod> modList = new ArrayList<>();
         ModManagerView modManagerView = new ModManagerView();
-        ModService modService = new ModService(new ModFileRepository());
         SandboxService sandboxService = new SandboxService(new SandboxConfigFileRepository());
 
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-        ModManagerController modController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
+        Properties properties = new Properties();
+        try (InputStream input = new FileInputStream("src/main/resources/SEMM.properties")) {
+            properties.load(input);
+        } catch (IOException e) {
+            logger.error("Could not load SEMM properties file.");
+        }
+
+        final String CONNECTION_CHECK_URL = properties.getProperty("semm.connectionCheck.steam.url");
+        final String CONNECTION_CHECK_TITLE = properties.getProperty("semm.connectionCheck.steam.title");
+        final String MOD_SCRAPING_XPATH = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
+
+        ModService modService = new ModService(new ModFileRepository(), logger, MOD_SCRAPING_XPATH);
+
+
+        ModManagerController modController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH, CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
 
         //Get the party started
         modController.injectModList();

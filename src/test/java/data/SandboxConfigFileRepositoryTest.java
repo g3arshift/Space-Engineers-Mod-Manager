@@ -12,14 +12,13 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SandboxFileRepositoryTest {
+public class SandboxConfigFileRepositoryTest {
 
     private final SandboxConfigRepository repository = new SandboxConfigFileRepository();
 
     @TempDir
     public File tempDir;
 
-    //TODO: Do the tests with short strings, not a full config file, except for reading one.
     @Test
     void shouldGetValidSandboxConfigFile() {
         assertTrue(repository.getSandboxConfig("src/test/resources/TestSandbox_config.sbc").isSuccess());

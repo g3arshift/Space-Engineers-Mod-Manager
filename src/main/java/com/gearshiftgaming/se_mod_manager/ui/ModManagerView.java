@@ -9,7 +9,6 @@ import java.io.File;
 
 public class ModManagerView {
 
-    //TODO: We really should just be passing back the String themselves, not this weird FileChooserAndOption object.
     FileNameExtensionFilter textFileFilter = new FileNameExtensionFilter("Text Files (.txt, .doc)", "txt", "doc");
     FileNameExtensionFilter sbcFileFilter = new FileNameExtensionFilter("SBC Files", "sbc");
 
@@ -90,5 +89,15 @@ public class ModManagerView {
 
     public void displayOverwriteAbortDialog() {
         JOptionPane.showMessageDialog(null, "Sandbox_config.sbc saving aborted. Please select another file.", "Save aborted", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    //TODO: The buttons don't do anything. Fix it.
+    public int getBadModListOverrideDialog() {
+        JButton continueButton = new JButton("Continue");
+        JButton closeButton = new JButton("Close");
+        JButton cleanListButton = new JButton("Clean");
+        Object[] options = {continueButton, closeButton, cleanListButton};
+
+        return JOptionPane.showOptionDialog(null, "Entries were found in the selected mod list that were not mods. These will not load properly into a save, and will have \"_NOT_A_MOD\" appended to their name in the mod list. Do you wish to continue without cleaning, close the application, or attempt to clean the mod list of non-mod entries?", "Mod list error", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
     }
 }

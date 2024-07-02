@@ -42,7 +42,7 @@ public class ModFileRepository implements ModRepository {
     @Override
     public List<Mod> getModListModIds(File modListFile) {
         //We use a set to prevent duplicate lines from being added
-        //TODO: Check for correct pattern of the workshop url, and its variants. Only add if it matches.
+        //TODO: Check to make sure the workshop url is in the correct form. This includes its variants.
         Set<Mod> modSet = new LinkedHashSet<>();
         try (BufferedReader br = new BufferedReader(new FileReader(modListFile))) {
             String modUrl;

@@ -2,12 +2,9 @@ package data;
 
 import com.gearshiftgaming.se_mod_manager.data.ModFileRepository;
 import com.gearshiftgaming.se_mod_manager.data.ModRepository;
-import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,11 +13,12 @@ public class ModFileRepositoryTest {
     private final ModRepository repository = new ModFileRepository();
     private final String goodModListPath = "src/test/resources/GoodModList.txt";
     private final String emptyModListPath = "src/test/resources/EmptyModList.txt";
+    private final String blankLinesModListPath = "src/test/resources/BlankLinesModlist.txt";
+    private final String duplicateModListPath = "src/test/resources/DuplicateModList.txt";
 
     @Test
     void shouldGetValidModList() {
-        Result<List<Mod>> result = repository.getModList(goodModListPath);
-        assertTrue(result.isSuccess());
+        assertTrue(repository.getModList(goodModListPath).isSuccess());
     }
 
     @Test
@@ -31,14 +29,22 @@ public class ModFileRepositoryTest {
 
     @Test
     void shouldGetEmptyModList() {
-        Result<List<Mod>> result = repository.getModList(emptyModListPath);
-        assertTrue(result.getPayload().isEmpty());
+        assertTrue(repository.getModList(emptyModListPath).getPayload().isEmpty());
     }
 
     @Test
-    void shouldGet7modIds() {
-        Result<List<Mod>> result = repository.getModList(goodModListPath);
-        assertEquals(7, result.getPayload().size());
+    void shouldGetSevenModIds() {
+        assertEquals(7, repository.getModList(goodModListPath).getPayload().size());
+    }
+
+    @Test
+    void shouldIgnoreBlankLinesAndGetNoMods() {
+        assertEquals(0, repository.getModList(blankLinesModListPath).getPayload().size());
+    }
+
+    @Test
+    void shouldIgnoreDuplicateModsAndGetOneMod() {
+        assertEquals(1, repository.getModList(duplicateModListPath).getPayload().size());
     }
 
     @Test
