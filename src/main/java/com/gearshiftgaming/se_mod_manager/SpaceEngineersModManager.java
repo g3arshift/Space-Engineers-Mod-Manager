@@ -14,6 +14,8 @@ import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -38,6 +40,10 @@ public class SpaceEngineersModManager {
 
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
+
+        if(!Files.isDirectory(Path.of(APP_DATA_PATH))) {
+            logger.warn("Space Engineers save location not found.");
+        }
 
         Properties properties = new Properties();
         try (InputStream input = new FileInputStream("src/main/resources/SEMM.properties")) {
