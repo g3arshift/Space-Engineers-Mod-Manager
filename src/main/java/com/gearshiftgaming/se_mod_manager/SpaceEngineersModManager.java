@@ -48,15 +48,15 @@ public class SpaceEngineersModManager {
 
         final String CONNECTION_CHECK_URL = properties.getProperty("semm.connectionCheck.steam.url");
         final String CONNECTION_CHECK_TITLE = properties.getProperty("semm.connectionCheck.steam.title");
-        final String MOD_SCRAPING_XPATH = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
+        final String MOD_SCRAPING_SELECTOR = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
 
-        ModService modService = new ModService(new ModFileRepository(), logger, MOD_SCRAPING_XPATH);
+        ModService modService = new ModService(new ModFileRepository(), logger, MOD_SCRAPING_SELECTOR);
 
 
-        ModManagerController modController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH, CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
+        ModManagerController modManagerController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH, CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
 
         //Get the party started
-        modController.injectModList();
+        modManagerController.injectModList();
         logger.info("Application finished. Closing.");
     }
 }

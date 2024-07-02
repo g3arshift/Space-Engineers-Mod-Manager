@@ -5,9 +5,8 @@ import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import lombok.Getter;
 import lombok.Setter;
-import org.jsoup.Jsoup;
 import org.apache.logging.log4j.Logger;
-import org.jsoup.nodes.Document;
+import org.jsoup.Jsoup;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,25 +16,27 @@ import java.util.concurrent.*;
 public class ModService {
 
     private final Logger logger;
-    private final String modScrapingCssSelector;
+
+    private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
+    private final String modScrapingSelector;
     private final ModRepository modFileRepository;
 
     @Setter
     @Getter
     private boolean workshopConnectionActive;
 
-    public ModService(ModRepository modFileRepository, Logger logger, String modScrapingCssSelector) {
+    public ModService(ModRepository modFileRepository, Logger logger, String modScrapingSelector) {
         this.modFileRepository = modFileRepository;
         this.logger = logger;
-        this.modScrapingCssSelector = modScrapingCssSelector;
+        this.modScrapingSelector = modScrapingSelector;
     }
 
     public Result<List<Mod>> getInjectableModListFromFile(String modFilePath) {
         return modFileRepository.getModList(modFilePath);
     }
 
-    //TODO: This is running slowly again. Check that when we refactored the controller this is being called properly.
-    public void generateModListSteam(List<Mod> modList) throws ExecutionException, InterruptedException, IOException {
+    //Take in our list of mod ID's and fill out the rest of their fields.
+    public void generateModListSteam(List<Mod> modList) throws ExecutionException, InterruptedException {
         List<Future<String>> futures = new ArrayList<>(modList.size());
 
         //Check if our workshop connection is active.
@@ -57,15 +58,13 @@ public class ModService {
     }
 
     //Scrape the Steam Workshop HTML pages for their titles, which are our friendly names
-    private Callable<String> scrapeModInformationSteam(Mod mod) throws IOException {
-        final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
-        Document doc = Jsoup.connect(STEAM_WORKSHOP_URL + mod.getModId()).get();
+    private Callable<String> scrapeModInformationSteam(Mod mod) {
+        return () -> Jsoup.connect(STEAM_WORKSHOP_URL + mod.getModId()).get().title() + (checkIfModIsMod(mod.getModId()) ? "" : "_NOT_A_MOD");
+    }
 
-        if (doc.select(modScrapingCssSelector).toString().contains("Mod")) {
-            return doc::title;
-        } else {
-            logger.error("Mod " + mod.getModId() + " is not a workshop mod item.");
-            return () -> doc.title() + "_NOT_A_MOD";
-        }
+    //Check if the mod we're scraping is actually a workshop mod.
+    private Boolean checkIfModIsMod(String modId) throws IOException {
+        return (Jsoup.connect(STEAM_WORKSHOP_URL + modId).get().select(modScrapingSelector).toString().contains("Mod"));
     }
 }
+

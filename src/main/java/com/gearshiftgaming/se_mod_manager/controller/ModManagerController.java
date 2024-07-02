@@ -114,7 +114,7 @@ public class ModManagerController {
         final int MAX_RETRIES = 3;
 
         //Check if we have a valid connection to the steam workshop
-        while (attempt < MAX_RETRIES && !connectivityCheckSuccess) {
+        do {
             try {
                 steamWorkshopConnection.checkWorkshopConnectivity(CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
                 if (!steamWorkshopConnection.isSteamWorkshopConnectionActive()) {
@@ -125,7 +125,7 @@ public class ModManagerController {
                 attempt++;
                 logger.warn(e.getMessage());
             }
-        }
+        } while (attempt < MAX_RETRIES && !connectivityCheckSuccess);
     }
 
     private Result<List<Mod>> getModList() {
@@ -149,7 +149,7 @@ public class ModManagerController {
         return modListResult;
     }
 
-    private Result<File> getSandboxFileResult() throws ExecutionException, InterruptedException {
+    private Result<File> getSandboxFileResult() {
         String sandboxConfigPath;
 
         Result<File> sandboxFileResult = new Result<>();
