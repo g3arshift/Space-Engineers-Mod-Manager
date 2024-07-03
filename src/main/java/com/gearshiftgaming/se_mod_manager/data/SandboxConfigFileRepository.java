@@ -8,6 +8,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SandboxConfigFileRepository implements SandboxConfigRepository {
     @Override
@@ -26,7 +28,7 @@ public class SandboxConfigFileRepository implements SandboxConfigRepository {
     }
 
     @Override
-    public Result<Boolean> saveSandboxConfig(String savePath, String modifiedSandboxConfig) {
+    public Result<Boolean> saveSandboxConfig(String savePath, String modifiedSandboxConfig) throws IOException {
         Result<Boolean> result = new Result<>();
 
         if (!FilenameUtils.getExtension(savePath).equals("sbc")) {
@@ -34,18 +36,25 @@ public class SandboxConfigFileRepository implements SandboxConfigRepository {
             savePath = savePath + ".sbc";
         }
 
-        try {
+        if (containsIllegals(savePath)) {
+            result.addMessage("File path or name contains invalid characters.", ResultType.FAILED);
+            result.setPayload(false);
+        } else {
             File sandboxFile = new File(savePath);
-            sandboxFile.getCanonicalPath();
+
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(sandboxFile))) {
                 bw.write(modifiedSandboxConfig);
                 result.addMessage("Successfully injected mod list into save", ResultType.SUCCESS);
                 result.setPayload(true);
             }
-        } catch (IOException e) {
-            result.addMessage("File path or name contains invalid characters.", ResultType.FAILED);
-            result.setPayload(false);
         }
         return result;
+
+    }
+
+    private boolean containsIllegals(String toExamine) {
+        Pattern pattern = Pattern.compile("[#@*+%{}<>\\[\\]|\"_^]");
+        Matcher matcher = pattern.matcher(toExamine);
+        return matcher.find();
     }
 }
