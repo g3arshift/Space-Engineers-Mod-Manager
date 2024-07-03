@@ -29,7 +29,7 @@ public class ModServiceTest {
     @BeforeEach
     void setup() {
         modRepository = mock(ModFileRepository.class);
-        service = new ModService(modRepository, mock(Logger.class), "div.workshopTags:nth-child(1) > a:nth-child(2)");
+        service = new ModService(modRepository, mock(Logger.class));
         service.setWorkshopConnectionActive(true);
         modList = new ArrayList<>();
         modList.add(new Mod("2777644246")); //Binoculars

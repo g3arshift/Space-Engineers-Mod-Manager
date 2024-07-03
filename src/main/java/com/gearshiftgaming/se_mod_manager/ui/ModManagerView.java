@@ -98,4 +98,8 @@ public class ModManagerView {
 
         return JOptionPane.showOptionDialog(null, "Entries were found in the selected mod list that were not mods. These will not load properly into a save, and will have \"_NOT_A_MOD\" appended to their name in the mod list. Do you wish to continue without cleaning, close the application, or attempt to clean the mod list of non-mod entries?", "Mod list error", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
     }
+
+    public void displayInvalidSandboxConfigDialog(String sandboxConfigFileName) {
+        JOptionPane.showMessageDialog(null, sandboxConfigFileName + " does not contain a valid mod section. Please select a file that contains this section.", "Invalid file selected", JOptionPane.ERROR_MESSAGE);
+    }
 }

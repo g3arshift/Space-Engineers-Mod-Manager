@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -22,12 +24,10 @@ public class ModManagerController {
     private final String DESKTOP_PATH;
     private final String APP_DATA_PATH;
     private final Logger logger;
-    private final String CONNECTION_CHECK_URL;
-    private final String CONNECTION_CHECK_TITLE;
-    private final SteamWorkshopConnection steamWorkshopConnection = new SteamWorkshopConnection();
+    private final SteamWorkshopConnection steamWorkshopConnection;
 
 
-    public ModManagerController(Logger logger, List<Mod> modList, ModManagerView modManagerView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath, String urlToUseForConnectionCheck, String titleToUseForConnectionCheck) {
+    public ModManagerController(Logger logger, List<Mod> modList, ModManagerView modManagerView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) throws IOException {
         this.logger = logger;
         this.modList = modList;
         this.modManagerView = modManagerView;
@@ -35,8 +35,8 @@ public class ModManagerController {
         this.sandboxService = sandboxService;
         this.DESKTOP_PATH = desktopPath;
         this.APP_DATA_PATH = appDataPath;
-        this.CONNECTION_CHECK_URL = urlToUseForConnectionCheck;
-        this.CONNECTION_CHECK_TITLE = titleToUseForConnectionCheck;
+
+        this.steamWorkshopConnection = new SteamWorkshopConnection(logger);
     }
 
     public void injectModList() throws ExecutionException, InterruptedException, IOException {
@@ -79,6 +79,7 @@ public class ModManagerController {
                 badModListOverride = modManagerView.getBadModListOverrideDialog();
             }
 
+            //TODO: Add handling for when the cleaning reduces the modlist size to 0
             if (badModListOverride != JOptionPane.NO_OPTION && badModListOverride != JOptionPane.DEFAULT_OPTION) {
                 if (badModListOverride == 2) {
                     modList.removeIf(m -> m.getFriendlyName().contains("_NOT_A_MOD"));
@@ -116,7 +117,7 @@ public class ModManagerController {
         //Check if we have a valid connection to the steam workshop
         do {
             try {
-                steamWorkshopConnection.checkWorkshopConnectivity(CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
+                steamWorkshopConnection.checkWorkshopConnectivity();
                 if (!steamWorkshopConnection.isSteamWorkshopConnectionActive()) {
                     logger.warn("Attempt " + (attempt + 1) + ": Failed to connect to Steam Workshop. Retrying...");
                     attempt++;
@@ -128,6 +129,7 @@ public class ModManagerController {
         } while (attempt < MAX_RETRIES && !connectivityCheckSuccess);
     }
 
+    //TODO: Implement checking for bad file format for modlist
     private Result<List<Mod>> getModList() {
         String modListPath;
         Result<List<Mod>> modListResult = new Result<>();
@@ -183,10 +185,14 @@ public class ModManagerController {
             savePath = modManagerView.getSavePath(DESKTOP_PATH);
 
             if (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
+                //TODO: Implement bad file format checking
+                //if (modifiedSandboxConfig.equals("INVALID_SANDBOX_CONFIG")) {
+                //      modManagerView.displayInvalidSandboxConfigDialog(sandboxFile.getName());
+                //   else sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
 
                 //Check if the file exists and let the user choose if they want to overwrite it, then get the modified config and save it.
-                int overwriteChoice = modManagerView.getOverwriteOption();
-                if (new File(savePath).exists()) {
+                if (Files.exists(Path.of(savePath))) {
+                    int overwriteChoice = modManagerView.getOverwriteOption();
                     if (overwriteChoice == JFileChooser.APPROVE_OPTION) {
                         modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
                         sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);

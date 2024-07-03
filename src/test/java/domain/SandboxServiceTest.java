@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,8 +38,7 @@ public class SandboxServiceTest {
     @BeforeEach
     void setup() throws IOException {
         fakeConfig = "This is a fake config.";
-        mockSandboxConfigRepository = mock(SandboxConfigFileRepository.class);
-        service = new SandboxService(mockSandboxConfigRepository);
+        service = new SandboxService(mock(SandboxConfigFileRepository.class), mock(Logger.class));
         fakePath = "src/test/fake";
         noPath = "src/there/is/no/path";
         goodConfigPath = "src/test/resources/GoodSandbox_config.sbc";

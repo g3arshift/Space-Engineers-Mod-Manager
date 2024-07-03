@@ -36,7 +36,7 @@ public class SpaceEngineersModManager {
 
         List<Mod> modList = new ArrayList<>();
         ModManagerView modManagerView = new ModManagerView();
-        SandboxService sandboxService = new SandboxService(new SandboxConfigFileRepository());
+        SandboxService sandboxService = new SandboxService(new SandboxConfigFileRepository(), logger);
 
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
@@ -45,21 +45,10 @@ public class SpaceEngineersModManager {
             logger.warn("Space Engineers save location not found.");
         }
 
-        Properties properties = new Properties();
-        try (InputStream input = new FileInputStream("src/main/resources/SEMM.properties")) {
-            properties.load(input);
-        } catch (IOException e) {
-            logger.error("Could not load SEMM properties file.");
-        }
-
-        final String CONNECTION_CHECK_URL = properties.getProperty("semm.connectionCheck.steam.url");
-        final String CONNECTION_CHECK_TITLE = properties.getProperty("semm.connectionCheck.steam.title");
-        final String MOD_SCRAPING_SELECTOR = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
-
-        ModService modService = new ModService(new ModFileRepository(), logger, MOD_SCRAPING_SELECTOR);
+        ModService modService = new ModService(new ModFileRepository(), logger);
 
 
-        ModManagerController modManagerController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH, CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
+        ModManagerController modManagerController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH);
 
         //Get the party started
         modManagerController.injectModList();

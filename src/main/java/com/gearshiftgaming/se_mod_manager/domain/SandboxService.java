@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.data.SandboxConfigRepository;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,9 +13,11 @@ import java.util.List;
 
 public class SandboxService {
     private final SandboxConfigRepository sandboxConfigFileRepository;
+    Logger logger;
 
-    public SandboxService(SandboxConfigRepository sandboxConfigRepository) {
+    public SandboxService(SandboxConfigRepository sandboxConfigRepository, Logger logger) {
         this.sandboxConfigFileRepository = sandboxConfigRepository;
+        this.logger = logger;
     }
 
     public Result<File> getSandboxConfigFromFile(String sandboxConfigPath) {
@@ -39,9 +42,12 @@ public class SandboxService {
         if (StringUtils.contains(sandboxFileContent, "<Mods />")) {
             preModSandboxContent = StringUtils.substringBefore(sandboxFileContent, "<Mods />").split(System.lineSeparator());
             postModSandboxContent = StringUtils.substringAfter(sandboxFileContent, "<Mods />").split(System.lineSeparator());
-        } else {
+        } else if(StringUtils.contains(sandboxFileContent, "<Mods>")){
             preModSandboxContent = StringUtils.substringBefore(sandboxFileContent, "<Mods>").split(System.lineSeparator());
             postModSandboxContent = StringUtils.substringAfter(sandboxFileContent, "</Mods>").split(System.lineSeparator());
+        } else{
+            logger.error("No valid mod section found for " + sandboxConfig.getName() + ".");
+            return "INVALID_SANDBOX_CONFIG";
         }
 
         //Append the text in the Sandbox_config that comes before the mod section
@@ -63,6 +69,7 @@ public class SandboxService {
         //Append the text in the Sandbox_config that comes after the mod section
         sandboxContent.append("  </Mods>");
 
+        //TODO: It's having the issue again, but perhaps only when not saving back to OG file? Needs testing.
         if (!sandboxContent.toString().endsWith("\n")) {
             sandboxContent.append(System.lineSeparator());
         }
