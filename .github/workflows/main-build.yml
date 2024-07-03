@@ -1,6 +1,6 @@
 # This workflow will build a Java project with Maven and AdoptOpen JDK 21 , and cache/restore any dependencies to improve the workflow execution time
 
-name: Build mod-injection with maven
+name: Build main
 
 on:
   push:
