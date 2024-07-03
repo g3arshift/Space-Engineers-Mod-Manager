@@ -20,6 +20,7 @@ public class Result<T> {
     }
 
     public Result() {
+        this.type = ResultType.NOT_INITIALIZED;
     }
 
     public void addMessage(String message, ResultType type) {
