@@ -80,7 +80,7 @@ public class ModManagerController {
             }
 
             if (badModListOverride != JOptionPane.NO_OPTION && badModListOverride != JOptionPane.DEFAULT_OPTION) {
-                if(badModListOverride == 2) {
+                if (badModListOverride == 2) {
                     modList.removeIf(m -> m.getFriendlyName().contains("_NOT_A_MOD"));
                 }
                 logger.info("Number of mods to inject is " + modListResult.getPayload().size());
@@ -176,26 +176,30 @@ public class ModManagerController {
     }
 
     private Result<Boolean> injectModsIntoSandboxConfig(File sandboxFile) throws IOException {
-        Result<Boolean> sandboxInjectionResult = new Result<>();
+        Result<Boolean> sandboxSaveResult = new Result<>();
+        String modifiedSandboxConfig;
         String savePath;
         do {
             savePath = modManagerView.getSavePath(DESKTOP_PATH);
 
             if (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
 
-                //Check if the file exists and let the user choose if they want to overwrite it
+                //Check if the file exists and let the user choose if they want to overwrite it, then get the modified config and save it.
+                int overwriteChoice = modManagerView.getOverwriteOption();
                 if (new File(savePath).exists()) {
-                    int overwriteChoice = modManagerView.getOverwriteOption();
                     if (overwriteChoice == JFileChooser.APPROVE_OPTION) {
-                        sandboxInjectionResult = sandboxService.addModsToSandboxConfigFile(sandboxFile, savePath, modList);
+                        modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
+                        sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
                     } else if (overwriteChoice == JOptionPane.CANCEL_OPTION) {
                         modManagerView.displayCancellationDialog();
                         savePath = "1";
                     } else modManagerView.displayOverwriteAbortDialog();
-                } else
-                    sandboxInjectionResult = sandboxService.addModsToSandboxConfigFile(sandboxFile, savePath, modList);
+                } else {
+                    modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
+                    sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
+                }
             }
-        } while (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !sandboxInjectionResult.isSuccess());
-        return sandboxInjectionResult;
+        } while (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !sandboxSaveResult.isSuccess());
+        return sandboxSaveResult;
     }
 }

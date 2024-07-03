@@ -41,7 +41,7 @@ public class SpaceEngineersModManager {
         final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
         final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-        if(!Files.isDirectory(Path.of(APP_DATA_PATH))) {
+        if (!Files.isDirectory(Path.of(APP_DATA_PATH))) {
             logger.warn("Space Engineers save location not found.");
         }
 

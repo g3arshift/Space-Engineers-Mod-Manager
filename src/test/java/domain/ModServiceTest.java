@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ModServiceTest {
 
@@ -41,7 +42,7 @@ public class ModServiceTest {
     void shouldGetModListWithThreeItems() {
         Result<List<Mod>> modListResult = new Result<>();
         modListResult.setPayload(modList);
-        when(service.getInjectableModListFromFile(testPath)).thenReturn(modListResult);
+        when(modRepository.getModList(testPath)).thenReturn(modListResult);
 
         List<Mod> testModList = service.getInjectableModListFromFile(testPath).getPayload();
         assertEquals(modList, testModList);
@@ -49,7 +50,7 @@ public class ModServiceTest {
     }
 
     @Test
-    void shouldCompleteModListWithFriendlyNameAndServiceName() throws ExecutionException, InterruptedException, IOException {
+    void shouldCompleteModListWithFriendlyNameAndServiceName() throws ExecutionException, InterruptedException {
         List<Mod> testModList = new ArrayList<>();
         testModList.add(new Mod("2777644246"));
         testModList.add(new Mod("2668820525"));
@@ -66,7 +67,7 @@ public class ModServiceTest {
     }
 
     @Test
-    void shouldDownloadInformationForAMod() throws IOException, ExecutionException, InterruptedException {
+    void shouldDownloadInformationForAMod() throws ExecutionException, InterruptedException {
         List<Mod> testModList = new ArrayList<>();
         testModList.add(new Mod("3276848116")); //Maelstrom - Black Hole
         service.generateModListSteam(testModList);
@@ -74,7 +75,7 @@ public class ModServiceTest {
     }
 
     @Test
-    void shouldAppendNotAModToModNameIfItIsNotAModItem() throws IOException, ExecutionException, InterruptedException {
+    void shouldAppendNotAModToModNameIfItIsNotAModItem() throws ExecutionException, InterruptedException {
         List<Mod> testModList = new ArrayList<>();
         testModList.add(new Mod("2396138200")); //Big Bird - Blueprint
         testModList.add(new Mod("1653185489")); //Escape From Mars Wico [Update WIP] - World

@@ -40,9 +40,11 @@ public class SandboxConfigFileRepository implements SandboxConfigRepository {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(sandboxFile))) {
                 bw.write(modifiedSandboxConfig);
                 result.addMessage("Successfully injected mod list into save", ResultType.SUCCESS);
+                result.setPayload(true);
             }
         } catch (IOException e) {
             result.addMessage("File path or name contains invalid characters.", ResultType.FAILED);
+            result.setPayload(false);
         }
         return result;
     }

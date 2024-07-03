@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.domain;
 
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.data.SandboxConfigRepository;
 import com.gearshiftgaming.se_mod_manager.models.Mod;
 import com.gearshiftgaming.se_mod_manager.models.utility.Result;
@@ -14,7 +13,7 @@ import java.util.List;
 public class SandboxService {
     private final SandboxConfigRepository sandboxConfigFileRepository;
 
-    public SandboxService(SandboxConfigFileRepository sandboxConfigRepository) {
+    public SandboxService(SandboxConfigRepository sandboxConfigRepository) {
         this.sandboxConfigFileRepository = sandboxConfigRepository;
     }
 
@@ -22,9 +21,12 @@ public class SandboxService {
         return sandboxConfigFileRepository.getSandboxConfig(sandboxConfigPath);
     }
 
-    public Result<Boolean> addModsToSandboxConfigFile(File sandboxConfig, String savePath, List<Mod> modList) throws IOException {
-        String modifiedSandboxConfig = injectModsIntoSandboxConfig(sandboxConfig, modList);
-        return sandboxConfigFileRepository.saveSandboxConfig(savePath, modifiedSandboxConfig);
+    public String addModsToSandboxConfigFile(File sandboxConfig, List<Mod> modList) throws IOException {
+        return injectModsIntoSandboxConfig(sandboxConfig, modList);
+    }
+
+    public Result<Boolean> saveSandboxConfig(String savePath, String sandboxConfig) throws IOException {
+        return sandboxConfigFileRepository.saveSandboxConfig(savePath, sandboxConfig);
     }
 
     private String injectModsIntoSandboxConfig(File sandboxConfig, List<Mod> modList) throws IOException {
@@ -60,6 +62,11 @@ public class SandboxService {
 
         //Append the text in the Sandbox_config that comes after the mod section
         sandboxContent.append("  </Mods>");
+
+        if (!sandboxContent.toString().endsWith("\n")) {
+            sandboxContent.append(System.lineSeparator());
+        }
+
         generateModifiedSandboxConfig(postModSandboxContent, sandboxContent);
 
         return sandboxContent.toString();
