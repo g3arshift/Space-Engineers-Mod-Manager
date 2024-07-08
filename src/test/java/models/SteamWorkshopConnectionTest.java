@@ -1,6 +1,6 @@
 package models;
 
-import com.gearshiftgaming.se_mod_manager.models.utility.SteamWorkshopConnection;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.SteamWorkshopConnection;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 

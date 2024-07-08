@@ -1,7 +1,7 @@
-package com.gearshiftgaming.se_mod_manager.ui;
+package com.gearshiftgaming.se_mod_manager.frontend.ui;
 
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;

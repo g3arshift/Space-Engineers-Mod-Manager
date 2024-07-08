@@ -1,7 +1,7 @@
-package com.gearshiftgaming.se_mod_manager.data;
+package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedWriter;

@@ -1,11 +1,11 @@
 package domain;
 
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigRepository;
-import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
+import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,6 @@ public class SandboxServiceTest {
 
     SandboxConfigRepository mockSandboxConfigRepository;
     SandboxService service;
-
     String fakeConfig;
     String fakePath;
     String goodConfigPath;
@@ -37,8 +36,9 @@ public class SandboxServiceTest {
 
     @BeforeEach
     void setup() throws IOException {
+        mockSandboxConfigRepository = mock(SandboxConfigFileRepository.class);
         fakeConfig = "This is a fake config.";
-        service = new SandboxService(mock(SandboxConfigFileRepository.class), mock(Logger.class));
+        service = new SandboxService(mockSandboxConfigRepository, mock(Logger.class));
         fakePath = "src/test/fake";
         noPath = "src/there/is/no/path";
         goodConfigPath = "src/test/resources/GoodSandbox_config.sbc";
@@ -106,7 +106,7 @@ public class SandboxServiceTest {
     void shouldSuccessfullySaveConfigFile() throws IOException {
         Result<Boolean> result = new Result<>(ResultType.SUCCESS);
         result.setPayload(true);
-        when(mockSandboxConfigRepository.saveSandboxConfig(goodConfigPath,fakeConfig)).thenReturn(result);
+        when(mockSandboxConfigRepository.saveSandboxConfig(goodConfigPath, fakeConfig)).thenReturn(result);
 
         service.saveSandboxConfig(goodConfigPath, fakeConfig);
         assertTrue(result.isSuccess());

@@ -1,11 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import com.gearshiftgaming.se_mod_manager.domain.ModService;
-import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.models.utility.SteamWorkshopConnection;
-import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
+import com.gearshiftgaming.se_mod_manager.backend.domain.ModService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.SteamWorkshopConnection;
+import com.gearshiftgaming.se_mod_manager.frontend.ui.ModManagerView;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;

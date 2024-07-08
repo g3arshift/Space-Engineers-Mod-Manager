@@ -1,24 +1,21 @@
 package com.gearshiftgaming.se_mod_manager;
 
 import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
-import com.gearshiftgaming.se_mod_manager.data.ModFileRepository;
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.domain.ModService;
-import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.domain.ModService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.frontend.ui.ModManagerView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class SpaceEngineersModManager {

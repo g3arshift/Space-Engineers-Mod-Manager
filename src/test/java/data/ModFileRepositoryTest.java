@@ -1,7 +1,7 @@
 package data;
 
-import com.gearshiftgaming.se_mod_manager.data.ModFileRepository;
-import com.gearshiftgaming.se_mod_manager.data.ModRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModRepository;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

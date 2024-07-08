@@ -1,6 +1,6 @@
-package com.gearshiftgaming.se_mod_manager.data;
+package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 
 import java.io.File;
 import java.io.IOException;

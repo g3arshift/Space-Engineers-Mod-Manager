@@ -1,7 +1,7 @@
 package data;
 
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

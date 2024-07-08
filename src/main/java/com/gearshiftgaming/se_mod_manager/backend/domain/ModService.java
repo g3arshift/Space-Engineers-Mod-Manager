@@ -1,8 +1,8 @@
-package com.gearshiftgaming.se_mod_manager.domain;
+package com.gearshiftgaming.se_mod_manager.backend.domain;
 
-import com.gearshiftgaming.se_mod_manager.data.ModRepository;
-import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModRepository;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.Logger;

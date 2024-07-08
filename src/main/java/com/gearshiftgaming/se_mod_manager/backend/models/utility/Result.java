@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.models.utility;
+package com.gearshiftgaming.se_mod_manager.backend.models.utility;
 
 import lombok.Getter;
 import lombok.Setter;
