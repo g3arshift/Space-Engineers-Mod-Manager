@@ -24,6 +24,7 @@ public class SpaceEngineersModManager {
 
         final Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
         logger.info("Started application...");
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
@@ -50,5 +51,6 @@ public class SpaceEngineersModManager {
         //Get the party started
         modManagerController.injectModList();
         logger.info("Application finished. Closing.");
+
     }
 }
