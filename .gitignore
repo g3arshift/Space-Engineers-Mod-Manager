@@ -52,4 +52,6 @@ build/
 /Documents/
 /.idea/artifacts/SEMM_0_9_jar.xml
 /out/
-!/icons/
+!/icons/!/Mockups/
+/Mockups/UI Mockup.afphoto
+/Mockups/UI Mockup.psd
