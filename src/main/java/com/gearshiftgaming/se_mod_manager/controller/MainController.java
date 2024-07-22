@@ -1,35 +1,20 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
-import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableCell;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
 
 
 public class MainController {
-
-    private Logger logger;
-
-    private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
-    private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
-
-    private SandboxService sandboxService;
-    private ModlistService modlistService;
-
     private ObservableList<LogMessage> viewableLogList;
+    private Logger logger;
 
     //FXML Items
     @FXML
@@ -104,17 +89,17 @@ public class MainController {
     @FXML
     private ListView<LogMessage> viewableLog;
 
-    public void initController(Logger logger, ObservableList<LogMessage> viewableLogList, int minWidth, int minHeight, SandboxService sandboxService, ModlistService modlistService) throws IOException, XmlPullParserException {
-        this.logger = logger;
+    public void initController(ObservableList<LogMessage> viewableLogList, Logger logger) {
         this.viewableLogList = viewableLogList;
-        this.sandboxService = sandboxService;
-        this.modlistService = modlistService;
+        this.logger = logger;
+        setupMainViewItems();
 
-        setupSceneItems();
-        viewableLogList.add(new LogMessage("Finished MainViewController setup.", MessageType.INFO, logger));
+        //TODO: Remove and replace with a debug log message.
+        viewableLogList.add(new LogMessage("Finished MainViewController setup", MessageType.INFO, logger));
     }
 
-    public void setupSceneItems() {
+    //TODO: Move to service
+    public void setupMainViewItems() {
         viewableLog.setItems(viewableLogList);
         viewableLog.setCellFactory(param -> new LogCell());
 
