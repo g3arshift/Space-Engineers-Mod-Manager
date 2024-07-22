@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.ui;
+package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
+@Deprecated
 public class ModManagerView {
 
     FileNameExtensionFilter textFileFilter = new FileNameExtensionFilter("Text Files (.txt, .doc)", "txt", "doc");

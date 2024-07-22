@@ -1,37 +1,39 @@
 package com.gearshiftgaming.se_mod_manager;
 
-import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
+import atlantafx.base.theme.*;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.frontend.ui.ModManagerView;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.controller.MainController;
+import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.beans.Observable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import javax.swing.*;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class SpaceEngineersModManager extends Application {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
-
-        final Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
-        logger.info("Started application...");
-        launch();
+        launch(args);
 /*
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -63,23 +65,43 @@ public class SpaceEngineersModManager extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Hello World!");
-        Button btn = new Button();
-        btn.setText("Say 'Hello World'");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
+    public void start(Stage primaryStage) throws IOException, XmlPullParserException {
+        final Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
+        final ObservableList<LogMessage> viewableLogList = FXCollections.observableArrayList(logMessage ->
+                new Observable[] {
+                        logMessage.messageProperty(),
+                        logMessage.messageTypeProperty()
+                });
 
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Hello World!");
-            }
-        });
+        viewableLogList.add(new LogMessage("Started application...", MessageType.INFO, logger));
 
-        StackPane root = new StackPane();
-        root.getChildren().add(btn);
-        primaryStage.setScene(new Scene(root, 300, 250));
+        SandboxService sandboxService = new SandboxService(new SandboxConfigFileRepository(), logger);
+        ModlistService modlistService = new ModlistService(new ModFileRepository(), logger);
+
+        //TODO: Let users choose the theme they wish from the AtlantaFX themes.
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-view.fxml"));
+        Parent root = loader.load();
+        final MainController mainController = loader.getController();
+        mainController.initController(logger, viewableLogList, 950, 350, sandboxService, modlistService);
+
+        //TODO: All the scene and stage stuff should be in the main controller
+        Scene scene = new Scene(root, 950, 350);
+
+        prepareStage(primaryStage);
+        primaryStage.setScene(scene);
         primaryStage.show();
 
         //TODO: Set a context menu on the menu header ONLY per this https://stackoverflow.com/questions/47786125/how-to-add-a-context-menu-to-an-empty-tableviews-header-row. This may however, not be a good idea. Check the notes for the todo. Fourth item, sub-item of item 3. Also use this to inject checkboxes!
+    }
+
+    private void prepareStage(Stage stage) throws IOException, XmlPullParserException {
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = reader.read(new FileReader("pom.xml"));
+        stage.setTitle("SEMM v" + model.getVersion());
+
+
+        stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
     }
 }

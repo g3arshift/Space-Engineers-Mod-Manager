@@ -1,11 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.SteamWorkshopConnection;
-import com.gearshiftgaming.se_mod_manager.frontend.ui.ModManagerView;
+import com.gearshiftgaming.se_mod_manager.frontend.view.ModManagerView;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutionException;
 public class ModManagerController {
     List<Mod> modList;
     private final ModManagerView modManagerView;
-    private final ModService modService;
+    private final ModlistService modlistService;
     private final SandboxService sandboxService;
     private final String DESKTOP_PATH;
     private final String APP_DATA_PATH;
@@ -27,11 +27,11 @@ public class ModManagerController {
     private final SteamWorkshopConnection steamWorkshopConnection;
 
 
-    public ModManagerController(Logger logger, List<Mod> modList, ModManagerView modManagerView, ModService modService, SandboxService sandboxService, String desktopPath, String appDataPath) throws IOException {
+    public ModManagerController(Logger logger, List<Mod> modList, ModManagerView modManagerView, ModlistService modlistService, SandboxService sandboxService, String desktopPath, String appDataPath) throws IOException {
         this.logger = logger;
         this.modList = modList;
         this.modManagerView = modManagerView;
-        this.modService = modService;
+        this.modlistService = modlistService;
         this.sandboxService = sandboxService;
         this.DESKTOP_PATH = desktopPath;
         this.APP_DATA_PATH = appDataPath;
@@ -50,11 +50,11 @@ public class ModManagerController {
                 return;
             } else {
                 logger.warn("Continuing with no active workshop connection.");
-                modService.setWorkshopConnectionActive(false);
+                modlistService.setWorkshopConnectionActive(false);
             }
         } else {
             logger.info("Successfully connected to Steam Workshop.");
-            modService.setWorkshopConnectionActive(true);
+            modlistService.setWorkshopConnectionActive(true);
         }
 
         modManagerView.displayWelcomeDialog();
@@ -65,7 +65,7 @@ public class ModManagerController {
         //Get our Sandbox_config file that we want to modify from the user, then write the new mod list to it
         if (modListResult.isSuccess()) {
             modList = modListResult.getPayload();
-            modService.generateModListSteam(modList);
+            modlistService.generateModListSteam(modList);
 
             //Check and make sure all our mods are valid entries
             int numBadMods = 0;
@@ -137,7 +137,7 @@ public class ModManagerController {
             modListPath = modManagerView.getModListFromFile(DESKTOP_PATH);
             if (!modListPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
                 logger.info("Grabbing mods from " + (modListPath));
-                modListResult = modService.getInjectableModListFromFile(modListPath);
+                modListResult = modlistService.getInjectableModListFromFile(modListPath);
 
                 if (!modListResult.isSuccess()) {
                     logger.warn(modListResult.getMessages().getLast());

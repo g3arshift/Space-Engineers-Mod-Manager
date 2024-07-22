@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 
-public class ModService {
+public class ModlistService {
 
     private final Logger logger;
 
@@ -27,7 +27,7 @@ public class ModService {
     @Getter
     private boolean workshopConnectionActive;
 
-    public ModService(ModRepository modFileRepository, Logger logger) {
+    public ModlistService(ModRepository modFileRepository, Logger logger) {
         this.modFileRepository = modFileRepository;
         this.logger = logger;
         Properties properties = new Properties();

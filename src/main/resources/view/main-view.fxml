@@ -27,99 +27,108 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gearshiftgaming.se_mod_manager.controller.MainController">
     <children>
-        <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="800.0" AnchorPane.bottomAnchor="573.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="2.0">
-            <menus>
-                <Menu mnemonicParsing="false" text="File">
-                    <items>
-                        <MenuItem fx:id="semmSettings" mnemonicParsing="false" text="Settings" />
-                  <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save Modlist as" />
-                  <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" selected="true" text="Log" />
-                  <MenuItem fx:id="closeSemm" mnemonicParsing="false" text="Close" />
-                    </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Help">
-                    <items>
-                        <MenuItem fx:id="aboutSemm" mnemonicParsing="false" text="About" />
-                        <MenuItem fx:id="guide" mnemonicParsing="false" text="How to use" />
-                  <MenuItem fx:id="faq" mnemonicParsing="false" text="FAQ" />
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
-        <BorderPane layoutY="27.0" style="-fx-background-color: &quot;f0f0f0&quot;;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="27.0">
+        <BorderPane layoutY="27.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
-                <HBox fx:id="menuBar" spacing="10.0" BorderPane.alignment="CENTER">
-                    <children>
-                        <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
-                            <children>
-                        <Label minWidth="-Infinity" text="Mod Profile" />
-                                <ComboBox fx:id="modProfileDropdown" prefWidth="150.0" />
-                            </children>
-                            <opaqueInsets>
-                                <Insets />
-                            </opaqueInsets>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
-                            <children>
-                        <Label text="SE Save" />
-                                <ComboBox fx:id="selectedSaveDropdown" prefWidth="150.0" />
-                            </children>
-                            <opaqueInsets>
-                                <Insets />
-                            </opaqueInsets>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="12.0">
-                            <children>
-                        <Label text="Active Mod Count" />
-                                <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
-                                    <children>
-                                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
-                                        <Text fx:id="activeModCount" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
-                                            <StackPane.margin>
-                                                <Insets right="10.0" />
-                                            </StackPane.margin>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Text>
-                                    </children>
-                                </StackPane>
-                            </children>
-                            <opaqueInsets>
-                                <Insets />
-                            </opaqueInsets>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="12.0">
-                            <children>
-                        <Label text="Mod Conflicts" />
-                                <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
-                                    <children>
-                                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
-                                        <Text fx:id="modConflicts" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
-                                            <StackPane.margin>
-                                                <Insets right="10.0" />
-                                            </StackPane.margin>
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </Text>
-                                    </children>
-                                </StackPane>
-                            </children>
-                            <opaqueInsets>
-                                <Insets />
-                            </opaqueInsets>
-                        </HBox>
-                    </children>
-                    <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                    </padding>
-                    <BorderPane.margin>
-                        <Insets />
-                    </BorderPane.margin>
-                </HBox>
+            <VBox BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets />
+               </BorderPane.margin>
+               <children>
+                    <MenuBar prefWidth="1000.0">
+                        <menus>
+                            <Menu mnemonicParsing="false" text="File">
+                                <items>
+                                    <MenuItem fx:id="settings" mnemonicParsing="false" text="Settings" />
+                              <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save Modlist as" />
+                              <MenuItem fx:id="close" mnemonicParsing="false" text="Close" />
+                                </items>
+                            </Menu>
+                        <Menu mnemonicParsing="false" text="View">
+                           <items>
+                              <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" selected="true" text="Log" />
+                              <MenuItem fx:id="themes" mnemonicParsing="false" text="Themes" />
+                           </items>
+                        </Menu>
+                            <Menu mnemonicParsing="false" text="Help">
+                                <items>
+                                    <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
+                                    <MenuItem fx:id="guide" mnemonicParsing="false" text="How to use" />
+                              <MenuItem fx:id="faq" mnemonicParsing="false" text="FAQ" />
+                                </items>
+                            </Menu>
+                        </menus>
+                    </MenuBar>
+                      <HBox fx:id="menuBar" spacing="10.0">
+                          <children>
+                              <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
+                                  <children>
+                              <Label minWidth="-Infinity" text="Mod Profile" />
+                                      <ComboBox fx:id="modProfileDropdown" prefWidth="150.0" />
+                                  </children>
+                                  <opaqueInsets>
+                                      <Insets />
+                                  </opaqueInsets>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
+                                  <children>
+                              <Label text="SE Save" />
+                                      <ComboBox fx:id="selectedSaveDropdown" prefWidth="150.0" />
+                                  </children>
+                                  <opaqueInsets>
+                                      <Insets />
+                                  </opaqueInsets>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" spacing="12.0">
+                                  <children>
+                              <Label text="Active Mod Count" />
+                                      <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
+                                          <children>
+                                              <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
+                                              <Text fx:id="activeModCount" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
+                                                  <StackPane.margin>
+                                                      <Insets right="10.0" />
+                                                  </StackPane.margin>
+                                                  <font>
+                                                      <Font size="14.0" />
+                                                  </font>
+                                              </Text>
+                                          </children>
+                                      </StackPane>
+                                  </children>
+                                  <opaqueInsets>
+                                      <Insets />
+                                  </opaqueInsets>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" spacing="12.0">
+                                  <children>
+                              <Label text="Mod Conflicts" />
+                                      <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
+                                          <children>
+                                              <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
+                                              <Text fx:id="modConflicts" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
+                                                  <StackPane.margin>
+                                                      <Insets right="10.0" />
+                                                  </StackPane.margin>
+                                                  <font>
+                                                      <Font size="14.0" />
+                                                  </font>
+                                              </Text>
+                                          </children>
+                                      </StackPane>
+                                  </children>
+                                  <opaqueInsets>
+                                      <Insets />
+                                  </opaqueInsets>
+                              </HBox>
+                          </children>
+                          <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                          </padding>
+                      </HBox>
+               </children>
+            </VBox>
             </top>
             <right>
                 <VBox alignment="TOP_CENTER" spacing="10.0" BorderPane.alignment="TOP_CENTER">
@@ -171,7 +180,7 @@
                 </HBox>
             </bottom>
             <center>
-                <SplitPane fx:id="mainViewSplitPane" dividerPositions="0.8" orientation="VERTICAL" BorderPane.alignment="CENTER">
+                <SplitPane fx:id="mainViewSplit" dividerPositions="0.8" orientation="VERTICAL" BorderPane.alignment="CENTER">
                     <items>
                   <VBox>
                      <children>
@@ -213,7 +222,7 @@
                                     <content>
                                         <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
                                             <content>
-                                                <ListView fx:id="log" />
+                                                <ListView fx:id="viewableLog" />
                                             </content>
                                         </ScrollPane>
                                     </content>

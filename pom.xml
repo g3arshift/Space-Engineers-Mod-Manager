@@ -101,6 +101,11 @@
             <artifactId>maven-assembly-plugin</artifactId>
             <version>3.7.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>3.9.8</version>
+        </dependency>
 
         <!-- JavaFX -->
         <dependency>
@@ -135,9 +140,9 @@
             <version>12.3.1</version>
         </dependency>
         <dependency>
-            <groupId>io.github.palexdev</groupId>
-            <artifactId>materialfx</artifactId>
-            <version>11.17.0</version>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>2.0.1</version>
         </dependency>
     </dependencies>
 
@@ -146,6 +151,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -159,6 +165,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -195,6 +202,15 @@
                             <noManPages>true</noManPages>
                             <stripDebug>true</stripDebug>
                             <noHeaderFiles>true</noHeaderFiles>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>debug</id>
+                        <configuration>
+                            <mainClass>com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager</mainClass>
+                            <options>
+                                <option>-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:8000,suspend=y</option>
+                            </options>
                         </configuration>
                     </execution>
                 </executions>
