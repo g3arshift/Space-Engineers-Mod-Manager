@@ -57,7 +57,8 @@
                             </Menu>
                         <Menu mnemonicParsing="false" text="View">
                            <items>
-                              <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" selected="true" text="Log" />
+                              <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" onAction="#toggleLog" selected="true" text="Log" />
+                              <CheckMenuItem fx:id="modDescriptionToggle" mnemonicParsing="false" onAction="#toggleModDescription" selected="true" text="Mod Description" />
                               <MenuItem fx:id="themes" mnemonicParsing="false" text="Themes" />
                            </items>
                         </Menu>
@@ -70,7 +71,7 @@
                             </Menu>
                         </menus>
                     </MenuBar>
-                      <HBox fx:id="menuBar" spacing="10.0">
+                      <HBox fx:id="menuBar" alignment="CENTER_LEFT" spacing="10.0">
                           <children>
                               <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
                                   <children>
@@ -172,7 +173,7 @@
                   </Label>
                     </children>
                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                        <Insets bottom="5.0" left="5.0" right="5.0" />
                     </padding>
                <opaqueInsets>
                   <Insets />
@@ -228,23 +229,14 @@
                               <Insets />
                            </VBox.margin>
                            <padding>
-                              <Insets bottom="5.0" left="5.0" top="5.0" />
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                         </HBox>
                      </children>
                   </VBox>
-                        <TabPane>
+                        <TabPane fx:id="informationPane" tabDragPolicy="REORDER">
                             <tabs>
-                                <Tab fx:id="logTab" text="Log">
-                                    <content>
-                                        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
-                                            <content>
-                                                <ListView fx:id="viewableLog" />
-                                            </content>
-                                        </ScrollPane>
-                                    </content>
-                                </Tab>
-                        <Tab closable="false" text="Mod Description">
+                        <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
                            <content>
                               <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
                                  <content>
@@ -253,7 +245,19 @@
                               </ScrollPane>
                            </content>
                         </Tab>
+                                <Tab fx:id="logTab" onClosed="#closeLogTab" text="Log">
+                                    <content>
+                                        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
+                                            <content>
+                                                <ListView fx:id="viewableLog" />
+                                            </content>
+                                        </ScrollPane>
+                                    </content>
+                                </Tab>
                             </tabs>
+                     <padding>
+                        <Insets bottom="5.0" />
+                     </padding>
                         </TabPane>
                     </items>
                <padding>

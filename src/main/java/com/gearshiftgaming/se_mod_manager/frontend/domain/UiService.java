@@ -79,6 +79,12 @@ public class UiService {
         stage.setScene(scene);
         stage.setMinWidth(minWidth);
         stage.setMinHeight(minHeight);
+
+        stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if(!mainController.isMainViewSplitDividerVisible()) {
+                mainController.getMainViewSplit().setDividerPosition(0, 1);
+            }
+        });
     }
 
     public void log(String message, MessageType messageType) {

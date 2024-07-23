@@ -1,27 +1,19 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModType;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import lombok.Getter;
 import org.apache.logging.log4j.Logger;
-import org.controlsfx.control.textfield.TextFields;
-import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-
+@Getter
 public class MainController {
 
     //TODO: We need to replace the window control bar for the window.
@@ -37,6 +29,9 @@ public class MainController {
 
     @FXML
     private CheckMenuItem logToggle;
+
+    @FXML
+    private CheckMenuItem modDescriptionToggle;
 
     @FXML
     private MenuItem themes;
@@ -124,7 +119,7 @@ public class MainController {
     private TableColumn<ModCell, Integer> loadPriority;
 
     @FXML
-    private TableColumn<ModCell, String>  modSource;
+    private TableColumn<ModCell, String> modSource;
 
     @FXML
     private TableColumn<ModCell, String> modCategory;
@@ -133,7 +128,15 @@ public class MainController {
     private TextField modTableSearchBox;
 
     @FXML
+    private TabPane informationPane;
+
+    @FXML
     private Tab logTab;
+
+    @FXML
+    private Tab modDescriptionTab;
+
+    private boolean mainViewSplitDividerVisible = true;
 
     @FXML
     private ListView<LogMessage> viewableLog;
@@ -170,7 +173,7 @@ public class MainController {
     //TODO: Hookup connections for the last save date and status
 
     @FXML
-    private void printTest(){
+    private void printTest() {
         System.out.println("Button pressed!");
     }
 
@@ -179,5 +182,61 @@ public class MainController {
         modTableSearchBox.clear();
     }
 
+    @FXML
+    private void closeLogTab() {
+        logToggle.setSelected(false);
+        if(informationPane.getTabs().isEmpty()) {
+            disableSplitPaneDivider();
+        }
+    }
 
+    @FXML
+    private void toggleLog() {
+        if(!logToggle.isSelected()) {
+            informationPane.getTabs().remove(logTab);
+        }else informationPane.getTabs().add(logTab);
+
+        if(informationPane.getTabs().isEmpty()) {
+            disableSplitPaneDivider();
+        } else if(!mainViewSplitDividerVisible) {
+            enableSplitPaneDivider();
+        }
+    }
+
+    @FXML
+    private void closeModDescriptionTab() {
+        modDescriptionToggle.setSelected(false);
+        if(informationPane.getTabs().isEmpty()) {
+            disableSplitPaneDivider();
+        }
+    }
+
+    @FXML
+    private void toggleModDescription() {
+        if(!modDescriptionToggle.isSelected()) {
+            informationPane.getTabs().remove(modDescriptionTab);
+        } else informationPane.getTabs().add(modDescriptionTab);
+
+        if(informationPane.getTabs().isEmpty()) {
+            disableSplitPaneDivider();
+        } else if(!mainViewSplitDividerVisible) {
+            enableSplitPaneDivider();
+        }
+    }
+
+    private void disableSplitPaneDivider() {
+        for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
+            node.setVisible(false);
+            mainViewSplitDividerVisible = false;
+        }
+        mainViewSplit.setDividerPosition(0, 1);
+    }
+
+    private void enableSplitPaneDivider() {
+        for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
+            node.setVisible(true);
+            mainViewSplitDividerVisible = true;
+        }
+        mainViewSplit.setDividerPosition(0, 0.7);
+    }
 }
