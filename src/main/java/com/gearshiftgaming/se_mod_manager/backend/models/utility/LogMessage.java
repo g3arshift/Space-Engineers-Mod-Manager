@@ -9,10 +9,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class LogMessage {
-    private final StringProperty message = new SimpleStringProperty();
+    private final StringProperty viewableLogMessage = new SimpleStringProperty();
     private final StringProperty messageType = new SimpleStringProperty();
     public LogMessage(String message, MessageType messageType, Logger logger) {
-        this.message.setValue(new SimpleDateFormat("hh:mm:ss").format(new Date()) + " - " + message);
+        this.viewableLogMessage.setValue(new SimpleDateFormat("hh:mm:ss").format(new Date()) + " - " + message);
         this.messageType.setValue(messageType.toString());
 
         switch(messageType) {
@@ -26,17 +26,17 @@ public class LogMessage {
                 logger.error(message);
             }
             case UNKNOWN -> {
-                logger.error("ERROR UNKNOWN - " +  message);
+                logger.error("ERROR UNKNOWN - " + message);
             }
         }
     }
 
-    public String getMessage() {
-        return message.get();
+    public String getViewableLogMessage() {
+        return viewableLogMessage.get();
     }
 
-    public StringProperty messageProperty() {
-        return message;
+    public StringProperty viewableLogMessageProperty() {
+        return viewableLogMessage;
     }
 
     public MessageType getMessageType() {

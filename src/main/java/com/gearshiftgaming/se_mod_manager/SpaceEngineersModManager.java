@@ -74,13 +74,18 @@ public class SpaceEngineersModManager extends Application {
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-view.fxml"));
         Parent root = loader.load();
-        UiService uiService = new UiService(logger, sandboxService, modlistService, root, 950, 350);
         final MainController mainController = loader.getController();
+        UiService uiService = new UiService(logger, sandboxService, modlistService, mainController, root, 950, 350);
         mainController.initController(uiService.getApplicationLog(), uiService.getLogger());
+
+        //TODO: Dev. Remove
+        uiService.log("Test Message 1: WARN", MessageType.WARN);
+        uiService.log("Test Message 2: ERROR", MessageType.ERROR);
+        uiService.log("Test Message 3: INFO", MessageType.INFO);
+        uiService.log("Test Message 4: UNKNOWN", MessageType.UNKNOWN);
 
         uiService.prepareStage(primaryStage);
         primaryStage.show();
-
         //TODO: Set a context menu on the menu header ONLY per this https://stackoverflow.com/questions/47786125/how-to-add-a-context-menu-to-an-empty-tableviews-header-row. This may however, not be a good idea. Check the notes for the todo. Fourth item, sub-item of item 3. Also use this to inject checkboxes!
     }
 }

@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.CheckMenuItem?>
-<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -17,17 +16,20 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gearshiftgaming.se_mod_manager.controller.MainController">
+<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1050.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gearshiftgaming.se_mod_manager.controller.MainController">
     <children>
         <BorderPane layoutY="27.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -41,8 +43,16 @@
                             <Menu mnemonicParsing="false" text="File">
                                 <items>
                                     <MenuItem fx:id="settings" mnemonicParsing="false" text="Settings" />
-                              <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save Modlist as" />
+                              <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save modlist as" />
                               <MenuItem fx:id="close" mnemonicParsing="false" text="Close" />
+                              <Menu mnemonicParsing="false" text="Add mods">
+                                <items>
+                                  <MenuItem mnemonicParsing="false" text="Add mods by Steam Workshop ID" />
+                                    <MenuItem mnemonicParsing="false" text="Add mods from Steam Collection" />
+                                    <MenuItem mnemonicParsing="false" text="Add mods from Mod.io" />
+                                    <MenuItem mnemonicParsing="false" text="Add mods from modlist file" />
+                                </items>
+                              </Menu>
                                 </items>
                             </Menu>
                         <Menu mnemonicParsing="false" text="View">
@@ -122,6 +132,17 @@
                                       <Insets />
                                   </opaqueInsets>
                               </HBox>
+                        <StackPane alignment="TOP_CENTER">
+                           <children>
+                              <TextField fx:id="modTableSearchBox" promptText="Search Modlist" />
+                              <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" StackPane.alignment="CENTER_RIGHT">
+                                 <children>
+                                       <FontIcon iconLiteral="ci-close" iconSize="16" />
+                                     <Button fx:id="clearSearchBox" mnemonicParsing="false" onAction="#clearSearchBox" opacity="0.0" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </StackPane>
                           </children>
                           <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -130,49 +151,28 @@
                </children>
             </VBox>
             </top>
-            <right>
-                <VBox alignment="TOP_CENTER" spacing="10.0" BorderPane.alignment="TOP_CENTER">
-                    <children>
-                  <HBox alignment="CENTER_LEFT" spacing="10.0">
-                     <children>
-                        <Label text="Import from:" />
-                              <ChoiceBox fx:id="modImportDropdown" prefWidth="150.0" />
-                     </children>
-                  </HBox>
-                        <ButtonBar buttonOrder="U+FBIX_NCYOA_R" prefHeight="40.0" prefWidth="200.0">
-                            <buttons>
-                                <Button fx:id="saveModlist" mnemonicParsing="false" text="Save Modlist" />
-                                <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist" />
-                            </buttons>
-                        </ButtonBar>
-                        <ButtonBar buttonOrder="U+FBIX_NCYOA_R" prefHeight="40.0" prefWidth="200.0">
-                            <buttons>
-                                <Button fx:id="injectModlist" mnemonicParsing="false" text="Inject Modlist" />
-                                <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" text="Launch SE" />
-                            </buttons>
-                        </ButtonBar>
-                    </children>
-                    <padding>
-                        <Insets left="5.0" right="5.0" />
-                    </padding>
-                </VBox>
-            </right>
             <bottom>
-                <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" spacing="10.0">
+                <HBox alignment="CENTER_RIGHT" spacing="10.0">
                     <children>
-                  <Label fx:id="lastSaved" text="12/12/12 9:30 AM">
+                  <Label fx:id="lastSaved">
                      <graphic>
                         <Label text="Last Saved:" />
-                     </graphic></Label>
-                        <StackPane maxWidth="-Infinity" HBox.hgrow="ALWAYS">
-                            <children>
-                                <Rectangle fx:id="saveStatusColor" arcHeight="5.0" arcWidth="5.0" fill="#1fff34" height="22.0" stroke="BLACK" strokeType="INSIDE" width="89.0" StackPane.alignment="CENTER" />
-                        <Label fx:id="saveStatus" text="Status: Saved" />
-                            </children>
-                        </StackPane>
+                     </graphic>
+                  </Label>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="lastModifiedBy" style="-fx-background-color: #1fff34; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;">
+                     <graphic>
+                        <Label text="Last Modified by:" />
+                     </graphic>
+                  </Label>
+                  <Label fx:id="saveStatus" style="-fx-background-color: #1fff34; -fx-background-radius: 2px; -fx-border-color: black; -fx-border-radius: 2px; -fx-padding: 2px;">
+                     <graphic>
+                        <Label text="Status:" />
+                     </graphic>
+                  </Label>
                     </children>
                     <padding>
-                        <Insets bottom="5.0" right="5.0" top="5.0" />
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                     </padding>
                <opaqueInsets>
                   <Insets />
@@ -180,16 +180,19 @@
                 </HBox>
             </bottom>
             <center>
-                <SplitPane fx:id="mainViewSplit" dividerPositions="0.8" orientation="VERTICAL" BorderPane.alignment="CENTER">
+                <SplitPane fx:id="mainViewSplit" dividerPositions="0.7" orientation="VERTICAL" BorderPane.alignment="CENTER">
                     <items>
                   <VBox>
                      <children>
                         <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
                            <content>
                                       <TableView fx:id="modTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                                          <placeholder>
+                                              <Label text="No Mods Installed" />
+                                          </placeholder>
                                           <columns>
                                               <TableColumn fx:id="modName" prefWidth="200.0" text="Mod Name" />
-                                    <TableColumn fx:id="modType" prefWidth="75.0" text="Mod Type" />
+                                              <TableColumn fx:id="modType" prefWidth="75.0" text="Mod Type" />
                                               <TableColumn fx:id="modVersion" prefWidth="85.0" text="Version" />
                                               <TableColumn fx:id="modLastUpdated" prefWidth="115.0" text="Last Updated" />
                                               <TableColumn fx:id="loadPriority" prefWidth="85.0" text="Priority" />
@@ -204,8 +207,22 @@
                         </ScrollPane>
                         <HBox alignment="CENTER_LEFT" spacing="10.0" VBox.vgrow="NEVER">
                            <children>
-                              <Label text="Search Modlist:" />
-                              <TextField fx:id="modTableSearchBox" />
+                              <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                 <children>
+                                    <ComboBox fx:id="modImportDropdown" prefWidth="250.0" promptText="Add mods from..." />
+                                 </children>
+                              </HBox>
+                                    <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
+                                        <buttons>
+                                    <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
+                                    <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
+                                            <Button fx:id="saveModlist" mnemonicParsing="false" text="Save Modlist" />
+                                            <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist" />
+                                            <Button fx:id="injectModlist" mnemonicParsing="false" text="Apply Modlist" />
+                                            <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" text="Launch SE" />
+                                        </buttons>
+                                    </ButtonBar>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0" />
                            </children>
                            <VBox.margin>
                               <Insets />
@@ -218,7 +235,7 @@
                   </VBox>
                         <TabPane>
                             <tabs>
-                                <Tab text="Log">
+                                <Tab fx:id="logTab" text="Log">
                                     <content>
                                         <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
                                             <content>
@@ -227,6 +244,15 @@
                                         </ScrollPane>
                                     </content>
                                 </Tab>
+                        <Tab closable="false" text="Mod Description">
+                           <content>
+                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
+                                 <content>
+                                    <TextArea />
+                                 </content>
+                              </ScrollPane>
+                           </content>
+                        </Tab>
                             </tabs>
                         </TabPane>
                     </items>

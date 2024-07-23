@@ -1,18 +1,30 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModType;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.Logger;
+import org.controlsfx.control.textfield.TextFields;
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 
 public class MainController {
+
+    //TODO: We need to replace the window control bar for the window.
     private ObservableList<LogMessage> viewableLogList;
     private Logger logger;
 
@@ -54,7 +66,13 @@ public class MainController {
     private Text modConflicts;
 
     @FXML
-    private ChoiceBox<String> modImportDropdown;
+    private ComboBox<String> modImportDropdown;
+
+    @FXML
+    private Button importModlist;
+
+    @FXML
+    private Button exportModlist;
 
     @FXML
     private Button saveModlist;
@@ -68,34 +86,69 @@ public class MainController {
     @FXML
     private Button launchSpaceEngineers;
 
+    //TODO: Set the text
     @FXML
     private Label lastSaved;
 
-    @FXML
-    private Rectangle saveStatusColor;
-
+    //TODO: Set the color of this with the AtlantaFX global colors
+    //TODO: Set the text
     @FXML
     private Label saveStatus;
+
+    //TODO: Set the color of this with the AtlantaFX global colors
+    //TODO: Set the text
+    @FXML
+    private Label lastModifiedBy;
 
     @FXML
     private SplitPane mainViewSplit;
 
+    //TODO: Low priority: Fix the alignment of the table headers to be centered, not center left.
     @FXML
-    private TableView<ModTableCell> modTable; //TODO: Create a new object for the mod items that contains a check box and all the context menu stuff
+    private TableView<ModCell> modTable; //TODO: Create a new object for the mod items that contains a check box and all the context menu stuff
+
+    //TODO: The modcell needs properties for each of these https://stackoverflow.com/questions/53751455/how-to-create-a-javafx-tableview-without-warnings
+    @FXML
+    private TableColumn<ModCell, String> modName;
+
+    @FXML
+    private TableColumn<ModCell, ModType> modType;
+
+    @FXML
+    private TableColumn<ModCell, String> modVersion;
+
+    @FXML
+    private TableColumn<ModCell, String> modLastUpdated;
+
+    @FXML
+    private TableColumn<ModCell, Integer> loadPriority;
+
+    @FXML
+    private TableColumn<ModCell, String>  modSource;
+
+    @FXML
+    private TableColumn<ModCell, String> modCategory;
 
     @FXML
     private TextField modTableSearchBox;
 
     @FXML
+    private Tab logTab;
+
+    @FXML
     private ListView<LogMessage> viewableLog;
+
+    @FXML
+    private Button clearSearchBox;
+
 
     public void initController(ObservableList<LogMessage> viewableLogList, Logger logger) {
         this.viewableLogList = viewableLogList;
         this.logger = logger;
-        setupMainViewItems();
 
         //TODO: Remove and replace with a debug log message.
         viewableLogList.add(new LogMessage("Finished MainViewController setup", MessageType.INFO, logger));
+        setupMainViewItems();
     }
 
     //TODO: Move to service
@@ -103,10 +156,10 @@ public class MainController {
         viewableLog.setItems(viewableLogList);
         viewableLog.setCellFactory(param -> new LogCell());
 
-        modImportDropdown.getItems().addAll("Steam", "Mod.io", "Steam Collection", "Mod List File");
-        modImportDropdown.getSelectionModel().selectFirst();
+        modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
-        selectedSaveDropdown.getItems().add("Manage..."); //TODO: Setup a service to read a created user config that has all their modprofile information saved in it
+        selectedSaveDropdown.getItems().add("Manage...");
+        //TODO: Setup a service to read a created user config that has all their modprofile information saved in it
         //TODO: Setup a service to get options for the user created mod profiles
         //TODO: Setup an activeModList var in ModList service to track active mods
         //TODO: Setup a function in ModList service to track conflicts.
@@ -115,4 +168,16 @@ public class MainController {
     //TODO: Setup control stuff for the split pane and log resizing/closing.
     //TODO: Hookup all the buttons to everything
     //TODO: Hookup connections for the last save date and status
+
+    @FXML
+    private void printTest(){
+        System.out.println("Button pressed!");
+    }
+
+    @FXML
+    private void clearSearchBox() {
+        modTableSearchBox.clear();
+    }
+
+
 }

@@ -4,6 +4,8 @@ import atlantafx.base.theme.PrimerLight;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.controller.MainController;
+import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
 import javafx.application.Application;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
@@ -20,6 +22,8 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class UiService {
@@ -28,29 +32,40 @@ public class UiService {
     private final ObservableList<LogMessage> applicationLog;
 
     @Getter
-    private Logger logger;
-    private SandboxService sandboxService;
-    private ModlistService modlistService;
+    private final Logger logger;
 
-    private Scene scene;
+    private final MainController mainController;
+    private final SandboxService sandboxService;
+    private final ModlistService modlistService;
+
+    private final Scene scene;
+    private final int minWidth;
+    private final int minHeight;
 
     private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
     private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-    public UiService(Logger logger, SandboxService sandboxService, ModlistService modlistService, Parent root, int minWidth, int minHeight) {
+    public UiService(Logger logger, SandboxService sandboxService, ModlistService modlistService, MainController mainController, Parent root, int minWidth, int minHeight) {
         //TODO: Let users choose the theme they wish from the AtlantaFX themes.
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
         applicationLog = FXCollections.observableArrayList(logMessage ->
                 new Observable[]{
-                        logMessage.messageProperty(),
+                        logMessage.viewableLogMessageProperty(),
                         logMessage.messageTypeProperty()
                 });
 
         this.logger = logger;
         this.sandboxService = sandboxService;
         this.modlistService = modlistService;
-        this.scene = new Scene(root, minWidth, minHeight);
+        this.scene = new Scene(root, 1100, 600);
+        this.mainController = mainController;
+        this.minWidth = minWidth;
+        this.minHeight = minHeight;
+
+        if (!Files.isDirectory(Path.of(APP_DATA_PATH))) {
+            applicationLog.add(new LogMessage("Space Engineers save location not found.", MessageType.WARN, logger));
+        }
     }
 
     public void prepareStage(Stage stage) throws IOException, XmlPullParserException {
@@ -62,5 +77,11 @@ public class UiService {
         stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
         stage.setScene(scene);
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
+    }
+
+    public void log(String message, MessageType messageType) {
+        applicationLog.add(new LogMessage(message, messageType, logger));
     }
 }
