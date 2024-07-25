@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+@Deprecated //We are no longer using this after switching to JavaFX. Kept here only temporarily until the JFX UI is fully complete.
 public class ModManagerController {
     List<Mod> modList;
     private final ModManagerView modManagerView;

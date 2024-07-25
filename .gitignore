@@ -55,3 +55,5 @@ build/
 !/icons/!/Mockups/
 /Mockups/UI Mockup.afphoto
 /Mockups/UI Mockup.psd
+/Storage/SEMM_Data.xml
+/Storage/UserConfigTest.xml

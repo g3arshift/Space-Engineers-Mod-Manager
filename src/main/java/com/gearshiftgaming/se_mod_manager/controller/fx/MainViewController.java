@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.controller;
+package com.gearshiftgaming.se_mod_manager.controller.fx;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
@@ -14,7 +14,7 @@ import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 
 @Getter
-public class MainController {
+public class MainViewController {
 
     //TODO: We need to replace the window control bar for the window.
     private ObservableList<LogMessage> viewableLogList;

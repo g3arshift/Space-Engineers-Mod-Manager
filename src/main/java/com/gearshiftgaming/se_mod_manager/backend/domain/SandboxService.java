@@ -24,6 +24,7 @@ public class SandboxService {
         return sandboxConfigFileRepository.getSandboxConfig(sandboxConfigPath);
     }
 
+    //TODO: Rename. The name does not reflect what it's actually doing.
     public String addModsToSandboxConfigFile(File sandboxConfig, List<Mod> modList) throws IOException {
         return injectModsIntoSandboxConfig(sandboxConfig, modList);
     }
@@ -32,6 +33,7 @@ public class SandboxService {
         return sandboxConfigFileRepository.saveSandboxConfig(savePath, sandboxConfig);
     }
 
+    //TODO: Rename. The name does not reflect what it's actually doing.
     private String injectModsIntoSandboxConfig(File sandboxConfig, List<Mod> modList) throws IOException {
         String sandboxFileContent = Files.readString(sandboxConfig.toPath());
         StringBuilder sandboxContent = new StringBuilder();

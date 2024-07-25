@@ -7,7 +7,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
-@Deprecated
+@Deprecated //We are no longer using this after switching to JavaFX. Kept here only temporarily until the JFX UI is fully complete.
 public class ModManagerView {
 
     FileNameExtensionFilter textFileFilter = new FileNameExtensionFilter("Text Files (.txt, .doc)", "txt", "doc");

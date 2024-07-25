@@ -4,6 +4,7 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
@@ -17,11 +18,11 @@ import java.util.Objects;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 public class Mod {
 
     //These are the fields required for the sandbox_config.sbc file
-    @XmlAttribute
-    private final String id;
+    private String id;
     private String friendlyName;
     private String publishedServiceName;
 
@@ -52,6 +53,11 @@ public class Mod {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @XmlAttribute
+    public void setId(String id) {
+        this.id = id;
     }
 
     @XmlElementWrapper(name = "categories")

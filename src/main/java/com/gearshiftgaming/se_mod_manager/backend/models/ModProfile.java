@@ -28,12 +28,9 @@ public class ModProfile {
     }
 
     public ModProfile(String profileName) {
+        id = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
-    }
-
-    public ModProfile(List<Mod> modList) {
-        this.modList = modList;
     }
 
     @XmlAttribute

@@ -3,13 +3,20 @@ package com.gearshiftgaming.se_mod_manager.frontend.domain;
 import atlantafx.base.theme.PrimerLight;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
+import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.controller.MainController;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.controller.fx.MainViewController;
 import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 import javafx.application.Application;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -34,9 +41,7 @@ public class UiService {
     @Getter
     private final Logger logger;
 
-    private final MainController mainController;
-    private final SandboxService sandboxService;
-    private final ModlistService modlistService;
+    private final MainViewController mainViewController;
 
     private final Scene scene;
     private final int minWidth;
@@ -45,9 +50,14 @@ public class UiService {
     private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
     private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-    public UiService(Logger logger, SandboxService sandboxService, ModlistService modlistService, MainController mainController, Parent root, int minWidth, int minHeight) {
+    public UiService(Logger logger, int minWidth, int minHeight) throws IOException {
         //TODO: Let users choose the theme they wish from the AtlantaFX themes.
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-view.fxml"));
+        Parent root = loader.load();
+
+        mainViewController = loader.getController();
 
         applicationLog = FXCollections.observableArrayList(logMessage ->
                 new Observable[]{
@@ -56,23 +66,21 @@ public class UiService {
                 });
 
         this.logger = logger;
-        this.sandboxService = sandboxService;
-        this.modlistService = modlistService;
         this.scene = new Scene(root, 1100, 600);
-        this.mainController = mainController;
         this.minWidth = minWidth;
         this.minHeight = minHeight;
 
         if (!Files.isDirectory(Path.of(APP_DATA_PATH))) {
             applicationLog.add(new LogMessage("Space Engineers save location not found.", MessageType.WARN, logger));
         }
+
+        mainViewController.initController(applicationLog, logger);
     }
 
     public void prepareStage(Stage stage) throws IOException, XmlPullParserException {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         Model model = reader.read(new FileReader("pom.xml"));
         stage.setTitle("SEMM v" + model.getVersion());
-
 
         stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
@@ -81,8 +89,8 @@ public class UiService {
         stage.setMinHeight(minHeight);
 
         stage.heightProperty().addListener((obs, oldVal, newVal) -> {
-            if(!mainController.isMainViewSplitDividerVisible()) {
-                mainController.getMainViewSplit().setDividerPosition(0, 1);
+            if (!mainViewController.isMainViewSplitDividerVisible()) {
+                mainViewController.getMainViewSplit().setDividerPosition(0, 1);
             }
         });
     }

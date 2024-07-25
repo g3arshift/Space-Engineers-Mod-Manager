@@ -6,16 +6,12 @@ import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.*;
 import jakarta.xml.bind.annotation.XmlType;
-import javafx.application.Application;
 import lombok.Getter;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import atlantafx.base.theme.Theme;
 import lombok.Setter;
 
 /**
@@ -46,17 +42,9 @@ public class UserConfiguration {
         this.userTheme = new PrimerLight().getName();
     }
 
-    /**
-     * Creates a new object from an existing file
-     *
-     * @param userConfigurationFile
-     */
-    public UserConfiguration(File userConfigurationFile) {
-        //TODO: Unmarshal the XML File
-    }
 
     //TODO: Remove
-    public void saveXMLTest() throws JAXBException {
+    public void saveXMLTest() throws JAXBException, IOException {
         ModProfile testModProfile = new ModProfile();
         Mod testMod = new Mod("123456789");
         List<String> testCategories = new ArrayList<>();
@@ -75,14 +63,17 @@ public class UserConfiguration {
 
         modProfiles.add(testModProfile);
         modProfiles.add(testModProfile);
-        try {
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("./Storage/UserConfigTest.xml")))){
             JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
             marshaller.marshal(this, sw);
-            System.out.println(sw);
-        } catch (JAXBException ex) {
+
+            bw.write(sw.toString());
+        } catch (JAXBException | IOException ex) {
+            //TODO: Replace with log statement
             throw ex;
         }
     }
