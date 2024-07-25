@@ -71,7 +71,7 @@
                             </Menu>
                         </menus>
                     </MenuBar>
-                      <HBox fx:id="menuBar" alignment="CENTER_LEFT" spacing="10.0">
+                      <HBox alignment="CENTER_LEFT" spacing="10.0">
                           <children>
                               <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
                                   <children>

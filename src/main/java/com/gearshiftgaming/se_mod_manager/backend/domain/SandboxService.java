@@ -63,7 +63,7 @@ public class SandboxService {
                     "      <PublishedServiceName>%s</PublishedServiceName>%n" +
                     "    </ModItem>%n";
 
-            sandboxContent.append(String.format(modItem, m.getFriendlyName(), m.getModId(), m.getModId(), m.getPublishedServiceName()));
+            sandboxContent.append(String.format(modItem, m.getFriendlyName(), m.getId(), m.getId(), m.getPublishedServiceName()));
         }
 
         //Append the text in the Sandbox_config that comes after the mod section

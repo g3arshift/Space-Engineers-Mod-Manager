@@ -4,7 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModType;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;

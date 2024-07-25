@@ -51,7 +51,7 @@ public class ModFileRepository implements ModRepository {
                 Mod mod = new Mod(STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining("")));
 
                 //Don't add blank lines
-                if (!mod.getModId().isBlank()) {
+                if (!mod.getId().isBlank()) {
                     modSet.add(mod);
                 }
             }
