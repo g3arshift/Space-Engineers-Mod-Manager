@@ -39,6 +39,12 @@ public class UserConfiguration {
         this.userTheme = new PrimerLight().getName();
     }
 
+    public UserConfiguration(List<SaveProfile> saveProfiles, List<ModProfile> modProfiles, String userTheme) {
+        this.saveProfiles = saveProfiles;
+        this.modProfiles = modProfiles;
+        this.userTheme = userTheme;
+    }
+
     @XmlElement(name = "userTheme")
     public void setUserTheme(String userTheme) {
         this.userTheme = userTheme;

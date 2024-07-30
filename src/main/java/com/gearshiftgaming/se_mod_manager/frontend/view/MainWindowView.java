@@ -12,7 +12,6 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @Getter
 public class MainWindowView {
@@ -144,12 +143,7 @@ public class MainWindowView {
     @FXML
     private Button clearSearchBox;
 
-    public void initView(ObservableList<LogMessage> viewableLogList, LocalDateTime lastModified) {
-        this.viewableLogList = viewableLogList;
-        this.lastSaved.setText(lastModified.format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a")));
-        setupMainViewItems();
-    }
-
+    //TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection".
     public void initView(ObservableList<LogMessage> viewableLogList, String lastModified) {
         this.viewableLogList = viewableLogList;
         this.lastSaved.setText(lastModified);

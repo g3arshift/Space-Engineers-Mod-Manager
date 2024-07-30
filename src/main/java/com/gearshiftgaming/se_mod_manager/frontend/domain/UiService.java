@@ -23,6 +23,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,6 +38,7 @@ public class UiService {
     private final int minWidth;
     private final int minHeight;
 
+    //TODO: These need to be observable lists
     private final List<ModProfile> modProfiles;
     private final List<SaveProfile> saveProfiles;
 

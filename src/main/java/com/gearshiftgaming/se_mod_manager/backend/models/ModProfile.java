@@ -25,21 +25,21 @@ public class ModProfile {
 
     private List<Mod> modList;
 
-    private LocalDateTime lastSaved;
+    private String lastSaved;
 
     public ModProfile() {
         id = UUID.randomUUID();
         modList = new ArrayList<>();
-        //TODO: Add incremment.
+        //TODO: Add increment if duplicate.
         profileName = "New Mod Profile";
-        lastSaved = LocalDateTime.now();
+        lastSaved = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
     }
 
     public ModProfile(String profileName) {
         id = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
-        lastSaved = LocalDateTime.now();
+        lastSaved = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
     }
 
     @XmlAttribute

@@ -21,7 +21,7 @@ public class ModlistService {
 
     private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
-    //TODO: Implement other repositories for the expected backend.data options
+    //TODO: Implement other repositories for the expected data options
     private final ModlistRepository modFileRepository;
     private final String MOD_SCRAPING_SELECTOR;
 

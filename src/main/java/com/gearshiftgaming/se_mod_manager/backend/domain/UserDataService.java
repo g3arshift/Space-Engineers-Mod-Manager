@@ -14,21 +14,21 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
         Result<UserConfiguration> result = new Result<>();
 
         if(!userConfigurationFile.exists()) {
-            result.addMessage("Could not load user backend.data. Defaulting to new user configuration.", ResultType.FAILED);
+            result.addMessage("Could not load user data. Defaulting to new user configuration.", ResultType.FAILED);
             result.setPayload(new UserConfiguration());
         } else {
             result.setPayload(userDataFileRepository.loadUserData(userConfigurationFile));
-            result.addMessage("Successfully loaded user backend.data.", ResultType.SUCCESS);
+            result.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
         }
         return result;
     }
 
-    private Result<Boolean> saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {
+    public Result<Boolean> saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {
         Result<Boolean> result = new Result<>();
         if(userDataFileRepository().saveUserData(userConfiguration, userConfigurationFile)) {
-            result.addMessage("Successfully saved user backend.data.", ResultType.SUCCESS);
+            result.addMessage("Successfully saved user data.", ResultType.SUCCESS);
         } else {
-            result.addMessage("Failed to save user backend.data.", ResultType.FAILED);
+            result.addMessage("Failed to save user data.", ResultType.FAILED);
         }
         return result;
     }

@@ -7,6 +7,8 @@ import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
@@ -24,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class MasterController {
@@ -64,10 +68,9 @@ public class MasterController {
         modlistService = new ModlistService(new ModlistFileRepository(), properties);
         userDataService = new UserDataService(new UserDataFileRepository());
 
-        //Load user backend.data
+        //Load user data
         Result<UserConfiguration> userConfigurationResult = userDataService.getUserData(new File(properties.getProperty("semm.userData.default.location")));
         UserConfiguration userConfiguration = userConfigurationResult.getPayload();
-
 
         uiService = new UiService(userConfiguration,
                 Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth")),
