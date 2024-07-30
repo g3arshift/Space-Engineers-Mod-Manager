@@ -99,4 +99,14 @@ public class MasterController {
         LogMessage logMessage = new LogMessage(message, messageType, logger);
         uiService.addMessageToLog(logMessage);
     }
+
+    private <T> void log(Result<T> result) {
+        MessageType messageType;
+        switch (result.getType()) {
+            case INVALID -> messageType = MessageType.WARN;
+            case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
+            default -> messageType = MessageType.INFO;
+        }
+        log(result.getMessages().getLast(), messageType);
+    }
 }

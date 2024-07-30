@@ -22,8 +22,6 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -75,7 +73,7 @@ public class UiService {
         this.minWidth = minWidth;
         this.minHeight = minHeight;
 
-        //TODO: We'll need this in the modprofiles code somewhere, I'm sure. Move it there later.
+        //TODO: We'll need this in the mod profiles code somewhere, I'm sure. Move it there later.
         //Get the last time the users first mod profile was modified, and if it's empty use the current time.
         if(!modProfiles.isEmpty()) {
             mainWindowView.initView(userLog, modProfiles.getFirst().getLastSaved());
