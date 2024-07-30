@@ -5,6 +5,12 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 
+/**
+ * Stores both a result of an operation within SEMM and to carry the result of that operation
+ * @param <T>
+ * @author Gear Shift
+ * @version 1.0
+ */
 @Getter
 public class Result<T> {
 
@@ -14,10 +20,6 @@ public class Result<T> {
     private T payload;
 
     private final ArrayList<String> messages = new ArrayList<>();
-
-    public Result(ResultType type) {
-        this.type = type;
-    }
 
     public Result() {
         this.type = ResultType.NOT_INITIALIZED;

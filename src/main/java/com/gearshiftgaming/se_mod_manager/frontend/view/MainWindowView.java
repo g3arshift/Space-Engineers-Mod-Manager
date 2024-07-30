@@ -1,24 +1,24 @@
-package com.gearshiftgaming.se_mod_manager.controller.fx;
+package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import lombok.Getter;
-import org.apache.logging.log4j.Logger;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 @Getter
-public class MainViewController {
+public class MainWindowView {
 
     //TODO: We need to replace the window control bar for the window.
     private ObservableList<LogMessage> viewableLogList;
-    private Logger logger;
 
     //FXML Items
     @FXML
@@ -107,7 +107,7 @@ public class MainViewController {
     private TableColumn<ModCell, String> modName;
 
     @FXML
-    private TableColumn<ModCell, ModType> modType;
+    private TableColumn<ModCell, String> modType;
 
     @FXML
     private TableColumn<ModCell, String> modVersion;
@@ -144,13 +144,15 @@ public class MainViewController {
     @FXML
     private Button clearSearchBox;
 
-
-    public void initController(ObservableList<LogMessage> viewableLogList, Logger logger) {
+    public void initView(ObservableList<LogMessage> viewableLogList, LocalDateTime lastModified) {
         this.viewableLogList = viewableLogList;
-        this.logger = logger;
+        this.lastSaved.setText(lastModified.format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a")));
+        setupMainViewItems();
+    }
 
-        //TODO: Remove and replace with a debug log message.
-        viewableLogList.add(new LogMessage("Finished MainViewController setup", MessageType.INFO, logger));
+    public void initView(ObservableList<LogMessage> viewableLogList, String lastModified) {
+        this.viewableLogList = viewableLogList;
+        this.lastSaved.setText(lastModified);
         setupMainViewItems();
     }
 
@@ -162,7 +164,6 @@ public class MainViewController {
         modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
         selectedSaveDropdown.getItems().add("Manage...");
-        //TODO: Setup a service to read a created user config that has all their modprofile information saved in it
         //TODO: Setup a service to get options for the user created mod profiles
         //TODO: Setup an activeModList var in ModList service to track active mods
         //TODO: Setup a function in ModList service to track conflicts.
@@ -172,6 +173,7 @@ public class MainViewController {
     //TODO: Hookup all the buttons to everything
     //TODO: Hookup connections for the last save date and status
 
+    //TODO: Remove
     @FXML
     private void printTest() {
         System.out.println("Button pressed!");

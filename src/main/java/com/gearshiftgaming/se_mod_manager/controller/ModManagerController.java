@@ -131,14 +131,14 @@ public class ModManagerController {
     }
 
     //TODO: Implement checking for bad file format for modlist
-    private Result<List<Mod>> getModList() {
+    private Result<List<Mod>> getModList() throws IOException {
         String modListPath;
         Result<List<Mod>> modListResult = new Result<>();
         do {
             modListPath = modManagerView.getModListFromFile(DESKTOP_PATH);
             if (!modListPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
                 logger.info("Grabbing mods from " + (modListPath));
-                modListResult = modlistService.getInjectableModListFromFile(modListPath);
+                modListResult = modlistService.getModListFromFile(modListPath);
 
                 if (!modListResult.isSuccess()) {
                     logger.warn(modListResult.getMessages().getLast());
@@ -163,7 +163,8 @@ public class ModManagerController {
             sandboxConfigPath = modManagerView.getSandboxConfigFromFile(APP_DATA_PATH);
 
             if (!sandboxConfigPath.equals(String.valueOf(JOptionPane.NO_OPTION))) {
-                sandboxFileResult = sandboxService.getSandboxConfigFromFile(sandboxConfigPath);
+                //Commented out to make this deprecated class not break the app
+                //sandboxFileResult = sandboxService.getSandboxConfigFromFile(sandboxConfigPath);
 
                 if (!sandboxFileResult.isSuccess()) {
                     logger.warn(sandboxFileResult.getMessages().getLast());
@@ -195,15 +196,17 @@ public class ModManagerController {
                 if (Files.exists(Path.of(savePath))) {
                     int overwriteChoice = modManagerView.getOverwriteOption();
                     if (overwriteChoice == JFileChooser.APPROVE_OPTION) {
-                        modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
-                        sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
+                        //Commented out to make this deprecated class not break the app
+                        //modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
+                        //sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
                     } else if (overwriteChoice == JOptionPane.CANCEL_OPTION) {
                         modManagerView.displayCancellationDialog();
                         savePath = "1";
                     } else modManagerView.displayOverwriteAbortDialog();
                 } else {
-                    modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
-                    sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
+                    //Commented out to make this deprecated class not break the app
+                    //modifiedSandboxConfig = sandboxService.addModsToSandboxConfigFile(sandboxFile, modList);
+                    //sandboxSaveResult = sandboxService.saveSandboxConfig(savePath, modifiedSandboxConfig);
                 }
             }
         } while (!savePath.equals(String.valueOf(JOptionPane.NO_OPTION)) && !sandboxSaveResult.isSuccess());

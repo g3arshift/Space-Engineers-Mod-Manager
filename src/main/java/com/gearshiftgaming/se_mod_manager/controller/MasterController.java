@@ -1,21 +1,30 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
 import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
-import com.gearshiftgaming.se_mod_manager.backend.data.ModFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import jakarta.xml.bind.JAXBException;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
 
 public class MasterController {
 
@@ -30,27 +39,61 @@ public class MasterController {
 
     private final UserDataService userDataService;
 
-    public MasterController(Stage stage) throws IOException, JAXBException, XmlPullParserException {
+    private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
+    private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
+
+
+    public MasterController(Stage stage) throws IOException, XmlPullParserException, JAXBException {
         logger = LogManager.getLogger(SpaceEngineersModManager.class);
         logger.info("Started application");
 
         this.primaryStage = stage;
 
-        //TODO: Change the sevice args from wanting a Logger to wanting nothing, and instead having their functions create a Result object, and passing it back up to the
-        // main controller and using the UI service to log it. Or maybe don't do this? It's late, and I should think on this tomorrow.
-        sandboxService = new SandboxService(new SandboxConfigFileRepository(), logger);
-        modlistService = new ModlistService(new ModFileRepository(), logger);
+        Properties properties = new Properties();
+        try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM.properties")) {
+            properties.load(input);
+        } catch (IOException | NullPointerException e) {
+            logger.error("Could not load SEMM.properties. " + e.getMessage());
+            throw (e);
+        }
 
-        //Replace the ints with a system property
-        uiService = new UiService(logger, 950, 350);
-        userDataService = new UserDataService();
+        //TODO: Use Result in only on service layer, and pass it back up to MC for logging. Switch all the existing services over to this model.
+        //TODO: Add validation to services for input AND USE RESULT
+        //TODO: When we launch the app for the first time, walk the user through first making a save profile, then naming a new mod profile, then IMMEDIATELY save to file.
+        sandboxService = new SandboxService(new SandboxConfigFileRepository());
+        modlistService = new ModlistService(new ModlistFileRepository(), properties);
+        userDataService = new UserDataService(new UserDataFileRepository());
+
+        //Load user backend.data
+        Result<UserConfiguration> userConfigurationResult = userDataService.getUserData(new File(properties.getProperty("semm.userData.default.location")));
+        UserConfiguration userConfiguration = userConfigurationResult.getPayload();
+
+
+        uiService = new UiService(userConfiguration,
+                Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth")),
+                Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight")));
+
+        if (userConfigurationResult.isSuccess()) {
+            log(userConfigurationResult.getMessages().getLast(), MessageType.INFO);
+        } else {
+            log(userConfigurationResult.getMessages().getLast(), MessageType.ERROR);
+        }
+
+        if (!Files.isDirectory(Path.of(APP_DATA_PATH))) {
+            log("Space Engineers save location not found.", MessageType.WARN);
+        }
 
         //TODO: Dev. Remove
-        uiService.log("Test Message 1: WARN\nTHIS IS LINE 2\nTHIS IS LINE 3", MessageType.WARN);
-        uiService.log("Test Message 2: ERROR", MessageType.ERROR);
-        uiService.log("Test Message 3: INFO", MessageType.INFO);
-        uiService.log("Test Message 4: UNKNOWN", MessageType.UNKNOWN);
+        log("Test Message 1: WARN\nTHIS IS LINE 2\nTHIS IS LINE 3", MessageType.WARN);
+        log("Test Message 2: ERROR", MessageType.ERROR);
+        log("Test Message 3: INFO", MessageType.INFO);
+        log("Test Message 4: UNKNOWN", MessageType.UNKNOWN);
 
-        uiService.prepareStage(primaryStage);
+        uiService.prepareMainStage(primaryStage);
+    }
+
+    private void log(String message, MessageType messageType) {
+        LogMessage logMessage = new LogMessage(message, messageType, logger);
+        uiService.addMessageToLog(logMessage);
     }
 }

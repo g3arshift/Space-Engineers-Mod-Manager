@@ -1,4 +1,4 @@
-package models;
+package backend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.SteamWorkshopConnection;
 import org.apache.logging.log4j.Logger;

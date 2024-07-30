@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-public enum ModType {
+public enum ModDownloadSourceType {
     STEAM,
     MOD_IO
 }

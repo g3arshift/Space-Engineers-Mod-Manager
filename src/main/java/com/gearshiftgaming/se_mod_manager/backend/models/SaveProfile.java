@@ -24,7 +24,7 @@ public class SaveProfile {
 
     private UUID lastAppliedModProfile;
 
-    private ModProfileModificationSourceType lastModifiedBy;
+    private ModlistChangeSourceType lastModifiedBy;
 
     public SaveProfile(){
         this.profileName = "New Save Profile";

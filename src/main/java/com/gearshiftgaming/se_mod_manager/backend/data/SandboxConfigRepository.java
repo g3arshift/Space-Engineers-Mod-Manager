@@ -4,10 +4,11 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface SandboxConfigRepository {
 
-    Result<File> getSandboxConfig(String sandboxConfigPath);
+    String getSandboxConfig(String sandboxConfigPath) throws IOException;
 
-    Result<Boolean> saveSandboxConfig(String savePath, String modifiedSandboxConfig) throws IOException;
+    void saveSandboxConfig(File sandboxFile, String modifiedSandboxConfig) throws IOException;
 }

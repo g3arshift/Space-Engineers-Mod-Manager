@@ -29,7 +29,7 @@
 <?import javafx.scene.text.Text?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1050.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gearshiftgaming.se_mod_manager.controller.fx.MainViewController">
+<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1050.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gearshiftgaming.se_mod_manager.frontend.view.MainWindowView">
     <children>
         <BorderPane layoutY="27.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -59,7 +59,17 @@
                            <items>
                               <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" onAction="#toggleLog" selected="true" text="Log" />
                               <CheckMenuItem fx:id="modDescriptionToggle" mnemonicParsing="false" onAction="#toggleModDescription" selected="true" text="Mod Description" />
-                              <MenuItem fx:id="themes" mnemonicParsing="false" text="Themes" />
+                              <Menu fx:id="themes" mnemonicParsing="false" text="Themes">
+                                 <items>
+                                    <CheckMenuItem fx:id="primerLightTheme" mnemonicParsing="false" text="Primer Light" />
+                                    <CheckMenuItem fx:id="primerDarkTheme" mnemonicParsing="false" text="Primer Dark" />
+                                    <CheckMenuItem fx:id="nordLightTheme" mnemonicParsing="false" text="Nord Light" />
+                                    <CheckMenuItem fx:id="nordDarkTheme" mnemonicParsing="false" text="Nord Dark" />
+                                    <CheckMenuItem fx:id="cupertinoLightTheme" mnemonicParsing="false" text="Cupertino Light" />
+                                    <CheckMenuItem fx:id="cupertinoDarkTheme" mnemonicParsing="false" text="Cupertino Dark" />
+                                    <CheckMenuItem fx:id="draculaTheme" mnemonicParsing="false" text="Dracula" />
+                                 </items>
+                              </Menu>
                            </items>
                         </Menu>
                             <Menu mnemonicParsing="false" text="Help">
@@ -193,11 +203,11 @@
                                           </placeholder>
                                           <columns>
                                               <TableColumn fx:id="modName" prefWidth="200.0" text="Mod Name" />
-                                              <TableColumn fx:id="modType" prefWidth="75.0" text="Mod Type" />
                                               <TableColumn fx:id="modVersion" prefWidth="85.0" text="Version" />
                                               <TableColumn fx:id="modLastUpdated" prefWidth="115.0" text="Last Updated" />
                                               <TableColumn fx:id="loadPriority" prefWidth="85.0" text="Priority" />
-                                              <TableColumn fx:id="modSource" prefWidth="85.0" text="Source" />
+                                              <TableColumn fx:id="modSource" prefWidth="85.0" text="Import Source" />
+                                              <TableColumn fx:id="modType" prefWidth="100.0" text="Download Source" />
                                               <TableColumn fx:id="modCategory" prefWidth="125.0" text="Category/Tags" />
                                           </columns>
                                  <columnResizePolicy>

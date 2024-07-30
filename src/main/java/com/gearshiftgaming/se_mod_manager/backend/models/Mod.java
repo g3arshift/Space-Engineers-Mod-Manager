@@ -27,11 +27,11 @@ public class Mod {
     private String publishedServiceName;
 
     //These are the fields for the UI
-    private ModType modType;
+    private ModDownloadSourceType modDownloadSource;
     private String modVersion;
     private Date lastUpdated;
     private int loadPriority;
-    private ModSourceType source;
+    private ModImportSourceType source;
 
     private List<String> categories;
 
