@@ -47,27 +47,13 @@ public class UiService {
         //Set the theme for our application.
         //This makes it clunky to add any new themes in the future, but for the moment it's a straightforwards approach to it.
         switch (userConfiguration.getUserTheme()) {
-            case "Primer Dark" -> {
-                Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
-            }
-            case "Nord Light" -> {
-                Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
-            }
-            case "Nord Dark" -> {
-                Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
-            }
-            case "Cupertino Light" -> {
-                Application.setUserAgentStylesheet(new CupertinoLight().getUserAgentStylesheet());
-            }
-            case "Cupertino Dark" -> {
-                Application.setUserAgentStylesheet(new CupertinoDark().getUserAgentStylesheet());
-            }
-            case "Dracula" -> {
-                Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
-            }
-            default -> {
-                Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-            }
+            case "Primer Dark" -> Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+            case "Nord Light" -> Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
+            case "Nord Dark" -> Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
+            case "Cupertino Light" -> Application.setUserAgentStylesheet(new CupertinoLight().getUserAgentStylesheet());
+            case "Cupertino Dark" -> Application.setUserAgentStylesheet(new CupertinoDark().getUserAgentStylesheet());
+            case "Dracula" -> Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
+            default -> Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         }
 
         this.modProfiles = userConfiguration.getModProfiles();
@@ -91,7 +77,6 @@ public class UiService {
 
         //TODO: We'll need this in the modprofiles code somewhere, I'm sure. Move it there later.
         //Get the last time the users first mod profile was modified, and if it's empty use the current time.
-        LocalDateTime lastModified;
         if(!modProfiles.isEmpty()) {
             mainWindowView.initView(userLog, modProfiles.getFirst().getLastSaved());
         } else

@@ -16,15 +16,15 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
-@Setter
 public class ModProfile {
 
-    private UUID id;
+    private final UUID id;
 
     private String profileName;
 
     private List<Mod> modList;
 
+    @XmlAttribute
     private String lastSaved;
 
     public ModProfile() {
@@ -32,24 +32,30 @@ public class ModProfile {
         modList = new ArrayList<>();
         //TODO: Add increment if duplicate.
         profileName = "New Mod Profile";
-        lastSaved = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
+        lastSaved = getCurrentTime();
     }
 
     public ModProfile(String profileName) {
         id = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
-        lastSaved = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
+        lastSaved = getCurrentTime();
     }
 
     @XmlAttribute
     public void setProfileName(String profileName) {
         this.profileName = profileName;
+        lastSaved = getCurrentTime();
     }
 
     @XmlElementWrapper(name = "mods")
     @XmlElement(name = "mod")
     public void setModList(List<Mod> modList) {
         this.modList = modList;
+        lastSaved = getCurrentTime();
+    }
+
+    private String getCurrentTime() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
     }
 }
