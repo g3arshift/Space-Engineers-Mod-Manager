@@ -20,10 +20,14 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import javax.swing.text.html.Option;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class UiService {
     //TODO: Move the observable list and all the other controller junk here that isn't strictly DUMB UI related.
@@ -36,9 +40,12 @@ public class UiService {
     private final int minWidth;
     private final int minHeight;
 
-    //TODO: These need to be observable lists
-    private final List<ModProfile> modProfiles;
-    private final List<SaveProfile> saveProfiles;
+    private final UserConfiguration userConfiguration;
+
+    //TODO: Pass the objects to the UI instead and parse to observable lists
+    //private final List<ModProfile> modProfiles;
+    //private final List<SaveProfile> saveProfiles;
+
 
     public UiService(UserConfiguration userConfiguration, int minWidth, int minHeight) throws IOException {
 
@@ -54,8 +61,7 @@ public class UiService {
             default -> Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         }
 
-        this.modProfiles = userConfiguration.getModProfiles();
-        this.saveProfiles = userConfiguration.getSaveProfiles();
+        this.userConfiguration = userConfiguration;
 
         //Load the FXML for our main window
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
@@ -73,17 +79,17 @@ public class UiService {
         this.minWidth = minWidth;
         this.minHeight = minHeight;
 
-        //TODO: We'll need this in the mod profiles code somewhere, I'm sure. Move it there later.
-        //Get the last time the users first mod profile was modified, and if it's empty use the current time.
-        if(!modProfiles.isEmpty()) {
-            mainWindowView.initView(userLog, modProfiles.getFirst().getLastSaved());
-        } else
-            mainWindowView.initView(userLog, "Never");
+        //Get the last used save profile, and if it still exists, make that our current profile in the UI.
+        Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
+        if(lastUsedSaveProfile.isPresent()) {
+            mainWindowView.initView(userLog, lastUsedSaveProfile.get());
+        } else mainWindowView.initView(userLog);
     }
 
     /**
      * Sets the name of the application, as well as the icon for it, and adds a listener for the stage to ensure the tab pane behaves correctly.
      * Application version information is retrieved from pom.xml
+     *
      * @param stage The stage for the primary window that is the core of the application
      */
     public void prepareMainStage(Stage stage) throws IOException, XmlPullParserException {
@@ -106,5 +112,17 @@ public class UiService {
 
     public void addMessageToLog(LogMessage logMessage) {
         userLog.add(logMessage);
+    }
+
+    private Optional<SaveProfile> findLastUsedSaveProfile() {
+        Optional<SaveProfile> lastUsedSaveProfile = Optional.empty();
+        if (userConfiguration.getLastUsedSaveProfileId() != null) {
+            UUID lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
+
+            lastUsedSaveProfile = userConfiguration.getSaveProfiles().stream()
+                    .filter(saveProfile -> saveProfile.getId().equals(lastUsedSaveProfileId))
+                    .findFirst();
+        }
+        return lastUsedSaveProfile;
     }
 }

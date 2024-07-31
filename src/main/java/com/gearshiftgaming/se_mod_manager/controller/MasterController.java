@@ -7,11 +7,8 @@ import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
@@ -26,8 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public class MasterController {
@@ -85,12 +80,6 @@ public class MasterController {
         if (!Files.isDirectory(Path.of(APP_DATA_PATH))) {
             log("Space Engineers save location not found.", MessageType.WARN);
         }
-
-        //TODO: Dev. Remove
-        log("Test Message 1: WARN\nTHIS IS LINE 2\nTHIS IS LINE 3", MessageType.WARN);
-        log("Test Message 2: ERROR", MessageType.ERROR);
-        log("Test Message 3: INFO", MessageType.INFO);
-        log("Test Message 4: UNKNOWN", MessageType.UNKNOWN);
 
         uiService.prepareMainStage(primaryStage);
     }

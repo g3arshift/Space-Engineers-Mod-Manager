@@ -1,5 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
@@ -7,17 +9,18 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter
 public class MainWindowView {
 
     //TODO: We need to replace the window control bar for the window.
     private ObservableList<LogMessage> viewableLogList;
+
+    private SaveProfile currentSaveProfile;
+    private ModProfile currentModProfile;
 
     //FXML Items
     @FXML
@@ -94,6 +97,8 @@ public class MainWindowView {
     @FXML
     private Label lastModifiedBy;
 
+    private String statusBaseStyling;
+
     @FXML
     private SplitPane mainViewSplit;
 
@@ -144,9 +149,34 @@ public class MainWindowView {
     private Button clearSearchBox;
 
     //TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection".
-    public void initView(ObservableList<LogMessage> viewableLogList, String lastModified) {
+    public void initView(ObservableList<LogMessage> viewableLogList, SaveProfile saveProfile) {
         this.viewableLogList = viewableLogList;
-        this.lastSaved.setText(lastModified);
+        this.currentSaveProfile = saveProfile;
+        this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
+
+        initSaveStatus(currentSaveProfile);
+        initLastModifiedBy(currentSaveProfile);
+        if (currentSaveProfile.getLastSaved().isEmpty()) {
+            lastSaved.setText("Never");
+        } else {
+            lastSaved.setText(currentSaveProfile.getLastSaved());
+        }
+        setupMainViewItems();
+    }
+
+    public void initView(ObservableList<LogMessage> viewableLogList) {
+        this.viewableLogList = viewableLogList;
+        this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
+
+        saveStatus.setText("None");
+        saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+
+        lastModifiedBy.setText("None");
+        lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+        lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-warning-emphasis; -fx-text-fill: -color-warning-emphasis;");
+
+        lastSaved.setText("Never");
+
         setupMainViewItems();
     }
 
@@ -181,20 +211,20 @@ public class MainWindowView {
     @FXML
     private void closeLogTab() {
         logToggle.setSelected(false);
-        if(informationPane.getTabs().isEmpty()) {
+        if (informationPane.getTabs().isEmpty()) {
             disableSplitPaneDivider();
         }
     }
 
     @FXML
     private void toggleLog() {
-        if(!logToggle.isSelected()) {
+        if (!logToggle.isSelected()) {
             informationPane.getTabs().remove(logTab);
-        }else informationPane.getTabs().add(logTab);
+        } else informationPane.getTabs().add(logTab);
 
-        if(informationPane.getTabs().isEmpty()) {
+        if (informationPane.getTabs().isEmpty()) {
             disableSplitPaneDivider();
-        } else if(!mainViewSplitDividerVisible) {
+        } else if (!mainViewSplitDividerVisible) {
             enableSplitPaneDivider();
         }
     }
@@ -202,20 +232,20 @@ public class MainWindowView {
     @FXML
     private void closeModDescriptionTab() {
         modDescriptionToggle.setSelected(false);
-        if(informationPane.getTabs().isEmpty()) {
+        if (informationPane.getTabs().isEmpty()) {
             disableSplitPaneDivider();
         }
     }
 
     @FXML
     private void toggleModDescription() {
-        if(!modDescriptionToggle.isSelected()) {
+        if (!modDescriptionToggle.isSelected()) {
             informationPane.getTabs().remove(modDescriptionTab);
         } else informationPane.getTabs().add(modDescriptionTab);
 
-        if(informationPane.getTabs().isEmpty()) {
+        if (informationPane.getTabs().isEmpty()) {
             disableSplitPaneDivider();
-        } else if(!mainViewSplitDividerVisible) {
+        } else if (!mainViewSplitDividerVisible) {
             enableSplitPaneDivider();
         }
     }
@@ -234,5 +264,43 @@ public class MainWindowView {
             mainViewSplitDividerVisible = true;
         }
         mainViewSplit.setDividerPosition(0, 0.7);
+    }
+
+    private void initSaveStatus(SaveProfile saveProfile) {
+        switch (saveProfile.getLastSaveStatus()) {
+            case SAVED -> {
+                saveStatus.setText("Saved");;
+                saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-success-emphasis; -fx-text-fill: -color-success-emphasis;");
+            }
+            case UNSAVED -> {
+                saveStatus.setText("Unsaved");
+                saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-warning-emphasis; -fx-text-fill: -color-warning-emphasis;");
+            }
+            case FAILED -> {
+                saveStatus.setText("Failed to save");
+                saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-danger-emphasis; -fx-text-fill: -color-danger-emphasis;");
+            }
+            default -> {
+                saveStatus.setText("N/A");
+                saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+            }
+        }
+    }
+
+    private void initLastModifiedBy(SaveProfile saveProfile) {
+        switch (saveProfile.getLastModifiedBy()) {
+            case SEMM -> {
+                lastModifiedBy.setText("SEMM");
+                lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-success-emphasis; -fx-text-fill: -color-success-emphasis;");
+            }
+            case SPACE_ENGINEERS_IN_GAME -> {
+                lastModifiedBy.setText("In-game Mod Manager");
+                lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-warning-emphasis; -fx-text-fill: -color-warning-emphasis;");
+            }
+            default -> {
+                lastModifiedBy.setText("None");
+                lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+            }
+        }
     }
 }

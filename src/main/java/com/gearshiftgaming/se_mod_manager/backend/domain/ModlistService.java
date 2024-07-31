@@ -75,6 +75,7 @@ public class ModlistService {
         }
     }
 
+    //TODO: We should probably store the dom object with how much we're going to have to be checking on these pages
     //Scrape the Steam Workshop HTML pages for their titles, which are our friendly names
     private Callable<String> scrapeModInformationSteam(Mod mod) {
         return () -> Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");

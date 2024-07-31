@@ -94,7 +94,7 @@
                               </HBox>
                               <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
                                   <children>
-                              <Label text="SE Save" />
+                              <Label minWidth="-Infinity" text="Save Profile" />
                                       <ComboBox fx:id="selectedSaveDropdown" prefWidth="150.0" />
                                   </children>
                                   <opaqueInsets>
@@ -167,16 +167,16 @@
                     <children>
                   <Label fx:id="lastSaved">
                      <graphic>
-                        <Label text="Last Saved:" />
+                        <Label text="Mods Last Injected:" />
                      </graphic>
                   </Label>
                   <Region HBox.hgrow="ALWAYS" />
-                  <Label fx:id="lastModifiedBy" style="-fx-background-color: #1fff34; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;">
+                  <Label fx:id="lastModifiedBy">
                      <graphic>
-                        <Label text="Last Modified by:" />
+                        <Label text="Save Last Modified by:" />
                      </graphic>
                   </Label>
-                  <Label fx:id="saveStatus" style="-fx-background-color: #1fff34; -fx-background-radius: 2px; -fx-border-color: black; -fx-border-radius: 2px; -fx-padding: 2px;">
+                  <Label fx:id="saveStatus">
                      <graphic>
                         <Label text="Status:" />
                      </graphic>

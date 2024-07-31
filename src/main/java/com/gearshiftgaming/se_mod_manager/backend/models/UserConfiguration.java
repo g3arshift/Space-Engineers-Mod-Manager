@@ -9,6 +9,7 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.Setter;
 
@@ -25,6 +26,8 @@ import lombok.Setter;
 public class UserConfiguration {
 
     private String userTheme;
+
+    private UUID lastUsedSaveProfileId;
 
     private List<SaveProfile> saveProfiles;
 
