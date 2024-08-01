@@ -425,7 +425,7 @@ public class MainWindowView {
         } else {
             String errorMessage = "Save or Mod profile not setup yet.";
             uiService.log(errorMessage, MessageType.ERROR);
-            Alert.display(errorMessage, MessageType.ERROR);
+            Alert.display(errorMessage, stage, MessageType.ERROR);
             //TODO: Overload the update infobar function
         }
     }

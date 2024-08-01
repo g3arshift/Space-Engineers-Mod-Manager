@@ -1,12 +1,16 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -16,7 +20,7 @@ import java.util.Objects;
  * Displays a custom alert modal using icons from the Ikonli Carbon Icon icon pack.
  */
 public class Alert {
-    public static <T> void display(Result<T> result) {
+    public static <T> void display(Result<T> result, Stage parentStage) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -46,11 +50,10 @@ public class Alert {
                 stage.setTitle("Unknown");
             }
         }
-        setupDisplay(stage, label, messageIcon);
-        stage.show();
+        finishDisplay(stage, parentStage, label, messageIcon);
     }
 
-    public static void display(String message, MessageType messageType) {
+    public static void display(String message, Stage parentStage, MessageType messageType) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -79,11 +82,10 @@ public class Alert {
                 stage.setTitle("Unknown");
             }
         }
-        setupDisplay(stage, label, messageIcon);
-        stage.show();
+        finishDisplay(stage, parentStage, label, messageIcon);
     }
 
-    private static void setupDisplay(Stage stage, Label label, FontIcon messageIcon) {
+    private static void finishDisplay(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
         label.setStyle("-fx-font-size: 14;");
         messageIcon.setScaleX(1.2);
         messageIcon.setScaleY(1.2);
@@ -91,18 +93,35 @@ public class Alert {
         HBox layout = new HBox(messageIcon, label);
         layout.setAlignment(Pos.CENTER);
         layout.setSpacing(5d);
+        layout.setPadding(new Insets(5, 5, 5, 5));
+        layout.setStyle("-fx-background-color: -color-bg-subtle;");
 
-        int windowWidth = 275;
-        int windowHeight = 100;
+        Scene scene = new Scene(layout);
+        childStage.setTitle("Error");
+        childStage.getIcons().add(new Image(Objects.requireNonNull(Alert.class.getResourceAsStream("/icons/logo.png"))));
+        childStage.setResizable(false);
 
-        Scene scene = new Scene(layout, windowWidth, windowHeight);
-        stage.setTitle("Error");
-        stage.getIcons().add(new Image(Objects.requireNonNull(Alert.class.getResourceAsStream("/icons/logo.png"))));
-        stage.setMinWidth(windowWidth);
-        stage.setMinHeight(windowHeight);
-        stage.setMaxWidth(windowWidth);
-        stage.setMaxHeight(windowHeight);
+        childStage.setScene(scene);
 
-        stage.setScene(scene);
+        //Center the alert in the middle of the application window by using listeners that will fire off when the window is created but not yet visible.
+        ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+            double stageWidth = newValue.doubleValue();
+            childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
+        };
+        ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
+            double stageHeight = newValue.doubleValue();
+            childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
+        };
+
+        childStage.widthProperty().addListener(widthListener);
+        childStage.heightProperty().addListener(heightListener);
+
+        //Once the window is visible, remove the listeners.
+        childStage.setOnShown(e -> {
+            childStage.widthProperty().removeListener(widthListener);
+            childStage.heightProperty().removeListener(heightListener);
+        });
+
+        childStage.show();
     }
 }

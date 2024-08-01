@@ -48,7 +48,7 @@ public class LogCell extends ListCell<LogMessage> {
             //Make every other row in the log a different color for visibility.
             message.setText(item.getViewableLogMessage());
             if (getIndex() % 2 == 0) {
-                setStyle("-fx-background-color: -color-bg-subtle");
+                setStyle("-fx-background-color: -color-bg-subtle;");
             }
             setGraphic(layout);
         }
