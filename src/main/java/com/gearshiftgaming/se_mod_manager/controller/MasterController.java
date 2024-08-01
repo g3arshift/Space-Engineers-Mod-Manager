@@ -1,13 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
 import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
-import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
-import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
-import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MainWindowView;
 import jakarta.xml.bind.JAXBException;
 import javafx.fxml.FXMLLoader;

@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileReposito
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveStatus;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
@@ -189,6 +190,8 @@ public class MainWindowView {
 
     private Logger logger;
 
+    private Properties properties;
+
     private BackendController backendFileController;
 
     private UiService uiService;
@@ -209,13 +212,14 @@ public class MainWindowView {
                 new UserDataFileRepository());
         this.scene = new Scene(root);
         this.stage = stage;
+        this.properties = properties;
 
         //Get the users configurations
-        Result<UserConfiguration> userConfigurationResult = backendFileController.getUserData(new File(properties.getProperty("semm.userData.default.location")));
+        Result<UserConfiguration> userConfigurationResult = backendFileController.getUserData(new File(this.properties.getProperty("semm.userData.default.location")));
         userConfiguration = userConfigurationResult.getPayload();
 
         //Prepare the UI
-        setupWindow(properties, root);
+        setupWindow(root);
         setupInformationBar();
         setupMainViewItems();
 
@@ -228,7 +232,7 @@ public class MainWindowView {
     /**
      * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
      */
-    private void setupWindow(Properties properties, Parent root) throws IOException, XmlPullParserException {
+    private void setupWindow(Parent root) throws IOException, XmlPullParserException {
         //Set the theme for our application based on the users preferred theme.
         //This makes it clunky to add any new themes in the future, but for the moment it's works and it's a straightforwards approach.
         switch (userConfiguration.getUserTheme()) {
@@ -389,6 +393,29 @@ public class MainWindowView {
         Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
     }
 
+    //Apply the modlist the user is currently viewing to the save profile they're currently viewing.
+    @FXML
+    private void applyModlist() throws IOException {
+        Result<Boolean> modlistResult = backendFileController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
+        uiService.log(modlistResult);
+        if(!modlistResult.isSuccess()) {
+            //TODO: Popup some error window
+            currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
+        } else {
+            currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
+            currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
+
+            int modProfileIndex = userConfiguration.getModProfiles().indexOf(currentModProfile);
+            userConfiguration.getModProfiles().set(modProfileIndex, currentModProfile);
+
+            int saveProfileIndex = userConfiguration.getSaveProfiles().indexOf(currentSaveProfile);
+            userConfiguration.getSaveProfiles().set(saveProfileIndex, currentSaveProfile);
+
+            backendFileController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location=./Storage/SEMM_Data.xml")));
+        }
+        updateInfoBar(currentSaveProfile);
+    }
+
     private void disableSplitPaneDivider() {
         for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
             node.setVisible(false);
@@ -403,6 +430,12 @@ public class MainWindowView {
             mainViewSplitDividerVisible = true;
         }
         mainViewSplit.setDividerPosition(0, 0.7);
+    }
+
+    private void updateInfoBar(SaveProfile saveProfile){
+        updateSaveStatus(saveProfile);
+        updateLastModifiedBy(saveProfile);
+        updateLastInjected();
     }
 
     private void updateSaveStatus(SaveProfile saveProfile) {

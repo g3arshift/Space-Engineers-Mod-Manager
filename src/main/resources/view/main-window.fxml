@@ -229,7 +229,7 @@
                                     <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
                                             <Button fx:id="saveModlist" mnemonicParsing="false" text="Save Modlist" />
                                             <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist" />
-                                            <Button fx:id="injectModlist" mnemonicParsing="false" text="Apply Modlist" />
+                                            <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
                                             <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
                                         </buttons>
                                     </ButtonBar>

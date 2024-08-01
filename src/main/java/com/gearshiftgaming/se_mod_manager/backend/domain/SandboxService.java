@@ -71,7 +71,6 @@ public class SandboxService {
         } else{
             result.addMessage("No valid mod section found for " + sandboxConfig.getName() + ".", ResultType.FAILED);
             return  result;
-            //return "INVALID_SANDBOX_CONFIG";
         }
 
         //Append the text in the Sandbox_config that comes before the mod section
