@@ -27,7 +27,7 @@ public class ModlistService {
 
     @Setter
     @Getter
-    //TODO: Move this to master controller, and decide and log there.
+    //TODO: Move this to backend controller, and decide and log there.
     //"Retrieving mod information from Steam Workshop..."
     //"Not retrieving mod information from Steam Workshop."
     private boolean workshopConnectionActive;

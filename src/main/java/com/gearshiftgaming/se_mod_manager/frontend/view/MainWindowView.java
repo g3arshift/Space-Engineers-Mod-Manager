@@ -1,26 +1,60 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import atlantafx.base.theme.*;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.controller.BackendController;
+import com.gearshiftgaming.se_mod_manager.controller.BackendFileController;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
+import jakarta.xml.bind.JAXBException;
+import javafx.application.Application;
+import javafx.beans.Observable;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.paint.Paint;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import lombok.Getter;
+import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import java.awt.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.UUID;
+
+/**
+ * Responsible for the main window of the application, and all the visual elements of it. Business logic has been delegated to service classes.
+ */
 @Getter
 public class MainWindowView {
-
-    //TODO: We need to replace the window control bar for the window.
-    private ObservableList<LogMessage> viewableLogList;
-
-    private SaveProfile currentSaveProfile;
-    private ModProfile currentModProfile;
 
     //FXML Items
     @FXML
@@ -85,7 +119,7 @@ public class MainWindowView {
 
     //TODO: Set the text
     @FXML
-    private Label lastSaved;
+    private Label lastInjected;
 
     //TODO: Set the color of this with the AtlantaFX global colors
     //TODO: Set the text
@@ -140,62 +174,161 @@ public class MainWindowView {
     @FXML
     private Tab modDescriptionTab;
 
-    private boolean mainViewSplitDividerVisible = true;
-
     @FXML
     private ListView<LogMessage> viewableLog;
 
     @FXML
     private Button clearSearchBox;
 
-    //TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection".
-    public void initView(ObservableList<LogMessage> viewableLogList, SaveProfile saveProfile) {
-        this.viewableLogList = viewableLogList;
-        this.currentSaveProfile = saveProfile;
-        this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
+    //TODO: We need to replace the window control bar for the window.
+    private ObservableList<LogMessage> userLog;
 
-        initSaveStatus(currentSaveProfile);
-        initLastModifiedBy(currentSaveProfile);
-        if (currentSaveProfile.getLastSaved().isEmpty()) {
-            lastSaved.setText("Never");
-        } else {
-            lastSaved.setText(currentSaveProfile.getLastSaved());
+    //TODO: Might need to go into UiService
+    private SaveProfile currentSaveProfile;
+    private ModProfile currentModProfile;
+
+    private Logger logger;
+
+    private BackendController backendFileController;
+
+    private UiService uiService;
+
+    private Stage stage;
+
+    private Scene scene;
+
+    private boolean mainViewSplitDividerVisible = true;
+
+    private UserConfiguration userConfiguration;
+
+    //Initializes our controller while maintaining the empty constructor JavaFX expects
+    public void initController(Properties properties, Logger logger, Stage stage, Parent root) throws IOException, JAXBException, XmlPullParserException {
+        this.logger = logger;
+        this.backendFileController = new BackendFileController(new SandboxConfigFileRepository(),
+                new ModlistFileRepository(), properties,
+                new UserDataFileRepository());
+        this.scene = new Scene(root);
+        this.stage = stage;
+
+        //Get the users configurations
+        Result<UserConfiguration> userConfigurationResult = backendFileController.getUserData(new File(properties.getProperty("semm.userData.default.location")));
+        userConfiguration = userConfigurationResult.getPayload();
+
+        //Prepare the UI
+        setupWindow(properties, root);
+        setupInformationBar();
+        setupMainViewItems();
+
+        //Do this last so the constructor for the service runs after the application has been visually prepared
+        //Initialize the list we use to store log messages shown to the user
+        this.uiService = new UiService(logger, userLog);
+        uiService.log(userConfigurationResult);
+    }
+
+    /**
+     * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
+     */
+    private void setupWindow(Properties properties, Parent root) throws IOException, XmlPullParserException {
+        //Set the theme for our application based on the users preferred theme.
+        //This makes it clunky to add any new themes in the future, but for the moment it's works and it's a straightforwards approach.
+        switch (userConfiguration.getUserTheme()) {
+            case "Primer Dark" -> Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+            case "Nord Light" -> Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
+            case "Nord Dark" -> Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
+            case "Cupertino Light" -> Application.setUserAgentStylesheet(new CupertinoLight().getUserAgentStylesheet());
+            case "Cupertino Dark" -> Application.setUserAgentStylesheet(new CupertinoDark().getUserAgentStylesheet());
+            case "Dracula" -> Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
+            default -> Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         }
-        setupMainViewItems();
+
+        //Prepare the scene
+        int minWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth"));
+        int minHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight"));
+
+        //Prepare the stage
+        stage.setScene(scene);
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
+
+        //Add title and icon to the stage
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = reader.read(new FileReader("pom.xml"));
+        stage.setTitle("SEMM v" + model.getVersion());
+        stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+
+        //Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
+        stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if (!this.isMainViewSplitDividerVisible()) {
+                this.getMainViewSplit().setDividerPosition(0, 1);
+            }
+        });
     }
 
-    public void initView(ObservableList<LogMessage> viewableLogList) {
-        this.viewableLogList = viewableLogList;
-        this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
+    /**
+     * Sets the initial values for the toolbar located at the bottom of the UI.
+     */
+    private void setupInformationBar() {
+        Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
+        if(lastUsedSaveProfile.isPresent()) {
+            this.currentSaveProfile = lastUsedSaveProfile.get();
+            this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
 
-        saveStatus.setText("None");
-        saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+            updateSaveStatus(currentSaveProfile);
+            updateLastModifiedBy(currentSaveProfile);
 
-        lastModifiedBy.setText("None");
-        lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
-        lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-warning-emphasis; -fx-text-fill: -color-warning-emphasis;");
+            //Set the text for the last time this profile was saved
+            if (currentSaveProfile.getLastSaved().isEmpty()) {
+                lastInjected.setText("Never");
+            } else {
+                lastInjected.setText(currentSaveProfile.getLastSaved());
+            }
+        } else {
+            this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
 
-        lastSaved.setText("Never");
+            saveStatus.setText("None");
+            saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
 
-        setupMainViewItems();
+            lastModifiedBy.setText("None");
+            lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+
+            lastInjected.setText("Never");
+        }
     }
 
-    //TODO: Move to service
+    //TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
     public void setupMainViewItems() {
-        viewableLog.setItems(viewableLogList);
+        //Initialize the list we use to store log messages shown to the user
+        userLog = FXCollections.observableArrayList(logMessage ->
+                new Observable[]{
+                        logMessage.viewableLogMessageProperty(),
+                        logMessage.messageTypeProperty()
+                });
+
+        viewableLog.setItems(userLog);
         viewableLog.setCellFactory(param -> new LogCell());
 
         modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
         selectedSaveDropdown.getItems().add("Manage...");
-        //TODO: Setup a service to get options for the user created mod profiles
-        //TODO: Setup an activeModList var in ModList service to track active mods
+        modProfileDropdown.getItems().add("Manage...");
+
+        //TODO: Much of this needs to happen down in the service layer
         //TODO: Setup a function in ModList service to track conflicts.
-        //TODO: Populate modtable
+        //TODO: Populate mod table
     }
-    //TODO: Setup control stuff for the split pane and log resizing/closing.
     //TODO: Hookup all the buttons to everything
-    //TODO: Hookup connections for the last save date and status
+
+    private Optional<SaveProfile> findLastUsedSaveProfile() {
+        Optional<SaveProfile> lastUsedSaveProfile = Optional.empty();
+        if (userConfiguration.getLastUsedSaveProfileId() != null) {
+            UUID lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
+
+            lastUsedSaveProfile = userConfiguration.getSaveProfiles().stream()
+                    .filter(saveProfile -> saveProfile.getId().equals(lastUsedSaveProfileId))
+                    .findFirst();
+        }
+        return lastUsedSaveProfile;
+    }
 
     //TODO: Remove
     @FXML
@@ -250,6 +383,12 @@ public class MainWindowView {
         }
     }
 
+    @FXML
+    private void launchSpaceEngineers() throws URISyntaxException, IOException {
+        //TODO: Check this works on systems with no previous steam url association
+        Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
+    }
+
     private void disableSplitPaneDivider() {
         for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
             node.setVisible(false);
@@ -266,7 +405,7 @@ public class MainWindowView {
         mainViewSplit.setDividerPosition(0, 0.7);
     }
 
-    private void initSaveStatus(SaveProfile saveProfile) {
+    private void updateSaveStatus(SaveProfile saveProfile) {
         switch (saveProfile.getLastSaveStatus()) {
             case SAVED -> {
                 saveStatus.setText("Saved");;
@@ -287,7 +426,8 @@ public class MainWindowView {
         }
     }
 
-    private void initLastModifiedBy(SaveProfile saveProfile) {
+    //TODO: The visual part should be handled here, the logic should go into the service layers
+    private void updateLastModifiedBy(SaveProfile saveProfile) {
         switch (saveProfile.getLastModifiedBy()) {
             case SEMM -> {
                 lastModifiedBy.setText("SEMM");
@@ -302,5 +442,9 @@ public class MainWindowView {
                 lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
             }
         }
+    }
+
+    private void updateLastInjected() {
+        lastInjected.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a")));
     }
 }

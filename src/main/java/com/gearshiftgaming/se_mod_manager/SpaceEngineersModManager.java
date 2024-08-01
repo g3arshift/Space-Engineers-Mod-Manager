@@ -13,7 +13,9 @@ public class SpaceEngineersModManager extends Application {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
         launch(args);
-/*
+
+        //TODO: Remove
+        /*
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
@@ -48,7 +50,6 @@ public class SpaceEngineersModManager extends Application {
 
         MasterController masterController = new MasterController(primaryStage);
         primaryStage.show();
-        //TODO: Reconfigure the mod and sandbox service to return a result back up to the master controller to handle logging
         //TODO: Set a context menu on the menu header ONLY per this https://stackoverflow.com/questions/47786125/how-to-add-a-context-menu-to-an-empty-tableviews-header-row. This may however, not be a good idea. Check the notes for the todo. Fourth item, sub-item of item 3. Also use this to inject checkboxes!
     }
 }

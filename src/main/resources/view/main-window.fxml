@@ -165,7 +165,7 @@
             <bottom>
                 <HBox alignment="CENTER_RIGHT" spacing="10.0">
                     <children>
-                  <Label fx:id="lastSaved">
+                  <Label fx:id="lastInjected">
                      <graphic>
                         <Label text="Mods Last Injected:" />
                      </graphic>
@@ -230,7 +230,7 @@
                                             <Button fx:id="saveModlist" mnemonicParsing="false" text="Save Modlist" />
                                             <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist" />
                                             <Button fx:id="injectModlist" mnemonicParsing="false" text="Apply Modlist" />
-                                            <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" text="Launch SE" />
+                                            <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
                                         </buttons>
                                     </ButtonBar>
                               <HBox alignment="CENTER_LEFT" spacing="10.0" />
