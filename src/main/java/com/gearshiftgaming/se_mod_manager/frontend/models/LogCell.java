@@ -26,7 +26,6 @@ public class LogCell extends ListCell<LogMessage> {
         if (empty || item == null) {
             message.setText(null);
         } else {
-            //TODO: Get some icons for the message type images so we can define them.
             switch (item.getMessageType()) {
                 case INFO -> {
                     messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
@@ -45,6 +44,8 @@ public class LogCell extends ListCell<LogMessage> {
                     messageIcon.setIconLiteral("ci-unknown");
                 }
             }
+            //TODO: Reuse for the mod table!!!
+            //Make every other row in the log a different color for visibility.
             message.setText(item.getViewableLogMessage());
             if (getIndex() % 2 == 0) {
                 setStyle("-fx-background-color: -color-bg-subtle");

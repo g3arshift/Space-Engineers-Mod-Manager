@@ -22,7 +22,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @XmlRootElement(name = "userConfiguration")
-@XmlType(propOrder = {"userTheme", "saveProfiles", "modProfiles"})
+@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modProfiles"})
 public class UserConfiguration {
 
     private String userTheme;

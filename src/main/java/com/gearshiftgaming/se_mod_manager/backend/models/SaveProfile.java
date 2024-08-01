@@ -15,21 +15,26 @@ import java.util.UUID;
  * @version 1.0.1
  */
 @Getter
-@Setter
 public class SaveProfile {
 
     private final UUID id;
 
+    @Setter
     private String profileName;
 
+    @Setter
     private String saveName;
 
+    @Setter
     private String savePath;
 
+    @Setter
     private UUID lastAppliedModProfileId;
 
+    @Setter
     private ModlistChangeSourceType lastModifiedBy;
 
+    @Setter
     private SaveStatus lastSaveStatus;
 
     @XmlAttribute

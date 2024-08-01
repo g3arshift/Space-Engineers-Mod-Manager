@@ -9,7 +9,9 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveStatus;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import com.gearshiftgaming.se_mod_manager.controller.BackendFileController;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
@@ -37,6 +39,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.javafx.Icon;
 
 import java.awt.*;
 import java.io.File;
@@ -216,7 +220,11 @@ public class MainWindowView {
 
         //Get the users configurations
         Result<UserConfiguration> userConfigurationResult = backendFileController.getUserData(new File(this.properties.getProperty("semm.userData.default.location")));
-        userConfiguration = userConfigurationResult.getPayload();
+        if(userConfigurationResult.isSuccess()) {
+            userConfiguration = userConfigurationResult.getPayload();
+        } else {
+            userConfiguration = new UserConfiguration();
+        }
 
         //Prepare the UI
         setupWindow(root);
@@ -228,6 +236,8 @@ public class MainWindowView {
         this.uiService = new UiService(logger, userLog);
         uiService.log(userConfigurationResult);
     }
+
+    //TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
 
     /**
      * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
@@ -273,9 +283,10 @@ public class MainWindowView {
      */
     private void setupInformationBar() {
         Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
-        if(lastUsedSaveProfile.isPresent()) {
+        if (lastUsedSaveProfile.isPresent()) {
             this.currentSaveProfile = lastUsedSaveProfile.get();
-            this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
+            this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
+            ;
 
             updateSaveStatus(currentSaveProfile);
             updateLastModifiedBy(currentSaveProfile);
@@ -287,7 +298,8 @@ public class MainWindowView {
                 lastInjected.setText(currentSaveProfile.getLastSaved());
             }
         } else {
-            this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";;
+            this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
+            ;
 
             saveStatus.setText("None");
             saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
@@ -332,12 +344,6 @@ public class MainWindowView {
                     .findFirst();
         }
         return lastUsedSaveProfile;
-    }
-
-    //TODO: Remove
-    @FXML
-    private void printTest() {
-        System.out.println("Button pressed!");
     }
 
     @FXML
@@ -396,24 +402,32 @@ public class MainWindowView {
     //Apply the modlist the user is currently viewing to the save profile they're currently viewing.
     @FXML
     private void applyModlist() throws IOException {
-        Result<Boolean> modlistResult = backendFileController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
-        uiService.log(modlistResult);
-        if(!modlistResult.isSuccess()) {
-            //TODO: Popup some error window
-            currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
+        //This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
+        if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
+            Result<Boolean> modlistResult = backendFileController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
+            uiService.log(modlistResult);
+            if (!modlistResult.isSuccess()) {
+                //TODO: Popup some error window
+                currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
+            } else {
+                currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
+                currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
+
+                int modProfileIndex = userConfiguration.getModProfiles().indexOf(currentModProfile);
+                userConfiguration.getModProfiles().set(modProfileIndex, currentModProfile);
+
+                int saveProfileIndex = userConfiguration.getSaveProfiles().indexOf(currentSaveProfile);
+                userConfiguration.getSaveProfiles().set(saveProfileIndex, currentSaveProfile);
+
+                backendFileController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location=./Storage/SEMM_Data.xml")));
+            }
+            updateInfoBar(currentSaveProfile);
         } else {
-            currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
-            currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
-
-            int modProfileIndex = userConfiguration.getModProfiles().indexOf(currentModProfile);
-            userConfiguration.getModProfiles().set(modProfileIndex, currentModProfile);
-
-            int saveProfileIndex = userConfiguration.getSaveProfiles().indexOf(currentSaveProfile);
-            userConfiguration.getSaveProfiles().set(saveProfileIndex, currentSaveProfile);
-
-            backendFileController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location=./Storage/SEMM_Data.xml")));
+            String errorMessage = "Save or Mod profile not setup yet.";
+            uiService.log(errorMessage, MessageType.ERROR);
+            Alert.display(errorMessage, MessageType.ERROR);
+            //TODO: Overload the update infobar function
         }
-        updateInfoBar(currentSaveProfile);
     }
 
     private void disableSplitPaneDivider() {
@@ -432,7 +446,7 @@ public class MainWindowView {
         mainViewSplit.setDividerPosition(0, 0.7);
     }
 
-    private void updateInfoBar(SaveProfile saveProfile){
+    private void updateInfoBar(SaveProfile saveProfile) {
         updateSaveStatus(saveProfile);
         updateLastModifiedBy(saveProfile);
         updateLastInjected();
@@ -441,7 +455,7 @@ public class MainWindowView {
     private void updateSaveStatus(SaveProfile saveProfile) {
         switch (saveProfile.getLastSaveStatus()) {
             case SAVED -> {
-                saveStatus.setText("Saved");;
+                saveStatus.setText("Saved");
                 saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-success-emphasis; -fx-text-fill: -color-success-emphasis;");
             }
             case UNSAVED -> {
