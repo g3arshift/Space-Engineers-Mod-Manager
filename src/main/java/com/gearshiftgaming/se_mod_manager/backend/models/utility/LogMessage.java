@@ -9,7 +9,7 @@ import java.util.Date;
 
 /**
  * Functionally a wrapper for Log4j logging, but simplifies keeping logging synchronized between the system log and the log in the UI while also providing finer control on what log messages are displayed to the user.
- * The message in the system log can be of any length, but the UI will only display the first two lines of a LogMessage.
+ * The message in the system log can be of any length, but the UI will only display the first two lines of a LogMessage. It is thus preferred to instead
  * @author Gear Shift
  * @version 1.0
  */

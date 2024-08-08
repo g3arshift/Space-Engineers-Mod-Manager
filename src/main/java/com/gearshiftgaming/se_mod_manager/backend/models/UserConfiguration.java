@@ -40,6 +40,9 @@ public class UserConfiguration {
         this.saveProfiles = new ArrayList<>();
         this.modProfiles = new ArrayList<>();
         this.userTheme = new PrimerLight().getName();
+
+        this.saveProfiles.add(new SaveProfile("Default"));
+        this.modProfiles.add(new ModProfile("Default"));
     }
 
     public UserConfiguration(List<SaveProfile> saveProfiles, List<ModProfile> modProfiles, String userTheme) {

@@ -1,19 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.*;
-import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveStatus;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.controller.BackendController;
-import com.gearshiftgaming.se_mod_manager.controller.BackendFileController;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
@@ -39,8 +31,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.kordamp.ikonli.javafx.FontIcon;
-import org.kordamp.ikonli.javafx.Icon;
 
 import java.awt.*;
 import java.io.File;
@@ -188,7 +178,6 @@ public class MainWindowView {
     //TODO: We need to replace the window control bar for the window.
     private ObservableList<LogMessage> userLog;
 
-    //TODO: Might need to go into UiService
     private SaveProfile currentSaveProfile;
     private ModProfile currentModProfile;
 
@@ -196,7 +185,7 @@ public class MainWindowView {
 
     private Properties properties;
 
-    private BackendController backendFileController;
+    private BackendController backendController;
 
     private UiService uiService;
 
@@ -208,33 +197,40 @@ public class MainWindowView {
 
     private UserConfiguration userConfiguration;
 
+    //This is just a wrapper for the userConfiguration modProfiles list. Any changes made to this will propagate back to it, but not the other way around.
+    private ObservableList<ModProfile> modProfiles;
+
+    //This is just a wrapper for the userConfiguration saveProfiles list. Any changes made to this will propagate back to it, but not the other way around.
+    private ObservableList<SaveProfile> saveProfiles;
+
+    private ModProfileView modProfileView;
+
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public void initController(Properties properties, Logger logger, Stage stage, Parent root) throws IOException, JAXBException, XmlPullParserException {
+    public void initController(Properties properties, Logger logger,
+                               BackendController backendController, UserConfiguration userConfiguration,
+                               Stage stage, Parent root,
+                               ObservableList<ModProfile> modProfiles, ObservableList<SaveProfile> saveProfiles,
+                               ModProfileView modProfileView, UiService uiService) throws IOException, XmlPullParserException {
         this.logger = logger;
-        this.backendFileController = new BackendFileController(new SandboxConfigFileRepository(),
-                new ModlistFileRepository(), properties,
-                new UserDataFileRepository());
+        this.backendController = backendController;
         this.scene = new Scene(root);
         this.stage = stage;
         this.properties = properties;
+        this.userConfiguration = userConfiguration;
+        this.uiService = uiService;
+        this.userLog = this.uiService.getUserLog();
 
-        //Get the users configurations
-        Result<UserConfiguration> userConfigurationResult = backendFileController.getUserData(new File(this.properties.getProperty("semm.userData.default.location")));
-        if(userConfigurationResult.isSuccess()) {
-            userConfiguration = userConfigurationResult.getPayload();
-        } else {
-            userConfiguration = new UserConfiguration();
-        }
+        this.modProfiles = modProfiles;
+        this.saveProfiles = saveProfiles;
+
+        this.modProfileView = modProfileView;
+
+        //TODO: Set current mod and save profile
 
         //Prepare the UI
-        setupWindow(root);
+        setupWindow();
         setupInformationBar();
         setupMainViewItems();
-
-        //Do this last so the constructor for the service runs after the application has been visually prepared
-        //Initialize the list we use to store log messages shown to the user
-        this.uiService = new UiService(logger, userLog);
-        uiService.log(userConfigurationResult);
     }
 
     //TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -242,7 +238,7 @@ public class MainWindowView {
     /**
      * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
      */
-    private void setupWindow(Parent root) throws IOException, XmlPullParserException {
+    private void setupWindow() throws IOException, XmlPullParserException {
         //Set the theme for our application based on the users preferred theme.
         //This makes it clunky to add any new themes in the future, but for the moment it's works and it's a straightforwards approach.
         switch (userConfiguration.getUserTheme()) {
@@ -313,15 +309,10 @@ public class MainWindowView {
 
     //TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
     public void setupMainViewItems() {
-        //Initialize the list we use to store log messages shown to the user
-        userLog = FXCollections.observableArrayList(logMessage ->
-                new Observable[]{
-                        logMessage.viewableLogMessageProperty(),
-                        logMessage.messageTypeProperty()
-                });
-
         viewableLog.setItems(userLog);
         viewableLog.setCellFactory(param -> new LogCell());
+        //Disable selecting rows in the log.
+        viewableLog.setSelectionModel(null);
 
         modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
@@ -339,7 +330,7 @@ public class MainWindowView {
         if (userConfiguration.getLastUsedSaveProfileId() != null) {
             UUID lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
 
-            lastUsedSaveProfile = userConfiguration.getSaveProfiles().stream()
+            lastUsedSaveProfile = saveProfiles.stream()
                     .filter(saveProfile -> saveProfile.getId().equals(lastUsedSaveProfileId))
                     .findFirst();
         }
@@ -393,10 +384,43 @@ public class MainWindowView {
         }
     }
 
+    //TODO: Prevent users from creating a profile with the name Manage...
+    //TODO: Don't allow duplicate names for profiles
     @FXML
-    private void launchSpaceEngineers() throws URISyntaxException, IOException {
-        //TODO: Check this works on systems with no previous steam url association
-        Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
+    private void setActiveModProfile() throws IOException {
+        if (modProfileDropdown.getValue().equals("Manage...")) {
+            modProfileView.setUserConfiguration(userConfiguration);
+            modProfileView.getStage().showAndWait();
+            //TODO: Set the current profile to whatever is in user configuration last used profile ID. currentSaveProfile =
+            // Repeat this for the init method to set our current stuff!
+            //TODO: Save the profile object
+        } else {
+            Optional<ModProfile> selectedProfile = modProfiles.stream().
+                    filter(o -> o.getProfileName().equals(modProfileDropdown.getValue()))
+                    .findFirst();
+            selectedProfile.ifPresent(modProfile -> currentModProfile = modProfile);
+            //TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
+        }
+    }
+
+    private void importModlist() {
+        //TODO: Implement. Allow importing modlists from either sandbox file or exported list.
+    }
+
+    @FXML
+    private void exportModlist() {
+        //TODO: Implement. Export in our own format (use XML).
+    }
+
+    @FXML
+    private void saveModlist() {
+        //TODO: Implement
+    }
+
+    @FXML
+    private void resetModlist() {
+        //TODO: Implement by setting the current modprofile modlist to whatever it is in our userconfiguration.
+        // If it doesn't exist there, popup a modal asking if they're sure they want to reset the modlist as it is unsaved.
     }
 
     //Apply the modlist the user is currently viewing to the save profile they're currently viewing.
@@ -404,30 +428,35 @@ public class MainWindowView {
     private void applyModlist() throws IOException {
         //This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
         if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
-            Result<Boolean> modlistResult = backendFileController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
+            Result<Boolean> modlistResult = backendController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
             uiService.log(modlistResult);
             if (!modlistResult.isSuccess()) {
-                //TODO: Popup some error window
                 currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
             } else {
-                currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
                 currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
 
-                int modProfileIndex = userConfiguration.getModProfiles().indexOf(currentModProfile);
-                userConfiguration.getModProfiles().set(modProfileIndex, currentModProfile);
+                int modProfileIndex = modProfiles.indexOf(currentModProfile);
+                modProfiles.set(modProfileIndex, currentModProfile);
 
-                int saveProfileIndex = userConfiguration.getSaveProfiles().indexOf(currentSaveProfile);
-                userConfiguration.getSaveProfiles().set(saveProfileIndex, currentSaveProfile);
+                int saveProfileIndex = saveProfiles.indexOf(currentSaveProfile);
+                saveProfiles.set(saveProfileIndex, currentSaveProfile);
 
-                backendFileController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location=./Storage/SEMM_Data.xml")));
+                backendController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location=./Storage/SEMM_Data.xml")));
+                currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
             }
             updateInfoBar(currentSaveProfile);
         } else {
-            String errorMessage = "Save or Mod profile not setup yet.";
+            //Save or Mod profile not setup yet. Create both a Save and Mod profile to be able to apply a modlist.
+            String errorMessage = "Save or Mod profile not setup yet. Create both a Save and Mod profile to be able to apply a modlist.";
             uiService.log(errorMessage, MessageType.ERROR);
             Alert.display(errorMessage, stage, MessageType.ERROR);
-            //TODO: Overload the update infobar function
         }
+    }
+
+    @FXML
+    private void launchSpaceEngineers() throws URISyntaxException, IOException {
+        //TODO: Check this works on systems with no previous steam url association
+        Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
     }
 
     private void disableSplitPaneDivider() {

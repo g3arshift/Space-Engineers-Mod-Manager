@@ -2,22 +2,23 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.Objects;
 
 /**
- * Displays a custom alert modal using icons from the Ikonli Carbon Icon icon pack.
+ * Displays a custom alert modal using icons from the Ikonli CarbonIcon icon pack.
  */
 public class Alert {
     public static <T> void display(Result<T> result, Stage parentStage) {
@@ -27,8 +28,11 @@ public class Alert {
         Label label = new Label(result.getMessages().getLast());
         FontIcon messageIcon = new FontIcon();
 
-        switch (result.getType()) {
+        label.setStyle("-fx-font-size: 16;");
+        messageIcon.getStyleClass().clear();
+        messageIcon.setIconSize(30);
 
+        switch (result.getType()) {
             case SUCCESS -> {
                 messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
                 messageIcon.setIconLiteral("ci-information-square");
@@ -50,7 +54,9 @@ public class Alert {
                 stage.setTitle("Unknown");
             }
         }
-        finishDisplay(stage, parentStage, label, messageIcon);
+        //TODO: Should instead have different functions called in the switch cases depending on what case it hits.
+        // Use our current one as an "OK only" error display, but set others to have different options. Useful for when we save!
+        errorDisplay(stage, parentStage, label, messageIcon);
     }
 
     public static void display(String message, Stage parentStage, MessageType messageType) {
@@ -59,6 +65,9 @@ public class Alert {
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
+        label.setStyle("-fx-font-size: 16;");
+        messageIcon.getStyleClass().clear();
+        messageIcon.setIconSize(30);
 
         switch (messageType) {
             case INFO -> {
@@ -82,22 +91,25 @@ public class Alert {
                 stage.setTitle("Unknown");
             }
         }
-        finishDisplay(stage, parentStage, label, messageIcon);
+        //TODO: Should instead have different functions called in the switch cases depending on what case it hits.
+        errorDisplay(stage, parentStage, label, messageIcon);
     }
 
-    private static void finishDisplay(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
-        label.setStyle("-fx-font-size: 14;");
-        messageIcon.setScaleX(1.2);
-        messageIcon.setScaleY(1.2);
+    private static void errorDisplay(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
+        HBox errorInformation = new HBox(messageIcon, label);
+        label.setWrapText(true);
+        errorInformation.setAlignment(Pos.TOP_LEFT);
+        errorInformation.setPadding(new Insets(0, 5, 0 ,5));
+        errorInformation.setSpacing(5d);
+        errorInformation.setMaxWidth(600);
 
-        HBox layout = new HBox(messageIcon, label);
-        layout.setAlignment(Pos.CENTER);
-        layout.setSpacing(5d);
-        layout.setPadding(new Insets(5, 5, 5, 5));
-        layout.setStyle("-fx-background-color: -color-bg-subtle;");
+        //Setup our button
+        HBox buttonBar = getButtonBar(childStage);
 
-        Scene scene = new Scene(layout);
-        childStage.setTitle("Error");
+        VBox contents = new VBox(errorInformation, buttonBar);
+        contents.setSpacing(10);
+
+        Scene scene = new Scene(contents);
         childStage.getIcons().add(new Image(Objects.requireNonNull(Alert.class.getResourceAsStream("/icons/logo.png"))));
         childStage.setResizable(false);
 
@@ -123,5 +135,23 @@ public class Alert {
         });
 
         childStage.show();
+    }
+
+    private static HBox getButtonBar(Stage childStage) {
+        Button quitButton = new Button();
+        quitButton.setText("OK");
+        quitButton.setOnAction((ActionEvent event) -> {
+            childStage.close();
+        });
+
+        quitButton.setMinWidth(80d);
+        quitButton.setMinHeight(36d);
+        quitButton.setMaxHeight(36d);
+
+        HBox buttonBar = new HBox(quitButton);
+        buttonBar.setPadding(new Insets(5, 5, 5, 5));
+        buttonBar.setStyle("-fx-background-color: -color-neutral-subtle;");
+        buttonBar.setAlignment(Pos.CENTER);
+        return buttonBar;
     }
 }

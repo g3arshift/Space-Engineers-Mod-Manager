@@ -54,6 +54,14 @@ public class SaveProfile {
         this.lastSaveStatus = SaveStatus.NONE;
     }
 
+    public SaveProfile(String profileName, String savePath) {
+        id = UUID.randomUUID();
+        this.profileName = profileName;
+        this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
+        this.lastSaveStatus = SaveStatus.NONE;
+        this.savePath = savePath;
+    }
+
     @XmlAttribute
     public void setProfileName(String profileName) {
         this.profileName = profileName;
