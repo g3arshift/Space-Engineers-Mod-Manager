@@ -22,8 +22,8 @@
                   <Region HBox.hgrow="ALWAYS" />
                   <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                     <buttons>
-                      <Button fx:id="profileCreateAccept" mnemonicParsing="false" text="OK" />
-                        <Button fx:id="profileCreateDeny" mnemonicParsing="false" text="Cancel" />
+                      <Button fx:id="profileCreateAccept" mnemonicParsing="false" onAction="#getProfileName" text="OK" />
+                        <Button fx:id="profileCreateCancel" mnemonicParsing="false" onAction="#closeWindow" text="Cancel" />
                     </buttons>
                   </ButtonBar>
                </children>

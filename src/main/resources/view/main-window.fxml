@@ -72,6 +72,12 @@
                               </Menu>
                            </items>
                         </Menu>
+                        <Menu mnemonicParsing="false" text="Profiles">
+                          <items>
+                            <MenuItem fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Profiles" />
+                              <MenuItem fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage Save Profiles" />
+                          </items>
+                        </Menu>
                             <Menu mnemonicParsing="false" text="Help">
                                 <items>
                                     <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
@@ -83,19 +89,19 @@
                     </MenuBar>
                       <HBox alignment="CENTER_LEFT" spacing="10.0">
                           <children>
-                              <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
+                              <HBox alignment="CENTER_LEFT" minWidth="214.0" prefHeight="36.0" spacing="12.0">
                                   <children>
                               <Label minWidth="-Infinity" text="Mod Profile" />
-                                      <ComboBox fx:id="modProfileDropdown" onAction="#setActiveModProfile" prefWidth="150.0" />
+                                      <ComboBox fx:id="modProfileDropdown" minWidth="150.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
                                   </children>
                                   <opaqueInsets>
                                       <Insets />
                                   </opaqueInsets>
                               </HBox>
-                              <HBox alignment="CENTER_LEFT" prefHeight="36.0" prefWidth="214.0" spacing="12.0">
+                              <HBox alignment="CENTER_LEFT" minWidth="214.0" prefHeight="36.0" spacing="12.0">
                                   <children>
-                              <Label minWidth="-Infinity" text="Save Profile" />
-                                      <ComboBox fx:id="selectedSaveDropdown" prefWidth="150.0" />
+                              <Label minWidth="-Infinity" text="Save Profile" HBox.hgrow="ALWAYS" />
+                                      <ComboBox fx:id="saveProfileDropdown" minWidth="150.0" HBox.hgrow="ALWAYS" />
                                   </children>
                                   <opaqueInsets>
                                       <Insets />

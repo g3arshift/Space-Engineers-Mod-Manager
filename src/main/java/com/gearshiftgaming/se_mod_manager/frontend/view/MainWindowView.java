@@ -9,10 +9,7 @@ import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
-import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
-import javafx.beans.Observable;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -26,6 +23,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
@@ -80,10 +78,16 @@ public class MainWindowView {
     private MenuItem faq;
 
     @FXML
-    private ComboBox<String> modProfileDropdown;
+    private MenuItem manageModProfiles;
 
     @FXML
-    private ComboBox<String> selectedSaveDropdown;
+    private MenuItem manageSaveProfiles;
+
+    @FXML
+    private ComboBox<ModProfile> modProfileDropdown;
+
+    @FXML
+    private ComboBox<SaveProfile> saveProfileDropdown;
 
     @FXML
     private Text activeModCount;
@@ -316,8 +320,37 @@ public class MainWindowView {
 
         modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
-        selectedSaveDropdown.getItems().add("Manage...");
-        modProfileDropdown.getItems().add("Manage...");
+        //TODO: Add Manage option
+        //Make it so the combo boxes will properly return strings in their menus instead of the objects
+        saveProfileDropdown.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(SaveProfile saveProfile) {
+                return saveProfile.getProfileName();
+            }
+
+            @Override
+            public SaveProfile fromString(String s) {
+                return null;
+            }
+        });
+        modProfileDropdown.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(ModProfile modProfile) {
+                return modProfile.getProfileName();
+            }
+
+            @Override
+            public ModProfile fromString(String s) {
+                return null;
+            }
+        });
+
+        saveProfileDropdown.setItems(saveProfiles);
+        //TODO: If current save is not null then we want to select our current save
+        saveProfileDropdown.getSelectionModel().selectFirst();
+        modProfileDropdown.setItems(modProfiles);
+        //TODO: If current modprofile is not null then we want to select our current modprofile
+        modProfileDropdown.getSelectionModel().selectFirst();
 
         //TODO: Much of this needs to happen down in the service layer
         //TODO: Setup a function in ModList service to track conflicts.
@@ -386,21 +419,26 @@ public class MainWindowView {
 
     //TODO: Prevent users from creating a profile with the name Manage...
     //TODO: Don't allow duplicate names for profiles
+
     @FXML
-    private void setActiveModProfile() throws IOException {
-        if (modProfileDropdown.getValue().equals("Manage...")) {
-            modProfileView.setUserConfiguration(userConfiguration);
-            modProfileView.getStage().showAndWait();
-            //TODO: Set the current profile to whatever is in user configuration last used profile ID. currentSaveProfile =
-            // Repeat this for the init method to set our current stuff!
-            //TODO: Save the profile object
-        } else {
-            Optional<ModProfile> selectedProfile = modProfiles.stream().
-                    filter(o -> o.getProfileName().equals(modProfileDropdown.getValue()))
-                    .findFirst();
-            selectedProfile.ifPresent(modProfile -> currentModProfile = modProfile);
-            //TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
-        }
+    private void manageModProfiles() {
+        modProfileView.setUserConfiguration(userConfiguration);
+        modProfileView.getStage().showAndWait();
+        //TODO: Set the current profile to whatever is in user configuration last used profile ID. currentSaveProfile =
+    }
+
+    @FXML
+    private void manageSaveProfiles() {
+
+    }
+
+    @FXML
+    private void selectModProfile() throws IOException {
+        Optional<ModProfile> selectedProfile = modProfiles.stream().
+                filter(o -> o.getProfileName().equals(modProfileDropdown.getValue().getProfileName()))
+                .findFirst();
+        selectedProfile.ifPresent(modProfile -> currentModProfile = modProfile);
+        //TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
     }
 
     private void importModlist() {
