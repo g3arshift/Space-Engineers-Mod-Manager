@@ -10,6 +10,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -425,6 +426,7 @@ public class MainWindowView {
         modProfileView.setUserConfiguration(userConfiguration);
         modProfileView.getStage().showAndWait();
         //TODO: Set the current profile to whatever is in user configuration last used profile ID. currentSaveProfile =
+        //TODO: Set the current selected profile to currentProfile modProfileDropdown.getSelectionModel().select();
     }
 
     @FXML

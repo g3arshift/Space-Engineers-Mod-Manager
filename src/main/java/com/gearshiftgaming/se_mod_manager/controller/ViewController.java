@@ -76,6 +76,7 @@ public class ViewController {
                 });
 
         UiService uiService = new UiService(logger, userLog);
+        uiService.log(userConfigurationResult);
 
         //Manually inject our controllers into our FXML so we can reuse the FXML UI between ModProfiles and SaveProfiles.
         FXMLLoader modProfileCreateLoader = new FXMLLoader(getClass().getResource("/view/create-profile.fxml"));

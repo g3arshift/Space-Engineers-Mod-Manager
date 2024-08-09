@@ -3,7 +3,9 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileCell;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -79,6 +81,8 @@ public class ModProfileView {
         profileList.setItems(modProfiles);
         profileList.setCellFactory(param -> new ModProfileCell());
 
+        profileList.setStyle("-fx-background-color: -color-bg-default;");
+
         stage.setScene(scene);
     }
 
@@ -88,6 +92,7 @@ public class ModProfileView {
         ModProfile newModProfile = new ModProfile(modProfileCreateView.getProfileCreateInput().getText());
         //TODO: Add duplicate checking
         modProfiles.add(newModProfile);
+        uiService.log("Successfully created profile " + modProfileCreateView.getProfileCreateInput().getText(), MessageType.INFO);
     }
 
     @FXML
@@ -103,7 +108,7 @@ public class ModProfileView {
 
     @FXML
     private void renameProfile() {
-        //TODO: Implement
+        //TODO: Implement profileList.getSelectionModel().getSelectedItem().setProfileName();
     }
 
     @FXML
@@ -115,5 +120,4 @@ public class ModProfileView {
     private void closeProfileWindow() {
         stage.close();
     }
-
 }
