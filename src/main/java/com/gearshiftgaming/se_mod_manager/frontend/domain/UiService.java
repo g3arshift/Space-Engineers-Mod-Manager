@@ -9,9 +9,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
+@Getter
 public class UiService {
-    //TODO: Move the observable list and all the other controller junk here that isn't strictly DUMB UI related.
-    @Getter
+
     private final ObservableList<LogMessage> userLog;
 
     private final Logger logger;

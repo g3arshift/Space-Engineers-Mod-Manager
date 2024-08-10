@@ -59,10 +59,9 @@ public class ViewController {
 
         if(userConfigurationResult.isSuccess()) {
             userConfiguration = userConfigurationResult.getPayload();
-            logger.info(userConfigurationResult.getMessages());
         } else {
             userConfiguration = new UserConfiguration();
-            logger.warn(userConfigurationResult.getMessages());
+            backendController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location")));
         }
 
         ObservableList<ModProfile> modProfiles = FXCollections.observableList(userConfiguration.getModProfiles());
@@ -89,12 +88,13 @@ public class ViewController {
         ModProfileView modProfileView = new ModProfileView();
         modProfileLoader.setController(modProfileView);
         Parent modProfileRoot = modProfileLoader.load();
-        modProfileView.initController(modProfiles, modProfileRoot, uiService, modProfileInput, properties);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
         Parent mainViewRoot = loader.load();
         MainWindowView mainWindowView = loader.getController();
         mainWindowView.initController(properties, logger, backendController, userConfiguration, stage, mainViewRoot, modProfiles, saveProfiles, modProfileView, uiService);
+
+        modProfileView.initController(modProfiles, modProfileRoot, uiService, modProfileInput, properties, mainWindowView);
 
         //TODO: Add validation to services for input AND USE RESULT
         //TODO: When we launch the app for the first time, walk the user through first making a save profile, then naming a new mod profile, then IMMEDIATELY save to file.

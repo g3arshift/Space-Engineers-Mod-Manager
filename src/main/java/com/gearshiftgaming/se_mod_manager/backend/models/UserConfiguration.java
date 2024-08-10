@@ -37,18 +37,23 @@ public class UserConfiguration {
      * Creates an entirely new XML configuration file to store user information with.
      */
     public UserConfiguration() {
-        this.saveProfiles = new ArrayList<>();
-        this.modProfiles = new ArrayList<>();
-        this.userTheme = new PrimerLight().getName();
+        saveProfiles = new ArrayList<>();
+        modProfiles = new ArrayList<>();
+        userTheme = new PrimerLight().getName();
 
-        this.saveProfiles.add(new SaveProfile("Default"));
-        this.modProfiles.add(new ModProfile("Default"));
+        //TODO: The save profile is actually useless here because it has no save path.
+        saveProfiles.add(new SaveProfile("Default"));
+        modProfiles.add(new ModProfile("Default"));
+
+        lastUsedSaveProfileId = saveProfiles.getFirst().getId();
     }
 
     public UserConfiguration(List<SaveProfile> saveProfiles, List<ModProfile> modProfiles, String userTheme) {
         this.saveProfiles = saveProfiles;
         this.modProfiles = modProfiles;
         this.userTheme = userTheme;
+
+        lastUsedSaveProfileId = saveProfiles.getFirst().getId();
     }
 
     @XmlElement(name = "userTheme")

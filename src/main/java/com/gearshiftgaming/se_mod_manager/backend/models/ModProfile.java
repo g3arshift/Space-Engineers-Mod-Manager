@@ -37,6 +37,15 @@ public class ModProfile {
         this.profileName = profileName;
     }
 
+    public ModProfile(ModProfile modProfile) {
+        id = UUID.randomUUID();
+        profileName = modProfile.getProfileName();
+        modList = new ArrayList<>();
+        if(modProfile.getModList() != null){
+            modList.addAll(modProfile.getModList());
+        }
+    }
+
     @XmlAttribute
     public void setProfileName(String profileName) {
         this.profileName = profileName;

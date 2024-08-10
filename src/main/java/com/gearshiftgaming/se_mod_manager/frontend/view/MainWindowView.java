@@ -26,6 +26,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -85,6 +86,7 @@ public class MainWindowView {
     private MenuItem manageSaveProfiles;
 
     @FXML
+    @Getter
     private ComboBox<ModProfile> modProfileDropdown;
 
     @FXML
@@ -183,7 +185,9 @@ public class MainWindowView {
     //TODO: We need to replace the window control bar for the window.
     private ObservableList<LogMessage> userLog;
 
+    @Setter
     private SaveProfile currentSaveProfile;
+    @Setter
     private ModProfile currentModProfile;
 
     private Logger logger;
@@ -237,8 +241,8 @@ public class MainWindowView {
 
         //Prepare the UI
         setupWindow();
-        setupInformationBar();
         setupMainViewItems();
+        setupInformationBar();
     }
 
     //TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -295,7 +299,7 @@ public class MainWindowView {
             updateLastModifiedBy(currentSaveProfile);
 
             //Set the text for the last time this profile was saved
-            if (currentSaveProfile.getLastSaved().isEmpty()) {
+            if (currentSaveProfile.getLastSaved() == null || currentSaveProfile.getLastSaved().isEmpty()) {
                 lastInjected.setText("Never");
             } else {
                 lastInjected.setText(currentSaveProfile.getLastSaved());
@@ -351,9 +355,13 @@ public class MainWindowView {
         saveProfileDropdown.setItems(saveProfiles);
         //TODO: If current save is not null then we want to select our current save
         saveProfileDropdown.getSelectionModel().selectFirst();
+        currentSaveProfile = saveProfileDropdown.getSelectionModel().getSelectedItem();
+
+
         modProfileDropdown.setItems(modProfiles);
         //TODO: If current modprofile is not null then we want to select our current modprofile
         modProfileDropdown.getSelectionModel().selectFirst();
+        currentModProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 
         //TODO: Much of this needs to happen down in the service layer
         //TODO: Setup a function in ModList service to track conflicts.
@@ -427,8 +435,6 @@ public class MainWindowView {
     private void manageModProfiles() {
         modProfileView.setUserConfiguration(userConfiguration);
         modProfileView.getStage().showAndWait();
-        //TODO: Set the current profile to whatever is in user configuration last used profile ID. currentSaveProfile =
-        //TODO: Set the current selected profile to currentProfile modProfileDropdown.getSelectionModel().select();
         uiService.log(backendController.saveUserData(userConfiguration, userConfigurationFile));
     }
 
@@ -439,10 +445,13 @@ public class MainWindowView {
 
     @FXML
     private void selectModProfile() throws IOException {
-        Optional<ModProfile> selectedProfile = modProfiles.stream().
-                filter(o -> o.getProfileName().equals(modProfileDropdown.getValue().getProfileName()))
-                .findFirst();
-        selectedProfile.ifPresent(modProfile -> currentModProfile = modProfile);
+        currentModProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
+
+
+//        Optional<ModProfile> selectedProfile = modProfiles.stream().
+//                filter(o -> o.getProfileName().equals(modProfileDropdown.getValue().getProfileName()))
+//                .findFirst();
+//        selectedProfile.ifPresent(modProfile -> currentModProfile = modProfile);
         //TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
     }
 

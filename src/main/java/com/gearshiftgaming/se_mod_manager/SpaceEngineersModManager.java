@@ -11,14 +11,14 @@ import java.util.concurrent.ExecutionException;
 
 public class SpaceEngineersModManager extends Application {
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
+    public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException {
 
-        ViewController viewController = new ViewController(primaryStage);
+        new ViewController(primaryStage);
         primaryStage.show();
     }
 }
