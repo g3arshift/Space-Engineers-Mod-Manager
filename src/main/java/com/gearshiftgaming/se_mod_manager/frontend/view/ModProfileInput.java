@@ -11,11 +11,11 @@ import lombok.Getter;
 
 import javafx.scene.control.TextField;
 
-public class ModProfileCreateView {
+public class ModProfileInput {
 
     @Getter
     @FXML
-    private TextField profileCreateInput;
+    private TextField profileNameInput;
 
     @FXML
     private Button profileCreateAccept;
@@ -25,10 +25,9 @@ public class ModProfileCreateView {
 
     @Getter
     private Stage stage;
-    private Scene scene;
 
     public void initController(Parent root) {
-        this.scene = new Scene(root);
+        Scene scene = new Scene(root);
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -37,7 +36,7 @@ public class ModProfileCreateView {
 
     @FXML
     private void getProfileName() {
-        if (profileCreateInput.getText().isEmpty() || profileCreateInput.getText().isBlank()) {
+        if (profileNameInput.getText().isEmpty() || profileNameInput.getText().isBlank()) {
             Alert.display("Profile name cannot be empty!", stage, MessageType.WARN);
         } else {
             stage.close();
@@ -46,7 +45,7 @@ public class ModProfileCreateView {
 
     @FXML
     private void closeWindow() {
-        profileCreateInput.clear();
+        profileNameInput.clear();
         stage.close();
     }
 }

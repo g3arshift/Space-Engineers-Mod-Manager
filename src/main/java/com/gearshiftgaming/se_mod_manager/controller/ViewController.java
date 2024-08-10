@@ -11,7 +11,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MainWindowView;
-import com.gearshiftgaming.se_mod_manager.frontend.view.ModProfileCreateView;
+import com.gearshiftgaming.se_mod_manager.frontend.view.ModProfileInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.ModProfileView;
 import jakarta.xml.bind.JAXBException;
 import javafx.beans.Observable;
@@ -79,17 +79,17 @@ public class ViewController {
         uiService.log(userConfigurationResult);
 
         //Manually inject our controllers into our FXML so we can reuse the FXML UI between ModProfiles and SaveProfiles.
-        FXMLLoader modProfileCreateLoader = new FXMLLoader(getClass().getResource("/view/create-profile.fxml"));
-        ModProfileCreateView modProfileCreateView = new ModProfileCreateView();
-        modProfileCreateLoader.setController(modProfileCreateView);
+        FXMLLoader modProfileCreateLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
+        ModProfileInput modProfileInput = new ModProfileInput();
+        modProfileCreateLoader.setController(modProfileInput);
         Parent modProfileCreateRoot = modProfileCreateLoader.load();
-        modProfileCreateView.initController(modProfileCreateRoot);
+        modProfileInput.initController(modProfileCreateRoot);
 
         FXMLLoader modProfileLoader = new FXMLLoader(getClass().getResource("/view/profile-window.fxml"));
         ModProfileView modProfileView = new ModProfileView();
         modProfileLoader.setController(modProfileView);
         Parent modProfileRoot = modProfileLoader.load();
-        modProfileView.initController(modProfiles, modProfileRoot, uiService, modProfileCreateView, properties);
+        modProfileView.initController(modProfiles, modProfileRoot, uiService, modProfileInput, properties);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
         Parent mainViewRoot = loader.load();

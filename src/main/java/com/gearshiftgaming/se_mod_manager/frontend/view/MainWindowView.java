@@ -210,6 +210,7 @@ public class MainWindowView {
 
     private ModProfileView modProfileView;
 
+    private File userConfigurationFile;
     //Initializes our controller while maintaining the empty constructor JavaFX expects
     public void initController(Properties properties, Logger logger,
                                BackendController backendController, UserConfiguration userConfiguration,
@@ -229,6 +230,8 @@ public class MainWindowView {
         this.saveProfiles = saveProfiles;
 
         this.modProfileView = modProfileView;
+
+        userConfigurationFile = new File(properties.getProperty("semm.userData.default.location"));
 
         //TODO: Set current mod and save profile
 
@@ -287,7 +290,6 @@ public class MainWindowView {
         if (lastUsedSaveProfile.isPresent()) {
             this.currentSaveProfile = lastUsedSaveProfile.get();
             this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
-            ;
 
             updateSaveStatus(currentSaveProfile);
             updateLastModifiedBy(currentSaveProfile);
@@ -427,6 +429,7 @@ public class MainWindowView {
         modProfileView.getStage().showAndWait();
         //TODO: Set the current profile to whatever is in user configuration last used profile ID. currentSaveProfile =
         //TODO: Set the current selected profile to currentProfile modProfileDropdown.getSelectionModel().select();
+        uiService.log(backendController.saveUserData(userConfiguration, userConfigurationFile));
     }
 
     @FXML
@@ -481,7 +484,7 @@ public class MainWindowView {
                 int saveProfileIndex = saveProfiles.indexOf(currentSaveProfile);
                 saveProfiles.set(saveProfileIndex, currentSaveProfile);
 
-                backendController.saveUserData(userConfiguration, new File(properties.getProperty("semm.userData.default.location=./Storage/SEMM_Data.xml")));
+                uiService.log(backendController.saveUserData(userConfiguration, userConfigurationFile));
                 currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
             }
             updateInfoBar(currentSaveProfile);

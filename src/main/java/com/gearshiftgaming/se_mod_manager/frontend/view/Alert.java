@@ -134,7 +134,7 @@ public class Alert {
             childStage.heightProperty().removeListener(heightListener);
         });
 
-        childStage.show();
+        childStage.showAndWait();
     }
 
     private static HBox getButtonBar(Stage childStage) {

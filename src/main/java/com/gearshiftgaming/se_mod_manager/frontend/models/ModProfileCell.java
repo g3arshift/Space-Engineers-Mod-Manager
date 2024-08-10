@@ -16,9 +16,9 @@ public class ModProfileCell extends ListCell<ModProfile> {
     @Override
     protected void updateItem(ModProfile item, boolean empty) {
         super.updateItem(item, empty);
-
         if(empty || item == null) {
             setGraphic(null);
+            setStyle(null);
         } else {
             profileName.setText(item.getProfileName());
             //TODO: Not 100% happy with this, but it'll do for now.

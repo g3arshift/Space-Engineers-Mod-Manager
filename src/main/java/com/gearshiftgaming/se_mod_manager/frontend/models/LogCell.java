@@ -27,6 +27,7 @@ public class LogCell extends ListCell<LogMessage> {
         //If cells are empty or their contents null, remove them. Else, style them and add them.
         if (empty || item == null) {
             setGraphic(null);
+            setStyle(null);
         } else {
             switch (item.getMessageType()) {
                 case INFO -> {

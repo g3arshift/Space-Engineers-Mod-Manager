@@ -10,13 +10,12 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-
 <AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <Label text="Enter a name for the profile:" />
-            <TextField fx:id="profileCreateInput" minWidth="450.0" promptText="Profile name" />
+            <TextField fx:id="profileNameInput" minWidth="450.0" promptText="Profile name" />
             <HBox>
                <children>
                   <Region HBox.hgrow="ALWAYS" />
