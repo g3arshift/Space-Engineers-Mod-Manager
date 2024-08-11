@@ -29,13 +29,16 @@ public class BackendFileController implements BackendController {
 
     private final UserDataService userDataService;
 
-    public BackendFileController(SandboxConfigRepository sandboxConfigRepository, ModlistRepository modlistRepository, Properties properties, UserDataRepository userDataRepository) {
+    private final File userConfigurationFile;
+
+    public BackendFileController(SandboxConfigRepository sandboxConfigRepository, ModlistRepository modlistRepository, Properties properties, UserDataRepository userDataRepository, File userConfigurationFile) {
         this.sandboxService = new SandboxService(sandboxConfigRepository);
         this.modlistService = new ModlistService(modlistRepository, properties);
         this.userDataService = new UserDataService(userDataRepository);
+        this.userConfigurationFile = userConfigurationFile;
     }
 
-    public Result<UserConfiguration> getUserData(File userConfigurationFile) throws JAXBException {
+    public Result<UserConfiguration> getUserData() throws JAXBException {
         return userDataService.getUserData(userConfigurationFile);
     }
 
@@ -50,7 +53,7 @@ public class BackendFileController implements BackendController {
         }
     }
 
-    public Result<Boolean> saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {
+    public Result<Boolean> saveUserData(UserConfiguration userConfiguration) {
         return userDataService.saveUserData(userConfiguration, userConfigurationFile);
     }
 

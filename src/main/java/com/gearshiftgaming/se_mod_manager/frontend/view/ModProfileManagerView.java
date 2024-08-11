@@ -1,7 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileCell;
@@ -15,12 +14,11 @@ import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Objects;
 import java.util.Properties;
 
-public class ModProfileView {
+public class ModProfileManagerView {
 
     @FXML
     private ListView<ModProfile> profileList;
@@ -46,24 +44,19 @@ public class ModProfileView {
     @Getter
     private Stage stage;
 
-    private ObservableList<ModProfile> modProfiles;
-
     private UiService uiService;
 
-    @Setter
-    private UserConfiguration userConfiguration;
-
-    private ModProfileInput modProfileInputView;
+    private ModProfileInputView modProfileInputView;
 
     private MainWindowView mainWindowView;
 
-    public void initView(ObservableList<ModProfile> modProfiles, Parent root,
-                         UiService uiService, ModProfileInput modProfileInput,
-                         Properties properties, MainWindowView mainWindowView) {
-        this.modProfiles = modProfiles;
+    private ObservableList<ModProfile> modProfiles;
+
+    public void initView(Parent root, UiService uiService, ModProfileInputView modProfileInputView, Properties properties, MainWindowView mainWindowView) {
         Scene scene = new Scene(root);
         this.uiService = uiService;
-        this.modProfileInputView = modProfileInput;
+        modProfiles = uiService.getModProfiles();
+        this.modProfileInputView = modProfileInputView;
         this.mainWindowView = mainWindowView;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -86,8 +79,6 @@ public class ModProfileView {
     @FXML
     private void createNewProfile() {
         boolean duplicateProfileName;
-
-        //TODO: When clicking the close in the top right corner of the window it runs our code anyways. We want it to just cancel.
 
         do {
             modProfileInputView.getProfileNameInput().requestFocus();
@@ -143,8 +134,6 @@ public class ModProfileView {
     @FXML
     private void renameProfile() {
         boolean duplicateProfileName;
-
-        //TODO: When clicking the close in the top right corner of the window it runs our code anyways. We want it to just cancel.
 
         do {
             modProfileInputView.getProfileNameInput().clear();

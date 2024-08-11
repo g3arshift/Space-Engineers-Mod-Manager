@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.util.List;
 
 public interface BackendController {
-    Result<UserConfiguration> getUserData(File file) throws JAXBException;
+    Result<UserConfiguration> getUserData() throws JAXBException;
 
     Result<Boolean> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException;
 
-    Result<Boolean> saveUserData(UserConfiguration userConfiguration, File userConfigurationFile);
+    Result<Boolean> saveUserData(UserConfiguration userConfiguration);
 
     public Result<Boolean> createTestUserData(Theme theme);
 }

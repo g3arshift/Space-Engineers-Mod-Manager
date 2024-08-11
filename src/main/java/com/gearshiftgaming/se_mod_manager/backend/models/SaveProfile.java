@@ -20,9 +20,6 @@ public class SaveProfile {
     private final UUID id;
 
     @Setter
-    private String profileName;
-
-    @Setter
     private String saveName;
 
     @Setter
@@ -42,30 +39,16 @@ public class SaveProfile {
 
     public SaveProfile(){
         id = UUID.randomUUID();
-        this.profileName = "New Save Profile";
+        this.saveName = "None";
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
     }
 
-    public SaveProfile(String profileName) {
+    public SaveProfile(String savePath) {
         id = UUID.randomUUID();
-        this.profileName = profileName;
-        this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
-        this.lastSaveStatus = SaveStatus.NONE;
-    }
-
-    public SaveProfile(String profileName, String savePath) {
-        id = UUID.randomUUID();
-        this.profileName = profileName;
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
-    }
-
-    @XmlAttribute
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
-        lastSaved = getCurrentTime();
     }
 
     public void setLastAppliedModProfileId(UUID lastAppliedModProfileId) {

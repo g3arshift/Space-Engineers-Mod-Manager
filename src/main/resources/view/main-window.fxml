@@ -61,13 +61,13 @@
                               <CheckMenuItem fx:id="modDescriptionToggle" mnemonicParsing="false" onAction="#toggleModDescription" selected="true" text="Mod Description" />
                               <Menu fx:id="themes" mnemonicParsing="false" text="Themes">
                                  <items>
-                                    <CheckMenuItem fx:id="primerLightTheme" mnemonicParsing="false" text="Primer Light" />
-                                    <CheckMenuItem fx:id="primerDarkTheme" mnemonicParsing="false" text="Primer Dark" />
-                                    <CheckMenuItem fx:id="nordLightTheme" mnemonicParsing="false" text="Nord Light" />
-                                    <CheckMenuItem fx:id="nordDarkTheme" mnemonicParsing="false" text="Nord Dark" />
-                                    <CheckMenuItem fx:id="cupertinoLightTheme" mnemonicParsing="false" text="Cupertino Light" />
-                                    <CheckMenuItem fx:id="cupertinoDarkTheme" mnemonicParsing="false" text="Cupertino Dark" />
-                                    <CheckMenuItem fx:id="draculaTheme" mnemonicParsing="false" text="Dracula" />
+                                    <CheckMenuItem fx:id="primerLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Primer Light" />
+                                    <CheckMenuItem fx:id="primerDarkTheme" mnemonicParsing="false" onAction="#setTheme" text="Primer Dark" />
+                                    <CheckMenuItem fx:id="nordLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Nord Light" />
+                                    <CheckMenuItem fx:id="nordDarkTheme" mnemonicParsing="false" onAction="#setTheme" text="Nord Dark" />
+                                    <CheckMenuItem fx:id="cupertinoLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Cupertino Light" />
+                                    <CheckMenuItem fx:id="cupertinoDarkTheme" mnemonicParsing="false" onAction="#setTheme" text="Cupertino Dark" />
+                                    <CheckMenuItem fx:id="draculaTheme" mnemonicParsing="false" onAction="#setTheme" text="Dracula" />
                                  </items>
                               </Menu>
                            </items>

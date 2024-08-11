@@ -1,8 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import jakarta.xml.bind.*;
 
 import java.io.*;
@@ -13,6 +11,7 @@ import java.io.*;
  * @author Gear Shift
  * @version 1.0
  */
+//TODO: Implement file locks
 public class UserDataFileRepository implements UserDataRepository {
     public UserConfiguration loadUserData(File userConfigurationFile) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);

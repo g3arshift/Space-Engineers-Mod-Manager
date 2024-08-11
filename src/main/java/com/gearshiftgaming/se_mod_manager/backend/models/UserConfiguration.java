@@ -42,7 +42,7 @@ public class UserConfiguration {
         userTheme = new PrimerLight().getName();
 
         //TODO: The save profile is actually useless here because it has no save path.
-        saveProfiles.add(new SaveProfile("Default"));
+        saveProfiles.add(new SaveProfile());
         modProfiles.add(new ModProfile("Default"));
 
         lastUsedSaveProfileId = saveProfiles.getFirst().getId();

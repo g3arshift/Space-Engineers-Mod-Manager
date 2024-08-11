@@ -11,7 +11,7 @@ import lombok.Getter;
 
 import javafx.scene.control.TextField;
 
-public class ModProfileInput {
+public class ModProfileInputView {
 
     @Getter
     @FXML
@@ -26,7 +26,7 @@ public class ModProfileInput {
     @Getter
     private Stage stage;
 
-    public void initController(Parent root) {
+    public void initView(Parent root) {
         Scene scene = new Scene(root);
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);

@@ -1,31 +1,39 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-
 @Getter
 public class UiService {
 
-    private final ObservableList<LogMessage> userLog;
-
     private final Logger logger;
 
-    //TODO: Pass the objects to the UI instead and parse to observable lists
-    //private final List<ModProfile> modProfiles;
-    //private final List<SaveProfile> saveProfiles;
+    private final ObservableList<LogMessage> userLog;
 
-    public UiService(Logger logger, ObservableList<LogMessage> userLog) throws IOException {
+    private final ObservableList<ModProfile> modProfiles;
+
+    private final ObservableList<SaveProfile> saveProfiles;
+
+    private final BackendController backendController;
+    public UiService(Logger logger, ObservableList<LogMessage> userLog,
+                     ObservableList<ModProfile> modProfiles, ObservableList<SaveProfile> saveProfiles,
+                     BackendController backendController) {
+
         this.logger = logger;
         this.userLog = userLog;
-
-        //TODO: Run first time user setup
+        this.modProfiles = modProfiles;
+        this.saveProfiles = saveProfiles;
+        this.backendController = backendController;
     }
+
+    //TODO: Run first time user setup
 
     public void log(String message, MessageType messageType) {
         LogMessage logMessage = new LogMessage(message, messageType, logger);
@@ -40,6 +48,10 @@ public class UiService {
             default -> messageType = MessageType.INFO;
         }
         log(result.getMessages().getLast(), messageType);
+
+    }
+
+    public void firstTimeSetup() {
 
     }
 }

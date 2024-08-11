@@ -7,6 +7,7 @@ import javafx.stage.Stage;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutionException;
 
 public class SpaceEngineersModManager extends Application {
@@ -16,7 +17,7 @@ public class SpaceEngineersModManager extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException {
+    public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         new ViewController(primaryStage);
         primaryStage.show();

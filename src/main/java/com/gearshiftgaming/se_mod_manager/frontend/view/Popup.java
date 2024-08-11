@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Displays a custom alert modal using icons from the Ikonli CarbonIcon icon pack.
+ * Displays a custom popup modal using icons from the Ikonli CarbonIcon icon pack.
  */
 public class Popup {
 
@@ -71,9 +71,6 @@ public class Popup {
         simpleAlert(stage, parentStage, label, messageIcon);
     }
 
-
-    //TODO: Should instead have different functions to call based on what type of alert we want to make
-    //TODO: Break this up so we can have a unified basic design for the UI
     public static void displaySimpleAlert(String message, Stage parentStage, MessageType messageType) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
