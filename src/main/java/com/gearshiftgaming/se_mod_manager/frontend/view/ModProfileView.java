@@ -16,11 +16,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 
 public class ModProfileView {
@@ -60,9 +57,9 @@ public class ModProfileView {
 
     private MainWindowView mainWindowView;
 
-    public void initController(ObservableList<ModProfile> modProfiles, Parent root,
-                               UiService uiService, ModProfileInput modProfileInput,
-                               Properties properties, MainWindowView mainWindowView) throws IOException, XmlPullParserException {
+    public void initView(ObservableList<ModProfile> modProfiles, Parent root,
+                         UiService uiService, ModProfileInput modProfileInput,
+                         Properties properties, MainWindowView mainWindowView) {
         this.modProfiles = modProfiles;
         Scene scene = new Scene(root);
         this.uiService = uiService;
@@ -99,13 +96,13 @@ public class ModProfileView {
             duplicateProfileName = profileNameExists(modProfileInputView.getProfileNameInput().getText());
 
             if (duplicateProfileName) {
-                Alert.display("Profile name already exists!", stage, MessageType.WARN);
-            } else if(!modProfileInputView.getProfileNameInput().getText().isBlank()){
+                Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+            } else if (!modProfileInputView.getProfileNameInput().getText().isBlank()) {
                 modProfiles.add(newModProfile);
                 uiService.log("Successfully created profile " + modProfileInputView.getProfileNameInput().getText(), MessageType.INFO);
                 modProfileInputView.getProfileNameInput().clear();
             }
-        } while(duplicateProfileName);
+        } while (duplicateProfileName);
     }
 
     @FXML
@@ -114,10 +111,10 @@ public class ModProfileView {
         String copyProfileName = profileList.getSelectionModel().getSelectedItem().getProfileName() + "_Copy";
         do {
             duplicateProfileName = profileNameExists(copyProfileName);
-            if(duplicateProfileName) {
+            if (duplicateProfileName) {
                 copyProfileName += "_Copy";
             }
-        } while(duplicateProfileName);
+        } while (duplicateProfileName);
 
         ModProfile copyProfile = new ModProfile(profileList.getSelectionModel().getSelectedItem());
         copyProfile.setProfileName(copyProfileName);
@@ -127,17 +124,18 @@ public class ModProfileView {
 
     @FXML
     private void removeProfile() {
-        if(mainWindowView.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
-            Alert.display("You cannot remove the active profile.", stage, MessageType.WARN);
+        if (mainWindowView.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+            Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
         } else {
-            int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-            modProfiles.remove(profileIndex);
-            //TODO: Add a popup to make sure a user is certain they want to delete a profile.
-            // Implement in the alert dialog a "Delete" menu
-            if(profileIndex > modProfiles.size()) {
-                profileList.getSelectionModel().select(profileIndex - 1);
-            } else {
-                profileList.getSelectionModel().select(profileIndex);
+            int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
+            if (choice == 1) {
+                int profileIndex = profileList.getSelectionModel().getSelectedIndex();
+                modProfiles.remove(profileIndex);
+                if (profileIndex > modProfiles.size()) {
+                    profileList.getSelectionModel().select(profileIndex - 1);
+                } else {
+                    profileList.getSelectionModel().select(profileIndex);
+                }
             }
         }
     }
@@ -155,14 +153,19 @@ public class ModProfileView {
             duplicateProfileName = profileNameExists(modProfileInputView.getProfileNameInput().getText());
 
             if (duplicateProfileName) {
-                Alert.display("Profile name already exists!", stage, MessageType.WARN);
-            } else if(!modProfileInputView.getProfileNameInput().getText().isBlank()){
+                Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+            } else if (!modProfileInputView.getProfileNameInput().getText().isBlank()) {
                 //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                 int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                 modProfiles.get(profileIndex).setProfileName(modProfileInputView.getProfileNameInput().getText());
 
                 //We manually refresh here because the original profile won't update its name while it's selected in the list
                 profileList.refresh();
+
+                //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
+                mainWindowView.getModProfileDropdown().getSelectionModel().selectNext();
+                mainWindowView.getModProfileDropdown().getSelectionModel().selectPrevious();
+
                 modProfileInputView.getProfileNameInput().clear();
                 uiService.log("Successfully renamed profile.", MessageType.INFO);
             }

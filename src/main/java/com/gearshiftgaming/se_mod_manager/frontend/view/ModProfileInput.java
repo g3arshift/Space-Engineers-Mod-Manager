@@ -37,7 +37,7 @@ public class ModProfileInput {
     @FXML
     private void getProfileName() {
         if (profileNameInput.getText().isEmpty() || profileNameInput.getText().isBlank()) {
-            Alert.display("Profile name cannot be empty!", stage, MessageType.WARN);
+            Popup.displaySimpleAlert("Profile name cannot be empty!", stage, MessageType.WARN);
         } else {
             stage.close();
         }

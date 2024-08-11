@@ -10,7 +10,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -216,11 +215,11 @@ public class MainWindowView {
 
     private File userConfigurationFile;
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public void initController(Properties properties, Logger logger,
-                               BackendController backendController, UserConfiguration userConfiguration,
-                               Stage stage, Parent root,
-                               ObservableList<ModProfile> modProfiles, ObservableList<SaveProfile> saveProfiles,
-                               ModProfileView modProfileView, UiService uiService) throws IOException, XmlPullParserException {
+    public void initView(Properties properties, Logger logger,
+                         BackendController backendController, UserConfiguration userConfiguration,
+                         Stage stage, Parent root,
+                         ObservableList<ModProfile> modProfiles, ObservableList<SaveProfile> saveProfiles,
+                         ModProfileView modProfileView, UiService uiService) throws IOException, XmlPullParserException {
         this.logger = logger;
         this.backendController = backendController;
         this.scene = new Scene(root);
@@ -501,7 +500,7 @@ public class MainWindowView {
             //Save or Mod profile not setup yet. Create both a Save and Mod profile to be able to apply a modlist.
             String errorMessage = "Save or Mod profile not setup yet. Create both a Save and Mod profile to be able to apply a modlist.";
             uiService.log(errorMessage, MessageType.ERROR);
-            Alert.display(errorMessage, stage, MessageType.ERROR);
+            Popup.displaySimpleAlert(errorMessage, stage, MessageType.ERROR);
         }
     }
 

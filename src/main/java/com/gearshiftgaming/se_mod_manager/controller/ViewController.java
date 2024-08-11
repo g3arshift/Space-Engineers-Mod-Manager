@@ -92,9 +92,9 @@ public class ViewController {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
         Parent mainViewRoot = loader.load();
         MainWindowView mainWindowView = loader.getController();
-        mainWindowView.initController(properties, logger, backendController, userConfiguration, stage, mainViewRoot, modProfiles, saveProfiles, modProfileView, uiService);
+        mainWindowView.initView(properties, logger, backendController, userConfiguration, stage, mainViewRoot, modProfiles, saveProfiles, modProfileView, uiService);
 
-        modProfileView.initController(modProfiles, modProfileRoot, uiService, modProfileInput, properties, mainWindowView);
+        modProfileView.initView(modProfiles, modProfileRoot, uiService, modProfileInput, properties, mainWindowView);
 
         //TODO: Add validation to services for input AND USE RESULT
         //TODO: When we launch the app for the first time, walk the user through first making a save profile, then naming a new mod profile, then IMMEDIATELY save to file.
