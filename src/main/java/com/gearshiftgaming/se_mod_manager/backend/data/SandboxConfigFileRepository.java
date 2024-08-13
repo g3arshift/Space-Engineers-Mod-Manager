@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 
 public class SandboxConfigFileRepository implements SandboxConfigRepository {
     @Override
-    public String getSandboxConfig(String sandboxConfigPath) throws IOException {
-        return Files.readString(Path.of(sandboxConfigPath));
+    public String getSandboxConfig(File sandboxFile) throws IOException {
+        return Files.readString(sandboxFile.toPath());
     }
 
     @Override

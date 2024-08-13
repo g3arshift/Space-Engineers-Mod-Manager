@@ -32,10 +32,7 @@ import java.util.Properties;
  * Used to prepare basic environment setup for the application.
  */
 public class ViewController {
-
-
     private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
-    private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
     public ViewController(Stage stage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
@@ -83,7 +80,7 @@ public class ViewController {
         SaveListInputView saveListInputView = new SaveListInputView();
         saveListInputLoader.setController(saveListInputView);
         Parent saveListInputRoot = saveListInputLoader.load();
-        saveListInputView.initView(saveListInputRoot);
+        saveListInputView.initView(saveListInputRoot, uiService);
 
         //View for adding a new Mod Profile
         FXMLLoader modProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));

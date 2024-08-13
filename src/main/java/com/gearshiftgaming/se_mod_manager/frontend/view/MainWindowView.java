@@ -377,8 +377,8 @@ public class MainWindowView {
 
         saveProfileDropdown.setItems(saveProfiles);
         saveProfileDropdown.getSelectionModel().selectFirst();
+        //TODO: Set the current save and mod profile equal to whatever was used last.
         currentSaveProfile = saveProfileDropdown.getSelectionModel().getSelectedItem();
-
 
         modProfileDropdown.setItems(modProfiles);
         modProfileDropdown.getSelectionModel().selectFirst();
@@ -457,18 +457,13 @@ public class MainWindowView {
 
     @FXML
     private void manageSaveProfiles() {
-
+        saveManagerView.getStage().showAndWait();
+        uiService.log(backendController.saveUserData(userConfiguration));
     }
 
     @FXML
     private void selectModProfile() throws IOException {
         currentModProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
-
-
-//        Optional<ModProfile> selectedProfile = modProfiles.stream().
-//                filter(o -> o.getProfileName().equals(modProfileDropdown.getValue().getProfileName()))
-//                .findFirst();
-//        selectedProfile.ifPresent(modProfile -> currentModProfile = modProfile);
         //TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
     }
 
@@ -498,6 +493,7 @@ public class MainWindowView {
     private void applyModlist() throws IOException {
         //This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
         if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
+            //TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
             Result<Boolean> modlistResult = backendController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
             uiService.log(modlistResult);
             if (!modlistResult.isSuccess()) {
@@ -505,6 +501,7 @@ public class MainWindowView {
             } else {
                 currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
 
+                //TODO: This and the currentSave profile are both null, but they aren't actually. Why? This logic probably needs all looked over and rewritten.
                 int modProfileIndex = modProfiles.indexOf(currentModProfile);
                 modProfiles.set(modProfileIndex, currentModProfile);
 
@@ -587,6 +584,7 @@ public class MainWindowView {
         updateLastInjected();
     }
 
+    //TODO: MAybe make the graphic label also colored?
     private void updateSaveStatus(SaveProfile saveProfile) {
         switch (saveProfile.getLastSaveStatus()) {
             case SAVED -> {

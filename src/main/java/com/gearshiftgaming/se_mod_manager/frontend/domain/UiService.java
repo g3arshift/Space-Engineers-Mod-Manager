@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 @Getter
 public class UiService {
+    //TODO: Is this a controller, or a service? It's kind of performing the duties of a controller.
 
     private final Logger logger;
 

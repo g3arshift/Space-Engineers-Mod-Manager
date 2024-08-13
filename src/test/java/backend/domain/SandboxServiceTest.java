@@ -63,7 +63,7 @@ public class SandboxServiceTest {
 
     @Test
     void shouldGetGoodButFakeConfig() throws IOException {
-        Result<String> result = service.getSandboxConfigFromFile(goodConfigPath);
+        Result<String> result = service.getSandboxConfigFromFile(new File(goodConfigPath));
 
         assertEquals(Files.readString(Path.of(goodConfigPath)), result.getPayload());
         assertTrue(result.isSuccess());
@@ -71,14 +71,14 @@ public class SandboxServiceTest {
 
     @Test
     void shouldGetFileDoesNotExist() throws IOException {
-        Result<String> result = service.getSandboxConfigFromFile(fakePath);
+        Result<String> result = service.getSandboxConfigFromFile(new File(fakePath));
         assertFalse(result.isSuccess());
         assertEquals("File does not exist.", result.getMessages().getLast());
     }
 
     @Test
     void shouldGetIncorrectFileExtension() throws IOException {
-        Result<String> result = service.getSandboxConfigFromFile(badSavePath);
+        Result<String> result = service.getSandboxConfigFromFile(new File(badSavePath));
         assertFalse(result.isSuccess());
         assertEquals("Incorrect file type selected. Please select a .sbc file.", result.getMessages().getLast());
     }

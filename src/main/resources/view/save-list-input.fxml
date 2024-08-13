@@ -21,7 +21,7 @@
                      </graphic>
                   </Label>
                   <Region HBox.hgrow="ALWAYS" />
-                  <Button fx:id="selectSave" mnemonicParsing="false" onAction="#selectSave" text="Select Save" />
+                  <Button fx:id="chooseSave" mnemonicParsing="false" onAction="#chooseSave" text="Select Save" />
                </children>
             </HBox>
             <HBox>

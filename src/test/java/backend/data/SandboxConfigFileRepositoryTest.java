@@ -18,13 +18,13 @@ public class SandboxConfigFileRepositoryTest {
 
     @Test
     void shouldGetValidSandboxConfigFile() throws IOException {
-        assertFalse(repository.getSandboxConfig("src/test/resources/TestSandbox_config.sbc").isBlank());
+        assertFalse(repository.getSandboxConfig(new File("src/test/resources/TestSandbox_config.sbc")).isBlank());
     }
 
     @Test
     void shouldNotLoadFileThatDoesNotExist() {
         assertThrows(IOException.class, () ->
-                repository.getSandboxConfig("src/this/file/does/not/exist"));
+                repository.getSandboxConfig(new File("src/this/file/does/not/exist")));
     }
 
     @Test

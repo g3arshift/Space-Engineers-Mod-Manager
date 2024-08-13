@@ -18,7 +18,6 @@ public class SpaceEngineersModManager extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-
         new ViewController(primaryStage);
         primaryStage.show();
     }

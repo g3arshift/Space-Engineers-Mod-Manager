@@ -21,14 +21,13 @@ public class SandboxService {
         this.sandboxConfigFileRepository = sandboxConfigRepository;
     }
 
-    public Result<String> getSandboxConfigFromFile(String sandboxConfigPath) throws IOException {
-        File sandboxConfigFile = new File(sandboxConfigPath);
+    public Result<String> getSandboxConfigFromFile(File sandboxConfigFile) throws IOException {
         Result<String> result = new Result<>();
         if (!sandboxConfigFile.exists()) {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(sandboxConfigFile.getName()).equals("sbc")) {
             result.addMessage(sandboxConfigFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(sandboxConfigFileRepository.getSandboxConfig(sandboxConfigFile.getPath()));
+            result.setPayload(sandboxConfigFileRepository.getSandboxConfig(sandboxConfigFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .sbc file.", ResultType.INVALID);
         }

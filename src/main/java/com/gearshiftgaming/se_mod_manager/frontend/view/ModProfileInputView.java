@@ -5,11 +5,14 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 
 import javafx.scene.control.TextField;
+
+import java.util.Objects;
 
 public class ModProfileInputView {
 
@@ -30,6 +33,9 @@ public class ModProfileInputView {
         Scene scene = new Scene(root);
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
+
+        stage.setTitle("Create new mod profile");
+        stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
         stage.setScene(scene);
     }
