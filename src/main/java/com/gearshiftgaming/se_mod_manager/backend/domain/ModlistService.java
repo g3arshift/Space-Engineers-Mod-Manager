@@ -22,7 +22,7 @@ public class ModlistService {
     private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
     //TODO: Implement other repositories for the expected data options
-    private final ModlistRepository modFileRepository;
+    private final ModlistRepository modlistRepository;
     private final String MOD_SCRAPING_SELECTOR;
 
     @Setter
@@ -32,8 +32,8 @@ public class ModlistService {
     //"Not retrieving mod information from Steam Workshop."
     private boolean workshopConnectionActive;
 
-    public ModlistService(ModlistRepository modFileRepository, Properties properties) {
-        this.modFileRepository = modFileRepository;
+    public ModlistService(ModlistRepository modlistRepository, Properties properties) {
+        this.modlistRepository = modlistRepository;
         this.properties = properties;
         this.MOD_SCRAPING_SELECTOR = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
     }
@@ -45,7 +45,7 @@ public class ModlistService {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(modlistFile.getName()).equals("txt") || FilenameUtils.getExtension(modlistFile.getName()).equals("doc")) {
             result.addMessage(modlistFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(modFileRepository.getModList(modlistFile));
+            result.setPayload(modlistRepository.getModList(modlistFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .txt or .doc file.", ResultType.INVALID);
         }

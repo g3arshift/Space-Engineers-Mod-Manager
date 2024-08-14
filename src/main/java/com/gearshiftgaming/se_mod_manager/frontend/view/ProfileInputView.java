@@ -14,7 +14,7 @@ import javafx.scene.control.TextField;
 
 import java.util.Objects;
 
-public class ModProfileInputView {
+public class ProfileInputView {
 
     @Getter
     @FXML
@@ -34,7 +34,7 @@ public class ModProfileInputView {
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        stage.setTitle("Create new mod profile");
+        stage.setTitle("Create new profile");
         stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
         stage.setScene(scene);

@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.controller;
 import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
@@ -47,8 +48,10 @@ public class ViewController {
         }
 
         BackendController backendController = new BackendFileController(new SandboxConfigFileRepository(),
-                new ModlistFileRepository(), properties,
+                new ModlistFileRepository(),
                 new UserDataFileRepository(),
+                new SaveFileRepository(),
+                properties,
                 new File(properties.getProperty("semm.userData.default.location")));
 
         Result<UserConfiguration> userConfigurationResult = backendController.getUserData();
@@ -77,17 +80,23 @@ public class ViewController {
         //Manually inject our controllers into our FXML so we can reuse the FXML for the profile creation elsewhere, and have greater flexibility in controller injection.
         //View for adding a new Save Profile
         FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
-        SaveListInputView saveListInputView = new SaveListInputView();
-        saveListInputLoader.setController(saveListInputView);
+        SaveListInput saveListInputFirstStepView = new SaveListInput();
+        saveListInputLoader.setController(saveListInputFirstStepView);
         Parent saveListInputRoot = saveListInputLoader.load();
-        saveListInputView.initView(saveListInputRoot, uiService);
+        saveListInputFirstStepView.initView(saveListInputRoot, uiService);
+
+        FXMLLoader saveProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
+        ProfileInputView saveListInputSecondStepView = new ProfileInputView();
+        saveProfileManagerLoader.setController(saveListInputSecondStepView);
+        Parent saveListInputSecondStepRoot = saveProfileManagerLoader.load();
+        saveListInputSecondStepView.initView(saveListInputSecondStepRoot);
 
         //View for adding a new Mod Profile
         FXMLLoader modProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
-        ModProfileInputView modProfileInputView = new ModProfileInputView();
-        modProfileManagerLoader.setController(modProfileInputView);
+        ProfileInputView profileInputView = new ProfileInputView();
+        modProfileManagerLoader.setController(profileInputView);
         Parent modProfileCreateRoot = modProfileManagerLoader.load();
-        modProfileInputView.initView(modProfileCreateRoot);
+        profileInputView.initView(modProfileCreateRoot);
 
         //View for managing Save Profiles
         FXMLLoader saveManagerLoader = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
@@ -110,8 +119,8 @@ public class ViewController {
                 mainViewRoot, modProfileManagerView,
                 saveManagerView, uiService);
 
-        modProfileManagerView.initView(modProfileRoot, uiService, modProfileInputView, properties, mainWindowView);
-        saveManagerView.initView(saveManagerRoot, uiService, saveListInputView, properties, mainWindowView);
+        modProfileManagerView.initView(modProfileRoot, uiService, profileInputView, properties, mainWindowView);
+        saveManagerView.initView(saveManagerRoot, uiService, saveListInputFirstStepView, saveListInputSecondStepView, properties, mainWindowView);
 
         //TODO: Actually implement this. Function is empty at the moment.
         if(!userConfigurationResult.isSuccess()) {

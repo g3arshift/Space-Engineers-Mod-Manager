@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 @Getter
 public class UiService {
-    //TODO: Is this a controller, or a service? It's kind of performing the duties of a controller.
+    //TODO: Is this a controller, or a service? It's kind of performing the duties of a controller as it doesn't have too much of its own logic.
 
     private final Logger logger;
 
@@ -34,8 +34,6 @@ public class UiService {
         this.backendController = backendController;
     }
 
-    //TODO: Run first time user setup
-
     public void log(String message, MessageType messageType) {
         LogMessage logMessage = new LogMessage(message, messageType, logger);
         userLog.add(logMessage);
@@ -53,6 +51,6 @@ public class UiService {
     }
 
     public void firstTimeSetup() {
-
+        //TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
     }
 }

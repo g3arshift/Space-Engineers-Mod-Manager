@@ -20,5 +20,7 @@ public interface BackendController {
 
     Result<SaveProfile> getSaveProfile(File sandboxConfig) throws IOException;
 
+    Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException;
+
     public Result<Boolean> createTestUserData(Theme theme);
 }

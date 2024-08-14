@@ -36,6 +36,9 @@ public class SaveManagerView {
     private Button removeSave;
 
     @FXML
+    private Button renameSave;
+
+    @FXML
     private Button selectSave;
 
     @FXML
@@ -48,19 +51,24 @@ public class SaveManagerView {
 
     private UiService uiService;
 
-    private SaveListInputView saveListInputView;
+    private SaveListInput saveListInputFirstStepView;
+
+    private ProfileInputView saveListInputSecondStepView;
 
     private MainWindowView mainWindowView;
 
     //TODO: Add a button to rename save profiles, that will also rename them in the file structure! MAke sure it renames the session name in Sandbox.sbc and Sandbox_config.sbc, as well as the folder name.
 
-    public void initView(Parent root, UiService uiService, SaveListInputView saveListInputView, Properties properties, MainWindowView mainWindowView) {
+    public void initView(Parent root, UiService uiService,
+                         SaveListInput saveListInputFirstStepView, ProfileInputView saveListInputSecondStepView,
+                         Properties properties, MainWindowView mainWindowView) {
 
         Scene scene = new Scene(root);
         this.uiService = uiService;
         saveProfiles = uiService.getSaveProfiles();
 
-        this.saveListInputView = saveListInputView;
+        this.saveListInputFirstStepView = saveListInputFirstStepView;
+        this.saveListInputSecondStepView = saveListInputSecondStepView;
         this.mainWindowView = mainWindowView;
 
         stage = new Stage();
@@ -83,43 +91,76 @@ public class SaveManagerView {
 
     @FXML
     private void addSave() throws IOException {
-        //TODO: If the save list only contains one item and that one item = "None" with all its fields equal to null, replace it with our new item.
-        boolean duplicateSaveName = false;
+        //TODO: We need to implement profile names as well. This also means we need to change the cell factory so it displays the profile name, not save name!
+        // When implemented, change duplicate checking for saveName to profileName.
+        // Implement this with two screens. The first selects a save, the second adds a name for the profile.
+        boolean duplicateSavePath = false;
         Result<SaveProfile> result;
+        //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
         do {
-            saveListInputView.getStage().showAndWait();
-            result = saveListInputView.getSaveProfileResult();
+            saveListInputFirstStepView.getStage().showAndWait();
+            result = saveListInputFirstStepView.getSaveProfileResult();
             if (result.isSuccess()) {
                 SaveProfile saveProfile = result.getPayload();
-                duplicateSaveName = saveNameExists(saveProfile.getSaveName());
+                duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
 
-                if (duplicateSaveName) {
+                if (duplicateSavePath) {
                     Popup.displaySimpleAlert("Save is already being managed!", stage, MessageType.WARN);
                 } else {
                     //Remove the default save profile that isn't actually a profile if it's all that we have in the list.
-                    if (saveProfiles.size() == 1 && saveProfiles.getFirst().getSaveName().equals("None") && saveProfiles.getFirst().getSavePath() == null) {
-                        saveProfiles.set(0, saveProfile);
-                        mainWindowView.setCurrentSaveProfile(saveProfile);
-                    } else {
-                        saveProfiles.add(saveProfile);
-                    }
-                    result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
-                    uiService.log(result);
+                    //Technically a user could enter this by mistake, but it's extremely unlikely.
+                    boolean duplicateProfileName;
+                    do {
+                        saveListInputSecondStepView.getProfileNameInput().clear();
+                        saveListInputSecondStepView.getProfileNameInput().requestFocus();
+                        saveListInputSecondStepView.getStage().showAndWait();
+                        duplicateProfileName = profileNameAlreadyExists(saveListInputSecondStepView.getProfileNameInput().getText());
+
+                        if (duplicateProfileName) {
+                            Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+                        } else if (!saveListInputSecondStepView.getProfileNameInput().getText().isBlank()) {
+                            saveProfile.setProfileName(saveListInputSecondStepView.getProfileNameInput().getText());
+                            if (saveProfiles.size() == 1 &&
+                                    saveProfiles.getFirst().getSaveName().equals("None") &&
+                                    saveProfiles.getFirst().getProfileName().equals("None") &&
+                                    saveProfiles.getFirst().getSavePath() == null) {
+                                saveProfiles.set(0, saveProfile);
+                                mainWindowView.setCurrentSaveProfile(saveProfile);
+                            } else {
+                                saveProfiles.add(saveProfile);
+                                result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
+                                uiService.log(result);
+
+                                saveListInputSecondStepView.getProfileNameInput().clear();
+                            }
+                        }
+                    } while (duplicateProfileName);
                 }
-                saveListInputView.getSaveName().setText("No save selected");
-                saveListInputView.setSelectedSave(null);
             }
-        } while (result.isSuccess() && duplicateSaveName);
+        } while (result.isSuccess() && duplicateSavePath);
+
+        //Cleanup our UI actions.
+        saveListInputFirstStepView.getSaveName().setText("No save selected.");
+        saveListInputFirstStepView.setSelectedSave(null);
+        saveListInputSecondStepView.getProfileNameInput().clear();
     }
 
     @FXML
-    private void copySave() {
-        //TODO: Implement
-        //TODO: Make an alert that "This will only copy the sandbox config, not the entire save folder. It will be stored at XYZ. Continue?
+    private void copySave() throws IOException {
+        Result<SaveProfile> profileCopyResult = uiService.getBackendController().copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+        if(profileCopyResult.isSuccess()) {
+            saveProfiles.add(profileCopyResult.getPayload());
+        }
+        uiService.log(profileCopyResult);
     }
 
     @FXML
     private void removeSave() {
+        //TODO: Implement
+    }
+
+    @FXML
+    private void renameSave() {
         //TODO: Implement
     }
 
@@ -134,8 +175,18 @@ public class SaveManagerView {
         stage.close();
     }
 
-    private boolean saveNameExists(String saveName) {
+    private boolean saveAlreadyExists(String savePath) {
+        return saveProfiles.stream()
+                .anyMatch(saveProfile -> saveProfile.getSavePath() != null && saveProfile.getSavePath().equals(savePath));
+    }
+
+    private boolean saveNameAlreadyExists(String saveName) {
         return saveProfiles.stream()
                 .anyMatch(saveProfile -> saveProfile.getSaveName().equals(saveName));
+    }
+
+    private boolean profileNameAlreadyExists(String profileName) {
+        return saveProfiles.stream()
+                .anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
     }
 }

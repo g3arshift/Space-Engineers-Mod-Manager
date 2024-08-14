@@ -3,7 +3,6 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -21,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class SaveListInputView {
+public class SaveListInput {
 
     @FXML
     @Getter
@@ -50,7 +49,7 @@ public class SaveListInputView {
 
     private UiService uiService;
 
-    public void initView(Parent root, UiService uiService) {
+    public void initView(Parent root, UiService uiService) throws IOException {
         this.uiService = uiService;
         Scene scene = new Scene(root);
         stage = new Stage();
