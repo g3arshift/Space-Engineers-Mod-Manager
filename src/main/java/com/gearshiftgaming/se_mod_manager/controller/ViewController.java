@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
@@ -27,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 /**

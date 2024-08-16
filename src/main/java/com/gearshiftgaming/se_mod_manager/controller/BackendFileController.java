@@ -50,7 +50,7 @@ public class BackendFileController implements BackendController {
 	public Result<Boolean> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
 		Result<String> modifiedSandboxConfigResult = sandboxService.injectModsIntoSandboxConfig(new File(sandboxConfigPath), modList);
 		if (modifiedSandboxConfigResult.isSuccess()) {
-			return sandboxService.saveSandboxConfig(sandboxConfigPath, modifiedSandboxConfigResult.getPayload());
+			return sandboxService.saveSandboxToFile(sandboxConfigPath, modifiedSandboxConfigResult.getPayload());
 		} else {
 			Result<Boolean> failedModification = new Result<>();
 			failedModification.addMessage(modifiedSandboxConfigResult.getMessages().getLast(), ResultType.FAILED);
@@ -65,7 +65,7 @@ public class BackendFileController implements BackendController {
 	@Override
 	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
 		Result<SaveProfile> saveProfileResult = new Result<>();
-		Result<String> sandboxFileResult = sandboxService.getSandboxConfigFromFile(sandboxConfigFile);
+		Result<String> sandboxFileResult = sandboxService.getSandboxFromFile(sandboxConfigFile);
 		if (!sandboxFileResult.isSuccess()) {
 			saveProfileResult.addMessage(sandboxFileResult.getMessages().getLast(), sandboxFileResult.getType());
 			return saveProfileResult;
@@ -85,10 +85,7 @@ public class BackendFileController implements BackendController {
 
 	@Override
 	public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
-        //Gets the path without Sandbox_config.sbc at the end
-		String sourceSavePath = sourceSaveProfile.getSavePath().substring(0, sourceSaveProfile.getSavePath().length() - 19);
-
-		Result<SaveProfile> copyResult = saveService.copySaveFiles(sourceSavePath);
+		Result<SaveProfile> copyResult = saveService.copySaveFiles(sourceSaveProfile);
 		if (copyResult.isSuccess()) {
 			copyResult.addMessage("Successfully copied save " + sourceSaveProfile.getProfileName() + ".", ResultType.SUCCESS);
 		}

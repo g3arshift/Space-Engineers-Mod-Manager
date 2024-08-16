@@ -2,16 +2,16 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 
 public class SaveProfileCell extends ListCell<SaveProfile> {
-	private final Label profileName = new Label();
+	private final Text profileName = new Text();
 
 	private final Tooltip saveName = new Tooltip();
 
@@ -23,7 +23,6 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 
 	public SaveProfileCell() {
 		super();
-		profileName.setAlignment(Pos.CENTER_LEFT);
 		HBox.setHgrow(stackPane, Priority.ALWAYS);
 		stackPane.setAlignment(Pos.CENTER_LEFT);
 	}
@@ -36,11 +35,16 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 			setGraphic(null);
 			setStyle(null);
 		} else {
+			String style = "-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5";
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			saveName.setText("Save name: " + item.getSaveName());
 			profileName.setText(item.getProfileName());
+			if(!item.isSaveExists()) {
+				profileName.setStyle("-fx-fill: -color-danger-emphasis;");
+				profileName.setStrikethrough(true);
+			}
 			Tooltip.install(region, saveName);
-			setStyle("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;");
+			setStyle(style);
 			setGraphic(layout);
 		}
 	}

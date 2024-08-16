@@ -2,7 +2,6 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 
 import jakarta.xml.bind.annotation.XmlAttribute;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 
 import java.io.File;
@@ -40,12 +39,16 @@ public class SaveProfile {
     @XmlAttribute
     private String lastSaved;
 
+    private boolean saveExists;
+
+    //This represents our base save profile that only exists when the application is launched for the first time.
     public SaveProfile(){
         id = UUID.randomUUID();
         this.profileName = "None";
         this.saveName = "None";
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
+        saveExists = false;
     }
 
     public SaveProfile(String profileName, String savePath) {
@@ -54,6 +57,7 @@ public class SaveProfile {
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
+        saveExists = true;
     }
 
     public SaveProfile(File saveFile) {
@@ -62,6 +66,7 @@ public class SaveProfile {
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = saveFile.getPath();
+        saveExists = true;
     }
 
     public SaveProfile(SaveProfile saveProfile) {
@@ -73,6 +78,7 @@ public class SaveProfile {
         this.lastModifiedBy = saveProfile.getLastModifiedBy();
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
+        this.saveExists = saveProfile.isSaveExists();
     }
 
     public void setLastAppliedModProfileId(UUID lastAppliedModProfileId) {
@@ -93,5 +99,10 @@ public class SaveProfile {
 
     private String getCurrentTime() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
+    }
+
+    @XmlAttribute
+    public void setSaveExists(boolean saveExists) {
+        this.saveExists = saveExists;
     }
 }

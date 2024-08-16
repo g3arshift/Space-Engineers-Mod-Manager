@@ -6,6 +6,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -13,6 +14,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -37,6 +39,18 @@ public class Popup {
         getIconByMessageType(messageType, messageIcon, stage);
 
         return yesNoDialog(stage, parentStage, label, messageIcon);
+    }
+
+    public static int displayYesNoDialog(String message, MessageType messageType) {
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        Label label = new Label(message);
+        FontIcon messageIcon = new FontIcon();
+
+        getIconByMessageType(messageType, messageIcon, stage);
+
+        return yesNoDialog(stage, label, messageIcon);
     }
 
     public static <T> void displaySimpleAlert(Result<T> result, Stage parentStage) {
@@ -100,6 +114,18 @@ public class Popup {
         HBox buttonBar = makeYesNoBar(choice, childStage);
 
         createPopup(childStage, parentStage, dialogBox, buttonBar);
+
+        return choice.intValue();
+    }
+
+    private static int yesNoDialog(Stage childStage, Label label, FontIcon messageIcon) {
+        AtomicInteger choice = new AtomicInteger(-1);
+
+        HBox dialogBox = makeDialogBox(label, messageIcon);
+
+        HBox buttonBar = makeYesNoBar(choice, childStage);
+
+        createPopup(childStage, dialogBox, buttonBar);
 
         return choice.intValue();
     }
@@ -176,6 +202,31 @@ public class Popup {
         });
     }
 
+    private static void centerStage(Stage stage) {
+        //Center the alert in the middle of the screen
+
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+
+        ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+            double stageWidth = newValue.doubleValue();
+            stage.setX((screenBounds.getWidth() - stage.getWidth()) / 2);
+        };
+        ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
+            double stageHeight = newValue.doubleValue();
+            stage.setY((screenBounds.getHeight() - stage.getHeight()) / 2);
+        };
+
+        stage.widthProperty().addListener(widthListener);
+        stage.heightProperty().addListener(heightListener);
+
+        //Once the window is visible, remove the listeners.
+        stage.setOnShown(e -> {
+            stage.widthProperty().removeListener(widthListener);
+            stage.heightProperty().removeListener(heightListener);
+        });
+    }
+
     private static HBox makeDialogBox(Label label, FontIcon messageIcon) {
         label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
         messageIcon.getStyleClass().clear();
@@ -217,6 +268,22 @@ public class Popup {
     }
 
     private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
+        prepareStage(childStage, dialogBox, buttonBar);
+
+        centerStage(childStage, parentStage);
+
+        childStage.showAndWait();
+    }
+
+    private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
+        prepareStage(childStage, dialogBox, buttonBar);
+
+        centerStage(childStage);
+
+        childStage.showAndWait();
+    }
+
+    private static void prepareStage(Stage childStage, HBox dialogBox, HBox buttonBar) {
         VBox contents = new VBox(dialogBox, buttonBar);
         contents.setSpacing(10);
 
@@ -225,9 +292,5 @@ public class Popup {
         childStage.setResizable(false);
 
         childStage.setScene(scene);
-
-        centerStage(childStage, parentStage);
-
-        childStage.showAndWait();
     }
 }

@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import org.apache.commons.io.FilenameUtils;
@@ -21,20 +22,21 @@ public class SandboxService {
         this.sandboxConfigFileRepository = sandboxConfigRepository;
     }
 
-    public Result<String> getSandboxConfigFromFile(File sandboxConfigFile) throws IOException {
+    //This will work to retrieve both a Sandbox_config file and a Sandbox file.
+    public Result<String> getSandboxFromFile(File sandboxConfigFile) throws IOException {
         Result<String> result = new Result<>();
         if (!sandboxConfigFile.exists()) {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(sandboxConfigFile.getName()).equals("sbc")) {
             result.addMessage(sandboxConfigFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(sandboxConfigFileRepository.getSandboxConfig(sandboxConfigFile));
+            result.setPayload(sandboxConfigFileRepository.getSandboxInfo(sandboxConfigFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .sbc file.", ResultType.INVALID);
         }
         return result;
     }
 
-    public Result<Boolean> saveSandboxConfig(String savePath, String sandboxConfig) throws IOException {
+    public Result<Boolean> saveSandboxToFile(String savePath, String sandboxConfig) throws IOException {
         Result<Boolean> result = new Result<>();
         if (!FilenameUtils.getExtension(savePath).equals("sbc")) {
             result.addMessage("File extension ." + FilenameUtils.getExtension(savePath) + " not permitted. Changing to .sbc.", ResultType.SUCCESS);
@@ -47,7 +49,7 @@ public class SandboxService {
             result.setPayload(false);
         } else {
             File sandboxFile = new File(savePath);
-            sandboxConfigFileRepository.saveSandboxConfig(sandboxFile, sandboxConfig);
+            sandboxConfigFileRepository.saveSandboxInfo(sandboxFile, sandboxConfig);
             result.addMessage("Successfully saved sandbox config.", ResultType.SUCCESS);
         }
         return result;
@@ -91,7 +93,7 @@ public class SandboxService {
         //Append the text in the Sandbox_config that comes after the mod section
         sandboxContent.append("  </Mods>");
 
-        //TODO: It's having the issue again, but perhaps only when not saving back to OG file? Needs testing.
+        //TODO: It's having the issue with newlines in the last section again, but perhaps only when not saving back to OG file? Needs testing. It might not actually be an issue.
         if (!sandboxContent.toString().endsWith("\n")) {
             sandboxContent.append(System.lineSeparator());
         }
@@ -101,6 +103,22 @@ public class SandboxService {
         result.setPayload(sandboxContent.toString());
         result.addMessage("Successfully injected mods into save.", ResultType.SUCCESS);
         return result;
+    }
+
+    public Result<Boolean> changeConfigSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
+        StringBuilder renamedSandboxConfig = new StringBuilder(sandbox);
+        renamedSandboxConfig.replace(sessionNameIndexPositions[0], sessionNameIndexPositions[1], saveProfile.getSaveName());
+
+        return saveSandboxToFile(saveProfile.getSavePath(), renamedSandboxConfig.toString());
+    }
+
+    public Result<Boolean> changeSandboxSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
+        StringBuilder renamedSandboxConfig = new StringBuilder(sandbox);
+        renamedSandboxConfig.replace(sessionNameIndexPositions[0], sessionNameIndexPositions[1], saveProfile.getSaveName());
+
+        String savePath = saveProfile.getSavePath().substring(0, saveProfile.getSavePath().length() - 19) + "\\Sandbox.sbc";
+
+        return saveSandboxToFile(savePath, renamedSandboxConfig.toString());
     }
 
     private void generateModifiedSandboxConfig(String[] sandboxContent, StringBuilder modifiedSandboxContent) {

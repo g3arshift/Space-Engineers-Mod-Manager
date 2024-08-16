@@ -30,6 +30,11 @@ public class Result<T> {
         this.type = type;
     }
 
+    public void addMessage(Result<?> result) {
+        this.messages.add(result.getMessages().getLast());
+        this.type = result.getType();
+    }
+
     public boolean isSuccess() {
         return type == ResultType.SUCCESS;
     }

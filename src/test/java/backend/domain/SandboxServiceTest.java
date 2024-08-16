@@ -1,7 +1,6 @@
 package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
@@ -63,7 +62,7 @@ public class SandboxServiceTest {
 
     @Test
     void shouldGetGoodButFakeConfig() throws IOException {
-        Result<String> result = service.getSandboxConfigFromFile(new File(goodConfigPath));
+        Result<String> result = service.getSandboxFromFile(new File(goodConfigPath));
 
         assertEquals(Files.readString(Path.of(goodConfigPath)), result.getPayload());
         assertTrue(result.isSuccess());
@@ -71,14 +70,14 @@ public class SandboxServiceTest {
 
     @Test
     void shouldGetFileDoesNotExist() throws IOException {
-        Result<String> result = service.getSandboxConfigFromFile(new File(fakePath));
+        Result<String> result = service.getSandboxFromFile(new File(fakePath));
         assertFalse(result.isSuccess());
         assertEquals("File does not exist.", result.getMessages().getLast());
     }
 
     @Test
     void shouldGetIncorrectFileExtension() throws IOException {
-        Result<String> result = service.getSandboxConfigFromFile(new File(badSavePath));
+        Result<String> result = service.getSandboxFromFile(new File(badSavePath));
         assertFalse(result.isSuccess());
         assertEquals("Incorrect file type selected. Please select a .sbc file.", result.getMessages().getLast());
     }
@@ -100,21 +99,21 @@ public class SandboxServiceTest {
 
     @Test
     void shouldSuccessfullySaveConfigFile() throws IOException {
-        Result<Boolean> result = service.saveSandboxConfig(tempDir.getPath()+"/Sandbox_config.sbc", fakeConfig);
+        Result<Boolean> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.sbc", fakeConfig);
         assertTrue(result.isSuccess());
         assertEquals("Successfully saved sandbox config.", result.getMessages().getLast());
     }
 
     @Test
     void shouldAppendExtensionToSavePathWithIncorrectExtensionAndWriteCorrectly() throws IOException {
-        Result<Boolean> result = service.saveSandboxConfig(tempDir.getPath()+"/Sandbox_config.txt", "Save this config!");
+        Result<Boolean> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.txt", "Save this config!");
         assertTrue(result.isSuccess());
         assertEquals("File extension .txt not permitted. Changing to .sbc.", result.getMessages().getFirst());
     }
 
     @Test
     void savingSandboxConfigWillNotAcceptFilePathWithIllegalCharacters() throws IOException {
-        Result<Boolean> result = service.saveSandboxConfig(illegalSavePath, "Save this config!");
+        Result<Boolean> result = service.saveSandboxToFile(illegalSavePath, "Save this config!");
         assertFalse(result.isSuccess());
         assertEquals("Save path or name contains invalid characters.", result.getMessages().getLast());
     }

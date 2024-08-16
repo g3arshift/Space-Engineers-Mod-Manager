@@ -13,16 +13,18 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.nio.file.Files.readString;
+
 public class SandboxConfigFileRepository implements SandboxConfigRepository {
     @Override
-    public String getSandboxConfig(File sandboxFile) throws IOException {
-        return Files.readString(sandboxFile.toPath());
+    public String getSandboxInfo(File sandboxFile) throws IOException {
+        return readString(sandboxFile.toPath());
     }
 
     @Override
-    public void saveSandboxConfig(File sandboxFile, String modifiedSandboxConfig) throws IOException {
+    public void saveSandboxInfo(File sandboxFile, String modifiedSandbox) throws IOException {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(sandboxFile))) {
-            bw.write(modifiedSandboxConfig);
+            bw.write(modifiedSandbox);
         }
     }
 }

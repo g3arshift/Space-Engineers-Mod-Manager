@@ -3,12 +3,10 @@ package backend.data;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,19 +16,19 @@ public class SandboxConfigFileRepositoryTest {
 
     @Test
     void shouldGetValidSandboxConfigFile() throws IOException {
-        assertFalse(repository.getSandboxConfig(new File("src/test/resources/TestSandbox_config.sbc")).isBlank());
+        assertFalse(repository.getSandboxInfo(new File("src/test/resources/TestSandbox_config.sbc")).isBlank());
     }
 
     @Test
     void shouldNotLoadFileThatDoesNotExist() {
         assertThrows(IOException.class, () ->
-                repository.getSandboxConfig(new File("src/this/file/does/not/exist")));
+                repository.getSandboxInfo(new File("src/this/file/does/not/exist")));
     }
 
     @Test
     void shouldSaveToFile() throws IOException {
         File tempConfig = File.createTempFile("tempConfig", ".sbc");
-        repository.saveSandboxConfig(tempConfig, "This is a modified string.");
+        repository.saveSandboxInfo(tempConfig, "This is a modified string.");
         assertEquals("This is a modified string.", Files.readString(tempConfig.toPath()));
     }
 }
