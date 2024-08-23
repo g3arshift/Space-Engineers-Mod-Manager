@@ -38,8 +38,8 @@ public class SaveFileRepositoryTest {
 	@Test
 	void shouldCopySave() throws IOException {
 		Path tempFile = Files.createDirectory(tempDir.toPath().resolve("test_copy_directory"));
-		Files.createDirectory(tempDir.toPath().resolve("test_copy_directory/Backup"));
-		Files.createFile(tempDir.toPath().resolve("test_copy_directory/Sandbox_config.sbc"));
+		Files.createDirectory(tempDir.toPath().resolve(tempFile + "/Backup"));
+		Files.createFile(tempDir.toPath().resolve(tempFile + "/Sandbox_config.sbc"));
 
 		String destinationPath = tempDir.getPath() + "_1";
 

@@ -14,10 +14,8 @@ public class ModlistFileRepositoryTest {
     private final ModlistRepository repository = new ModlistFileRepository();
     private final String goodModListPath = "src/test/resources/GoodModList.txt";
     private final String emptyModListPath = "src/test/resources/EmptyModList.txt";
-    private final String blankLinesModListPath = "src/test/resources/BlankLinesModlist.txt";
-    private final String duplicateModListPath = "src/test/resources/DuplicateModList.txt";
 
-    @Test
+	@Test
     void shouldGetValidModList() throws IOException {
         assertFalse(repository.getModList(new File(goodModListPath)).isEmpty());
     }
@@ -40,12 +38,14 @@ public class ModlistFileRepositoryTest {
 
     @Test
     void shouldIgnoreBlankLinesAndGetNoMods() throws IOException {
-        assertEquals(0, repository.getModList(new File(blankLinesModListPath)).size());
+		String blankLinesModListPath = "src/test/resources/BlankLinesModlist.txt";
+		assertEquals(0, repository.getModList(new File(blankLinesModListPath)).size());
     }
 
     @Test
     void shouldIgnoreDuplicateModsAndGetOneMod() throws IOException {
-        assertEquals(1, repository.getModList(new File(duplicateModListPath)).size());
+		String duplicateModListPath = "src/test/resources/DuplicateModList.txt";
+		assertEquals(1, repository.getModList(new File(duplicateModListPath)).size());
     }
 
     @Test
