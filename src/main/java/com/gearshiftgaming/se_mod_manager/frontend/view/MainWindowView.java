@@ -47,16 +47,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
-/**
- * Responsible for the main window of the application, and all the visual elements of it. Business logic has been delegated to service classes.
+/** Responsible for the main window of the application, and all the visual elements of it. Business logic has been delegated to service classes.
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
  */
 @Getter
 public class MainWindowView {
 
 	//FXML Items
-	@FXML
-	private MenuItem settings;
-
 	@FXML
 	private MenuItem saveModlistAs;
 
@@ -272,6 +276,30 @@ public class MainWindowView {
 		setupMainViewItems();
 		setupInformationBar();
 		backendController.saveUserData(userConfiguration);
+
+		//Prompt the user to remove any saves that no longer exist on the file system.
+		if (saveProfiles.size() != 1 &&
+				!saveProfiles.getFirst().getSaveName().equals("None") &&
+				!saveProfiles.getFirst().getProfileName().equals("None") &&
+				saveProfiles.getFirst().getSavePath() != null) {
+			for (int i = 0; i < saveProfiles.size(); i++) {
+				if (Files.notExists(Path.of(saveProfiles.get(i).getSavePath()))) {
+					saveProfiles.get(i).setSaveExists(false);
+					String errorMessage = "The save associated with the profile \"" + saveProfiles.get(i).getProfileName() + "\" was not found. Do you want " +
+							"to remove this profile from the managed saves?";
+					uiService.log("Save \"" + saveProfiles.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
+
+					int choice = Popup.displayYesNoDialog(errorMessage, MessageType.WARN);
+					if (choice == 1) {
+						uiService.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
+						saveProfiles.remove(i);
+						i--;
+					}
+				} else {
+					saveProfiles.get(i).setSaveExists(true);
+				}
+			}
+		}
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -392,25 +420,8 @@ public class MainWindowView {
 		modProfileDropdown.getSelectionModel().selectFirst();
 		currentModProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 
-		//Remove any saves that no longer exist on the file system.
-		for (int i = 0; i < saveProfiles.size(); i++) {
-			if (Files.notExists(Path.of(saveProfiles.get(i).getSavePath()))) {
-				saveProfiles.get(i).setSaveExists(false);
-				String errorMessage = "The save associated with the profile \"" + saveProfiles.get(i).getProfileName() + "\" was not found. Do you want " +
-						"to remove this profile from the managed saves?";
-				int choice = Popup.displayYesNoDialog(errorMessage, MessageType.WARN);
-
-				uiService.log("Save " + saveProfiles.get(i).getSaveName() + " is missing from the disk.", MessageType.ERROR);
-
-				if (choice == 1) {
-					uiService.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
-					saveProfiles.remove(i);
-					i--;
-				}
-			} else {
-                saveProfiles.get(i).setSaveExists(true);
-            }
-		}
+		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected.
+		// - There's something on top of it. Look at it in dracula theme.
 
 		//TODO: Much of this needs to happen down in the service layer
 		//TODO: Setup a function in ModList service to track conflicts.
@@ -523,7 +534,7 @@ public class MainWindowView {
 		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
 		if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
 			//TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
-			Result<Boolean> modlistResult = backendController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
+			Result<Void> modlistResult = backendController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
 			uiService.log(modlistResult);
 			if (!modlistResult.isSuccess()) {
 				currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
@@ -583,7 +594,7 @@ public class MainWindowView {
 		}
 
 		backendController.saveUserData(userConfiguration);
-		Result<Boolean> userConfigurationResult = backendController.saveUserData(userConfiguration);
+		Result<Void> userConfigurationResult = backendController.saveUserData(userConfiguration);
 		if (userConfigurationResult.isSuccess()) {
 			uiService.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
 		} else {

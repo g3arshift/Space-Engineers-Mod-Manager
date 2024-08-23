@@ -11,16 +11,25 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 public interface BackendController {
     Result<UserConfiguration> getUserData() throws JAXBException;
 
-    Result<Boolean> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException;
+    Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException;
 
-    Result<Boolean> saveUserData(UserConfiguration userConfiguration);
+    Result<Void> saveUserData(UserConfiguration userConfiguration);
 
     Result<SaveProfile> getSaveProfile(File sandboxConfig) throws IOException;
 
     Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException;
 
-    public Result<Boolean> createTestUserData(Theme theme);
+    public Result<Void> createTestUserData(Theme theme);
 }

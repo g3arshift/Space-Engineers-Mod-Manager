@@ -72,14 +72,14 @@ public class SandboxServiceTest {
     void shouldGetFileDoesNotExist() throws IOException {
         Result<String> result = service.getSandboxFromFile(new File(fakePath));
         assertFalse(result.isSuccess());
-        assertEquals("File does not exist.", result.getMessages().getLast());
+        assertEquals("File does not exist.", result.getCurrentMessage());
     }
 
     @Test
     void shouldGetIncorrectFileExtension() throws IOException {
         Result<String> result = service.getSandboxFromFile(new File(badSavePath));
         assertFalse(result.isSuccess());
-        assertEquals("Incorrect file type selected. Please select a .sbc file.", result.getMessages().getLast());
+        assertEquals("Incorrect file type selected. Please select a .sbc file.", result.getCurrentMessage());
     }
 
 
@@ -99,22 +99,22 @@ public class SandboxServiceTest {
 
     @Test
     void shouldSuccessfullySaveConfigFile() throws IOException {
-        Result<Boolean> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.sbc", fakeConfig);
+        Result<Void> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.sbc", fakeConfig);
         assertTrue(result.isSuccess());
-        assertEquals("Successfully saved sandbox config.", result.getMessages().getLast());
+        assertEquals("Successfully saved sandbox config.", result.getCurrentMessage());
     }
 
     @Test
     void shouldAppendExtensionToSavePathWithIncorrectExtensionAndWriteCorrectly() throws IOException {
-        Result<Boolean> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.txt", "Save this config!");
+        Result<Void> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.txt", "Save this config!");
         assertTrue(result.isSuccess());
         assertEquals("File extension .txt not permitted. Changing to .sbc.", result.getMessages().getFirst());
     }
 
     @Test
     void savingSandboxConfigWillNotAcceptFilePathWithIllegalCharacters() throws IOException {
-        Result<Boolean> result = service.saveSandboxToFile(illegalSavePath, "Save this config!");
+        Result<Void> result = service.saveSandboxToFile(illegalSavePath, "Save this config!");
         assertFalse(result.isSuccess());
-        assertEquals("Save path or name contains invalid characters.", result.getMessages().getLast());
+        assertEquals("Save path or name contains invalid characters.", result.getCurrentMessage());
     }
 }

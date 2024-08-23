@@ -34,9 +34,6 @@ public class ModlistServiceTest {
 
     Properties properties;
 
-    @TempDir
-    public File tempDir;
-
     //TODO: Add test for incorrect file extension
     @BeforeEach
     void setup() throws IOException {
@@ -104,13 +101,13 @@ public class ModlistServiceTest {
     void shouldGetFileDoesNotExist() throws IOException {
         Result<List<Mod>> result = service.getModListFromFile("src/this/path/does/not/exist");
         assertFalse(result.isSuccess());
-        assertEquals("File does not exist.", result.getMessages().getLast());
+        assertEquals("File does not exist.", result.getCurrentMessage());
     }
 
     @Test
     void shouldGetIncorrectFileExtension() throws IOException {
         Result<List<Mod>> result = service.getModListFromFile(badExtensionPath);
         assertFalse(result.isSuccess());
-        assertEquals("Incorrect file type selected. Please select a .txt or .doc file.", result.getMessages().getLast());
+        assertEquals("Incorrect file type selected. Please select a .txt or .doc file.", result.getCurrentMessage());
     }
 }

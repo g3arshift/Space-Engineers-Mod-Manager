@@ -6,11 +6,18 @@ import lombok.Setter;
 import java.util.ArrayList;
 
 /**
- * Stores both a result of an operation within SEMM and to carry the result of that operation
- * @param <T>
+ * Stores both a result of an operation within SEMM and a message attached to that operation.
+ * <p>
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
  * @author Gear Shift
- * @version 1.0
  */
+
 @Getter
 public class Result<T> {
 
@@ -31,11 +38,15 @@ public class Result<T> {
     }
 
     public void addMessage(Result<?> result) {
-        this.messages.add(result.getMessages().getLast());
+        this.messages.add(result.getCurrentMessage());
         this.type = result.getType();
     }
 
     public boolean isSuccess() {
         return type == ResultType.SUCCESS;
+    }
+
+    public String getCurrentMessage() {
+        return messages.getLast();
     }
 }

@@ -15,6 +15,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 public class SandboxService {
     private final SandboxConfigRepository sandboxConfigFileRepository;
 
@@ -36,8 +45,8 @@ public class SandboxService {
         return result;
     }
 
-    public Result<Boolean> saveSandboxToFile(String savePath, String sandboxConfig) throws IOException {
-        Result<Boolean> result = new Result<>();
+    public Result<Void> saveSandboxToFile(String savePath, String sandboxConfig) throws IOException {
+        Result<Void> result = new Result<>();
         if (!FilenameUtils.getExtension(savePath).equals("sbc")) {
             result.addMessage("File extension ." + FilenameUtils.getExtension(savePath) + " not permitted. Changing to .sbc.", ResultType.SUCCESS);
             savePath = FilenameUtils.removeExtension(savePath);
@@ -46,7 +55,6 @@ public class SandboxService {
 
         if (validateFilePath(savePath)) {
             result.addMessage("Save path or name contains invalid characters.", ResultType.FAILED);
-            result.setPayload(false);
         } else {
             File sandboxFile = new File(savePath);
             sandboxConfigFileRepository.saveSandboxInfo(sandboxFile, sandboxConfig);
@@ -105,14 +113,14 @@ public class SandboxService {
         return result;
     }
 
-    public Result<Boolean> changeConfigSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
+    public Result<Void> changeConfigSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
         StringBuilder renamedSandboxConfig = new StringBuilder(sandbox);
         renamedSandboxConfig.replace(sessionNameIndexPositions[0], sessionNameIndexPositions[1], saveProfile.getSaveName());
 
         return saveSandboxToFile(saveProfile.getSavePath(), renamedSandboxConfig.toString());
     }
 
-    public Result<Boolean> changeSandboxSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
+    public Result<Void> changeSandboxSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
         StringBuilder renamedSandboxConfig = new StringBuilder(sandbox);
         renamedSandboxConfig.replace(sessionNameIndexPositions[0], sessionNameIndexPositions[1], saveProfile.getSaveName());
 

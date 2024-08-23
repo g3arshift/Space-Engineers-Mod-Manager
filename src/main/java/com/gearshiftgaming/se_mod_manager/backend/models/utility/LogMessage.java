@@ -10,9 +10,17 @@ import java.util.Date;
 /**
  * Functionally a wrapper for Log4j logging, but simplifies keeping logging synchronized between the system log and the log in the UI while also providing finer control on what log messages are displayed to the user.
  * The message in the system log can be of any length, but the UI will only display the first two lines of a LogMessage. It is thus preferred to instead
+ * <p>
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
  * @author Gear Shift
- * @version 1.0
  */
+
 public class LogMessage {
     private final StringProperty viewableLogMessage = new SimpleStringProperty();
     private final StringProperty messageType = new SimpleStringProperty();

@@ -14,6 +14,15 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 public class ModlistFileRepository implements ModlistRepository {
     private final Pattern STEAM_WORKSHOP_ID_REGEX_PATTERN;
 

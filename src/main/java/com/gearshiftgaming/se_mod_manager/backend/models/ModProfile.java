@@ -10,11 +10,17 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 @Getter
 public class ModProfile {
 
@@ -55,5 +61,17 @@ public class ModProfile {
     @XmlElement(name = "mod")
     public void setModList(List<Mod> modList) {
         this.modList = modList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ModProfile that)) return false;
+		return Objects.equals(id, that.id) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, profileName, modList);
     }
 }

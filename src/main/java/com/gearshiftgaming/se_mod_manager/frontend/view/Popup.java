@@ -21,8 +21,15 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Displays a custom popup modal using icons from the Ikonli CarbonIcon icon pack.
+/** Displays a custom popup modal using icons from the Ikonli CarbonIcon icon pack.
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
  */
 public class Popup {
 
@@ -57,7 +64,7 @@ public class Popup {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        Label label = new Label(result.getMessages().getLast());
+        Label label = new Label(result.getCurrentMessage());
         FontIcon messageIcon = new FontIcon();
 
         switch (result.getType()) {
@@ -182,7 +189,7 @@ public class Popup {
     }
 
     private static void centerStage(Stage childStage, Stage parentStage) {
-        //Center the alert in the middle of the application window by using listeners that will fire off when the window is created but not yet visible.
+        //Center the alert in the middle of the provided stage by using listeners that will fire off when the window is created.
         ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
             double stageWidth = newValue.doubleValue();
             childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
@@ -203,17 +210,13 @@ public class Popup {
     }
 
     private static void centerStage(Stage stage) {
-        //Center the alert in the middle of the screen
-
+        //Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
-
         ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-            double stageWidth = newValue.doubleValue();
             stage.setX((screenBounds.getWidth() - stage.getWidth()) / 2);
         };
         ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-            double stageHeight = newValue.doubleValue();
             stage.setY((screenBounds.getHeight() - stage.getHeight()) / 2);
         };
 

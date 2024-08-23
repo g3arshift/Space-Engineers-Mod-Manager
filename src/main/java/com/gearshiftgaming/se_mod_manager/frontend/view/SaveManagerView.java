@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import atlantafx.base.controls.RingProgressIndicator;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
@@ -7,12 +8,14 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -21,6 +24,16 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 
+
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 
 public class SaveManagerView {
 	@FXML
@@ -44,6 +57,12 @@ public class SaveManagerView {
 	@FXML
 	private Button closeSaveWindow;
 
+	@FXML
+	private Pane operationInProgressDimmer;
+
+	@FXML
+	private RingProgressIndicator progressIndicator;
+
 	@Getter
 	private Stage stage;
 
@@ -56,8 +75,6 @@ public class SaveManagerView {
 	private ProfileInputView saveListInputSecondStepView;
 
 	private MainWindowView mainWindowView;
-
-	//TODO: Add a button to rename save profiles, that will also rename them in the file structure! MAke sure it renames the session name in Sandbox.sbc and Sandbox_config.sbc, as well as the folder name.
 
 	public void initView(Parent root, UiService uiService,
 						 SaveListInput saveListInputFirstStepView, ProfileInputView saveListInputSecondStepView,
@@ -121,6 +138,7 @@ public class SaveManagerView {
 									saveProfiles.getFirst().getSaveName().equals("None") &&
 									saveProfiles.getFirst().getProfileName().equals("None") &&
 									saveProfiles.getFirst().getSavePath() == null) {
+								saveProfile.setSaveExists(true);
 								saveProfiles.set(0, saveProfile);
 								mainWindowView.setCurrentSaveProfile(saveProfile);
 							} else {
@@ -142,28 +160,63 @@ public class SaveManagerView {
 		saveListInputSecondStepView.getProfileNameInput().clear();
 	}
 
-	//TODO: It's time. Let's run this as a separate thread and make a loading animation on the save list. Concurrency API time.
 	@FXML
 	private void copySave() throws IOException {
-		if (saveList.getSelectionModel().getSelectedItem().isSaveExists()) {
-			Result<SaveProfile> profileCopyResult = uiService.getBackendController().copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+		if (saveList.getSelectionModel().getSelectedItem() != null) {
+			if (saveList.getSelectionModel().getSelectedItem().isSaveExists()) {
+
+				operationInProgressDimmer.setVisible(true);
+				progressIndicator.setVisible(true);
+				saveList.setMouseTransparent(true);
+				Thread copyThread = getCopyThread();
+				copyThread.start();
+			} else {
+				Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
+			}
+		} else {
+			Popup.displaySimpleAlert("You have to select a profile first!", stage, MessageType.ERROR);
+		}
+	}
+
+	private Thread getCopyThread() {
+		final Task<Result<SaveProfile>> task = new Task<>() {
+			@Override
+			protected Result<SaveProfile> call() throws Exception {
+				return uiService.getBackendController().copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+			}
+		};
+
+		task.setOnSucceeded(event -> {
+			Result<SaveProfile> profileCopyResult = task.getValue();
+
 			if (profileCopyResult.isSuccess()) {
 				saveProfiles.add(profileCopyResult.getPayload());
+			} else {
+				Popup.displaySimpleAlert(profileCopyResult, stage);
 			}
+
 			uiService.log(profileCopyResult);
-		} else {
-			Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
-		}
+			operationInProgressDimmer.setVisible(false);
+			progressIndicator.setVisible(false);
+			saveList.setMouseTransparent(false);
+		});
+
+		Thread thread = new Thread(task);
+		thread.setDaemon(true);
+		return thread;
 	}
 
 	@FXML
 	private void removeSave() {
+		//TODO: Add active profile check and minimum size check.
 		saveProfiles.remove(saveList.getSelectionModel().getSelectedIndex());
 	}
 
 	@FXML
 	private void renameProfile() {
 		//TODO: Implement
+		//TODO: Add a button to rename save profiles, that will also rename them in the file structure! MAke sure it renames the session name in Sandbox.sbc and Sandbox_config.sbc, as well as the folder name.
+		//TODO: Rename the profile in the list, then replicate to backend. If the backend rename fails, revert.
 	}
 
 	@FXML

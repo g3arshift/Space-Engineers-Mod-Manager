@@ -16,6 +16,15 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 @Deprecated //We are no longer using this after switching to JavaFX. Kept here only temporarily until the JFX UI is fully complete.
 public class ModManagerController {
     List<Mod> modList;
@@ -92,7 +101,7 @@ public class ModManagerController {
                 //Get the location the user wants to save the modified Sandbox_config.sbc file and then save it there
                 if (sandboxFileResult.isSuccess()) {
                     modManagerView.displaySaveLocationDialog();
-                    Result<Boolean> sandboxInjectionResult = injectModsIntoSandboxConfig(sandboxFileResult.getPayload());
+                    Result<Void> sandboxInjectionResult = injectModsIntoSandboxConfig(sandboxFileResult.getPayload());
 
                     switch (sandboxInjectionResult.getType()) {
                         case SUCCESS -> {
@@ -100,7 +109,7 @@ public class ModManagerController {
                             modManagerView.displayResult(sandboxInjectionResult);
                         }
                         case FAILED -> {
-                            logger.info(sandboxInjectionResult.getMessages().getLast());
+                            logger.info(sandboxInjectionResult.getCurrentMessage());
                             modManagerView.displayResult(sandboxInjectionResult);
                         }
                     }
@@ -141,7 +150,7 @@ public class ModManagerController {
                 modListResult = modlistService.getModListFromFile(modListPath);
 
                 if (!modListResult.isSuccess()) {
-                    logger.warn(modListResult.getMessages().getLast());
+                    logger.warn(modListResult.getCurrentMessage());
                     modManagerView.displayResult(modListResult);
                 }
             } else {
@@ -167,7 +176,7 @@ public class ModManagerController {
                 //sandboxFileResult = sandboxService.getSandboxConfigFromFile(sandboxConfigPath);
 
                 if (!sandboxFileResult.isSuccess()) {
-                    logger.warn(sandboxFileResult.getMessages().getLast());
+                    logger.warn(sandboxFileResult.getCurrentMessage());
                     modManagerView.displayResult(sandboxFileResult);
                 }
                 logger.info("Injecting mods into " + (sandboxFileResult.getPayload()).getPath());
@@ -179,8 +188,8 @@ public class ModManagerController {
         return sandboxFileResult;
     }
 
-    private Result<Boolean> injectModsIntoSandboxConfig(File sandboxFile) throws IOException {
-        Result<Boolean> sandboxSaveResult = new Result<>();
+    private Result<Void> injectModsIntoSandboxConfig(File sandboxFile) throws IOException {
+        Result<Void> sandboxSaveResult = new Result<>();
         String modifiedSandboxConfig;
         String savePath;
         do {

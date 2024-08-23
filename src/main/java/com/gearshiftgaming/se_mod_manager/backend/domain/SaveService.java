@@ -12,6 +12,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 public class SaveService {
 
 	private final SaveRepository saveRepository;
@@ -24,6 +33,8 @@ public class SaveService {
 	}
 
 	public Result<SaveProfile> copySaveFiles(SaveProfile sourceSaveProfile) throws IOException {
+		Result<SaveProfile> result = new Result<>();
+
 		//Gets the path without Sandbox_config.sbc at the end
 		String sourceSavePath = sourceSaveProfile.getSavePath().substring(0, sourceSaveProfile.getSavePath().length() - 19);
 		String destinationSavePath;
@@ -37,43 +48,51 @@ public class SaveService {
 			copyIndex++;
 		} while (pathHasDuplicate);
 
-		saveRepository.copySave(sourceSavePath, destinationSavePath);
+		Result<String> sandboxConfigResult = sandboxService.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));
 
-		//Copies our source directory to a new location.
-		Result<SaveProfile> result = new Result<>();
-		SaveProfile copiedSaveProfile = new SaveProfile(sourceSaveProfile);
-
-		//Check that our copy performed correctly.
-		if (Files.exists(Path.of(destinationSavePath))) {
-			result.addMessage("Save directory successfully copied.", ResultType.SUCCESS);
-			copiedSaveProfile.setSavePath(destinationSavePath + "\\Sandbox_config.sbc");
-		} else {
-			result.addMessage("Failed to copy save directory.", ResultType.FAILED);
-		}
-
-		//Change the name in our copied save's Sandbox_config and Sandbox files to match the save name.
-		Result<String> sandboxConfigResult = sandboxService.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox_config.sbc"));
+		//Check that we got a config before we do anything else
 		if (sandboxConfigResult.isSuccess()) {
 			String sandboxConfig = sandboxConfigResult.getPayload();
+			int[] sessionNameIndexPositions = getSessionNameIndexPositions(sandboxConfig);
 
-			copiedSaveProfile.setSaveName(getSessionName(sandboxConfig, destinationSavePath) + "_" + copyIndex);
-			copiedSaveProfile.setProfileName(copiedSaveProfile.getProfileName() + "_" + copyIndex);
+			//Check if the sandbox_config actually contains a <SessionName> tag.
+			if (sessionNameIndexPositions[0] != -1 && sessionNameIndexPositions[1] != -1) {
+				//Copies our source directory to a new location.
+				saveRepository.copySave(sourceSavePath, destinationSavePath);
+				SaveProfile copiedSaveProfile = new SaveProfile(sourceSaveProfile);
 
-			//Change the name in our copied save's Sandbox_config file to match the save name.
-			Result<Boolean> sandboxConfigNameChangeResult = changeSandboxConfigSessionName(sandboxConfig, copiedSaveProfile);
+				//Check that our copy performed correctly.
+				if (Files.exists(Path.of(destinationSavePath))) {
+					result.addMessage("Save directory successfully copied.", ResultType.SUCCESS);
+					copiedSaveProfile.setSavePath(destinationSavePath + "\\Sandbox_config.sbc");
 
-			//Change the name in our copied save's Sandbox file to match the save name.
-			if (sandboxConfigNameChangeResult.isSuccess()) {
-				Result<String> sandboxResult = sandboxService.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox.sbc"));
-				String sandbox = sandboxResult.getPayload();
+					//Change the name in our copied save's Sandbox_config and Sandbox files to match the save name.
 
-				Result<Boolean> sandboxNameChangeResult = changeSandboxSessionName(sandbox, copiedSaveProfile);
-				if(sandboxConfigNameChangeResult.isSuccess()) {
-					result.addMessage("Successfully copied profile.", ResultType.SUCCESS);
-					result.setPayload(copiedSaveProfile);
+					copiedSaveProfile.setSaveName(getSessionName(sandboxConfig, destinationSavePath) + "_" + copyIndex);
+					copiedSaveProfile.setProfileName(copiedSaveProfile.getProfileName() + "_" + copyIndex);
+
+					//Change the name in our copied save's Sandbox_config file to match the save name.
+					Result<Void> sandboxConfigNameChangeResult = changeSandboxConfigSessionName(sandboxConfig, copiedSaveProfile);
+
+					//Change the name in our copied save's Sandbox_config file to match the save name.
+					if (sandboxConfigNameChangeResult.isSuccess()) {
+						Result<String> sandboxResult = sandboxService.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox.sbc"));
+						String sandbox = sandboxResult.getPayload();
+
+						//Change the name in our copied save's Sandbox file to match the save name. This is NOT THE SAME AS the previous step.
+						Result<Void> sandboxNameChangeResult = changeSandboxSessionName(sandbox, copiedSaveProfile);
+						if (sandboxConfigNameChangeResult.isSuccess()) {
+							result.addMessage("Successfully copied profile.", ResultType.SUCCESS);
+							result.setPayload(copiedSaveProfile);
+						} else {
+							result.addMessage(sandboxNameChangeResult);
+						}
+					}
 				} else {
-					result.addMessage(sandboxNameChangeResult);
+					result.addMessage("Failed to copy save directory.", ResultType.FAILED);
 				}
+			} else {
+				result.addMessage("Save does not contain a <SessionName> tag, and cannot be copied.", ResultType.FAILED);
 			}
 		} else {
 			result.addMessage(sandboxConfigResult);
@@ -123,8 +142,8 @@ public class SaveService {
 		return new int[]{saveNameStartIndex, saveNameEndIndex};
 	}
 
-	private Result<Boolean> changeSandboxConfigSessionName(String sandboxConfig, SaveProfile copiedSaveProfile) throws IOException {
-		Result<Boolean> result = new Result<>();
+	private Result<Void> changeSandboxConfigSessionName(String sandboxConfig, SaveProfile copiedSaveProfile) throws IOException {
+		Result<Void> result = new Result<>();
 
 		int[] sessionNameIndexPositions = getSessionNameIndexPositions(sandboxConfig);
 
@@ -138,8 +157,8 @@ public class SaveService {
 		return result;
 	}
 
-	private Result<Boolean> changeSandboxSessionName(String sandbox, SaveProfile copiedSaveProfile) throws IOException {
-		Result<Boolean> result = new Result<>();
+	private Result<Void> changeSandboxSessionName(String sandbox, SaveProfile copiedSaveProfile) throws IOException {
+		Result<Void> result = new Result<>();
 
 		int[] sessionNameIndexPositions = getSessionNameIndexPositions(sandbox);
 

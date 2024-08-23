@@ -5,18 +5,25 @@ import jakarta.xml.bind.*;
 
 import java.io.*;
 
-/**
- * Loads and saves user configuration data to the filesystem using JAXB.
- *
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
  * @author Gear Shift
- * @version 1.0
  */
 //TODO: Implement file locks
 public class UserDataFileRepository implements UserDataRepository {
-    public UserConfiguration loadUserData(File userConfigurationFile) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-        return (UserConfiguration) unmarshaller.unmarshal(userConfigurationFile);
+    public UserConfiguration loadUserData(File userConfigurationFile) {
+        try {
+            JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+            return (UserConfiguration) unmarshaller.unmarshal(userConfigurationFile);
+        } catch (JAXBException f) {
+            return new UserConfiguration();
+        }
     }
 
     public boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {

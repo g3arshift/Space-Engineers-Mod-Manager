@@ -42,7 +42,6 @@
                         <menus>
                             <Menu mnemonicParsing="false" text="File">
                                 <items>
-                                    <MenuItem fx:id="settings" mnemonicParsing="false" text="Settings" />
                               <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save modlist as" />
                               <MenuItem fx:id="close" mnemonicParsing="false" text="Close" />
                               <Menu mnemonicParsing="false" text="Add mods">

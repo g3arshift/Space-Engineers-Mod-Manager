@@ -7,6 +7,15 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 @Deprecated //We are no longer using this after switching to JavaFX. Kept here only temporarily until the JFX UI is fully complete.
 public class ModManagerView {
 
@@ -54,12 +63,12 @@ public class ModManagerView {
     public void displayResult(Result<?> result) {
         switch (result.getType()) {
             case INVALID ->
-                    JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, result.getCurrentMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             case SUCCESS ->
-                    JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Success", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(null, result.getCurrentMessage(), "Success", JOptionPane.INFORMATION_MESSAGE);
             default -> {
                 result.addMessage("Failed to open mod list file.", ResultType.FAILED);
-                JOptionPane.showMessageDialog(null, result.getMessages().getLast(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, result.getCurrentMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

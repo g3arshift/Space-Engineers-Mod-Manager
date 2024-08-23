@@ -9,7 +9,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
@@ -28,12 +27,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Properties;
 
-/**
- * Used to prepare basic environment setup for the application.
+
+/** * Used to prepare basic environment setup for the application.
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
  */
 public class ViewController {
     private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
@@ -126,10 +131,9 @@ public class ViewController {
         saveManagerView.initView(saveManagerRoot, uiService, saveListInputFirstStepView, saveListInputSecondStepView, properties, mainWindowView);
 
         //TODO: Actually implement this. Function is empty at the moment.
+        //TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
         if(!userConfigurationResult.isSuccess()) {
             uiService.firstTimeSetup();
         }
-
-        //TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
     }
 }

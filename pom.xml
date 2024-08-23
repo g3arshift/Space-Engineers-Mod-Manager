@@ -83,6 +83,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- TestFX for UI testing -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-core</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Mockito for mocks -->
         <dependency>
             <groupId>org.mockito</groupId>

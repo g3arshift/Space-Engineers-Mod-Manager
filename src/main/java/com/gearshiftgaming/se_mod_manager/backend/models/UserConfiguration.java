@@ -9,14 +9,19 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import lombok.Setter;
 
-/**
- * Stores a users information, including their preferred theme, their mod profiles, and their save profiles.
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
  * @author Gear Shift
- * @version 1.0
  */
 
 @Getter
@@ -44,16 +49,6 @@ public class UserConfiguration {
         //TODO: The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
         modProfiles.add(new ModProfile("Default"));
-
-        lastUsedSaveProfileId = saveProfiles.getFirst().getId();
-    }
-
-    public UserConfiguration(List<SaveProfile> saveProfiles, List<ModProfile> modProfiles, String userTheme) {
-        this.saveProfiles = saveProfiles;
-        this.modProfiles = modProfiles;
-        this.userTheme = userTheme;
-
-        lastUsedSaveProfileId = saveProfiles.getFirst().getId();
     }
 
     @XmlElement(name = "userTheme")
@@ -71,5 +66,17 @@ public class UserConfiguration {
     @XmlElement(name = "modProfile")
     public void setModProfiles(List<ModProfile> modProfiles) {
         this.modProfiles = modProfiles;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserConfiguration that)) return false;
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastUsedSaveProfileId, that.lastUsedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modProfiles, that.modProfiles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userTheme, lastUsedSaveProfileId, saveProfiles, modProfiles);
     }
 }

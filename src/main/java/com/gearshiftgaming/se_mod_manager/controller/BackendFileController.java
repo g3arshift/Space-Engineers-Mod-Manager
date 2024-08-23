@@ -23,6 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 public class BackendFileController implements BackendController {
 
 	private final SandboxService sandboxService;
@@ -47,18 +56,18 @@ public class BackendFileController implements BackendController {
 		return userDataService.getUserData(userConfigurationFile);
 	}
 
-	public Result<Boolean> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
+	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
 		Result<String> modifiedSandboxConfigResult = sandboxService.injectModsIntoSandboxConfig(new File(sandboxConfigPath), modList);
 		if (modifiedSandboxConfigResult.isSuccess()) {
 			return sandboxService.saveSandboxToFile(sandboxConfigPath, modifiedSandboxConfigResult.getPayload());
 		} else {
-			Result<Boolean> failedModification = new Result<>();
-			failedModification.addMessage(modifiedSandboxConfigResult.getMessages().getLast(), ResultType.FAILED);
+			Result<Void> failedModification = new Result<>();
+			failedModification.addMessage(modifiedSandboxConfigResult.getCurrentMessage(), ResultType.FAILED);
 			return failedModification;
 		}
 	}
 
-	public Result<Boolean> saveUserData(UserConfiguration userConfiguration) {
+	public Result<Void> saveUserData(UserConfiguration userConfiguration) {
 		return userDataService.saveUserData(userConfiguration, userConfigurationFile);
 	}
 
@@ -67,7 +76,7 @@ public class BackendFileController implements BackendController {
 		Result<SaveProfile> saveProfileResult = new Result<>();
 		Result<String> sandboxFileResult = sandboxService.getSandboxFromFile(sandboxConfigFile);
 		if (!sandboxFileResult.isSuccess()) {
-			saveProfileResult.addMessage(sandboxFileResult.getMessages().getLast(), sandboxFileResult.getType());
+			saveProfileResult.addMessage(sandboxFileResult.getCurrentMessage(), sandboxFileResult.getType());
 			return saveProfileResult;
 		}
 
@@ -92,7 +101,7 @@ public class BackendFileController implements BackendController {
 		return copyResult;
 	}
 
-	public Result<Boolean> createTestUserData(Theme theme) {
+	public Result<Void> createTestUserData(Theme theme) {
 
 		ModProfile testModProfile = new ModProfile();
 		Mod testMod = new Mod("123456789");

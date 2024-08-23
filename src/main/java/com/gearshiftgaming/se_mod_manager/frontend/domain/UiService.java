@@ -10,6 +10,15 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 
+/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * @author Gear Shift
+ */
 @Getter
 public class UiService {
     //TODO: Is this a controller, or a service? It's kind of performing the duties of a controller as it doesn't have too much of its own logic.
@@ -46,7 +55,7 @@ public class UiService {
             case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
             default -> messageType = MessageType.INFO;
         }
-        log(result.getMessages().getLast(), messageType);
+        log(result.getCurrentMessage(), messageType);
 
     }
 
