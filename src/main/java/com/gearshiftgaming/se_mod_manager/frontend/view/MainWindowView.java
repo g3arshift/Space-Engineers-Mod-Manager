@@ -299,6 +299,8 @@ public class MainWindowView {
 					saveProfiles.get(i).setSaveExists(true);
 				}
 			}
+
+			backendController.saveUserData(userConfiguration);
 		}
 	}
 

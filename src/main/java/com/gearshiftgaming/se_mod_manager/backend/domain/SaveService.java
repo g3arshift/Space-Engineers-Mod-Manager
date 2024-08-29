@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SaveRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -12,13 +13,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  * <p>
+ *
  * @author Gear Shift
  */
 public class SaveService {
@@ -67,26 +70,33 @@ public class SaveService {
 					copiedSaveProfile.setSavePath(destinationSavePath + "\\Sandbox_config.sbc");
 
 					//Change the name in our copied save's Sandbox_config and Sandbox files to match the save name.
-
-					copiedSaveProfile.setSaveName(getSessionName(sandboxConfig, destinationSavePath) + "_" + copyIndex);
-					copiedSaveProfile.setProfileName(copiedSaveProfile.getProfileName() + "_" + copyIndex);
+					copiedSaveProfile.setSaveName(getSessionName(sandboxConfig, destinationSavePath) + "_" + (copyIndex - 1));
+					copiedSaveProfile.setProfileName(copiedSaveProfile.getProfileName() + "_" + (copyIndex - 1));
 
 					//Change the name in our copied save's Sandbox_config file to match the save name.
 					Result<Void> sandboxConfigNameChangeResult = changeSandboxConfigSessionName(sandboxConfig, copiedSaveProfile);
 
-					//Change the name in our copied save's Sandbox_config file to match the save name.
+					//Change the name in our copied save's Sandbox file to match the save name.
 					if (sandboxConfigNameChangeResult.isSuccess()) {
 						Result<String> sandboxResult = sandboxService.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox.sbc"));
 						String sandbox = sandboxResult.getPayload();
 
 						//Change the name in our copied save's Sandbox file to match the save name. This is NOT THE SAME AS the previous step.
 						Result<Void> sandboxNameChangeResult = changeSandboxSessionName(sandbox, copiedSaveProfile);
-						if (sandboxConfigNameChangeResult.isSuccess()) {
+						if (sandboxNameChangeResult.isSuccess()) {
 							result.addMessage("Successfully copied profile.", ResultType.SUCCESS);
 							result.setPayload(copiedSaveProfile);
 						} else {
 							result.addMessage(sandboxNameChangeResult);
+
+							//Cleanup the copied save since our rename failed
+							FileUtils.deleteDirectory(new File(destinationSavePath));
 						}
+					} else {
+						result.addMessage(sandboxConfigNameChangeResult);
+
+						//Cleanup the copied save since our rename failed
+						FileUtils.deleteDirectory(new File(destinationSavePath));
 					}
 				} else {
 					result.addMessage("Failed to copy save directory.", ResultType.FAILED);
@@ -148,11 +158,7 @@ public class SaveService {
 		int[] sessionNameIndexPositions = getSessionNameIndexPositions(sandboxConfig);
 
 		//Change the name in our copied save's Sandbox_config file to match the save name.
-		if (sessionNameIndexPositions[0] != -1 && sessionNameIndexPositions[1] != -1) {
-			result.addMessage(sandboxService.changeConfigSessionName(sandboxConfig, copiedSaveProfile, sessionNameIndexPositions));
-		} else {
-			result.addMessage("Save does not contain a SessionName tag,", ResultType.FAILED);
-		}
+		result.addMessage(sandboxService.changeConfigSessionName(sandboxConfig, copiedSaveProfile, sessionNameIndexPositions));
 
 		return result;
 	}
