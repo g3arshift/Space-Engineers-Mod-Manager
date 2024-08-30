@@ -1,34 +1,27 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import atlantafx.base.theme.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
-import javafx.application.Application;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.text.Text;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -45,7 +38,6 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.List;
 
 /** Responsible for the main window of the application, and all the visual elements of it. Business logic has been delegated to service classes.
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -56,56 +48,13 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  * <p>
  * @author Gear Shift
- *
- * This class has been deprecated in favor of MainWindowViewExperimental, and will be removed once it is confirmed all existing functionality is working correctly in the new class.
  */
-@Deprecated
 @Getter
-public class MainWindowView {
+public class MainWindowViewExperimental {
 
 	//FXML Items
 	@FXML
-	private MenuItem saveModlistAs;
-
-	@FXML
-	private CheckMenuItem logToggle;
-
-	@FXML
-	private CheckMenuItem modDescriptionToggle;
-
-	@FXML
-	private MenuItem themes;
-
-	@FXML
-	private MenuItem close;
-
-	@FXML
-	private MenuItem about;
-
-	@FXML
-	private MenuItem guide;
-
-	@FXML
-	private MenuItem faq;
-
-	@FXML
-	private MenuItem manageModProfiles;
-
-	@FXML
-	private MenuItem manageSaveProfiles;
-
-	@FXML
-	@Getter
-	private ComboBox<ModProfile> modProfileDropdown;
-
-	@FXML
-	private ComboBox<SaveProfile> saveProfileDropdown;
-
-	@FXML
-	private Text activeModCount;
-
-	@FXML
-	private Text modConflicts;
+	private BorderPane mainWindowLayout;
 
 	@FXML
 	private ComboBox<String> modImportDropdown;
@@ -137,8 +86,6 @@ public class MainWindowView {
 	@FXML
 	private Label lastModifiedBy;
 
-	private String statusBaseStyling;
-
 	@FXML
 	private SplitPane mainViewSplit;
 
@@ -169,9 +116,6 @@ public class MainWindowView {
 	private TableColumn<ModCell, String> modCategory;
 
 	@FXML
-	private TextField modTableSearchBox;
-
-	@FXML
 	private TabPane informationPane;
 
 	@FXML
@@ -183,43 +127,14 @@ public class MainWindowView {
 	@FXML
 	private ListView<LogMessage> viewableLog;
 
-	@FXML
-	private Button clearSearchBox;
-
-	@FXML
-	private CheckMenuItem primerLightTheme;
-
-	@FXML
-	private CheckMenuItem primerDarkTheme;
-
-	@FXML
-	private CheckMenuItem nordLightTheme;
-
-	@FXML
-	private CheckMenuItem nordDarkTheme;
-
-	@FXML
-	private CheckMenuItem cupertinoLightTheme;
-
-	@FXML
-	private CheckMenuItem cupertinoDarkTheme;
-
-	@FXML
-	private CheckMenuItem draculaTheme;
+	private MenuBarView menuBarView;
 
 	//TODO: We need to replace the window control bar for the window.
 	private ObservableList<LogMessage> userLog;
 
-	@Setter
-	private SaveProfile currentSaveProfile;
-	@Setter
-	private ModProfile currentModProfile;
-
 	private Logger logger;
 
 	private Properties properties;
-
-	private BackendController backendController;
 
 	private UiService uiService;
 
@@ -237,47 +152,33 @@ public class MainWindowView {
 	//This is just a wrapper for the userConfiguration saveProfiles list. Any changes made to this will propagate back to it, but not the other way around.
 	private ObservableList<SaveProfile> saveProfiles;
 
-	private ModProfileManagerView modProfileManagerView;
+	private String statusBaseStyling;
 
-	private SaveManagerView saveManagerView;
-
-	private final List<CheckMenuItem> themeList = new ArrayList<>();
-
-	//TODO: This class is GIANT. Split on whether it should be split up into multiple views and stitched together or left as is.
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public void initView(Properties properties, Logger logger,
-						 UserConfiguration userConfiguration,
 						 Stage stage, Parent root,
 						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView,
+						 MenuBarView menuBarView, Parent menuBarRoot,
 						 UiService uiService) throws IOException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		this.logger = logger;
-		backendController = uiService.getBackendController();
 		this.scene = new Scene(root);
 		this.stage = stage;
 		this.properties = properties;
-		this.userConfiguration = userConfiguration;
+		this.userConfiguration = uiService.getUserConfiguration();
 		this.uiService = uiService;
 		this.userLog = this.uiService.getUserLog();
+		this.menuBarView = menuBarView;
 
 		modProfiles = uiService.getModProfiles();
 		saveProfiles = uiService.getSaveProfiles();
 
-		this.modProfileManagerView = modProfileManagerView;
-		this.saveManagerView = saveManagerView;
-
-		themeList.add(primerLightTheme);
-		themeList.add(primerDarkTheme);
-		themeList.add(nordLightTheme);
-		themeList.add(nordDarkTheme);
-		themeList.add(cupertinoLightTheme);
-		themeList.add(cupertinoDarkTheme);
-		themeList.add(draculaTheme);
-
 		//Prepare the UI
 		setupWindow();
+		menuBarView.initView(this, uiService, modProfileManagerView, saveManagerView);
+		mainWindowLayout.setTop(menuBarRoot);
 		setupMainViewItems();
 		setupInformationBar();
-		backendController.saveUserData(userConfiguration);
+		uiService.saveUserData(userConfiguration);
 
 		//Prompt the user to remove any saves that no longer exist on the file system.
 		if (saveProfiles.size() != 1 &&
@@ -302,7 +203,7 @@ public class MainWindowView {
 				}
 			}
 
-			backendController.saveUserData(userConfiguration);
+			uiService.saveUserData(userConfiguration);
 		}
 	}
 
@@ -311,19 +212,7 @@ public class MainWindowView {
 	/**
 	 * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
 	 */
-	private void setupWindow() throws IOException, XmlPullParserException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-		//Set the theme for our application based on the users preferred theme using reflection.
-		for (CheckMenuItem c : themeList) {
-			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
-			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
-			if (themeName.equals(StringUtils.deleteWhitespace(userConfiguration.getUserTheme()))) {
-				c.setSelected(true);
-				Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(userConfiguration.getUserTheme()));
-				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
-				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-			}
-		}
-
+	private void setupWindow() throws IOException, XmlPullParserException {
 		//Prepare the scene
 		int minWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth"));
 		int minHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight"));
@@ -353,17 +242,17 @@ public class MainWindowView {
 	private void setupInformationBar() {
 		Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
 		if (lastUsedSaveProfile.isPresent()) {
-			this.currentSaveProfile = lastUsedSaveProfile.get();
+			uiService.setCurrentSaveProfile(lastUsedSaveProfile.get());
 			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
 
-			updateSaveStatus(currentSaveProfile);
-			updateLastModifiedBy(currentSaveProfile);
+			updateSaveStatus(uiService.getCurrentSaveProfile());
+			updateLastModifiedBy(uiService.getCurrentSaveProfile());
 
 			//Set the text for the last time this profile was saved
-			if (currentSaveProfile.getLastSaved() == null || currentSaveProfile.getLastSaved().isEmpty()) {
+			if (uiService.getCurrentSaveProfile().getLastSaved() == null || uiService.getCurrentSaveProfile().getLastSaved().isEmpty()) {
 				lastInjected.setText("Never");
 			} else {
-				lastInjected.setText(currentSaveProfile.getLastSaved());
+				lastInjected.setText(uiService.getCurrentSaveProfile().getLastSaved());
 			}
 		} else {
 			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
@@ -388,45 +277,6 @@ public class MainWindowView {
 
 		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
-		//Makes it so the combo boxes will properly return strings in their menus instead of the objects
-		saveProfileDropdown.setConverter(new StringConverter<>() {
-			@Override
-			public String toString(SaveProfile saveProfile) {
-				return saveProfile.getProfileName();
-			}
-
-			@Override
-			public SaveProfile fromString(String s) {
-				return null;
-			}
-		});
-		modProfileDropdown.setConverter(new StringConverter<>() {
-			@Override
-			public String toString(ModProfile modProfile) {
-				return modProfile.getProfileName();
-			}
-
-			@Override
-			public ModProfile fromString(String s) {
-				return null;
-			}
-		});
-
-		saveProfileDropdown.setItems(saveProfiles);
-		saveProfileDropdown.getSelectionModel().selectFirst();
-		//TODO: Set the current save and mod profile equal to whatever was used last.
-		currentSaveProfile = saveProfileDropdown.getSelectionModel().getSelectedItem();
-
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell());
-		saveProfileDropdown.setButtonCell(new SaveProfileCell());
-
-		modProfileDropdown.setItems(modProfiles);
-		modProfileDropdown.getSelectionModel().selectFirst();
-		currentModProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
-
-		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected.
-		// - There's something on top of it. Look at it in dracula theme.
-
 		//TODO: Much of this needs to happen down in the service layer
 		//TODO: Setup a function in ModList service to track conflicts.
 		//TODO: Populate mod table
@@ -446,70 +296,21 @@ public class MainWindowView {
 	}
 
 	@FXML
-	private void clearSearchBox() {
-		modTableSearchBox.clear();
-	}
-
-	@FXML
 	private void closeLogTab() {
-		logToggle.setSelected(false);
+		menuBarView.getLogToggle().setSelected(false);
 		if (informationPane.getTabs().isEmpty()) {
 			disableSplitPaneDivider();
-		}
-	}
-
-	@FXML
-	private void toggleLog() {
-		if (!logToggle.isSelected()) {
-			informationPane.getTabs().remove(logTab);
-		} else informationPane.getTabs().add(logTab);
-
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		} else if (!mainViewSplitDividerVisible) {
-			enableSplitPaneDivider();
 		}
 	}
 
 	@FXML
 	private void closeModDescriptionTab() {
-		modDescriptionToggle.setSelected(false);
+		menuBarView.getModDescriptionToggle().setSelected(false);
 		if (informationPane.getTabs().isEmpty()) {
 			disableSplitPaneDivider();
 		}
 	}
 
-	@FXML
-	private void toggleModDescription() {
-		if (!modDescriptionToggle.isSelected()) {
-			informationPane.getTabs().remove(modDescriptionTab);
-		} else informationPane.getTabs().add(modDescriptionTab);
-
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		} else if (!mainViewSplitDividerVisible) {
-			enableSplitPaneDivider();
-		}
-	}
-
-	@FXML
-	private void manageModProfiles() {
-		modProfileManagerView.getStage().showAndWait();
-		uiService.log(backendController.saveUserData(userConfiguration));
-	}
-
-	//TODO: Add check for if the file can't be found for a save profile.
-	@FXML
-	private void manageSaveProfiles() {
-		saveManagerView.getStage().showAndWait();
-		uiService.log(backendController.saveUserData(userConfiguration));
-	}
-
-	@FXML
-	private void selectModProfile() throws IOException {
-		currentModProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
-		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
-	}
 
 	private void importModlist() {
 		//TODO: Implement. Allow importing modlists from either sandbox file or exported list.
@@ -535,10 +336,12 @@ public class MainWindowView {
 	//Apply the modlist the user is currently using to the save profile they're currently using.
 	@FXML
 	private void applyModlist() throws IOException {
+		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
+		ModProfile currentModProfile = uiService.getCurrentModProfile();
 		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
 		if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
 			//TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
-			Result<Void> modlistResult = backendController.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
+			Result<Void> modlistResult = uiService.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
 			uiService.log(modlistResult);
 			if (!modlistResult.isSuccess()) {
 				currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
@@ -552,7 +355,7 @@ public class MainWindowView {
 				int saveProfileIndex = saveProfiles.indexOf(currentSaveProfile);
 				saveProfiles.set(saveProfileIndex, currentSaveProfile);
 
-				uiService.log(backendController.saveUserData(userConfiguration));
+				uiService.log(uiService.saveUserData(userConfiguration));
 				currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
 			}
 			updateInfoBar(currentSaveProfile);
@@ -571,40 +374,7 @@ public class MainWindowView {
 	}
 
 
-	/**
-	 * Using reflection, set the theme of the application and check/uncheck the appropriate menu boxes for themes.
-	 */
-	@FXML
-	private void setTheme(ActionEvent event) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
-		//Remove the "Theme" end tag from our caller and capitalize the first letter
-		final CheckMenuItem source = (CheckMenuItem) event.getSource();
-		String caller = StringUtils.removeEnd(source.getId(), "Theme");
-		String selectedTheme = caller.substring(0, 1).toUpperCase() + caller.substring(1);
-
-		for (CheckMenuItem c : themeList) {
-			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
-			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
-			if (!themeName.equals(selectedTheme)) {
-				c.setSelected(false);
-			} else {
-				//Use reflection to get a theme class from our string
-				c.setSelected(true);
-				Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
-				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
-				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-				userConfiguration.setUserTheme(selectedTheme);
-			}
-		}
-
-		backendController.saveUserData(userConfiguration);
-		Result<Void> userConfigurationResult = backendController.saveUserData(userConfiguration);
-		if (userConfigurationResult.isSuccess()) {
-			uiService.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
-		} else {
-			uiService.log("Failed to save theme to user configuration.", MessageType.ERROR);
-		}
-	}
 
 	protected void disableSplitPaneDivider() {
 		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {

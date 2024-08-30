@@ -57,16 +57,16 @@ public class ModProfileManagerView {
 
     private ProfileInputView profileInputView;
 
-    private MainWindowView mainWindowView;
+    private MenuBarView topBarView;
 
     private ObservableList<ModProfile> modProfiles;
 
-    public void initView(Parent root, UiService uiService, ProfileInputView profileInputView, Properties properties, MainWindowView mainWindowView) {
+    public void initView(Parent root, UiService uiService, ProfileInputView profileInputView, Properties properties, MenuBarView mainWindowView) {
         Scene scene = new Scene(root);
         this.uiService = uiService;
         modProfiles = uiService.getModProfiles();
         this.profileInputView = profileInputView;
-        this.mainWindowView = mainWindowView;
+        this.topBarView = mainWindowView;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -124,7 +124,7 @@ public class ModProfileManagerView {
 
     @FXML
     private void removeProfile() {
-        if (mainWindowView.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+        if (uiService.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
             Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
         } else {
             int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
@@ -161,8 +161,8 @@ public class ModProfileManagerView {
                 profileList.refresh();
 
                 //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
-                mainWindowView.getModProfileDropdown().getSelectionModel().selectNext();
-                mainWindowView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                topBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                topBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
 
                 profileInputView.getProfileNameInput().clear();
                 uiService.log("Successfully renamed profile.", MessageType.INFO);
@@ -172,8 +172,8 @@ public class ModProfileManagerView {
 
     @FXML
     private void selectProfile() {
-        mainWindowView.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
-        mainWindowView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
+        uiService.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
+        topBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
     }
 
     @FXML

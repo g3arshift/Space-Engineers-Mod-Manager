@@ -74,11 +74,11 @@ public class SaveManagerView {
 
 	private ProfileInputView saveListInputSecondStepView;
 
-	private MainWindowView mainWindowView;
+	private MenuBarView topBarView;
 
 	public void initView(Parent root, UiService uiService,
 						 SaveListInput saveListInputFirstStepView, ProfileInputView saveListInputSecondStepView,
-						 Properties properties, MainWindowView mainWindowView) {
+						 Properties properties, MenuBarView topBarView) {
 
 		Scene scene = new Scene(root);
 		this.uiService = uiService;
@@ -86,7 +86,7 @@ public class SaveManagerView {
 
 		this.saveListInputFirstStepView = saveListInputFirstStepView;
 		this.saveListInputSecondStepView = saveListInputSecondStepView;
-		this.mainWindowView = mainWindowView;
+		this.topBarView = topBarView;
 
 		stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);
@@ -140,7 +140,7 @@ public class SaveManagerView {
 									saveProfiles.getFirst().getSavePath() == null) {
 								saveProfile.setSaveExists(true);
 								saveProfiles.set(0, saveProfile);
-								mainWindowView.setCurrentSaveProfile(saveProfile);
+								uiService.setCurrentSaveProfile(saveProfile);
 							} else {
 								saveProfiles.add(saveProfile);
 								result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);

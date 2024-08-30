@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
+import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
@@ -82,7 +83,7 @@ public class ViewController {
                         logMessage.messageTypeProperty()
                 });
 
-        UiService uiService = new UiService(logger, userLog, modProfiles, saveProfiles, backendController);
+        UiService uiService = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
         uiService.log(userConfigurationResult);
 
         //Manually inject our controllers into our FXML so we can reuse the FXML for the profile creation elsewhere, and have greater flexibility in controller injection.
@@ -118,17 +119,23 @@ public class ViewController {
         modProfilerManagerLoader.setController(modProfileManagerView);
         Parent modProfileRoot = modProfilerManagerLoader.load();
 
-        //View for the primary application window
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
-        Parent mainViewRoot = loader.load();
-        MainWindowView mainWindowView = loader.getController();
-        mainWindowView.initView(properties, logger,
-                userConfiguration, stage,
-                mainViewRoot, modProfileManagerView,
-                saveManagerView, uiService);
+        //View for the menubar section of the main window
+        FXMLLoader menuBarLoader = new FXMLLoader(getClass().getResource("/view/experimental/menubar.fxml"));
+        MenuBarView menuBarView = new MenuBarView();
+        menuBarLoader.setController(menuBarView);
+        Parent menuBarRoot = menuBarLoader.load();
 
-        modProfileManagerView.initView(modProfileRoot, uiService, profileInputView, properties, mainWindowView);
-        saveManagerView.initView(saveManagerRoot, uiService, saveListInputFirstStepView, saveListInputSecondStepView, properties, mainWindowView);
+        //View for the primary application window
+        FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/experimental/main-window.fxml"));
+        Parent mainViewRoot = mainViewLoader.load();
+        MainWindowViewExperimental mainWindowView = mainViewLoader.getController();
+        mainWindowView.initView(properties, logger, stage,
+                mainViewRoot, modProfileManagerView,
+                saveManagerView,  menuBarView,
+                menuBarRoot, uiService);
+
+        modProfileManagerView.initView(modProfileRoot, uiService, profileInputView, properties, mainWindowView.getMenuBarView());
+        saveManagerView.initView(saveManagerRoot, uiService, saveListInputFirstStepView, saveListInputSecondStepView, properties, mainWindowView.getMenuBarView());
 
         //TODO: Actually implement this. Function is empty at the moment.
         //TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
