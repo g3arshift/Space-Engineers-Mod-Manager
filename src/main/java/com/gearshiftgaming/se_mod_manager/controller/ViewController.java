@@ -57,8 +57,8 @@ public class ViewController {
 
 	private Logger logger;
 
-	public ViewController(Stage stage) throws IOException, JAXBException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		logger = LogManager.getLogger(SpaceEngineersModManager.class);
+	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+		this.logger = logger;
 		logger.info("Started application");
 
 		properties = new Properties();
@@ -161,7 +161,8 @@ public class ViewController {
 		MainWindowView mainWindowView = mainViewLoader.getController();
 		mainWindowView.initView(properties, logger,
 				stage, mainViewRoot,
-				modProfileManagerView, saveManagerView,
+				//TODO: ONLY SET TO NULL FOR TESTING, REVERT THE NULL TO modProfileManagerView
+				null, saveManagerView,
 				menuBarView, menuBarRoot,
 				statusBarView, statusBarRoot,
 				uiService);
