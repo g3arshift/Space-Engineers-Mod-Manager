@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
+import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
@@ -8,12 +9,16 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.controller.BackendController;
+import javafx.application.Application;
 import javafx.collections.ObservableList;
+import javafx.scene.control.CheckMenuItem;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -83,5 +88,19 @@ public class UiService {
 
     public void firstTimeSetup() {
         //TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
+    }
+
+    public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        //Set the theme for our application based on the users preferred theme using reflection.
+        for (CheckMenuItem c : themeList) {
+            String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
+            String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
+            if (themeName.equals(StringUtils.deleteWhitespace(userConfiguration.getUserTheme()))) {
+                c.setSelected(true);
+                Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(userConfiguration.getUserTheme()));
+                Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
+                Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
+            }
+        }
     }
 }

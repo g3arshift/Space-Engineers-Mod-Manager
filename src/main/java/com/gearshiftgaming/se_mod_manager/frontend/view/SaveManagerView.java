@@ -103,7 +103,7 @@ public class SaveManagerView {
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
 		stage.setScene(scene);
-		uiService.getLogger().info("Successfully initialized SaveManagerView.");
+		uiService.getLogger().info("Successfully initialized save manager.");
 	}
 
 	@FXML

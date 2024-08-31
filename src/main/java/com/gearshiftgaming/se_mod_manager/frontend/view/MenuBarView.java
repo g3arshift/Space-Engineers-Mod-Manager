@@ -108,7 +108,7 @@ public class MenuBarView {
 	@FXML
 	private CheckMenuItem draculaTheme;
 
-	private MainWindowViewExperimental mainWindowView;
+	private MainWindowView mainWindowView;
 
 	private final List<CheckMenuItem> themeList = new ArrayList<>();
 
@@ -124,7 +124,7 @@ public class MenuBarView {
 
 	private SaveManagerView saveManagerView;
 
-	public void initView(MainWindowViewExperimental mainWindowView, UiService uiService,
+	public void initView(MainWindowView mainWindowView, UiService uiService,
 						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected.
 		// - There's something on top of it. Look at it in dracula theme.
@@ -159,17 +159,7 @@ public class MenuBarView {
 
 		userConfiguration = uiService.getUserConfiguration();
 
-		//Set the theme for our application based on the users preferred theme using reflection.
-		for (CheckMenuItem c : themeList) {
-			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
-			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
-			if (themeName.equals(StringUtils.deleteWhitespace(userConfiguration.getUserTheme()))) {
-				c.setSelected(true);
-				Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(userConfiguration.getUserTheme()));
-				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
-				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-			}
-		}
+		uiService.setUserSavedApplicationTheme(themeList);
 
 		//Makes it so the combo boxes will properly return strings in their menus instead of the objects
 		saveProfileDropdown.setConverter(new StringConverter<>() {
@@ -194,6 +184,8 @@ public class MenuBarView {
 				return null;
 			}
 		});
+
+		uiService.getLogger().info("Successfully initialized menu bar.");
 	}
 
 	@FXML
