@@ -161,8 +161,7 @@ public class ViewController {
 		MainWindowView mainWindowView = mainViewLoader.getController();
 		mainWindowView.initView(properties, logger,
 				stage, mainViewRoot,
-				//TODO: ONLY SET TO NULL FOR TESTING, REVERT THE NULL TO modProfileManagerView
-				null, saveManagerView,
+				modProfileManagerView, saveManagerView,
 				menuBarView, menuBarRoot,
 				statusBarView, statusBarRoot,
 				uiService);
