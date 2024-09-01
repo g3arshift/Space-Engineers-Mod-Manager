@@ -47,7 +47,7 @@ public class SpaceEngineersModManager extends Application {
 			logger.error(e.getLocalizedMessage());
 			logger.error(Arrays.toString(e.getStackTrace()));
 			Popup.displaySimpleAlert("An unexpected error was encountered and the application will now exit. " +
-					"Please submit a bug report along with your SEMM.log file located in the logs folder to", "https://spaceengineersmodmanager.com/bugreport", MessageType.ERROR);
+					"Please submit a bug report along with your SEMM.log file located in the logs folder to the below link.", "https://spaceengineersmodmanager.com/bugreport", MessageType.ERROR);
 			Platform.exit();
 		}
 	}

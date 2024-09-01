@@ -4,20 +4,16 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -135,26 +131,16 @@ public class Popup {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        Hyperlink hyperlink = new Hyperlink();
-        hyperlink.setText(link);
-        hyperlink.setOnAction(actionEvent -> {
-			try {
-				Desktop.getDesktop().browse(new URI(link));
-			} catch (IOException | URISyntaxException e) {
-				throw new RuntimeException(e);
-			}
-		});
-        Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
 
         getIconByMessageType(messageType, messageIcon, stage);
 
-        simpleAlert(stage, label, hyperlink, messageIcon);
+        simpleAlert(stage, message, link, messageIcon);
     }
 
     //Creates a simple alert centered on a specific stage
     private static void simpleAlert(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
-        HBox dialogBox = makeDialogBox(label, messageIcon);
+        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
 
         //Setup our button
         HBox buttonBar = makeOkBar(childStage);
@@ -164,7 +150,7 @@ public class Popup {
 
     //Creates a simple alert centered on the screen
     private static void simpleAlert(Stage childStage, Label label, FontIcon messageIcon) {
-        HBox dialogBox = makeDialogBox(label, messageIcon);
+        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
 
         //Setup our button
         HBox buttonBar = makeOkBar(childStage);
@@ -173,8 +159,8 @@ public class Popup {
     }
 
     //Creates a simple alert centered on the screen, with a clickable link
-    private static void simpleAlert(Stage childStage, Label label, Hyperlink hyperlink, FontIcon messageIcon) {
-        HBox dialogBox = makeDialogBox(label, hyperlink, messageIcon);
+    private static void simpleAlert(Stage childStage, String message, String link, FontIcon messageIcon) {
+        HBox dialogBox = makeDialogBoxWithLink(message, link, messageIcon);
 
         //Setup our button
         HBox buttonBar = makeOkBar(childStage);
@@ -186,7 +172,7 @@ public class Popup {
     private static int yesNoDialog(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
         AtomicInteger choice = new AtomicInteger(-1);
 
-        HBox dialogBox = makeDialogBox(label, messageIcon);
+        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
 
         HBox buttonBar = makeYesNoBar(choice, childStage);
 
@@ -199,7 +185,7 @@ public class Popup {
     private static int yesNoDialog(Stage childStage, Label label, FontIcon messageIcon) {
         AtomicInteger choice = new AtomicInteger(-1);
 
-        HBox dialogBox = makeDialogBox(label, messageIcon);
+        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
 
         HBox buttonBar = makeYesNoBar(choice, childStage);
 
@@ -302,7 +288,7 @@ public class Popup {
     }
 
     //Creates a dialog box message
-    private static HBox makeDialogBox(Label label, FontIcon messageIcon) {
+    private static HBox makeDialogBoxWithLink(Label label, FontIcon messageIcon) {
         label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
         messageIcon.getStyleClass().clear();
         messageIcon.setIconSize(ICON_SIZE);
@@ -318,24 +304,39 @@ public class Popup {
     }
 
     //Creates a dialog box message, with a hyperlink
-    private static HBox makeDialogBox(Label label, Hyperlink hyperlink, FontIcon messageIcon) {
-        label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+    private static HBox makeDialogBoxWithLink(String message, String link, FontIcon messageIcon) {
         messageIcon.getStyleClass().clear();
         messageIcon.setIconSize(ICON_SIZE);
 
-        //TODO: Make this wrap properly.
-        TextFlow textFlow = new TextFlow(label, hyperlink);
-        textFlow.setPrefWidth(600);
+        Label label = new Label(message);
+        label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+        label.setWrapText(true);
 
-        HBox dialogBox = new HBox(messageIcon, textFlow);
+        HBox dialogBox = createLinkBox(link, messageIcon, label);
         dialogBox.setAlignment(Pos.TOP_LEFT);
         dialogBox.setPadding(new Insets(0, 5, 0, 5));
         dialogBox.setSpacing(5d);
         dialogBox.setMaxWidth(600);
 
-        //TODO: Instead of this, maybe return a vbox?
-        VBox.setVgrow(dialogBox, Priority.ALWAYS);
+        return dialogBox;
+    }
 
+    private static HBox createLinkBox(String link, FontIcon messageIcon, Label label) {
+        Hyperlink hyperlink = new Hyperlink("https://spaceengineersmodmanager.com/bugreport");
+        hyperlink.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+
+        hyperlink.setOnAction(actionEvent -> {
+            try {
+                Desktop.getDesktop().browse(new URI(link));
+            } catch (IOException | URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        VBox textLayout = new VBox(label, hyperlink);
+        textLayout.setAlignment(Pos.CENTER);
+
+        HBox dialogBox = new HBox(messageIcon, textLayout);
         return dialogBox;
     }
 
