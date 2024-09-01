@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
@@ -19,7 +18,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
@@ -49,13 +47,11 @@ import java.util.Properties;
 public class ViewController {
 	private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
 
-	private BackendController backendController;
+	private final Properties properties;
 
-	private Properties properties;
+	private final UiService uiService;
 
-	private UiService uiService;
-
-	private Logger logger;
+	private final Logger logger;
 
 	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		this.logger = logger;
@@ -69,7 +65,7 @@ public class ViewController {
 			throw (e);
 		}
 
-		backendController = new BackendFileController(new SandboxConfigFileRepository(),
+		BackendController backendController = new BackendFileController(new SandboxConfigFileRepository(),
 				new ModlistFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
