@@ -44,7 +44,7 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 			setStyle(null);
 			setGraphic(null);
 		} else {
-			String style = "-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5";
+			String style = "-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;";
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			saveName.setText("Save name: " + item.getSaveName());
 			profileName.setText(item.getProfileName());

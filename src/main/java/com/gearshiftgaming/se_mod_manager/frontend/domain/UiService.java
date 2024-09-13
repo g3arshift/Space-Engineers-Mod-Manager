@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
+import atlantafx.base.controls.Message;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
@@ -17,11 +18,16 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
+ * It holds all the relevant variables that are actual logic, such as the observable lists for save and mod profiles, as well as the current profiles.
+ * <p>
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the GPL3 license.
  * <p>
@@ -30,24 +36,28 @@ import java.util.List;
  * <p>
  * @author Gear Shift
  */
-@Getter
 public class UiService {
-    //TODO: Is this a controller, or a service? It's kind of performing the duties of a controller as it doesn't have too much of its own logic.
-
     private final Logger logger;
-
-    private final ObservableList<LogMessage> userLog;
-
-    private final ObservableList<ModProfile> modProfiles;
-
-    private final ObservableList<SaveProfile> saveProfiles;
 
     private final BackendController backendController;
 
+    @Getter
+    private final ObservableList<LogMessage> userLog;
+
+    @Getter
+    private final ObservableList<ModProfile> modProfiles;
+
+    @Getter
+    private final ObservableList<SaveProfile> saveProfiles;
+
+    @Getter
     private final UserConfiguration userConfiguration;
 
+    @Getter
     @Setter
     private SaveProfile currentSaveProfile;
+
+    @Getter
     @Setter
     private ModProfile currentModProfile;
 
@@ -78,6 +88,23 @@ public class UiService {
         log(result.getCurrentMessage(), messageType);
     }
 
+    public void logPrivate(String message, MessageType messageType) {
+        switch(messageType) {
+            case INFO -> {
+                logger.info(message);
+            }
+            case WARN -> {
+                logger.warn(message);
+            }
+            case ERROR -> {
+                logger.error(message);
+            }
+            case UNKNOWN -> {
+                logger.error("ERROR UNKNOWN - " + message);
+            }
+        }
+    }
+
     public Result<Void> saveUserData(UserConfiguration userConfiguration) {
         return backendController.saveUserData(userConfiguration);
     }
@@ -86,12 +113,21 @@ public class UiService {
         return backendController.applyModlist(modList, sandboxConfigPath);
     }
 
+    public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
+        return backendController.copySaveProfile(saveProfile);
+    }
+
+    public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
+        return backendController.getSaveProfile(sandboxConfigFile);
+    }
+
     public void firstTimeSetup() {
         //TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
     }
 
+    //Sets the theme for our application based on the users preferred theme using reflection.
+    //It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar.
     public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        //Set the theme for our application based on the users preferred theme using reflection.
         for (CheckMenuItem c : themeList) {
             String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
             String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);

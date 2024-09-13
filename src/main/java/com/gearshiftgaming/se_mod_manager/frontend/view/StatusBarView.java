@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -73,7 +74,7 @@ public class StatusBarView {
 			lastInjected.setText("Never");
 		}
 
-		uiService.getLogger().info("Successfully initialized status bar.");
+		uiService.logPrivate("Successfully initialized status bar.", MessageType.INFO);
 	}
 
 	private void updateInfoBar(SaveProfile saveProfile) {

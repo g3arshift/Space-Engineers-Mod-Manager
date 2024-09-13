@@ -155,7 +155,7 @@ public class ViewController {
 		FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
 		Parent mainViewRoot = mainViewLoader.load();
 		MainWindowView mainWindowView = mainViewLoader.getController();
-		mainWindowView.initView(properties, logger,
+		mainWindowView.initView(properties,
 				stage, mainViewRoot,
 				modProfileManagerView, saveManagerView,
 				menuBarView, menuBarRoot,

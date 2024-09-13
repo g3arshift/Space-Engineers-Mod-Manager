@@ -9,10 +9,7 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import jakarta.xml.bind.JAXBException;
@@ -105,13 +102,13 @@ public class BackendFileController implements BackendController {
 	public Result<Void> createTestUserData(Theme theme) {
 
 		ModProfile testModProfile = new ModProfile();
-		Mod testMod = new Mod("123456789");
+		Mod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();
 		testCategories.add("Test Category");
 		testCategories.add("Three Category test");
 		testMod.setCategories(testCategories);
 		testModProfile.getModList().add(testMod);
-		testModProfile.getModList().add(new Mod("4444444"));
+		testModProfile.getModList().add(new SteamMod("4444444"));
 
 		SaveProfile testSaveProfile = new SaveProfile();
 		testSaveProfile.setSaveName("Test Save");

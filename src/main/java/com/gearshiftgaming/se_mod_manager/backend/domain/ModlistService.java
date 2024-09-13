@@ -54,13 +54,14 @@ public class ModlistService {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(modlistFile.getName()).equals("txt") || FilenameUtils.getExtension(modlistFile.getName()).equals("doc")) {
             result.addMessage(modlistFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(modlistRepository.getModList(modlistFile));
+            result.setPayload(modlistRepository.getSteamModList(modlistFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .txt or .doc file.", ResultType.INVALID);
         }
         return result;
     }
 
+    //TODO: Should instead create a function called generateModList or something more appropriate that calls two methods, one to generate info for steam mods, the other for ModIO mods, and perform those operations on the given modlist.
     //TODO: Do this with the concurrency API
     //Take in our list of mod ID's and fill out the rest of their fields.
     public void generateModListSteam(List<Mod> modList) throws ExecutionException, InterruptedException {

@@ -185,7 +185,7 @@ public class MenuBarView {
 			}
 		});
 
-		uiService.getLogger().info("Successfully initialized menu bar.");
+		uiService.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
 	}
 
 	@FXML

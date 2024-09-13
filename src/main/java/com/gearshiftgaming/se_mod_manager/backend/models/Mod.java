@@ -20,10 +20,12 @@ import java.util.Objects;
  * <p>
  * @author Gear Shift
  */
+
+//TODO: Change this into an abstract, and remove the field for modDownloadSourceType. Instead, make two subclasses for steam and modio mods.
 @Getter
 @Setter
 @NoArgsConstructor
-public class Mod {
+public abstract class Mod {
 
     //These are the fields required for the sandbox_config.sbc file
     private String id;
@@ -31,14 +33,12 @@ public class Mod {
     private String publishedServiceName;
 
     //These are the fields for the UI
-    private ModDownloadSourceType modDownloadSource;
     private String modVersion;
     private Date lastUpdated;
     private int loadPriority;
     private ModImportSourceType source;
 
     private List<String> categories;
-
     private boolean active;
 
     public Mod(String id) {

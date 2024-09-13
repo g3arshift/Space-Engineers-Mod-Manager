@@ -80,7 +80,7 @@ public class SaveListInput {
         selectedSave = fileChooser.showOpenDialog(stage);
 
         if (selectedSave != null) {
-            saveProfileResult = uiService.getBackendController().getSaveProfile(selectedSave);
+            saveProfileResult = uiService.getSaveProfile(selectedSave);
             if (saveProfileResult.isSuccess()) {
                 saveName.setText(saveProfileResult.getPayload().getSaveName());
             }

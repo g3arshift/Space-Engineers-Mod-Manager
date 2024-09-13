@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import org.apache.commons.io.FilenameUtils;
@@ -31,7 +32,7 @@ public class ModlistFileRepository implements ModlistRepository {
     }
 
     @Override
-    public List<Mod> getModList(File modListFile) throws IOException {
+    public List<Mod> getSteamModList(File modListFile) throws IOException {
         //We use a set to prevent duplicate lines from being added
         //TODO: Check to make sure the workshop url is in the correct form. This includes its variants.
         Set<Mod> modSet = new LinkedHashSet<>();
@@ -39,7 +40,7 @@ public class ModlistFileRepository implements ModlistRepository {
             String modUrl;
             while ((modUrl = br.readLine()) != null) {
                 //Grab just the ID from the full URLs
-                Mod mod = new Mod(STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining("")));
+                Mod mod = new SteamMod(STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining("")));
 
                 //Don't add blank lines
                 if (!mod.getId().isBlank()) {

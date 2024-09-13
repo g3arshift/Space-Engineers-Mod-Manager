@@ -43,7 +43,8 @@ public class SpaceEngineersModManager extends Application {
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.
 	private static void logError(Thread t, Throwable e){
-		if (Platform.isFxApplicationThread()) {
+		//Second condition is a dirty hack to prevent it from double displaying errors when we close the platform
+		if (Platform.isFxApplicationThread() && !e.getLocalizedMessage().contains("Key not associated with a running event loop")) {
 			logger.error(e.getLocalizedMessage());
 			logger.error(Arrays.toString(e.getStackTrace()));
 			Popup.displaySimpleAlert("An unexpected error was encountered and the application will now exit. " +

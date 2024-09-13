@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
@@ -103,7 +104,7 @@ public class SaveManagerView {
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
 		stage.setScene(scene);
-		uiService.getLogger().info("Successfully initialized save manager.");
+		uiService.logPrivate("Successfully initialized save manager.", MessageType.INFO);
 	}
 
 	@FXML
@@ -122,7 +123,6 @@ public class SaveManagerView {
 					Popup.displaySimpleAlert("Save is already being managed!", stage, MessageType.WARN);
 				} else {
 					//Remove the default save profile that isn't actually a profile if it's all that we have in the list.
-					//Technically a user could enter this by mistake, but it's extremely unlikely.
 					boolean duplicateProfileName;
 					do {
 						saveListInputSecondStepView.getProfileNameInput().clear();
@@ -134,13 +134,16 @@ public class SaveManagerView {
 							Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
 						} else if (!saveListInputSecondStepView.getProfileNameInput().getText().isBlank()) {
 							saveProfile.setProfileName(saveListInputSecondStepView.getProfileNameInput().getText());
-							if (saveProfiles.size() == 1 &&
-									saveProfiles.getFirst().getSaveName().equals("None") &&
-									saveProfiles.getFirst().getProfileName().equals("None") &&
-									saveProfiles.getFirst().getSavePath() == null) {
+							if (saveProfiles.size() == 1 && saveProfiles.getFirst().getSaveName().equals("None") && saveProfiles.getFirst().getProfileName().equals("None") && saveProfiles.getFirst().getSavePath() == null) {
 								saveProfile.setSaveExists(true);
 								saveProfiles.set(0, saveProfile);
 								uiService.setCurrentSaveProfile(saveProfile);
+
+								//TODO: This only partially works. It fixes the styling, but leaves the text as "None" for the button cell.
+								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
+								buttonCellFix.setItem(saveProfiles.getFirst());
+								topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
+								saveList.refresh();
 							} else {
 								saveProfiles.add(saveProfile);
 								result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
@@ -178,11 +181,12 @@ public class SaveManagerView {
 		}
 	}
 
+	//Create a new thread that runs our
 	private Thread getCopyThread() {
 		final Task<Result<SaveProfile>> task = new Task<>() {
 			@Override
 			protected Result<SaveProfile> call() throws Exception {
-				return uiService.getBackendController().copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+				return uiService.copySaveProfile(saveList.getSelectionModel().getSelectedItem());
 			}
 		};
 
@@ -206,6 +210,7 @@ public class SaveManagerView {
 		return thread;
 	}
 
+	//TODO: Removing the first element of the list causes the application to crash and the saveprofile passed to the string parser for list to be null
 	@FXML
 	private void removeSave() {
 		//TODO: Add active profile check and minimum size check.

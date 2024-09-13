@@ -4,10 +4,10 @@ import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,16 +46,16 @@ public class ModlistServiceTest {
         service = new ModlistService(modlistRepository, properties);
         service.setWorkshopConnectionActive(true);
         modList = new ArrayList<>();
-        modList.add(new Mod("2777644246")); //Binoculars
-        modList.add(new Mod("2668820525")); //TouchScreenAPI
-        modList.add(new Mod("1902970975")); //Assertive Combat Systems
+        modList.add(new SteamMod("2777644246")); //Binoculars
+        modList.add(new SteamMod("2668820525")); //TouchScreenAPI
+        modList.add(new SteamMod("1902970975")); //Assertive Combat Systems
         badExtensionPath = "src/test/resources/nomods.sbc";
         testPath = "src/test/resources/GoodModList.txt";
     }
 
     @Test
     void shouldGetModListWithThreeItems() throws IOException {
-        when(modlistRepository.getModList(new File(testPath))).thenReturn(modList);
+        when(modlistRepository.getSteamModList(new File(testPath))).thenReturn(modList);
 
         List<Mod> testModList = service.getModListFromFile(testPath).getPayload();
         assertEquals(modList, testModList);
@@ -63,35 +63,31 @@ public class ModlistServiceTest {
     }
 
     @Test
-    void shouldCompleteModListWithFriendlyNameAndServiceName() throws ExecutionException, InterruptedException {
-        List<Mod> testModList = new ArrayList<>();
-        testModList.add(new Mod("2777644246"));
-        testModList.add(new Mod("2668820525"));
-        testModList.add(new Mod("1902970975"));
+    void shouldCompleteSteamModListWithFriendlyNameAndServiceName() throws ExecutionException, InterruptedException {
 
-        service.generateModListSteam(testModList);
-        assertEquals("Binoculars", testModList.get(0).getFriendlyName());
-        assertEquals("TouchScreenAPI", testModList.get(1).getFriendlyName());
-        assertEquals("Assertive Combat Systems", testModList.get(2).getFriendlyName());
+        service.generateModListSteam(modList);
+        assertEquals("Binoculars", modList.get(0).getFriendlyName());
+        assertEquals("TouchScreenAPI", modList.get(1).getFriendlyName());
+        assertEquals("Assertive Combat Systems", modList.get(2).getFriendlyName());
 
-        assertEquals("Steam", testModList.get(0).getPublishedServiceName());
-        assertEquals("Steam", testModList.get(1).getPublishedServiceName());
-        assertEquals("Steam", testModList.get(2).getPublishedServiceName());
+        assertEquals("Steam", modList.get(0).getPublishedServiceName());
+        assertEquals("Steam", modList.get(1).getPublishedServiceName());
+        assertEquals("Steam", modList.get(2).getPublishedServiceName());
     }
 
     @Test
-    void shouldDownloadInformationForAMod() throws ExecutionException, InterruptedException {
+    void shouldDownloadSteamInformationForAMod() throws ExecutionException, InterruptedException {
         List<Mod> testModList = new ArrayList<>();
-        testModList.add(new Mod("3276848116")); //Maelstrom - Black Hole
+        testModList.add(new SteamMod("3276848116")); //Maelstrom - Black Hole
         service.generateModListSteam(testModList);
         assertEquals("Maelstrom - Black Hole", testModList.getFirst().getFriendlyName());
     }
 
     @Test
-    void shouldAppendNotAModToModNameIfItIsNotAModItem() throws ExecutionException, InterruptedException {
+    void shouldAppendNotASteamModToModNameIfItIsNotAModItem() throws ExecutionException, InterruptedException {
         List<Mod> testModList = new ArrayList<>();
-        testModList.add(new Mod("2396138200")); //Big Bird - Blueprint
-        testModList.add(new Mod("1653185489")); //Escape From Mars Wico [Update WIP] - World
+        testModList.add(new SteamMod("2396138200")); //Big Bird - Blueprint
+        testModList.add(new SteamMod("1653185489")); //Escape From Mars Wico [Update WIP] - World
         service.generateModListSteam(testModList);
         assertEquals("Big Bird_NOT_A_MOD", testModList.getFirst().getFriendlyName());
         assertEquals("Escape From Mars Wico [Update WIP]_NOT_A_MOD", testModList.getLast().getFriendlyName());

@@ -119,8 +119,6 @@ public class MainWindowView {
 	//TODO: We need to replace the window control bar for the window.
 	private ObservableList<LogMessage> userLog;
 
-	private Logger logger;
-
 	private Properties properties;
 
 	private UiService uiService;
@@ -146,13 +144,12 @@ public class MainWindowView {
 	private StatusBarView statusBarView;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public void initView(Properties properties, Logger logger,
+	public void initView(Properties properties,
 						 Stage stage, Parent root,
 						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView,
 						 MenuBarView menuBarView, Parent menuBarRoot,
 						 StatusBarView statusBarView, Parent statusBarRoot,
 						 UiService uiService) throws IOException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		this.logger = logger;
 		this.scene = new Scene(root);
 		this.stage = stage;
 		this.properties = properties;
