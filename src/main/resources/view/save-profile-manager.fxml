@@ -22,7 +22,7 @@
                   <Region HBox.hgrow="ALWAYS" />
                   <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                     <buttons>
-                      <Button fx:id="selectSave" mnemonicParsing="false" onAction="#selectSave" text="Select" />
+                      <Button fx:id="selectSave" mnemonicParsing="false" onAction="#selectSave" text="Set Active" />
                         <Button fx:id="closeSaveWindow" mnemonicParsing="false" onAction="#closeSaveWindow" text="Close" />
                     </buttons>
                   </ButtonBar>

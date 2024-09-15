@@ -126,8 +126,13 @@ public class MenuBarView {
 
 	public void initView(MainWindowView mainWindowView, UiService uiService,
 						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected.
-		// - There's something on top of it. Look at it in dracula theme.
+		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
+		// - For some reason, calling:
+		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
+		//		buttonCellFix.setItem(saveProfile);
+		//		buttonCellFix.setText(saveProfile.getProfileName());
+		//		topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
+		//	in saveManagerView fixes it?! WHY?!
 		this.mainWindowView = mainWindowView;
 		this.uiService = uiService;
 		this.modProfileManagerView = modProfileManagerView;
@@ -245,9 +250,8 @@ public class MenuBarView {
 			}
 		}
 
-		uiService.saveUserData(userConfiguration);
-		Result<Void> userConfigurationResult = uiService.saveUserData(userConfiguration);
-		if (userConfigurationResult.isSuccess()) {
+		boolean savedUserTheme = uiService.saveUserData();
+		if (savedUserTheme) {
 			uiService.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
 		} else {
 			uiService.log("Failed to save theme to user configuration.", MessageType.ERROR);
@@ -257,14 +261,13 @@ public class MenuBarView {
 	@FXML
 	private void manageModProfiles() {
 		modProfileManagerView.getStage().showAndWait();
-		uiService.log(uiService.saveUserData(userConfiguration));
+		//uiService.log(uiService.saveUserData());
 	}
 
-	//TODO: Add check for if the file can't be found for a save profile.
 	@FXML
 	private void manageSaveProfiles() {
 		saveManagerView.getStage().showAndWait();
-		uiService.log(uiService.saveUserData(userConfiguration));
+		//uiService.log(uiService.saveUserData());
 	}
 
 	@FXML

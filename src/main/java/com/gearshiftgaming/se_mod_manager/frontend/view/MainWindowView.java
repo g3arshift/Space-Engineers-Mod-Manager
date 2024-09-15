@@ -170,7 +170,7 @@ public class MainWindowView {
 		mainWindowLayout.setBottom(statusBarRoot);
 		setupMainViewItems();
 
-		uiService.saveUserData(userConfiguration);
+		uiService.saveUserData();
 
 		//Prompt the user to remove any saves that no longer exist on the file system.
 		if (saveProfiles.size() != 1 &&
@@ -194,8 +194,7 @@ public class MainWindowView {
 					saveProfiles.get(i).setSaveExists(true);
 				}
 			}
-
-			uiService.saveUserData(userConfiguration);
+			uiService.saveUserData();
 		}
 	}
 

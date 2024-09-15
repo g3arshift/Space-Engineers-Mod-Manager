@@ -51,10 +51,8 @@ public class ViewController {
 
 	private final UiService uiService;
 
-	private final Logger logger;
-
+	//TODO: Check for file locks to prevent two copies of the app from running simultaneously
 	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		this.logger = logger;
 		logger.info("Started application");
 
 		properties = new Properties();
@@ -92,6 +90,7 @@ public class ViewController {
 						logMessage.messageTypeProperty()
 				});
 
+		//TODO: setup current active mod and save profiles
 		uiService = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
 		uiService.log(userConfigurationResult);
 

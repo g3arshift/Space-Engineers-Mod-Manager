@@ -34,7 +34,7 @@ public class SaveProfile {
     private String savePath;
 
     @Setter
-    private UUID lastAppliedModProfileId;
+    private UUID lastUsedModProfile;
 
     @Setter
     private ModlistChangeSourceType lastModifiedBy;
@@ -80,15 +80,15 @@ public class SaveProfile {
         this.profileName = saveProfile.getProfileName();
         this.saveName = saveProfile.getSaveName();
         this.savePath = saveProfile.getSavePath();
-        this.lastAppliedModProfileId = saveProfile.getLastAppliedModProfileId();
+        this.lastUsedModProfile = saveProfile.getLastUsedModProfile();
         this.lastModifiedBy = saveProfile.getLastModifiedBy();
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
         this.saveExists = saveProfile.isSaveExists();
     }
 
-    public void setLastAppliedModProfileId(UUID lastAppliedModProfileId) {
-        this.lastAppliedModProfileId = lastAppliedModProfileId;
+    public void setLastUsedModProfile(UUID lastUsedModProfile) {
+        this.lastUsedModProfile = lastUsedModProfile;
         lastSaved = getCurrentTime();
     }
 
@@ -110,11 +110,11 @@ public class SaveProfile {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SaveProfile that)) return false;
-		return saveExists == that.saveExists && Objects.equals(id, that.id) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastAppliedModProfileId, that.lastAppliedModProfileId) && lastModifiedBy == that.lastModifiedBy && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
+		return saveExists == that.saveExists && Objects.equals(id, that.id) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModProfile, that.lastUsedModProfile) && lastModifiedBy == that.lastModifiedBy && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, profileName, saveName, savePath, lastAppliedModProfileId, lastModifiedBy, lastSaveStatus, lastSaved, saveExists);
+        return Objects.hash(id, profileName, saveName, savePath, lastUsedModProfile, lastModifiedBy, lastSaveStatus, lastSaved, saveExists);
     }
 }

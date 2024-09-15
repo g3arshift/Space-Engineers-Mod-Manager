@@ -101,6 +101,7 @@ public class ModProfileManagerView {
                 modProfiles.add(newModProfile);
                 uiService.log("Successfully created profile " + profileInputView.getProfileNameInput().getText(), MessageType.INFO);
                 profileInputView.getProfileNameInput().clear();
+                uiService.saveUserData();
             }
         } while (duplicateProfileName);
     }
@@ -120,6 +121,7 @@ public class ModProfileManagerView {
         copyProfile.setProfileName(copyProfileName);
 
         modProfiles.add(copyProfile);
+        uiService.saveUserData();
     }
 
     @FXML
@@ -136,6 +138,7 @@ public class ModProfileManagerView {
                 } else {
                     profileList.getSelectionModel().select(profileIndex);
                 }
+                uiService.saveUserData();
             }
         }
     }
@@ -166,6 +169,7 @@ public class ModProfileManagerView {
 
                 profileInputView.getProfileNameInput().clear();
                 uiService.log("Successfully renamed profile.", MessageType.INFO);
+                uiService.saveUserData();
             }
         } while (duplicateProfileName);
     }

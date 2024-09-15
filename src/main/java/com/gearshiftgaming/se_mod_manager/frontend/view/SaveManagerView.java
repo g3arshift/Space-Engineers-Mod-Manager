@@ -26,13 +26,15 @@ import java.util.Objects;
 import java.util.Properties;
 
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  * <p>
+ *
  * @author Gear Shift
  */
 
@@ -141,7 +143,8 @@ public class SaveManagerView {
 
 								//TODO: This only partially works. It fixes the styling, but leaves the text as "None" for the button cell.
 								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
-								buttonCellFix.setItem(saveProfiles.getFirst());
+								buttonCellFix.setItem(saveProfile);
+								buttonCellFix.setText(saveProfile.getProfileName());
 								topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 								saveList.refresh();
 							} else {
@@ -151,6 +154,7 @@ public class SaveManagerView {
 
 								saveListInputSecondStepView.getProfileNameInput().clear();
 							}
+							uiService.saveUserData();
 						}
 					} while (duplicateProfileName);
 				}
@@ -181,7 +185,8 @@ public class SaveManagerView {
 		}
 	}
 
-	//Create a new thread that runs our
+	//Create a new thread that runs the code for copying profiles
+	//TODO: Add a lock so that only this application can work on the UserData files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.
 	private Thread getCopyThread() {
 		final Task<Result<SaveProfile>> task = new Task<>() {
 			@Override
@@ -203,6 +208,7 @@ public class SaveManagerView {
 			operationInProgressDimmer.setVisible(false);
 			progressIndicator.setVisible(false);
 			saveList.setMouseTransparent(false);
+			uiService.saveUserData();
 		});
 
 		Thread thread = new Thread(task);
@@ -210,23 +216,36 @@ public class SaveManagerView {
 		return thread;
 	}
 
-	//TODO: Removing the first element of the list causes the application to crash and the saveprofile passed to the string parser for list to be null
 	@FXML
 	private void removeSave() {
-		//TODO: Add active profile check and minimum size check.
-		saveProfiles.remove(saveList.getSelectionModel().getSelectedIndex());
+		if (uiService.getCurrentSaveProfile().equals(saveList.getSelectionModel().getSelectedItem())) {
+			Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
+		} else {
+			int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
+			if (choice == 1) {
+				int profileIndex = saveList.getSelectionModel().getSelectedIndex();
+				saveProfiles.remove(profileIndex);
+				if(profileIndex > saveProfiles.size()) {
+					saveList.getSelectionModel().select(profileIndex - 1);
+				} else {
+					saveList.getSelectionModel().select(profileIndex);
+				}
+				uiService.saveUserData();
+			}
+		}
 	}
 
 	@FXML
 	private void renameProfile() {
 		//TODO: Implement
-		//TODO: Add a button to rename save profiles, that will also rename them in the file structure! MAke sure it renames the session name in Sandbox.sbc and Sandbox_config.sbc, as well as the folder name.
 		//TODO: Rename the profile in the list, then replicate to backend. If the backend rename fails, revert.
+		uiService.saveUserData();
 	}
 
 	@FXML
 	private void selectSave() {
-		//TODO: Implement
+		uiService.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
+		topBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
 	}
 
 	@FXML

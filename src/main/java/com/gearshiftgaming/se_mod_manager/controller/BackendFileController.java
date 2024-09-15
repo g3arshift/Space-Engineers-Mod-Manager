@@ -113,7 +113,7 @@ public class BackendFileController implements BackendController {
 		SaveProfile testSaveProfile = new SaveProfile();
 		testSaveProfile.setSaveName("Test Save");
 		testSaveProfile.setSavePath("Fake/Path");
-		testSaveProfile.setLastAppliedModProfileId(testModProfile.getId());
+		testSaveProfile.setLastUsedModProfile(testModProfile.getId());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().add(testSaveProfile);
