@@ -21,7 +21,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -110,7 +109,7 @@ public class SaveManagerView {
 	}
 
 	@FXML
-	private void addSave() throws IOException {
+	private void addSave() {
 		boolean duplicateSavePath = false;
 		Result<SaveProfile> result;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
@@ -168,7 +167,7 @@ public class SaveManagerView {
 	}
 
 	@FXML
-	private void copySave() throws IOException {
+	private void copySave() {
 		if (saveList.getSelectionModel().getSelectedItem() != null) {
 			if (saveList.getSelectionModel().getSelectedItem().isSaveExists()) {
 
