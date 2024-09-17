@@ -143,6 +143,8 @@ public class MainWindowView {
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
 	private StatusBarView statusBarView;
 
+
+	//TODO: On dropdown select, change active profile
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public void initView(Properties properties,
 						 Stage stage, Parent root,
@@ -170,8 +172,6 @@ public class MainWindowView {
 		mainWindowLayout.setBottom(statusBarRoot);
 		setupMainViewItems();
 
-		uiService.saveUserData();
-
 		//Prompt the user to remove any saves that no longer exist on the file system.
 		if (saveProfiles.size() != 1 &&
 				!saveProfiles.getFirst().getSaveName().equals("None") &&
@@ -194,7 +194,6 @@ public class MainWindowView {
 					saveProfiles.get(i).setSaveExists(true);
 				}
 			}
-			uiService.saveUserData();
 		}
 	}
 

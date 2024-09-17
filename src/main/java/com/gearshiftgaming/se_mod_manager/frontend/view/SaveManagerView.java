@@ -72,22 +72,22 @@ public class SaveManagerView {
 
 	private UiService uiService;
 
-	private SaveListInput saveListInputFirstStepView;
+	private SaveInputView saveInputViewView;
 
-	private ProfileInputView saveListInputSecondStepView;
+	private ProfileInputView profileInputView;
 
 	private MenuBarView topBarView;
 
 	public void initView(Parent root, UiService uiService,
-						 SaveListInput saveListInputFirstStepView, ProfileInputView saveListInputSecondStepView,
+						 SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView,
 						 Properties properties, MenuBarView topBarView) {
 
 		Scene scene = new Scene(root);
 		this.uiService = uiService;
 		saveProfiles = uiService.getSaveProfiles();
 
-		this.saveListInputFirstStepView = saveListInputFirstStepView;
-		this.saveListInputSecondStepView = saveListInputSecondStepView;
+		this.saveInputViewView = saveInputViewFirstStepView;
+		this.profileInputView = saveListInputSecondStepView;
 		this.topBarView = topBarView;
 
 		stage = new Stage();
@@ -114,8 +114,8 @@ public class SaveManagerView {
 		Result<SaveProfile> result;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
-			saveListInputFirstStepView.getStage().showAndWait();
-			result = saveListInputFirstStepView.getSaveProfileResult();
+			saveInputViewView.getStage().showAndWait();
+			result = saveInputViewView.getSaveProfileResult();
 			if (result.isSuccess()) {
 				SaveProfile saveProfile = result.getPayload();
 				duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
@@ -126,15 +126,15 @@ public class SaveManagerView {
 					//Remove the default save profile that isn't actually a profile if it's all that we have in the list.
 					boolean duplicateProfileName;
 					do {
-						saveListInputSecondStepView.getProfileNameInput().clear();
-						saveListInputSecondStepView.getProfileNameInput().requestFocus();
-						saveListInputSecondStepView.getStage().showAndWait();
-						duplicateProfileName = profileNameAlreadyExists(saveListInputSecondStepView.getProfileNameInput().getText());
+						profileInputView.getProfileNameInput().clear();
+						profileInputView.getProfileNameInput().requestFocus();
+						profileInputView.getStage().showAndWait();
+						duplicateProfileName = profileNameAlreadyExists(profileInputView.getProfileNameInput().getText());
 
 						if (duplicateProfileName) {
 							Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-						} else if (!saveListInputSecondStepView.getProfileNameInput().getText().isBlank()) {
-							saveProfile.setProfileName(saveListInputSecondStepView.getProfileNameInput().getText());
+						} else if (!profileInputView.getProfileNameInput().getText().isBlank()) {
+							saveProfile.setProfileName(profileInputView.getProfileNameInput().getText());
 							if (saveProfiles.size() == 1 && saveProfiles.getFirst().getSaveName().equals("None") && saveProfiles.getFirst().getProfileName().equals("None") && saveProfiles.getFirst().getSavePath() == null) {
 								saveProfile.setSaveExists(true);
 								saveProfiles.set(0, saveProfile);
@@ -151,7 +151,7 @@ public class SaveManagerView {
 								result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
 								uiService.log(result);
 
-								saveListInputSecondStepView.getProfileNameInput().clear();
+								profileInputView.getProfileNameInput().clear();
 							}
 							uiService.saveUserData();
 						}
@@ -161,9 +161,9 @@ public class SaveManagerView {
 		} while (result.isSuccess() && duplicateSavePath);
 
 		//Cleanup our UI actions.
-		saveListInputFirstStepView.getSaveName().setText("No save selected.");
-		saveListInputFirstStepView.setSelectedSave(null);
-		saveListInputSecondStepView.getProfileNameInput().clear();
+		saveInputViewView.getSaveName().setText("No save selected.");
+		saveInputViewView.setSelectedSave(null);
+		profileInputView.getProfileNameInput().clear();
 	}
 
 	@FXML
@@ -236,9 +236,18 @@ public class SaveManagerView {
 
 	@FXML
 	private void renameProfile() {
-		//TODO: Implement
-		//TODO: Rename the profile in the list, then replicate to backend. If the backend rename fails, revert.
-		uiService.saveUserData();
+		profileInputView.getProfileNameInput().clear();
+		profileInputView.getProfileNameInput().requestFocus();
+		profileInputView.getStage().showAndWait();
+
+		String newProfileName = profileInputView.getProfileNameInput().getText();
+		if(profileNameAlreadyExists(newProfileName)) {
+			Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+		} else if (!newProfileName.isBlank()){
+			saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
+			saveList.refresh();
+			uiService.saveUserData();
+		}
 	}
 
 	@FXML
@@ -255,11 +264,6 @@ public class SaveManagerView {
 	private boolean saveAlreadyExists(String savePath) {
 		return saveProfiles.stream()
 				.anyMatch(saveProfile -> saveProfile.getSavePath() != null && saveProfile.getSavePath().equals(savePath));
-	}
-
-	private boolean saveNameAlreadyExists(String saveName) {
-		return saveProfiles.stream()
-				.anyMatch(saveProfile -> saveProfile.getSaveName().equals(saveName));
 	}
 
 	private boolean profileNameAlreadyExists(String profileName) {

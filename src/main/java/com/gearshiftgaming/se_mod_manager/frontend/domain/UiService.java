@@ -86,7 +86,7 @@ public class UiService {
                     .findFirst();
 			lastUsedModProfile.ifPresent(modProfile -> currentModProfile = modProfile);
         } else {
-            log("No previously used save profile detected.", MessageType.INFO);
+            log("No previously applied save profile detected.", MessageType.INFO);
         }
 	}
 
@@ -107,18 +107,10 @@ public class UiService {
 
 	public void logPrivate(String message, MessageType messageType) {
 		switch (messageType) {
-			case INFO -> {
-				logger.info(message);
-			}
-			case WARN -> {
-				logger.warn(message);
-			}
-			case ERROR -> {
-				logger.error(message);
-			}
-			case UNKNOWN -> {
-				logger.error("ERROR UNKNOWN - " + message);
-			}
+			case INFO -> logger.info(message);
+			case WARN -> logger.warn(message);
+			case ERROR -> logger.error(message);
+			case UNKNOWN -> logger.error("ERROR UNKNOWN - " + message);
 		}
 	}
 
@@ -145,7 +137,7 @@ public class UiService {
 	}
 
 	//Sets the theme for our application based on the users preferred theme using reflection.
-	//It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar.
+	//It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar. Not the *best* way to do this, but it works.
 	public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 		for (CheckMenuItem c : themeList) {
 			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");

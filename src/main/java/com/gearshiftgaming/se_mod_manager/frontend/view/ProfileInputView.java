@@ -43,7 +43,7 @@ public class ProfileInputView {
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        stage.setTitle("Create new profile");
+        stage.setTitle("Save Profile name");
         stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
         stage.setScene(scene);

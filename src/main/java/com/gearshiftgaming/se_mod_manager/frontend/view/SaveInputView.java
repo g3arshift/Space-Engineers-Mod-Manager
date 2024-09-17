@@ -29,7 +29,7 @@ import java.util.Objects;
  * <p>
  * @author Gear Shift
  */
-public class SaveListInput {
+public class SaveInputView {
 
     @FXML
     @Getter
@@ -58,7 +58,7 @@ public class SaveListInput {
 
     private UiService uiService;
 
-    public void initView(Parent root, UiService uiService) throws IOException {
+    public void initView(Parent root, UiService uiService) {
         this.uiService = uiService;
         Scene scene = new Scene(root);
         stage = new Stage();

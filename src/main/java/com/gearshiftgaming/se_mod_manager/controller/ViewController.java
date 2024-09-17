@@ -107,10 +107,10 @@ public class ViewController {
 		//Manually inject our controllers into our FXML so we can reuse the FXML for the profile creation elsewhere, and have greater flexibility in controller injection and FXML initialization.
 		//View for adding a new Save Profile
 		FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
-		SaveListInput saveListInputFirstStepView = new SaveListInput();
-		saveListInputLoader.setController(saveListInputFirstStepView);
+		SaveInputView saveInputViewFirstStepView = new SaveInputView();
+		saveListInputLoader.setController(saveInputViewFirstStepView);
 		Parent saveListInputRoot = saveListInputLoader.load();
-		saveListInputFirstStepView.initView(saveListInputRoot, uiService);
+		saveInputViewFirstStepView.initView(saveListInputRoot, uiService);
 
 		//View for text input when creating a new save profile.
 		FXMLLoader saveProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
@@ -162,6 +162,9 @@ public class ViewController {
 				uiService);
 
 		modProfileManagerView.initView(modProfileRoot, uiService, profileInputView, properties, mainWindowView.getMenuBarView());
-		saveManagerView.initView(saveManagerRoot, uiService, saveListInputFirstStepView, saveListInputSecondStepView, properties, mainWindowView.getMenuBarView());
+		saveManagerView.initView(saveManagerRoot, uiService, saveInputViewFirstStepView, saveListInputSecondStepView, properties, mainWindowView.getMenuBarView());
+
+		//Save our changes that were made to the user config, such as removing missing profiles, to disk
+		uiService.saveUserData();
 	}
 }
