@@ -104,8 +104,7 @@ public class StatusBarView {
 			}
 		}
 	}
-
-	//TODO: The visual part should be handled here, the logic should go into the service layers
+	
 	private void updateLastModifiedBy(SaveProfile saveProfile) {
 		switch (saveProfile.getLastModifiedBy()) {
 			case SEMM -> {

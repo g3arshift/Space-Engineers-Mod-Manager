@@ -17,8 +17,7 @@
 <?import javafx.scene.text.Text?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-
- <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
      <children>
          <MenuBar prefWidth="1000.0">
              <menus>
@@ -82,7 +81,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="12.0">
                      <children>
                          <Label minWidth="-Infinity" text="Save Profile" HBox.hgrow="ALWAYS" />
-                         <ComboBox fx:id="saveProfileDropdown" maxWidth="250.0" minWidth="150.0" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="saveProfileDropdown" maxWidth="250.0" minWidth="150.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />

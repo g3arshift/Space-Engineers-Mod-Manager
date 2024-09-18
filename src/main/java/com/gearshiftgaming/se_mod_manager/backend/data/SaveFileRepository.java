@@ -16,6 +16,7 @@ import java.io.IOException;
  * <p>
  * @author Gear Shift
  */
+//TODO: Add a lock so that only this application can work on the files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.
 public class SaveFileRepository implements SaveRepository{
     //TODO: Do we need to implement locks?
     @Override

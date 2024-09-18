@@ -90,7 +90,6 @@ public class ViewController {
 						logMessage.messageTypeProperty()
 				});
 
-		//TODO: setup current active mod and save profiles
 		uiService = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
 		uiService.log(userConfigurationResult);
 

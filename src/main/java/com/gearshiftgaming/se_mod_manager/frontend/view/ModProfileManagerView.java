@@ -57,7 +57,7 @@ public class ModProfileManagerView {
 
     private ProfileInputView profileInputView;
 
-    private MenuBarView topBarView;
+    private MenuBarView menuBarView;
 
     private ObservableList<ModProfile> modProfiles;
 
@@ -66,7 +66,7 @@ public class ModProfileManagerView {
         this.uiService = uiService;
         modProfiles = uiService.getModProfiles();
         this.profileInputView = profileInputView;
-        this.topBarView = mainWindowView;
+        this.menuBarView = mainWindowView;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -164,8 +164,8 @@ public class ModProfileManagerView {
                 profileList.refresh();
 
                 //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
-                topBarView.getModProfileDropdown().getSelectionModel().selectNext();
-                topBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                menuBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                menuBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
 
                 profileInputView.getProfileNameInput().clear();
                 uiService.log("Successfully renamed profile.", MessageType.INFO);
@@ -177,7 +177,7 @@ public class ModProfileManagerView {
     @FXML
     private void selectProfile() {
         uiService.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
-        topBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
+        menuBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
     }
 
     @FXML

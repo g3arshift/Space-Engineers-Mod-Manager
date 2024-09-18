@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
@@ -84,25 +85,25 @@ public class MainWindowView {
 
 	//TODO: The modcell needs properties for each of these https://stackoverflow.com/questions/53751455/how-to-create-a-javafx-tableview-without-warnings
 	@FXML
-	private TableColumn<ModCell, String> modName;
+	private TableColumn<Mod, String> modName;
 
 	@FXML
-	private TableColumn<ModCell, String> modType;
+	private TableColumn<Mod, String> modType;
 
 	@FXML
-	private TableColumn<ModCell, String> modVersion;
+	private TableColumn<Mod, String> modVersion;
 
 	@FXML
-	private TableColumn<ModCell, String> modLastUpdated;
+	private TableColumn<Mod, String> modLastUpdated;
 
 	@FXML
-	private TableColumn<ModCell, Integer> loadPriority;
+	private TableColumn<Mod, Integer> loadPriority;
 
 	@FXML
-	private TableColumn<ModCell, String> modSource;
+	private TableColumn<Mod, String> modSource;
 
 	@FXML
-	private TableColumn<ModCell, String> modCategory;
+	private TableColumn<Mod, String> modCategory;
 
 	@FXML
 	private TabPane informationPane;
@@ -143,8 +144,6 @@ public class MainWindowView {
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
 	private StatusBarView statusBarView;
 
-
-	//TODO: On dropdown select, change active profile
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public void initView(Properties properties,
 						 Stage stage, Parent root,

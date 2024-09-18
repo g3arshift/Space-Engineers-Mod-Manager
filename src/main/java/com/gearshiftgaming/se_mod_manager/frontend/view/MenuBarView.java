@@ -124,6 +124,8 @@ public class MenuBarView {
 
 	private SaveManagerView saveManagerView;
 
+	//TODO: On dropdown select, change active profile
+
 	public void initView(MainWindowView mainWindowView, UiService uiService,
 						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
@@ -273,6 +275,12 @@ public class MenuBarView {
 	@FXML
 	private void selectModProfile() throws IOException {
 		uiService.setCurrentModProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
+	}
+
+	@FXML
+	private void selectSaveProfile() {
+		uiService.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
 	}
 

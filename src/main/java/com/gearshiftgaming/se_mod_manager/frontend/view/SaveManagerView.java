@@ -76,11 +76,11 @@ public class SaveManagerView {
 
 	private ProfileInputView profileInputView;
 
-	private MenuBarView topBarView;
+	private MenuBarView menuBarView;
 
 	public void initView(Parent root, UiService uiService,
 						 SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView,
-						 Properties properties, MenuBarView topBarView) {
+						 Properties properties, MenuBarView menuBarView) {
 
 		Scene scene = new Scene(root);
 		this.uiService = uiService;
@@ -88,7 +88,7 @@ public class SaveManagerView {
 
 		this.saveInputViewView = saveInputViewFirstStepView;
 		this.profileInputView = saveListInputSecondStepView;
-		this.topBarView = topBarView;
+		this.menuBarView = menuBarView;
 
 		stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);
@@ -144,7 +144,7 @@ public class SaveManagerView {
 								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
 								buttonCellFix.setItem(saveProfile);
 								buttonCellFix.setText(saveProfile.getProfileName());
-								topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
+								menuBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 								saveList.refresh();
 							} else {
 								saveProfiles.add(saveProfile);
@@ -185,7 +185,6 @@ public class SaveManagerView {
 	}
 
 	//Create a new thread that runs the code for copying profiles
-	//TODO: Add a lock so that only this application can work on the UserData files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.
 	private Thread getCopyThread() {
 		final Task<Result<SaveProfile>> task = new Task<>() {
 			@Override
@@ -253,7 +252,7 @@ public class SaveManagerView {
 	@FXML
 	private void selectSave() {
 		uiService.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
-		topBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
+		menuBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
 	}
 
 	@FXML

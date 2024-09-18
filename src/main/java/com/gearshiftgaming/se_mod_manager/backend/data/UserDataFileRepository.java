@@ -15,6 +15,7 @@ import java.io.*;
  * @author Gear Shift
  */
 //TODO: Implement file locks
+//TODO: Add a lock so that only this application can work on the UserData files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.
 public class UserDataFileRepository implements UserDataRepository {
     public UserConfiguration loadUserData(File userConfigurationFile) {
         try {
