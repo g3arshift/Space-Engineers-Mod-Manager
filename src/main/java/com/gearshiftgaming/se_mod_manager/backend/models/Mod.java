@@ -21,7 +21,6 @@ import java.util.Objects;
  * @author Gear Shift
  */
 
-//TODO: Change this into an abstract, and remove the field for modDownloadSourceType. Instead, make two subclasses for steam and modio mods.
 @Getter
 @Setter
 @NoArgsConstructor
