@@ -98,24 +98,28 @@ public class BackendFileController implements BackendController {
 		return copyResult;
 	}
 
-	//Only here so we
+	//Only here for dev
 	public Result<Void> createTestUserData(Theme theme) {
 
-		ModProfile testModProfile = new ModProfile();
-		Mod testMod = new SteamMod("123456789");
+		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc");
+		testSaveProfile.setSaveName("Test save");
+		ModProfile testModProfile = new ModProfile("Test Profile");
+
+		Mod testMod = new Mod("123456789", ModType.STEAM);
 		List<String> testCategories = new ArrayList<>();
 		testCategories.add("Test Category");
 		testCategories.add("Three Category test");
 		testMod.setCategories(testCategories);
 		testModProfile.getModList().add(testMod);
-		testModProfile.getModList().add(new SteamMod("4444444"));
 
-		SaveProfile testSaveProfile = new SaveProfile();
-		testSaveProfile.setSaveName("Test Save");
-		testSaveProfile.setSavePath("Fake/Path");
+		Mod secondTestMod = new Mod("0987654321", ModType.MOD_IO);
+		secondTestMod.setCategories(testCategories);
+		testModProfile.getModList().add(secondTestMod);
+
 		testSaveProfile.setLastUsedModProfile(testModProfile.getId());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
+		userConfiguration.getSaveProfiles().removeFirst();
 		userConfiguration.getSaveProfiles().add(testSaveProfile);
 		userConfiguration.getModProfiles().add(testModProfile);
 		userConfiguration.setUserTheme(theme.getName());

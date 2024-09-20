@@ -37,17 +37,17 @@ public class StatusBarView {
 
 	private String statusBaseStyling;
 
-	private UiService uiService;
-
-	private MainWindowView mainWindowView;
+	private final UiService uiService;
 
 	/**
 	 * Sets the initial values for the toolbar located at the bottom of the UI.
 	 */
-	public void initView(MainWindowView mainWindowView, UiService uiService) {
-		this.uiService = uiService;
-		this.mainWindowView = mainWindowView;
 
+	public StatusBarView(UiService uiService) {
+		this.uiService = uiService;
+	}
+
+	public void initView() {
 		Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
 		if (lastUsedSaveProfile.isPresent()) {
 			uiService.setCurrentSaveProfile(lastUsedSaveProfile.get());

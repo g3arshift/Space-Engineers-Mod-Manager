@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +25,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
-public abstract class Mod {
+public class Mod {
 
     //These are the fields required for the sandbox_config.sbc file
     private String id;
@@ -35,15 +36,19 @@ public abstract class Mod {
     private String modVersion;
     private Date lastUpdated;
     private int loadPriority;
-    private ModImportSourceType source;
+    //private ModImportSourceType source;
 
     private List<String> categories;
     private boolean active;
+    private ModType modType;
 
-    public Mod(String id) {
+    public Mod(String id, ModType modType) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
+        //this.source = source;
+        categories = new ArrayList<>();
+        this.modType = modType;
     }
 
     @Override

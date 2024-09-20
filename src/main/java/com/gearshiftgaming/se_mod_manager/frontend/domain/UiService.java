@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
 import atlantafx.base.controls.Message;
+import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
@@ -11,6 +12,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.CheckMenuItem;
 import lombok.Getter;
@@ -75,19 +77,21 @@ public class UiService {
 		this.backendController = backendController;
 		this.userConfiguration = userConfiguration;
 
-        //Initialize our current mod and save profiles
-        Optional<SaveProfile> lastUsedSaveProfile = saveProfiles.stream()
-                .filter(saveProfile -> saveProfile.getId().equals(userConfiguration.getLastUsedSaveProfileId()))
-                .findFirst();
-        if(lastUsedSaveProfile.isPresent()) {
-            currentSaveProfile = lastUsedSaveProfile.get();
-            Optional<ModProfile> lastUsedModProfile = modProfiles.stream()
-                    .filter(modProfile -> modProfile.getId().equals(currentSaveProfile.getLastUsedModProfile()))
-                    .findFirst();
-			lastUsedModProfile.ifPresent(modProfile -> currentModProfile = modProfile);
-        } else {
-            log("No previously applied save profile detected.", MessageType.INFO);
-        }
+		//Initialize our current mod and save profiles
+		Optional<SaveProfile> lastUsedSaveProfile = saveProfiles.stream()
+				.filter(saveProfile -> saveProfile.getId().equals(userConfiguration.getLastUsedSaveProfileId()))
+				.findFirst();
+		if (lastUsedSaveProfile.isPresent()) {
+			currentSaveProfile = lastUsedSaveProfile.get();
+			Optional<ModProfile> lastUsedModProfile = modProfiles.stream()
+					.filter(modProfile -> modProfile.getId().equals(currentSaveProfile.getLastUsedModProfile()))
+					.findFirst();
+			currentModProfile = lastUsedModProfile.orElseGet(modProfiles::getFirst);
+		} else {
+			log("No previously applied save profile detected.", MessageType.INFO);
+			currentSaveProfile = saveProfiles.getFirst();
+			currentModProfile = modProfiles.getFirst();
+		}
 	}
 
 	public void log(String message, MessageType messageType) {

@@ -53,19 +53,22 @@ public class ModProfileManagerView {
     @Getter
     private Stage stage;
 
-    private UiService uiService;
+    private final UiService uiService;
 
-    private ProfileInputView profileInputView;
+    private final ProfileInputView profileInputView;
 
     private MenuBarView menuBarView;
 
-    private ObservableList<ModProfile> modProfiles;
+    private final ObservableList<ModProfile> modProfiles;
 
-    public void initView(Parent root, UiService uiService, ProfileInputView profileInputView, Properties properties, MenuBarView mainWindowView) {
-        Scene scene = new Scene(root);
+    public ModProfileManagerView(UiService uiService, ProfileInputView profileInputView) {
         this.uiService = uiService;
         modProfiles = uiService.getModProfiles();
         this.profileInputView = profileInputView;
+    }
+
+    public void initView(Parent root, Properties properties, MenuBarView mainWindowView) {
+        Scene scene = new Scene(root);
         this.menuBarView = mainWindowView;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);

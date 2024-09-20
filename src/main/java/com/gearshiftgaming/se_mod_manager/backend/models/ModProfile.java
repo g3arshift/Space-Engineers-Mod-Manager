@@ -1,8 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -57,8 +55,7 @@ public class ModProfile {
         this.profileName = profileName;
     }
 
-    @XmlElementWrapper(name = "mods")
-    @XmlElement(name = "mod")
+   @XmlElementWrapper(name = "mods")
     public void setModList(List<Mod> modList) {
         this.modList = modList;
     }

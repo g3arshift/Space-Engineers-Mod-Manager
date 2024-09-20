@@ -15,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuBar;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
@@ -68,27 +69,26 @@ public class SaveManagerView {
 	@Getter
 	private Stage stage;
 
-	private ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<SaveProfile> saveProfiles;
 
-	private UiService uiService;
+	private final UiService uiService;
 
-	private SaveInputView saveInputViewView;
+	private final SaveInputView saveInputViewView;
 
-	private ProfileInputView profileInputView;
+	private final ProfileInputView profileInputView;
 
 	private MenuBarView menuBarView;
 
-	public void initView(Parent root, UiService uiService,
-						 SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView,
-						 Properties properties, MenuBarView menuBarView) {
-
-		Scene scene = new Scene(root);
+	public SaveManagerView(UiService uiService, SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView) {
 		this.uiService = uiService;
 		saveProfiles = uiService.getSaveProfiles();
-
 		this.saveInputViewView = saveInputViewFirstStepView;
 		this.profileInputView = saveListInputSecondStepView;
+	}
+
+	public void initView(Parent root, Properties properties, MenuBarView menuBarView) {
 		this.menuBarView = menuBarView;
+		Scene scene = new Scene(root);
 
 		stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);

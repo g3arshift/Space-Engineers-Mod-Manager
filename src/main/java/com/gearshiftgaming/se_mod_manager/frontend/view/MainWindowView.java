@@ -1,14 +1,15 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -16,11 +17,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import lombok.Getter;
-import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -34,6 +35,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 
 /**
  * This represents the main window of the application, with a border pane at its core.
@@ -81,11 +83,11 @@ public class MainWindowView {
 
 	//TODO: Low priority: Fix the alignment of the table headers to be centered, not center left.
 	@FXML
-	private TableView<ModCell> modTable; //TODO: Create a new object for the mod items that contains a check box and all the context menu stuff
+	private TableView<Mod> modTable; //TODO: Create a new object for the mod items that contains a check box and all the context menu stuff
 
 	//TODO: The modcell needs properties for each of these https://stackoverflow.com/questions/53751455/how-to-create-a-javafx-tableview-without-warnings
 	@FXML
-	private TableColumn<Mod, String> modName;
+	private TableColumn<Mod, Mod> modName;
 
 	@FXML
 	private TableColumn<Mod, String> modType;
@@ -97,7 +99,7 @@ public class MainWindowView {
 	private TableColumn<Mod, String> modLastUpdated;
 
 	@FXML
-	private TableColumn<Mod, Integer> loadPriority;
+	private TableColumn<Mod, String> loadPriority;
 
 	@FXML
 	private TableColumn<Mod, String> modSource;
@@ -118,40 +120,35 @@ public class MainWindowView {
 	private ListView<LogMessage> viewableLog;
 
 	//TODO: We need to replace the window control bar for the window.
-	private ObservableList<LogMessage> userLog;
+	private final ObservableList<LogMessage> userLog;
 
-	private Properties properties;
+	private final Properties properties;
 
-	private UiService uiService;
+	private final UiService uiService;
 
-	private Stage stage;
+	private final Stage stage;
 
 	private Scene scene;
 
 	private boolean mainViewSplitDividerVisible = true;
 
-	private UserConfiguration userConfiguration;
+	private final UserConfiguration userConfiguration;
 
 	//This is just a wrapper for the userConfiguration modProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private ObservableList<ModProfile> modProfiles;
+	private final ObservableList<ModProfile> modProfiles;
 
 	//This is just a wrapper for the userConfiguration saveProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<SaveProfile> saveProfiles;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
-	private MenuBarView menuBarView;
+	private final MenuBarView menuBarView;
 
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
-	private StatusBarView statusBarView;
+	private final StatusBarView statusBarView;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public void initView(Properties properties,
-						 Stage stage, Parent root,
-						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView,
-						 MenuBarView menuBarView, Parent menuBarRoot,
-						 StatusBarView statusBarView, Parent statusBarRoot,
-						 UiService uiService) throws IOException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		this.scene = new Scene(root);
+	public MainWindowView(Properties properties, Stage stage,
+						 MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
 		this.stage = stage;
 		this.properties = properties;
 		this.userConfiguration = uiService.getUserConfiguration();
@@ -162,11 +159,14 @@ public class MainWindowView {
 
 		modProfiles = uiService.getModProfiles();
 		saveProfiles = uiService.getSaveProfiles();
+	}
 
+	public void initView(Parent mainViewRoot,
+						 Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
-		setupWindow();
-		menuBarView.initView(this, uiService, modProfileManagerView, saveManagerView);
-		statusBarView.initView(this, uiService);
+		setupWindow(mainViewRoot);
+		menuBarView.initView(this);
+		statusBarView.initView();
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
 		setupMainViewItems();
@@ -194,52 +194,8 @@ public class MainWindowView {
 				}
 			}
 		}
+		setupModTable();
 	}
-
-	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
-
-	/**
-	 * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
-	 */
-	private void setupWindow() throws IOException, XmlPullParserException {
-		//Prepare the scene
-		int minWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth"));
-		int minHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight"));
-
-		//Prepare the stage
-		stage.setScene(scene);
-		stage.setMinWidth(minWidth);
-		stage.setMinHeight(minHeight);
-
-		//Add title and icon to the stage
-		MavenXpp3Reader reader = new MavenXpp3Reader();
-		Model model = reader.read(new FileReader("pom.xml"));
-		stage.setTitle("SEMM v" + model.getVersion());
-		stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
-
-		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
-		stage.heightProperty().addListener((obs, oldVal, newVal) -> {
-			if (!this.isMainViewSplitDividerVisible()) {
-				this.getMainViewSplit().setDividerPosition(0, 1);
-			}
-		});
-	}
-
-	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
-	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
-	public void setupMainViewItems() {
-		viewableLog.setItems(userLog);
-		viewableLog.setCellFactory(param -> new LogCell());
-		//Disable selecting rows in the log.
-		viewableLog.setSelectionModel(null);
-
-		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
-
-		//TODO: Much of this needs to happen down in the service layer
-		//TODO: Setup a function in ModList service to track conflicts.
-		//TODO: Populate mod table
-	}
-	//TODO: Hookup all the buttons to everything
 
 	@FXML
 	private void closeLogTab() {
@@ -319,6 +275,91 @@ public class MainWindowView {
 		//TODO: Check this works on systems with no previous steam url association
 		Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
 	}
+
+	private void setupModTable() {
+		//Create the context menus for the table and prepare the table
+		//modTable.itemsProperty().bind(new SimpleObjectProperty<>(FXCollections.observableList(uiService.getCurrentModProfile().getModList())));
+		modName.setCellFactory(param -> new ModNameCell());
+
+		//Format the appearance, styling, and menus of our table cells, rows, and columns
+		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
+		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
+				cellData.getValue().getLastUpdated().toString() : "Unknown"));
+		loadPriority.setCellValueFactory(cellData -> {
+			Mod mod = cellData.getValue();
+			int index = uiService.getCurrentModProfile().getModList().indexOf(mod);
+			//This SHOULD always be able to find the cell data because we're calling this FROM a cell. But, just in case, here's a default case.
+			if(index != -1) {
+				return new SimpleStringProperty(Integer.toString(index));
+			} else {
+				return new SimpleStringProperty("Error");
+			}
+		});
+		//modSource.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getSource().toString()));
+		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
+		modCategory.setCellValueFactory(cellData -> {
+			StringBuilder sb = new StringBuilder();
+			List<String> categories = cellData.getValue().getCategories();
+			for(int i = 0; i < cellData.getValue().getCategories().size(); i++) {
+				if(i + 1 > cellData.getValue().getCategories().size()) {
+					sb.append(categories.get(i)).append(", ");
+				} else {
+					sb.append(categories.get(i));
+				}
+			}
+			return new SimpleStringProperty(sb.toString());
+		});
+
+		//TODO: Make the rows alternate colors. Log cell has an implementation for this.
+
+		modTable.setItems((FXCollections.observableList(uiService.getCurrentModProfile().getModList())));
+	}
+
+	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
+
+	/**
+	 * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
+	 */
+	private void setupWindow(Parent root) throws IOException, XmlPullParserException {
+		this.scene = new Scene(root);
+		//Prepare the scene
+		int minWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth"));
+		int minHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight"));
+
+		//Prepare the stage
+		stage.setScene(scene);
+		stage.setMinWidth(minWidth);
+		stage.setMinHeight(minHeight);
+
+		//Add title and icon to the stage
+		MavenXpp3Reader reader = new MavenXpp3Reader();
+		Model model = reader.read(new FileReader("pom.xml"));
+		stage.setTitle("SEMM v" + model.getVersion());
+		stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+
+		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
+		stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+			if (!this.isMainViewSplitDividerVisible()) {
+				this.getMainViewSplit().setDividerPosition(0, 1);
+			}
+		});
+	}
+
+	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
+	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
+	public void setupMainViewItems() {
+		viewableLog.setItems(userLog);
+		viewableLog.setCellFactory(param -> new LogCell());
+		//Disable selecting rows in the log.
+		viewableLog.setSelectionModel(null);
+
+		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
+
+		//TODO: Much of this needs to happen down in the service layer
+		//TODO: Setup a function in ModList service to track conflicts.
+		//TODO: Populate mod table
+	}
+	//TODO: Hookup all the buttons to everything
 
 	protected void disableSplitPaneDivider() {
 		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {

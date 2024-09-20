@@ -56,10 +56,13 @@ public class SaveInputView {
     @Setter
     private File selectedSave;
 
-    private UiService uiService;
+    private final UiService uiService;
 
-    public void initView(Parent root, UiService uiService) {
+    public SaveInputView( UiService uiService) {
         this.uiService = uiService;
+    }
+
+    public void initView(Parent root) {
         Scene scene = new Scene(root);
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);

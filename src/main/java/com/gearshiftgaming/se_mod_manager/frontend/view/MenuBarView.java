@@ -3,9 +3,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
 import javafx.application.Application;
@@ -112,22 +110,19 @@ public class MenuBarView {
 
 	private final List<CheckMenuItem> themeList = new ArrayList<>();
 
-	private UiService uiService;
+	private final UiService uiService;
 
-	private ObservableList<ModProfile> modProfiles;
+	private final ObservableList<ModProfile> modProfiles;
 
-	private ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<SaveProfile> saveProfiles;
 
-	private UserConfiguration userConfiguration;
+	private final ModProfileManagerView modProfileManagerView;
 
-	private ModProfileManagerView modProfileManagerView;
-
-	private SaveManagerView saveManagerView;
+	private final SaveManagerView saveManagerView;
 
 	//TODO: On dropdown select, change active profile
 
-	public void initView(MainWindowView mainWindowView, UiService uiService,
-						 ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+	public MenuBarView(UiService uiService, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -135,13 +130,16 @@ public class MenuBarView {
 		//		buttonCellFix.setText(saveProfile.getProfileName());
 		//		topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 		//	in saveManagerView fixes it?! WHY?!
-		this.mainWindowView = mainWindowView;
 		this.uiService = uiService;
 		this.modProfileManagerView = modProfileManagerView;
 		this.saveManagerView = saveManagerView;
 
 		modProfiles = uiService.getModProfiles();
 		saveProfiles = uiService.getSaveProfiles();
+	}
+
+	public void initView(MainWindowView mainWindowView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+		this.mainWindowView = mainWindowView;
 
 		themeList.add(primerLightTheme);
 		themeList.add(primerDarkTheme);
@@ -159,12 +157,6 @@ public class MenuBarView {
 
 		modProfileDropdown.setItems(modProfiles);
 		modProfileDropdown.getSelectionModel().selectFirst();
-
-		//TODO: Set the current save and mod profile equal to whatever was used last.
-		uiService.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
-		uiService.setCurrentModProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
-
-		userConfiguration = uiService.getUserConfiguration();
 
 		uiService.setUserSavedApplicationTheme(themeList);
 
@@ -248,7 +240,7 @@ public class MenuBarView {
 				Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-				userConfiguration.setUserTheme(selectedTheme);
+				uiService.getUserConfiguration().setUserTheme(selectedTheme);
 			}
 		}
 
