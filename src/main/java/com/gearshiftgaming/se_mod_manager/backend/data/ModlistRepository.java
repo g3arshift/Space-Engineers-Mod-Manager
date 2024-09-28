@@ -17,5 +17,6 @@ import java.util.List;
  */
 public interface ModlistRepository {
 
+    //TODO: Shouldn't be a file.
     List<Mod> getSteamModList(File modListFile) throws IOException;
 }

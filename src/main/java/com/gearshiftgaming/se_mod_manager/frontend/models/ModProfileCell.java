@@ -15,11 +15,11 @@ import javafx.scene.control.ListCell;
  * @author Gear Shift
  */
 public class ModProfileCell extends ListCell<ModProfile> {
-    private final Label profileName = new Label();
+    private final Label PROFILE_NAME = new Label();
 
     public ModProfileCell() {
         super();
-        profileName.setAlignment(Pos.CENTER_LEFT);
+        PROFILE_NAME.setAlignment(Pos.CENTER_LEFT);
     }
 
     @Override
@@ -29,9 +29,9 @@ public class ModProfileCell extends ListCell<ModProfile> {
             setGraphic(null);
             setStyle(null);
         } else {
-            profileName.setText(item.getProfileName());
+            PROFILE_NAME.setText(item.getProfileName());
             setStyle("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;");
-            setGraphic(profileName);
+            setGraphic(PROFILE_NAME);
         }
     }
 }

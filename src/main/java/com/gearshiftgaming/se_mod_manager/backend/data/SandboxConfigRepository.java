@@ -16,5 +16,6 @@ public interface SandboxConfigRepository {
 
     String getSandboxInfo(File sandboxConfig) throws IOException;
 
+    //TODO: Shouldn't be a file.
     void saveSandboxInfo(File sandboxFile, String modifiedSandboxConfig) throws IOException;
 }

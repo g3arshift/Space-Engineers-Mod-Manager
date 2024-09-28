@@ -25,10 +25,10 @@ import java.util.regex.Pattern;
  * @author Gear Shift
  */
 public class SandboxService {
-    private final SandboxConfigRepository sandboxConfigFileRepository;
+    private final SandboxConfigRepository SANDBOX_CONFIG_FILE_REPOSITORY;
 
     public SandboxService(SandboxConfigRepository sandboxConfigRepository) {
-        this.sandboxConfigFileRepository = sandboxConfigRepository;
+        this.SANDBOX_CONFIG_FILE_REPOSITORY = sandboxConfigRepository;
     }
 
     //This will work to retrieve both a Sandbox_config file and a Sandbox file.
@@ -38,7 +38,7 @@ public class SandboxService {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(sandboxConfigFile.getName()).equals("sbc")) {
             result.addMessage(sandboxConfigFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(sandboxConfigFileRepository.getSandboxInfo(sandboxConfigFile));
+            result.setPayload(SANDBOX_CONFIG_FILE_REPOSITORY.getSandboxInfo(sandboxConfigFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .sbc file.", ResultType.INVALID);
         }
@@ -57,7 +57,7 @@ public class SandboxService {
             result.addMessage("Save path or name contains invalid characters.", ResultType.FAILED);
         } else {
             File sandboxFile = new File(savePath);
-            sandboxConfigFileRepository.saveSandboxInfo(sandboxFile, sandboxConfig);
+            SANDBOX_CONFIG_FILE_REPOSITORY.saveSandboxInfo(sandboxFile, sandboxConfig);
             result.addMessage("Successfully saved sandbox config.", ResultType.SUCCESS);
         }
         return result;

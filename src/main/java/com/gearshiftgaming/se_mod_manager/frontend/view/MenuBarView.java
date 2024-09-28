@@ -16,7 +16,6 @@ import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -108,21 +107,21 @@ public class MenuBarView {
 
 	private MainWindowView mainWindowView;
 
-	private final List<CheckMenuItem> themeList = new ArrayList<>();
+	private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
 
-	private final UiService uiService;
+	private final UiService UI_SERVICE;
 
-	private final ObservableList<ModProfile> modProfiles;
+	private final ObservableList<ModProfile> MOD_PROFILES;
 
-	private final ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<SaveProfile> SAVE_PROFILES;
 
-	private final ModProfileManagerView modProfileManagerView;
+	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
 
-	private final SaveManagerView saveManagerView;
+	private final SaveManagerView SAVE_MANAGER_VIEW;
 
 	//TODO: On dropdown select, change active profile
 
-	public MenuBarView(UiService uiService, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public MenuBarView(UiService UI_SERVICE, ModProfileManagerView MOD_PROFILE_MANAGER_VIEW, SaveManagerView SAVE_MANAGER_VIEW) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -130,35 +129,35 @@ public class MenuBarView {
 		//		buttonCellFix.setText(saveProfile.getProfileName());
 		//		topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 		//	in saveManagerView fixes it?! WHY?!
-		this.uiService = uiService;
-		this.modProfileManagerView = modProfileManagerView;
-		this.saveManagerView = saveManagerView;
+		this.UI_SERVICE = UI_SERVICE;
+		this.MOD_PROFILE_MANAGER_VIEW = MOD_PROFILE_MANAGER_VIEW;
+		this.SAVE_MANAGER_VIEW = SAVE_MANAGER_VIEW;
 
-		modProfiles = uiService.getModProfiles();
-		saveProfiles = uiService.getSaveProfiles();
+		MOD_PROFILES = UI_SERVICE.getMOD_PROFILES();
+		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 	}
 
 	public void initView(MainWindowView mainWindowView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		this.mainWindowView = mainWindowView;
 
-		themeList.add(primerLightTheme);
-		themeList.add(primerDarkTheme);
-		themeList.add(nordLightTheme);
-		themeList.add(nordDarkTheme);
-		themeList.add(cupertinoLightTheme);
-		themeList.add(cupertinoDarkTheme);
-		themeList.add(draculaTheme);
+		THEME_LIST.add(primerLightTheme);
+		THEME_LIST.add(primerDarkTheme);
+		THEME_LIST.add(nordLightTheme);
+		THEME_LIST.add(nordDarkTheme);
+		THEME_LIST.add(cupertinoLightTheme);
+		THEME_LIST.add(cupertinoDarkTheme);
+		THEME_LIST.add(draculaTheme);
 
-		saveProfileDropdown.setItems(uiService.getSaveProfiles());
+		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
 		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell());
 		saveProfileDropdown.setButtonCell(new SaveProfileCell());
 
-		modProfileDropdown.setItems(modProfiles);
+		modProfileDropdown.setItems(MOD_PROFILES);
 		modProfileDropdown.getSelectionModel().selectFirst();
 
-		uiService.setUserSavedApplicationTheme(themeList);
+		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 
 		//Makes it so the combo boxes will properly return strings in their menus instead of the objects
 		saveProfileDropdown.setConverter(new StringConverter<>() {
@@ -184,7 +183,7 @@ public class MenuBarView {
 			}
 		});
 
-		uiService.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
+		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
 	}
 
 	@FXML
@@ -225,11 +224,11 @@ public class MenuBarView {
 	private void setTheme(ActionEvent event) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
 		//Remove the "Theme" end tag from our caller and capitalize the first letter
-		final CheckMenuItem source = (CheckMenuItem) event.getSource();
-		String caller = StringUtils.removeEnd(source.getId(), "Theme");
+		final CheckMenuItem SOURCE = (CheckMenuItem) event.getSource();
+		String caller = StringUtils.removeEnd(SOURCE.getId(), "Theme");
 		String selectedTheme = caller.substring(0, 1).toUpperCase() + caller.substring(1);
 
-		for (CheckMenuItem c : themeList) {
+		for (CheckMenuItem c : THEME_LIST) {
 			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
 			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
 			if (!themeName.equals(selectedTheme)) {
@@ -240,39 +239,38 @@ public class MenuBarView {
 				Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-				uiService.getUserConfiguration().setUserTheme(selectedTheme);
+				UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
 			}
 		}
 
-		boolean savedUserTheme = uiService.saveUserData();
+		boolean savedUserTheme = UI_SERVICE.saveUserData();
 		if (savedUserTheme) {
-			uiService.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
+			UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
 		} else {
-			uiService.log("Failed to save theme to user configuration.", MessageType.ERROR);
+			UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
 		}
 	}
 
 	@FXML
 	private void manageModProfiles() {
-		modProfileManagerView.getStage().showAndWait();
-		//uiService.log(uiService.saveUserData());
+		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
 	}
 
 	@FXML
 	private void manageSaveProfiles() {
-		saveManagerView.getStage().showAndWait();
-		//uiService.log(uiService.saveUserData());
+		SAVE_MANAGER_VIEW.getStage().showAndWait();
 	}
 
 	@FXML
-	private void selectModProfile() throws IOException {
-		uiService.setCurrentModProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+	private void selectModProfile() {
+		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
+		UI_SERVICE.setCurrentModProfile(modProfile);
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
 	}
 
 	@FXML
 	private void selectSaveProfile() {
-		uiService.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+		UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
 	}
 

@@ -47,17 +47,17 @@ import java.util.Properties;
 public class ViewController {
 	private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
 
-	private final Properties properties;
+	private final Properties PROPERTIES;
 
-	private final UiService uiService;
+	private final UiService UI_SERVICE;
 
 	//TODO: Check for file locks to prevent two copies of the app from running simultaneously
 	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		logger.info("Started application");
 
-		properties = new Properties();
+		PROPERTIES = new Properties();
 		try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM.properties")) {
-			properties.load(input);
+			PROPERTIES.load(input);
 		} catch (IOException | NullPointerException e) {
 			logger.error("Could not load SEMM.properties. " + e.getMessage());
 			throw (e);
@@ -67,8 +67,8 @@ public class ViewController {
 				new ModlistFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
-				properties,
-				new File(properties.getProperty("semm.userData.default.location")));
+				PROPERTIES,
+				new File(PROPERTIES.getProperty("semm.userData.default.location")));
 
 		Result<UserConfiguration> userConfigurationResult = backendController.getUserData();
 		UserConfiguration userConfiguration;
@@ -86,19 +86,19 @@ public class ViewController {
 		//Initialize the list we use to store log messages shown to the user
 		ObservableList<LogMessage> userLog = FXCollections.observableArrayList(logMessage ->
 				new Observable[]{
-						logMessage.viewableLogMessageProperty(),
-						logMessage.messageTypeProperty()
+						logMessage.VIEWABLE_LOG_MESSAGEProperty(),
+						logMessage.MESSAGE_TYPEProperty()
 				});
 
-		uiService = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
-		uiService.log(userConfigurationResult);
+		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
+		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);
 
 		//TODO: Actually implement this. Function is empty at the moment.
 		//TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
 		if (!userConfigurationResult.isSuccess()) {
-			uiService.firstTimeSetup();
+			UI_SERVICE.firstTimeSetup();
 		}
 	}
 
@@ -107,9 +107,10 @@ public class ViewController {
 		//This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
 		//The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
 		//For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
+
 		//View for adding a new Save Profile
 		FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
-		SaveInputView saveInputView = new SaveInputView(uiService);
+		SaveInputView saveInputView = new SaveInputView(UI_SERVICE);
 		saveListInputLoader.setController(saveInputView);
 		Parent saveListInputRoot = saveListInputLoader.load();
 		saveInputView.initView(saveListInputRoot);
@@ -130,41 +131,41 @@ public class ViewController {
 
 		//View for managing Save Profiles
 		FXMLLoader saveManagerLoader = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
-		SaveManagerView saveManagerView = new SaveManagerView(uiService, saveInputView, saveProfileInputView);
+		SaveManagerView saveManagerView = new SaveManagerView(UI_SERVICE, saveInputView, saveProfileInputView);
 		saveManagerLoader.setController(saveManagerView);
 		Parent saveManagerRoot = saveManagerLoader.load();
 
 		//View for managing Mod Profiles
 		FXMLLoader modProfilerManagerLoader = new FXMLLoader(getClass().getResource("/view/mod-profile-manager.fxml"));
-		ModProfileManagerView modProfileManagerView = new ModProfileManagerView(uiService, modProfileInputView);
+		ModProfileManagerView modProfileManagerView = new ModProfileManagerView(UI_SERVICE, modProfileInputView);
 		modProfilerManagerLoader.setController(modProfileManagerView);
 		Parent modProfileRoot = modProfilerManagerLoader.load();
 
 		//View for the menubar section of the main window
 		FXMLLoader menuBarLoader = new FXMLLoader(getClass().getResource("/view/menubar.fxml"));
-		MenuBarView menuBarView = new MenuBarView(uiService, modProfileManagerView, saveManagerView);
+		MenuBarView menuBarView = new MenuBarView(UI_SERVICE, modProfileManagerView, saveManagerView);
 		menuBarLoader.setController(menuBarView);
 		Parent menuBarRoot = menuBarLoader.load();
 
 		//View for the statusbar section of the main window
 		FXMLLoader statusBarLoader = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
-		StatusBarView statusBarView = new StatusBarView(uiService);
+		StatusBarView statusBarView = new StatusBarView(UI_SERVICE);
 		statusBarLoader.setController(statusBarView);
 		Parent statusBarRoot = statusBarLoader.load();
 
 		//View for the primary application window
 		FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
-		MainWindowView mainWindowView = new MainWindowView(properties, stage,
-				menuBarView, statusBarView, uiService);
+		MainWindowView mainWindowView = new MainWindowView(PROPERTIES, stage,
+				menuBarView, statusBarView, UI_SERVICE);
 		mainViewLoader.setController(mainWindowView);
 		Parent mainViewRoot = mainViewLoader.load();
 		mainWindowView.initView(mainViewRoot, menuBarRoot, statusBarRoot);
 
 		//The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-		modProfileManagerView.initView(modProfileRoot, properties, menuBarView);
-		saveManagerView.initView(saveManagerRoot, properties, menuBarView);
+		modProfileManagerView.initView(modProfileRoot, PROPERTIES, menuBarView);
+		saveManagerView.initView(saveManagerRoot, PROPERTIES, menuBarView);
 
 		//Save our changes that were made to the user config, such as removing missing profiles, to disk
-		uiService.saveUserData();
+		UI_SERVICE.saveUserData();
 	}
 }

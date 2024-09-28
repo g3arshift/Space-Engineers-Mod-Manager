@@ -23,7 +23,7 @@ import java.util.UUID;
 @Getter
 public class SaveProfile {
 
-    private final UUID id;
+    private final UUID ID;
 
     private String profileName;
 
@@ -49,7 +49,7 @@ public class SaveProfile {
 
     //This represents our base save profile that only exists when the application is launched for the first time.
     public SaveProfile(){
-        id = UUID.randomUUID();
+        ID = UUID.randomUUID();
         this.profileName = "None";
         this.saveName = "None";
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
@@ -58,7 +58,7 @@ public class SaveProfile {
     }
 
     public SaveProfile(String profileName, String savePath) {
-        id = UUID.randomUUID();
+        ID = UUID.randomUUID();
         this.profileName = profileName;
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
@@ -67,7 +67,7 @@ public class SaveProfile {
     }
 
     public SaveProfile(File saveFile) {
-        id = UUID.randomUUID();
+        ID = UUID.randomUUID();
         this.profileName = "Default";
         this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
@@ -76,7 +76,7 @@ public class SaveProfile {
     }
 
     public SaveProfile(SaveProfile saveProfile) {
-        id = UUID.randomUUID();
+        ID = UUID.randomUUID();
         this.profileName = saveProfile.getProfileName();
         this.saveName = saveProfile.getSaveName();
         this.savePath = saveProfile.getSavePath();
@@ -110,11 +110,11 @@ public class SaveProfile {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SaveProfile that)) return false;
-		return saveExists == that.saveExists && Objects.equals(id, that.id) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModProfile, that.lastUsedModProfile) && lastModifiedBy == that.lastModifiedBy && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
+		return saveExists == that.saveExists && Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModProfile, that.lastUsedModProfile) && lastModifiedBy == that.lastModifiedBy && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, profileName, saveName, savePath, lastUsedModProfile, lastModifiedBy, lastSaveStatus, lastSaved, saveExists);
+        return Objects.hash(ID, profileName, saveName, savePath, lastUsedModProfile, lastModifiedBy, lastSaveStatus, lastSaved, saveExists);
     }
 }

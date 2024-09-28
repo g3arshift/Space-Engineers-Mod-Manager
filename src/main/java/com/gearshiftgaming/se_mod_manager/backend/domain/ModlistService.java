@@ -26,12 +26,12 @@ import java.util.concurrent.*;
  * @author Gear Shift
  */
 public class ModlistService {
-    private final Properties properties;
+    private final Properties PROPERTIES;
 
     private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
     //TODO: Implement other repositories for the expected data options
-    private final ModlistRepository modlistRepository;
+    private final ModlistRepository MODLIST_REPOSITORY;
     private final String MOD_SCRAPING_SELECTOR;
 
     @Setter
@@ -41,10 +41,10 @@ public class ModlistService {
     //"Not retrieving mod information from Steam Workshop."
     private boolean workshopConnectionActive;
 
-    public ModlistService(ModlistRepository modlistRepository, Properties properties) {
-        this.modlistRepository = modlistRepository;
-        this.properties = properties;
-        this.MOD_SCRAPING_SELECTOR = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
+    public ModlistService(ModlistRepository MODLIST_REPOSITORY, Properties PROPERTIES) {
+        this.MODLIST_REPOSITORY = MODLIST_REPOSITORY;
+        this.PROPERTIES = PROPERTIES;
+        this.MOD_SCRAPING_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
     }
 
     public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
@@ -54,7 +54,7 @@ public class ModlistService {
             result.addMessage("File does not exist.", ResultType.INVALID);
         } else if (FilenameUtils.getExtension(modlistFile.getName()).equals("txt") || FilenameUtils.getExtension(modlistFile.getName()).equals("doc")) {
             result.addMessage(modlistFile.getName() + " selected.", ResultType.SUCCESS);
-            result.setPayload(modlistRepository.getSteamModList(modlistFile));
+            result.setPayload(MODLIST_REPOSITORY.getSteamModList(modlistFile));
         } else {
             result.addMessage("Incorrect file type selected. Please select a .txt or .doc file.", ResultType.INVALID);
         }

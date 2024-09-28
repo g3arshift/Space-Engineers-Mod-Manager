@@ -42,7 +42,7 @@ public class UserDataServiceTest {
 
 		UserConfiguration userData = result.getPayload();
 		assertEquals(ResultType.FAILED, result.getType());
-		assertEquals("Could not load user data. Defaulting to new user configuration.", result.getMessages().getFirst());
+		assertEquals("Could not load user data. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
 		assertEquals("Primer Light", userData.getUserTheme());
 		assertNull(userData.getLastUsedSaveProfileId());
 		assertEquals(1, userData.getModProfiles().size());
@@ -63,7 +63,7 @@ public class UserDataServiceTest {
 
 		UserConfiguration userConfiguration = result.getPayload();
 
-		assertEquals("Successfully loaded user data.", result.getMessages().getFirst());
+		assertEquals("Successfully loaded user data.", result.getMESSAGES().getFirst());
 
 		assertEquals("Primer Dark", userConfiguration.getUserTheme());
 		assertNull(userConfiguration.getLastUsedSaveProfileId());
@@ -82,7 +82,7 @@ public class UserDataServiceTest {
 		Result<Void> result = userDataService.saveUserData(mockUserConfig, goodUserDataFile);
 
 		assertEquals(ResultType.SUCCESS, result.getType());
-		assertEquals("Successfully saved user data.", result.getMessages().getFirst());
+		assertEquals("Successfully saved user data.", result.getMESSAGES().getFirst());
 	}
 
 	@Test
@@ -95,6 +95,6 @@ public class UserDataServiceTest {
 		Result<Void> result = userDataService.saveUserData(mockUserConfig, badUserDataFile);
 		assertEquals(ResultType.FAILED, result.getType());
 		assertNull(result.getPayload());
-		assertEquals("Failed to save user data.", result.getMessages().getFirst());
+		assertEquals("Failed to save user data.", result.getMESSAGES().getFirst());
 	}
 }

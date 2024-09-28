@@ -22,13 +22,13 @@ import java.util.Date;
  */
 
 public class LogMessage {
-    private final StringProperty viewableLogMessage = new SimpleStringProperty();
-    private final StringProperty messageType = new SimpleStringProperty();
-    public LogMessage(String message, MessageType messageType, Logger logger) {
-        this.viewableLogMessage.setValue(new SimpleDateFormat("hh:mm:ss").format(new Date()) + " - " + message);
-        this.messageType.setValue(messageType.toString());
+    private final StringProperty VIEWABLE_LOG_MESSAGE = new SimpleStringProperty();
+    private final StringProperty MESSAGE_TYPE = new SimpleStringProperty();
+    public LogMessage(String message, MessageType MESSAGE_TYPE, Logger logger) {
+        this.VIEWABLE_LOG_MESSAGE.setValue(new SimpleDateFormat("hh:mm:ss").format(new Date()) + " - " + message);
+        this.MESSAGE_TYPE.setValue(MESSAGE_TYPE.toString());
 
-        switch(messageType) {
+        switch(MESSAGE_TYPE) {
             case INFO -> {
                 logger.info(message);
             }
@@ -44,19 +44,19 @@ public class LogMessage {
         }
     }
 
-    public String getViewableLogMessage() {
-        return viewableLogMessage.get();
+    public String getVIEWABLE_LOG_MESSAGE() {
+        return VIEWABLE_LOG_MESSAGE.get();
     }
 
-    public StringProperty viewableLogMessageProperty() {
-        return viewableLogMessage;
+    public StringProperty VIEWABLE_LOG_MESSAGEProperty() {
+        return VIEWABLE_LOG_MESSAGE;
     }
 
-    public MessageType getMessageType() {
-        return MessageType.valueOf(messageType.get());
+    public MessageType getMESSAGE_TYPE() {
+        return MessageType.valueOf(MESSAGE_TYPE.get());
     }
 
-    public StringProperty messageTypeProperty() {
-        return messageType;
+    public StringProperty MESSAGE_TYPEProperty() {
+        return MESSAGE_TYPE;
     }
 }

@@ -26,19 +26,19 @@ public class Result<T> {
     @Setter
     private T payload;
 
-    private final ArrayList<String> messages = new ArrayList<>();
+    private final ArrayList<String> MESSAGES = new ArrayList<>();
 
     public Result() {
         this.type = ResultType.NOT_INITIALIZED;
     }
 
     public void addMessage(String message, ResultType type) {
-        messages.add(message);
+        MESSAGES.add(message);
         this.type = type;
     }
 
     public void addMessage(Result<?> result) {
-        this.messages.add(result.getCurrentMessage());
+        this.MESSAGES.add(result.getCurrentMessage());
         this.type = result.getType();
     }
 
@@ -47,6 +47,6 @@ public class Result<T> {
     }
 
     public String getCurrentMessage() {
-        return messages.getLast();
+        return MESSAGES.getLast();
     }
 }

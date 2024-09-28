@@ -26,13 +26,13 @@ import java.nio.file.Path;
  */
 public class SaveService {
 
-	private final SaveRepository saveRepository;
+	private final SaveRepository SAVE_REPOSITORY;
 
-	private final SandboxService sandboxService;
+	private final SandboxService SANDBOX_SERVICE;
 
-	public SaveService(SaveRepository saveRepository, SandboxService sandboxService) {
-		this.saveRepository = saveRepository;
-		this.sandboxService = sandboxService;
+	public SaveService(SaveRepository SAVE_REPOSITORY, SandboxService SANDBOX_SERVICE) {
+		this.SAVE_REPOSITORY = SAVE_REPOSITORY;
+		this.SANDBOX_SERVICE = SANDBOX_SERVICE;
 	}
 
 	public Result<SaveProfile> copySaveFiles(SaveProfile sourceSaveProfile) throws IOException {
@@ -51,7 +51,7 @@ public class SaveService {
 			copyIndex++;
 		} while (pathHasDuplicate);
 
-		Result<String> sandboxConfigResult = sandboxService.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));
+		Result<String> sandboxConfigResult = SANDBOX_SERVICE.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));
 
 		//Check that we got a config before we do anything else
 		if (sandboxConfigResult.isSuccess()) {
@@ -61,7 +61,7 @@ public class SaveService {
 			//Check if the sandbox_config actually contains a <SessionName> tag.
 			if (sessionNameIndexPositions[0] != -1 && sessionNameIndexPositions[1] != -1) {
 				//Copies our source directory to a new location.
-				saveRepository.copySave(sourceSavePath, destinationSavePath);
+				SAVE_REPOSITORY.copySave(sourceSavePath, destinationSavePath);
 				SaveProfile copiedSaveProfile = new SaveProfile(sourceSaveProfile);
 
 				//Check that our copy performed correctly.
@@ -78,7 +78,7 @@ public class SaveService {
 
 					//Change the name in our copied save's Sandbox file to match the save name.
 					if (sandboxConfigNameChangeResult.isSuccess()) {
-						Result<String> sandboxResult = sandboxService.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox.sbc"));
+						Result<String> sandboxResult = SANDBOX_SERVICE.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox.sbc"));
 						String sandbox = sandboxResult.getPayload();
 
 						//Change the name in our copied save's Sandbox file to match the save name. This is NOT THE SAME AS the previous step.
@@ -158,7 +158,7 @@ public class SaveService {
 		int[] sessionNameIndexPositions = getSessionNameIndexPositions(sandboxConfig);
 
 		//Change the name in our copied save's Sandbox_config file to match the save name.
-		result.addMessage(sandboxService.changeConfigSessionName(sandboxConfig, copiedSaveProfile, sessionNameIndexPositions));
+		result.addMessage(SANDBOX_SERVICE.changeConfigSessionName(sandboxConfig, copiedSaveProfile, sessionNameIndexPositions));
 
 		return result;
 	}
@@ -169,7 +169,7 @@ public class SaveService {
 		int[] sessionNameIndexPositions = getSessionNameIndexPositions(sandbox);
 
 		if (sessionNameIndexPositions[0] != -1 && sessionNameIndexPositions[1] != -1) {
-			result.addMessage(sandboxService.changeSandboxSessionName(sandbox, copiedSaveProfile, sessionNameIndexPositions));
+			result.addMessage(SANDBOX_SERVICE.changeSandboxSessionName(sandbox, copiedSaveProfile, sessionNameIndexPositions));
 		} else {
 			result.addMessage("Save does not contain a SessionName tag,", ResultType.FAILED);
 		}

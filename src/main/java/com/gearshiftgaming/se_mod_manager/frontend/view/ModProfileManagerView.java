@@ -53,18 +53,18 @@ public class ModProfileManagerView {
     @Getter
     private Stage stage;
 
-    private final UiService uiService;
+    private final UiService UI_SERVICE;
 
-    private final ProfileInputView profileInputView;
+    private final ProfileInputView PROFILE_INPUT_VIEW;
 
     private MenuBarView menuBarView;
 
-    private final ObservableList<ModProfile> modProfiles;
+    private final ObservableList<ModProfile> MOD_PROFILES;
 
-    public ModProfileManagerView(UiService uiService, ProfileInputView profileInputView) {
-        this.uiService = uiService;
-        modProfiles = uiService.getModProfiles();
-        this.profileInputView = profileInputView;
+    public ModProfileManagerView(UiService UI_SERVICE, ProfileInputView PROFILE_INPUT_VIEW) {
+        this.UI_SERVICE = UI_SERVICE;
+        MOD_PROFILES = UI_SERVICE.getMOD_PROFILES();
+        this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
     }
 
     public void initView(Parent root, Properties properties, MenuBarView mainWindowView) {
@@ -79,13 +79,13 @@ public class ModProfileManagerView {
         stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
-        profileList.setItems(modProfiles);
+        profileList.setItems(MOD_PROFILES);
         profileList.setCellFactory(param -> new ModProfileCell());
 
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
         stage.setScene(scene);
-        uiService.logPrivate("Successfully initialized mod profile manager.", MessageType.INFO);
+        UI_SERVICE.logPrivate("Successfully initialized mod profile manager.", MessageType.INFO);
     }
 
     @FXML
@@ -93,18 +93,18 @@ public class ModProfileManagerView {
         boolean duplicateProfileName;
 
         do {
-            profileInputView.getProfileNameInput().requestFocus();
-            profileInputView.getStage().showAndWait();
-            ModProfile newModProfile = new ModProfile(profileInputView.getProfileNameInput().getText());
-            duplicateProfileName = profileNameExists(profileInputView.getProfileNameInput().getText());
+            PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+            PROFILE_INPUT_VIEW.getStage().showAndWait();
+            ModProfile newModProfile = new ModProfile(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+            duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
             if (duplicateProfileName) {
                 Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-            } else if (!profileInputView.getProfileNameInput().getText().isBlank()) {
-                modProfiles.add(newModProfile);
-                uiService.log("Successfully created profile " + profileInputView.getProfileNameInput().getText(), MessageType.INFO);
-                profileInputView.getProfileNameInput().clear();
-                uiService.saveUserData();
+            } else if (!PROFILE_INPUT_VIEW.getProfileNameInput().getText().isBlank()) {
+                MOD_PROFILES.add(newModProfile);
+                UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getProfileNameInput().getText(), MessageType.INFO);
+                PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+                UI_SERVICE.saveUserData();
             }
         } while (duplicateProfileName);
     }
@@ -123,25 +123,25 @@ public class ModProfileManagerView {
         ModProfile copyProfile = new ModProfile(profileList.getSelectionModel().getSelectedItem());
         copyProfile.setProfileName(copyProfileName);
 
-        modProfiles.add(copyProfile);
-        uiService.saveUserData();
+        MOD_PROFILES.add(copyProfile);
+        UI_SERVICE.saveUserData();
     }
 
     @FXML
     private void removeProfile() {
-        if (uiService.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+        if (UI_SERVICE.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
             Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
         } else {
             int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
             if (choice == 1) {
                 int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                modProfiles.remove(profileIndex);
-                if (profileIndex > modProfiles.size()) {
+                MOD_PROFILES.remove(profileIndex);
+                if (profileIndex > MOD_PROFILES.size()) {
                     profileList.getSelectionModel().select(profileIndex - 1);
                 } else {
                     profileList.getSelectionModel().select(profileIndex);
                 }
-                uiService.saveUserData();
+                UI_SERVICE.saveUserData();
             }
         }
     }
@@ -151,17 +151,17 @@ public class ModProfileManagerView {
         boolean duplicateProfileName;
 
         do {
-            profileInputView.getProfileNameInput().clear();
-            profileInputView.getProfileNameInput().requestFocus();
-            profileInputView.getStage().showAndWait();
-            duplicateProfileName = profileNameExists(profileInputView.getProfileNameInput().getText());
+            PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+            PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+            PROFILE_INPUT_VIEW.getStage().showAndWait();
+            duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
             if (duplicateProfileName) {
                 Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-            } else if (!profileInputView.getProfileNameInput().getText().isBlank()) {
+            } else if (!PROFILE_INPUT_VIEW.getProfileNameInput().getText().isBlank()) {
                 //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                 int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                modProfiles.get(profileIndex).setProfileName(profileInputView.getProfileNameInput().getText());
+                MOD_PROFILES.get(profileIndex).setProfileName(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
                 //We manually refresh here because the original profile won't update its name while it's selected in the list
                 profileList.refresh();
@@ -170,16 +170,16 @@ public class ModProfileManagerView {
                 menuBarView.getModProfileDropdown().getSelectionModel().selectNext();
                 menuBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
 
-                profileInputView.getProfileNameInput().clear();
-                uiService.log("Successfully renamed profile.", MessageType.INFO);
-                uiService.saveUserData();
+                PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+                UI_SERVICE.log("Successfully renamed profile.", MessageType.INFO);
+                UI_SERVICE.saveUserData();
             }
         } while (duplicateProfileName);
     }
 
     @FXML
     private void selectProfile() {
-        uiService.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
+        UI_SERVICE.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
         menuBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
     }
 
@@ -189,7 +189,7 @@ public class ModProfileManagerView {
     }
 
     private boolean profileNameExists(String profileName) {
-        return modProfiles.stream()
+        return MOD_PROFILES.stream()
                 .anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));
     }
 }

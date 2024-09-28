@@ -112,7 +112,7 @@ public class SandboxServiceTest {
     void shouldAppendExtensionToSavePathWithIncorrectExtensionAndWriteCorrectly() throws IOException {
         Result<Void> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.txt", "Save this config!");
         assertTrue(result.isSuccess());
-        assertEquals("File extension .txt not permitted. Changing to .sbc.", result.getMessages().getFirst());
+        assertEquals("File extension .txt not permitted. Changing to .sbc.", result.getMESSAGES().getFirst());
     }
 
     @Test

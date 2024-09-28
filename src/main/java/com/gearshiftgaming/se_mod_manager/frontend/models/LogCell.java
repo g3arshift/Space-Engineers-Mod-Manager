@@ -17,16 +17,16 @@ import org.kordamp.ikonli.javafx.FontIcon;
  * @author Gear Shift
  */
 public class LogCell extends ListCell<LogMessage> {
-    private final FontIcon messageIcon = new FontIcon();
-    private final Label message = new Label();
+    private final FontIcon MESSAGE_ICON = new FontIcon();
+    private final Label MESSAGE = new Label();
 
-    private final HBox layout = new HBox(messageIcon, message);
+    private final HBox LAYOUT = new HBox(MESSAGE_ICON, MESSAGE);
 
     public LogCell() {
         super();
-        layout.setAlignment(Pos.CENTER_LEFT);
-        layout.setSpacing(5d);
-        message.setWrapText(true);
+        LAYOUT.setAlignment(Pos.CENTER_LEFT);
+        LAYOUT.setSpacing(5d);
+        MESSAGE.setWrapText(true);
     }
 
     //TODO: We're getting a weird bug that's leaving empty cells sometimes when the message is especially large and the user clicks into the rows? Could be the cell resizing too large for the view maybe?
@@ -38,31 +38,31 @@ public class LogCell extends ListCell<LogMessage> {
             setGraphic(null);
             setStyle(null);
         } else {
-            switch (item.getMessageType()) {
+            switch (item.getMESSAGE_TYPE()) {
                 case INFO -> {
-                    messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
-                    messageIcon.setIconLiteral("ci-information-square");
+                    MESSAGE_ICON.setStyle("-fx-icon-color: -color-accent-emphasis;");
+                    MESSAGE_ICON.setIconLiteral("ci-information-square");
                 }
                 case WARN -> {
-                    messageIcon.setStyle("-fx-icon-color: -color-warning-emphasis;");
-                    messageIcon.setIconLiteral("ci-warning-alt");
+                    MESSAGE_ICON.setStyle("-fx-icon-color: -color-warning-emphasis;");
+                    MESSAGE_ICON.setIconLiteral("ci-warning-alt");
                 }
                 case ERROR -> {
-                    messageIcon.setStyle("-fx-icon-color: -color-danger-emphasis;");
-                    messageIcon.setIconLiteral("ci-warning-square");
+                    MESSAGE_ICON.setStyle("-fx-icon-color: -color-danger-emphasis;");
+                    MESSAGE_ICON.setIconLiteral("ci-warning-square");
                 }
                 default -> {
-                    messageIcon.setStyle("-fx-icon-color: -color-neutral-emphasis;");
-                    messageIcon.setIconLiteral("ci-unknown");
+                    MESSAGE_ICON.setStyle("-fx-icon-color: -color-neutral-emphasis;");
+                    MESSAGE_ICON.setIconLiteral("ci-unknown");
                 }
             }
             //TODO: Reuse for the mod table!!!
             //Make every other row in the log a different color for visibility.
-            message.setText(item.getViewableLogMessage());
+            MESSAGE.setText(item.getVIEWABLE_LOG_MESSAGE());
             if (getIndex() % 2 == 0) {
                 setStyle("-fx-background-color: -color-bg-subtle;");
             }
-            setGraphic(layout);
+            setGraphic(LAYOUT);
         }
     }
 }

@@ -17,5 +17,6 @@ import java.io.File;
 public interface UserDataRepository {
     UserConfiguration loadUserData(File userConfigurationFile) throws JAXBException;
 
+    //TODO: Shouldn't be a file.
     boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile);
 }

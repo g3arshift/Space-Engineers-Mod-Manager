@@ -15,7 +15,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MenuBar;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
@@ -69,21 +68,21 @@ public class SaveManagerView {
 	@Getter
 	private Stage stage;
 
-	private final ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<SaveProfile> SAVE_PROFILES;
 
-	private final UiService uiService;
+	private final UiService UI_SERVICE;
 
-	private final SaveInputView saveInputViewView;
+	private final SaveInputView SAVE_INPUT_VIEW;
 
-	private final ProfileInputView profileInputView;
+	private final ProfileInputView PROFILE_INPUT_VIEW;
 
 	private MenuBarView menuBarView;
 
-	public SaveManagerView(UiService uiService, SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView) {
-		this.uiService = uiService;
-		saveProfiles = uiService.getSaveProfiles();
-		this.saveInputViewView = saveInputViewFirstStepView;
-		this.profileInputView = saveListInputSecondStepView;
+	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView) {
+		this.UI_SERVICE = UI_SERVICE;
+		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
+		this.SAVE_INPUT_VIEW = saveInputViewFirstStepView;
+		this.PROFILE_INPUT_VIEW = saveListInputSecondStepView;
 	}
 
 	public void initView(Parent root, Properties properties, MenuBarView menuBarView) {
@@ -99,13 +98,13 @@ public class SaveManagerView {
 		stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
-		saveList.setItems(saveProfiles);
+		saveList.setItems(SAVE_PROFILES);
 		saveList.setCellFactory(param -> new SaveProfileCell());
 
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
 		stage.setScene(scene);
-		uiService.logPrivate("Successfully initialized save manager.", MessageType.INFO);
+		UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
 	}
 
 	@FXML
@@ -114,8 +113,8 @@ public class SaveManagerView {
 		Result<SaveProfile> result;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
-			saveInputViewView.getStage().showAndWait();
-			result = saveInputViewView.getSaveProfileResult();
+			SAVE_INPUT_VIEW.getStage().showAndWait();
+			result = SAVE_INPUT_VIEW.getSaveProfileResult();
 			if (result.isSuccess()) {
 				SaveProfile saveProfile = result.getPayload();
 				duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
@@ -126,19 +125,19 @@ public class SaveManagerView {
 					//Remove the default save profile that isn't actually a profile if it's all that we have in the list.
 					boolean duplicateProfileName;
 					do {
-						profileInputView.getProfileNameInput().clear();
-						profileInputView.getProfileNameInput().requestFocus();
-						profileInputView.getStage().showAndWait();
-						duplicateProfileName = profileNameAlreadyExists(profileInputView.getProfileNameInput().getText());
+						PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+						PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+						PROFILE_INPUT_VIEW.getStage().showAndWait();
+						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
 						if (duplicateProfileName) {
 							Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-						} else if (!profileInputView.getProfileNameInput().getText().isBlank()) {
-							saveProfile.setProfileName(profileInputView.getProfileNameInput().getText());
-							if (saveProfiles.size() == 1 && saveProfiles.getFirst().getSaveName().equals("None") && saveProfiles.getFirst().getProfileName().equals("None") && saveProfiles.getFirst().getSavePath() == null) {
+						} else if (!PROFILE_INPUT_VIEW.getProfileNameInput().getText().isBlank()) {
+							saveProfile.setProfileName(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+							if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
 								saveProfile.setSaveExists(true);
-								saveProfiles.set(0, saveProfile);
-								uiService.setCurrentSaveProfile(saveProfile);
+								SAVE_PROFILES.set(0, saveProfile);
+								UI_SERVICE.setCurrentSaveProfile(saveProfile);
 
 								//TODO: This only partially works. It fixes the styling, but leaves the text as "None" for the button cell.
 								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -147,13 +146,13 @@ public class SaveManagerView {
 								menuBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 								saveList.refresh();
 							} else {
-								saveProfiles.add(saveProfile);
+								SAVE_PROFILES.add(saveProfile);
 								result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
-								uiService.log(result);
+								UI_SERVICE.log(result);
 
-								profileInputView.getProfileNameInput().clear();
+								PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 							}
-							uiService.saveUserData();
+							UI_SERVICE.saveUserData();
 						}
 					} while (duplicateProfileName);
 				}
@@ -161,9 +160,9 @@ public class SaveManagerView {
 		} while (result.isSuccess() && duplicateSavePath);
 
 		//Cleanup our UI actions.
-		saveInputViewView.getSaveName().setText("No save selected.");
-		saveInputViewView.setSelectedSave(null);
-		profileInputView.getProfileNameInput().clear();
+		SAVE_INPUT_VIEW.getSaveName().setText("No save selected.");
+		SAVE_INPUT_VIEW.setSelectedSave(null);
+		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 	}
 
 	@FXML
@@ -186,72 +185,72 @@ public class SaveManagerView {
 
 	//Create a new thread that runs the code for copying profiles
 	private Thread getCopyThread() {
-		final Task<Result<SaveProfile>> task = new Task<>() {
+		final Task<Result<SaveProfile>> TASK = new Task<>() {
 			@Override
 			protected Result<SaveProfile> call() throws Exception {
-				return uiService.copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+				return UI_SERVICE.copySaveProfile(saveList.getSelectionModel().getSelectedItem());
 			}
 		};
 
-		task.setOnSucceeded(event -> {
-			Result<SaveProfile> profileCopyResult = task.getValue();
+		TASK.setOnSucceeded(event -> {
+			Result<SaveProfile> profileCopyResult = TASK.getValue();
 
 			if (profileCopyResult.isSuccess()) {
-				saveProfiles.add(profileCopyResult.getPayload());
+				SAVE_PROFILES.add(profileCopyResult.getPayload());
 			} else {
 				Popup.displaySimpleAlert(profileCopyResult, stage);
 			}
 
-			uiService.log(profileCopyResult);
+			UI_SERVICE.log(profileCopyResult);
 			operationInProgressDimmer.setVisible(false);
 			progressIndicator.setVisible(false);
 			saveList.setMouseTransparent(false);
-			uiService.saveUserData();
+			UI_SERVICE.saveUserData();
 		});
 
-		Thread thread = new Thread(task);
+		Thread thread = new Thread(TASK);
 		thread.setDaemon(true);
 		return thread;
 	}
 
 	@FXML
 	private void removeSave() {
-		if (uiService.getCurrentSaveProfile().equals(saveList.getSelectionModel().getSelectedItem())) {
+		if (UI_SERVICE.getCurrentSaveProfile().equals(saveList.getSelectionModel().getSelectedItem())) {
 			Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
 		} else {
 			int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
 			if (choice == 1) {
 				int profileIndex = saveList.getSelectionModel().getSelectedIndex();
-				saveProfiles.remove(profileIndex);
-				if(profileIndex > saveProfiles.size()) {
+				SAVE_PROFILES.remove(profileIndex);
+				if(profileIndex > SAVE_PROFILES.size()) {
 					saveList.getSelectionModel().select(profileIndex - 1);
 				} else {
 					saveList.getSelectionModel().select(profileIndex);
 				}
-				uiService.saveUserData();
+				UI_SERVICE.saveUserData();
 			}
 		}
 	}
 
 	@FXML
 	private void renameProfile() {
-		profileInputView.getProfileNameInput().clear();
-		profileInputView.getProfileNameInput().requestFocus();
-		profileInputView.getStage().showAndWait();
+		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+		PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+		PROFILE_INPUT_VIEW.getStage().showAndWait();
 
-		String newProfileName = profileInputView.getProfileNameInput().getText();
+		String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
 		if(profileNameAlreadyExists(newProfileName)) {
 			Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
 		} else if (!newProfileName.isBlank()){
 			saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
 			saveList.refresh();
-			uiService.saveUserData();
+			UI_SERVICE.saveUserData();
 		}
 	}
 
 	@FXML
 	private void selectSave() {
-		uiService.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
+		UI_SERVICE.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
 		menuBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
 	}
 
@@ -261,12 +260,12 @@ public class SaveManagerView {
 	}
 
 	private boolean saveAlreadyExists(String savePath) {
-		return saveProfiles.stream()
+		return SAVE_PROFILES.stream()
 				.anyMatch(saveProfile -> saveProfile.getSavePath() != null && saveProfile.getSavePath().equals(savePath));
 	}
 
 	private boolean profileNameAlreadyExists(String profileName) {
-		return saveProfiles.stream()
+		return SAVE_PROFILES.stream()
 				.anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
 	}
 }

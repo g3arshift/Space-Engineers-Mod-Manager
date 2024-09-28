@@ -41,7 +41,7 @@ public class Mod {
     private List<String> categories;
     private boolean active;
     private ModType modType;
-
+    
     public Mod(String id, ModType modType) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
@@ -49,6 +49,7 @@ public class Mod {
         //this.source = source;
         categories = new ArrayList<>();
         this.modType = modType;
+        this.modVersion = "Unknown";
     }
 
     @Override

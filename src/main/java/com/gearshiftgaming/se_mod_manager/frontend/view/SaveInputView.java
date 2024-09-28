@@ -56,10 +56,10 @@ public class SaveInputView {
     @Setter
     private File selectedSave;
 
-    private final UiService uiService;
+    private final UiService UI_SERVICE;
 
-    public SaveInputView( UiService uiService) {
-        this.uiService = uiService;
+    public SaveInputView( UiService UI_SERVICE) {
+        this.UI_SERVICE = UI_SERVICE;
     }
 
     public void initView(Parent root) {
@@ -83,7 +83,7 @@ public class SaveInputView {
         selectedSave = fileChooser.showOpenDialog(stage);
 
         if (selectedSave != null) {
-            saveProfileResult = uiService.getSaveProfile(selectedSave);
+            saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
             if (saveProfileResult.isSuccess()) {
                 saveName.setText(saveProfileResult.getPayload().getSaveName());
             }

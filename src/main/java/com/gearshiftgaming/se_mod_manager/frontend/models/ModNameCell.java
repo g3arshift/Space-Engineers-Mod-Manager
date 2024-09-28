@@ -1,11 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
-import javafx.scene.layout.HBox;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -20,7 +17,7 @@ import javafx.scene.layout.HBox;
  */
 public class ModNameCell extends TableCell<Mod, Mod> {
 
-	private final CheckBox activateToggle = new CheckBox();
+	private final CheckBox ACTIVATE_TOGGLE = new CheckBox();
 
 	public ModNameCell() {
 		super();
@@ -34,11 +31,12 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			activateToggle.setText(item.getFriendlyName());
-			activateToggle.setSelected(item.isActive());
+			ACTIVATE_TOGGLE.setText(item.getFriendlyName());
+			ACTIVATE_TOGGLE.setSelected(item.isActive());
 
-			activateToggle.setOnAction(actionEvent -> item.setActive(this.isSelected()));
-			setGraphic(activateToggle);
+			ACTIVATE_TOGGLE.setOnAction(actionEvent -> item.setActive(this.isSelected()));
+			TableCell<Mod, Mod> tableCell = new TableCell<>();
+			// TODO: We need to actually return a table cell containing our items. tableCell.itemProperty()
 		}
 	}
 }

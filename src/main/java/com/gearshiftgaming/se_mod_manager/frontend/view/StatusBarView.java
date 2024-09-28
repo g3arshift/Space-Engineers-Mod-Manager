@@ -37,30 +37,30 @@ public class StatusBarView {
 
 	private String statusBaseStyling;
 
-	private final UiService uiService;
+	private final UiService UI_SERVICE;
 
 	/**
 	 * Sets the initial values for the toolbar located at the bottom of the UI.
 	 */
 
-	public StatusBarView(UiService uiService) {
-		this.uiService = uiService;
+	public StatusBarView(UiService UI_SERVICE) {
+		this.UI_SERVICE = UI_SERVICE;
 	}
 
 	public void initView() {
 		Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
 		if (lastUsedSaveProfile.isPresent()) {
-			uiService.setCurrentSaveProfile(lastUsedSaveProfile.get());
+			UI_SERVICE.setCurrentSaveProfile(lastUsedSaveProfile.get());
 			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
 
-			updateSaveStatus(uiService.getCurrentSaveProfile());
-			updateLastModifiedBy(uiService.getCurrentSaveProfile());
+			updateSaveStatus(UI_SERVICE.getCurrentSaveProfile());
+			updateLastModifiedBy(UI_SERVICE.getCurrentSaveProfile());
 
 			//Set the text for the last time this profile was saved
-			if (uiService.getCurrentSaveProfile().getLastSaved() == null || uiService.getCurrentSaveProfile().getLastSaved().isEmpty()) {
+			if (UI_SERVICE.getCurrentSaveProfile().getLastSaved() == null || UI_SERVICE.getCurrentSaveProfile().getLastSaved().isEmpty()) {
 				lastInjected.setText("Never");
 			} else {
-				lastInjected.setText(uiService.getCurrentSaveProfile().getLastSaved());
+				lastInjected.setText(UI_SERVICE.getCurrentSaveProfile().getLastSaved());
 			}
 		} else {
 			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
@@ -74,7 +74,7 @@ public class StatusBarView {
 			lastInjected.setText("Never");
 		}
 
-		uiService.logPrivate("Successfully initialized status bar.", MessageType.INFO);
+		UI_SERVICE.logPrivate("Successfully initialized status bar.", MessageType.INFO);
 	}
 
 	private void updateInfoBar(SaveProfile saveProfile) {
@@ -128,11 +128,11 @@ public class StatusBarView {
 
 	private Optional<SaveProfile> findLastUsedSaveProfile() {
 		Optional<SaveProfile> lastUsedSaveProfile = Optional.empty();
-		if (uiService.getUserConfiguration().getLastUsedSaveProfileId() != null) {
-			UUID lastUsedSaveProfileId = uiService.getUserConfiguration().getLastUsedSaveProfileId();
+		if (UI_SERVICE.getUSER_CONFIGURATION().getLastUsedSaveProfileId() != null) {
+			UUID lastUsedSaveProfileId = UI_SERVICE.getUSER_CONFIGURATION().getLastUsedSaveProfileId();
 
-			lastUsedSaveProfile = uiService.getSaveProfiles().stream()
-					.filter(saveProfile -> saveProfile.getId().equals(lastUsedSaveProfileId))
+			lastUsedSaveProfile = UI_SERVICE.getSAVE_PROFILES().stream()
+					.filter(saveProfile -> saveProfile.getID().equals(lastUsedSaveProfileId))
 					.findFirst();
 		}
 		return lastUsedSaveProfile;
