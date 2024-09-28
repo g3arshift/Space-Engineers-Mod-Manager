@@ -1,7 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
-import atlantafx.base.controls.Message;
-import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
@@ -25,7 +23,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -42,61 +39,67 @@ import java.util.UUID;
  * @author Gear Shift
  */
 public class UiService {
-	private final Logger logger;
+	private final Logger LOGGER;
 
-	private final BackendController backendController;
-
-	@Getter
-	private final ObservableList<LogMessage> userLog;
+	private final BackendController BACKEND_CONTROLLER;
 
 	@Getter
-	private final ObservableList<ModProfile> modProfiles;
+	private final ObservableList<LogMessage> USER_LOG;
 
 	@Getter
-	private final ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<ModProfile> MOD_PROFILES;
 
 	@Getter
-	private final UserConfiguration userConfiguration;
+	private final ObservableList<SaveProfile> SAVE_PROFILES;
+
+	@Getter
+	private final UserConfiguration USER_CONFIGURATION;
 
 	@Getter
 	@Setter
 	private SaveProfile currentSaveProfile;
 
 	@Getter
-	@Setter
 	private ModProfile currentModProfile;
 
-	public UiService(Logger logger, ObservableList<LogMessage> userLog,
-					 ObservableList<ModProfile> modProfiles, ObservableList<SaveProfile> saveProfiles,
-					 BackendController backendController, UserConfiguration userConfiguration) {
+	@Getter
+	private final ObservableList<Mod> CURRENT_MOD_LIST;
 
-		this.logger = logger;
-		this.userLog = userLog;
-		this.modProfiles = modProfiles;
-		this.saveProfiles = saveProfiles;
-		this.backendController = backendController;
-		this.userConfiguration = userConfiguration;
+	public UiService(Logger LOGGER, ObservableList<LogMessage> USER_LOG,
+					 ObservableList<ModProfile> MOD_PROFILES, ObservableList<SaveProfile> SAVE_PROFILES,
+					 BackendController BACKEND_CONTROLLER, UserConfiguration USER_CONFIGURATION) {
+
+		CURRENT_MOD_LIST = FXCollections.observableArrayList();
+
+		this.LOGGER = LOGGER;
+		this.USER_LOG = USER_LOG;
+		this.MOD_PROFILES = MOD_PROFILES;
+		this.SAVE_PROFILES = SAVE_PROFILES;
+		this.BACKEND_CONTROLLER = BACKEND_CONTROLLER;
+		this.USER_CONFIGURATION = USER_CONFIGURATION;
 
 		//Initialize our current mod and save profiles
-		Optional<SaveProfile> lastUsedSaveProfile = saveProfiles.stream()
-				.filter(saveProfile -> saveProfile.getId().equals(userConfiguration.getLastUsedSaveProfileId()))
+		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
+				.filter(saveProfile -> saveProfile.getID().equals(USER_CONFIGURATION.getLastUsedSaveProfileId()))
 				.findFirst();
 		if (lastUsedSaveProfile.isPresent()) {
 			currentSaveProfile = lastUsedSaveProfile.get();
-			Optional<ModProfile> lastUsedModProfile = modProfiles.stream()
-					.filter(modProfile -> modProfile.getId().equals(currentSaveProfile.getLastUsedModProfile()))
+			Optional<ModProfile> lastUsedModProfile = MOD_PROFILES.stream()
+					.filter(modProfile -> modProfile.getID().equals(currentSaveProfile.getLastUsedModProfile()))
 					.findFirst();
-			currentModProfile = lastUsedModProfile.orElseGet(modProfiles::getFirst);
+			currentModProfile = lastUsedModProfile.orElseGet(MOD_PROFILES::getFirst);
 		} else {
 			log("No previously applied save profile detected.", MessageType.INFO);
-			currentSaveProfile = saveProfiles.getFirst();
-			currentModProfile = modProfiles.getFirst();
+			currentSaveProfile = SAVE_PROFILES.getFirst();
+			currentModProfile = MOD_PROFILES.getFirst();
 		}
+
+		CURRENT_MOD_LIST.addAll(currentModProfile.getModList());
 	}
 
 	public void log(String message, MessageType messageType) {
-		LogMessage logMessage = new LogMessage(message, messageType, logger);
-		userLog.add(logMessage);
+		LogMessage logMessage = new LogMessage(message, messageType, LOGGER);
+		USER_LOG.add(logMessage);
 	}
 
 	public <T> void log(Result<T> result) {
@@ -111,29 +114,29 @@ public class UiService {
 
 	public void logPrivate(String message, MessageType messageType) {
 		switch (messageType) {
-			case INFO -> logger.info(message);
-			case WARN -> logger.warn(message);
-			case ERROR -> logger.error(message);
-			case UNKNOWN -> logger.error("ERROR UNKNOWN - " + message);
+			case INFO -> LOGGER.info(message);
+			case WARN -> LOGGER.warn(message);
+			case ERROR -> LOGGER.error(message);
+			case UNKNOWN -> LOGGER.error("ERROR UNKNOWN - " + message);
 		}
 	}
 
 	public boolean saveUserData() {
-		Result<Void> result = backendController.saveUserData(userConfiguration);
+		Result<Void> result = BACKEND_CONTROLLER.saveUserData(USER_CONFIGURATION);
 		log(result);
 		return result.isSuccess();
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		return backendController.applyModlist(modList, sandboxConfigPath);
+		return BACKEND_CONTROLLER.applyModlist(modList, sandboxConfigPath);
 	}
 
 	public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-		return backendController.copySaveProfile(saveProfile);
+		return BACKEND_CONTROLLER.copySaveProfile(saveProfile);
 	}
 
 	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-		return backendController.getSaveProfile(sandboxConfigFile);
+		return BACKEND_CONTROLLER.getSaveProfile(sandboxConfigFile);
 	}
 
 	public void firstTimeSetup() {
@@ -146,12 +149,22 @@ public class UiService {
 		for (CheckMenuItem c : themeList) {
 			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
 			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
-			if (themeName.equals(StringUtils.deleteWhitespace(userConfiguration.getUserTheme()))) {
+			if (themeName.equals(StringUtils.deleteWhitespace(USER_CONFIGURATION.getUserTheme()))) {
 				c.setSelected(true);
-				Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(userConfiguration.getUserTheme()));
+				Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(USER_CONFIGURATION.getUserTheme()));
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
 			}
 		}
+	}
+
+	public void setCurrentModProfile(ModProfile modProfile) {
+		currentModProfile = modProfile;
+		updateCurrentModList(modProfile.getModList());
+	}
+
+	private void updateCurrentModList(List<Mod> modList) {
+		CURRENT_MOD_LIST.clear();
+		CURRENT_MOD_LIST.addAll(modList);
 	}
 }

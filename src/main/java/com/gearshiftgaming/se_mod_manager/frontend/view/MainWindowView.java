@@ -6,10 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -17,7 +14,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -120,77 +116,76 @@ public class MainWindowView {
 	private ListView<LogMessage> viewableLog;
 
 	//TODO: We need to replace the window control bar for the window.
-	private final ObservableList<LogMessage> userLog;
+	private final ObservableList<LogMessage> USER_LOG;
 
-	private final Properties properties;
+	private final Properties PROPERTIES;
 
-	private final UiService uiService;
+	private final UiService UI_SERVICE;
 
-	private final Stage stage;
+	private final Stage STAGE;
 
 	private Scene scene;
 
 	private boolean mainViewSplitDividerVisible = true;
 
-	private final UserConfiguration userConfiguration;
+	private final UserConfiguration USER_CONFIGURATION;
 
 	//This is just a wrapper for the userConfiguration modProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private final ObservableList<ModProfile> modProfiles;
+	private final ObservableList<ModProfile> MOD_PROFILES;
 
 	//This is just a wrapper for the userConfiguration saveProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private final ObservableList<SaveProfile> saveProfiles;
+	private final ObservableList<SaveProfile> SAVE_PROFILES;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
-	private final MenuBarView menuBarView;
+	private final MenuBarView MENU_BAR_VIEW;
 
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
-	private final StatusBarView statusBarView;
+	private final StatusBarView STATUS_BAR_VIEW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage,
 						 MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
-		this.stage = stage;
-		this.properties = properties;
-		this.userConfiguration = uiService.getUserConfiguration();
-		this.uiService = uiService;
-		this.userLog = this.uiService.getUserLog();
-		this.menuBarView = menuBarView;
-		this.statusBarView = statusBarView;
+		this.STAGE = stage;
+		this.PROPERTIES = properties;
+		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
+		this.UI_SERVICE = uiService;
+		this.USER_LOG = this.UI_SERVICE.getUSER_LOG();
+		this.MENU_BAR_VIEW = menuBarView;
+		this.STATUS_BAR_VIEW = statusBarView;
 
-		modProfiles = uiService.getModProfiles();
-		saveProfiles = uiService.getSaveProfiles();
+		MOD_PROFILES = uiService.getMOD_PROFILES();
+		SAVE_PROFILES = uiService.getSAVE_PROFILES();
 	}
 
-	public void initView(Parent mainViewRoot,
-						 Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
-		menuBarView.initView(this);
-		statusBarView.initView();
+		MENU_BAR_VIEW.initView(this);
+		STATUS_BAR_VIEW.initView();
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
 		setupMainViewItems();
 
 		//Prompt the user to remove any saves that no longer exist on the file system.
-		if (saveProfiles.size() != 1 &&
-				!saveProfiles.getFirst().getSaveName().equals("None") &&
-				!saveProfiles.getFirst().getProfileName().equals("None") &&
-				saveProfiles.getFirst().getSavePath() != null) {
-			for (int i = 0; i < saveProfiles.size(); i++) {
-				if (Files.notExists(Path.of(saveProfiles.get(i).getSavePath()))) {
-					saveProfiles.get(i).setSaveExists(false);
-					String errorMessage = "The save associated with the profile \"" + saveProfiles.get(i).getProfileName() + "\" was not found. Do you want " +
+		if (SAVE_PROFILES.size() != 1 &&
+				!SAVE_PROFILES.getFirst().getSaveName().equals("None") &&
+				!SAVE_PROFILES.getFirst().getProfileName().equals("None") &&
+				SAVE_PROFILES.getFirst().getSavePath() != null) {
+			for (int i = 0; i < SAVE_PROFILES.size(); i++) {
+				if (Files.notExists(Path.of(SAVE_PROFILES.get(i).getSavePath()))) {
+					SAVE_PROFILES.get(i).setSaveExists(false);
+					String errorMessage = "The save associated with the profile \"" + SAVE_PROFILES.get(i).getProfileName() + "\" was not found. Do you want " +
 							"to remove this profile from the managed saves?";
-					uiService.log("Save \"" + saveProfiles.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
+					UI_SERVICE.log("Save \"" + SAVE_PROFILES.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
 
 					int choice = Popup.displayYesNoDialog(errorMessage, MessageType.WARN);
 					if (choice == 1) {
-						uiService.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
-						saveProfiles.remove(i);
+						UI_SERVICE.log("Removing save " + SAVE_PROFILES.get(i).getSaveName() + ".", MessageType.INFO);
+						SAVE_PROFILES.remove(i);
 						i--;
 					}
 				} else {
-					saveProfiles.get(i).setSaveExists(true);
+					SAVE_PROFILES.get(i).setSaveExists(true);
 				}
 			}
 		}
@@ -199,7 +194,7 @@ public class MainWindowView {
 
 	@FXML
 	private void closeLogTab() {
-		menuBarView.getLogToggle().setSelected(false);
+		MENU_BAR_VIEW.getLogToggle().setSelected(false);
 		if (informationPane.getTabs().isEmpty()) {
 			disableSplitPaneDivider();
 		}
@@ -207,7 +202,7 @@ public class MainWindowView {
 
 	@FXML
 	private void closeModDescriptionTab() {
-		menuBarView.getModDescriptionToggle().setSelected(false);
+		MENU_BAR_VIEW.getModDescriptionToggle().setSelected(false);
 		if (informationPane.getTabs().isEmpty()) {
 			disableSplitPaneDivider();
 		}
@@ -277,6 +272,10 @@ public class MainWindowView {
 	}
 
 	private void setupModTable() {
+		//TODO: Not displaying name, checkbox for name, or version.
+		//TODO: Categories not parsed properly. String is badly formatted.
+		//TODO: Doesn't work when you change mod profile. Won't even show up unless there's active mods in the first profile loaded.
+		// Check the variable assignment. It might be referencing the old data, even when we update. ACtually, this is def what's happening as backend updates don't propagate forwards
 		//Create the context menus for the table and prepare the table
 		//modTable.itemsProperty().bind(new SimpleObjectProperty<>(FXCollections.observableList(uiService.getCurrentModProfile().getModList())));
 		modName.setCellFactory(param -> new ModNameCell());
@@ -287,7 +286,7 @@ public class MainWindowView {
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
 		loadPriority.setCellValueFactory(cellData -> {
 			Mod mod = cellData.getValue();
-			int index = uiService.getCurrentModProfile().getModList().indexOf(mod);
+			int index = UI_SERVICE.getCurrentModProfile().getModList().indexOf(mod);
 			//This SHOULD always be able to find the cell data because we're calling this FROM a cell. But, just in case, here's a default case.
 			if(index != -1) {
 				return new SimpleStringProperty(Integer.toString(index));
@@ -301,7 +300,7 @@ public class MainWindowView {
 			StringBuilder sb = new StringBuilder();
 			List<String> categories = cellData.getValue().getCategories();
 			for(int i = 0; i < cellData.getValue().getCategories().size(); i++) {
-				if(i + 1 > cellData.getValue().getCategories().size()) {
+				if(i + 1 < cellData.getValue().getCategories().size()) {
 					sb.append(categories.get(i)).append(", ");
 				} else {
 					sb.append(categories.get(i));
@@ -312,7 +311,7 @@ public class MainWindowView {
 
 		//TODO: Make the rows alternate colors. Log cell has an implementation for this.
 
-		modTable.setItems((FXCollections.observableList(uiService.getCurrentModProfile().getModList())));
+		modTable.setItems(UI_SERVICE.getCURRENT_MOD_LIST());
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -323,22 +322,22 @@ public class MainWindowView {
 	private void setupWindow(Parent root) throws IOException, XmlPullParserException {
 		this.scene = new Scene(root);
 		//Prepare the scene
-		int minWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth"));
-		int minHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight"));
+		int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));
+		int minHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minHeight"));
 
 		//Prepare the stage
-		stage.setScene(scene);
-		stage.setMinWidth(minWidth);
-		stage.setMinHeight(minHeight);
+		STAGE.setScene(scene);
+		STAGE.setMinWidth(minWidth);
+		STAGE.setMinHeight(minHeight);
 
 		//Add title and icon to the stage
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model = reader.read(new FileReader("pom.xml"));
-		stage.setTitle("SEMM v" + model.getVersion());
-		stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+		STAGE.setTitle("SEMM v" + model.getVersion());
+		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
 		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
-		stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
 			if (!this.isMainViewSplitDividerVisible()) {
 				this.getMainViewSplit().setDividerPosition(0, 1);
 			}
@@ -348,7 +347,7 @@ public class MainWindowView {
 	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
 	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
 	public void setupMainViewItems() {
-		viewableLog.setItems(userLog);
+		viewableLog.setItems(USER_LOG);
 		viewableLog.setCellFactory(param -> new LogCell());
 		//Disable selecting rows in the log.
 		viewableLog.setSelectionModel(null);

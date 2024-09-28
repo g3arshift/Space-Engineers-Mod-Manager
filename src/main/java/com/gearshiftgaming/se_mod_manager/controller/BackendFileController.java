@@ -31,32 +31,32 @@ import java.util.Properties;
  */
 public class BackendFileController implements BackendController {
 
-	private final SandboxService sandboxService;
+	private final SandboxService SANDBOX_SERVICE;
 
-	private final ModlistService modlistService;
+	private final ModlistService MODLIST_SERVICE;
 
-	private final UserDataService userDataService;
+	private final UserDataService USER_DATA_SERVICE;
 
-	private final SaveService saveService;
+	private final SaveService SAVE_SERVICE;
 
-	private final File userConfigurationFile;
+	private final File USER_CONFIGURATION_FILE;
 
-	public BackendFileController(SandboxConfigRepository sandboxConfigRepository, ModlistRepository modlistRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File userConfigurationFile) {
-		this.sandboxService = new SandboxService(sandboxConfigRepository);
-		this.modlistService = new ModlistService(modlistRepository, properties);
-		this.userDataService = new UserDataService(userDataRepository);
-		this.userConfigurationFile = userConfigurationFile;
-		this.saveService = new SaveService(saveRepository, sandboxService);
+	public BackendFileController(SandboxConfigRepository sandboxConfigRepository, ModlistRepository modlistRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
+		this.SANDBOX_SERVICE = new SandboxService(sandboxConfigRepository);
+		this.MODLIST_SERVICE = new ModlistService(modlistRepository, properties);
+		this.USER_DATA_SERVICE = new UserDataService(userDataRepository);
+		this.USER_CONFIGURATION_FILE = USER_CONFIGURATION_FILE;
+		this.SAVE_SERVICE = new SaveService(saveRepository, SANDBOX_SERVICE);
 	}
 
 	public Result<UserConfiguration> getUserData() throws JAXBException {
-		return userDataService.getUserData(userConfigurationFile);
+		return USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		Result<String> modifiedSandboxConfigResult = sandboxService.injectModsIntoSandboxConfig(new File(sandboxConfigPath), modList);
+		Result<String> modifiedSandboxConfigResult = SANDBOX_SERVICE.injectModsIntoSandboxConfig(new File(sandboxConfigPath), modList);
 		if (modifiedSandboxConfigResult.isSuccess()) {
-			return sandboxService.saveSandboxToFile(sandboxConfigPath, modifiedSandboxConfigResult.getPayload());
+			return SANDBOX_SERVICE.saveSandboxToFile(sandboxConfigPath, modifiedSandboxConfigResult.getPayload());
 		} else {
 			Result<Void> failedModification = new Result<>();
 			failedModification.addMessage(modifiedSandboxConfigResult.getCurrentMessage(), ResultType.FAILED);
@@ -65,13 +65,13 @@ public class BackendFileController implements BackendController {
 	}
 
 	public Result<Void> saveUserData(UserConfiguration userConfiguration) {
-		return userDataService.saveUserData(userConfiguration, userConfigurationFile);
+		return USER_DATA_SERVICE.saveUserData(userConfiguration, USER_CONFIGURATION_FILE);
 	}
 
 	@Override
 	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
 		Result<SaveProfile> saveProfileResult = new Result<>();
-		Result<String> sandboxFileResult = sandboxService.getSandboxFromFile(sandboxConfigFile);
+		Result<String> sandboxFileResult = SANDBOX_SERVICE.getSandboxFromFile(sandboxConfigFile);
 		if (!sandboxFileResult.isSuccess()) {
 			saveProfileResult.addMessage(sandboxFileResult.getCurrentMessage(), sandboxFileResult.getType());
 			return saveProfileResult;
@@ -82,7 +82,7 @@ public class BackendFileController implements BackendController {
 		//Technically, the name of the save the game reads is in Sandbox.sbc, not Sandbox_config.sbc.
 		// But when you rename a save in the game it changes both files, so this is probably fine.
 		SaveProfile saveProfile = new SaveProfile(sandboxConfigFile);
-		saveProfile.setSaveName(saveService.getSessionName(sandboxConfig, sandboxConfigFile.getPath()));
+		saveProfile.setSaveName(SAVE_SERVICE.getSessionName(sandboxConfig, sandboxConfigFile.getPath()));
 
 		saveProfileResult.setPayload(saveProfile);
 		saveProfileResult.addMessage("Successfully loaded save: " + saveProfile.getSaveName(), ResultType.SUCCESS);
@@ -91,7 +91,7 @@ public class BackendFileController implements BackendController {
 
 	@Override
 	public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
-		Result<SaveProfile> copyResult = saveService.copySaveFiles(sourceSaveProfile);
+		Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile);
 		if (copyResult.isSuccess()) {
 			copyResult.addMessage("Successfully copied save " + sourceSaveProfile.getProfileName() + ".", ResultType.SUCCESS);
 		}
@@ -109,14 +109,16 @@ public class BackendFileController implements BackendController {
 		List<String> testCategories = new ArrayList<>();
 		testCategories.add("Test Category");
 		testCategories.add("Three Category test");
+		testMod.setFriendlyName("Test Mod");
 		testMod.setCategories(testCategories);
 		testModProfile.getModList().add(testMod);
 
 		Mod secondTestMod = new Mod("0987654321", ModType.MOD_IO);
+		secondTestMod.setFriendlyName("Second test mod");
 		secondTestMod.setCategories(testCategories);
 		testModProfile.getModList().add(secondTestMod);
 
-		testSaveProfile.setLastUsedModProfile(testModProfile.getId());
+		testSaveProfile.setLastUsedModProfile(testModProfile.getID());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();
@@ -124,6 +126,6 @@ public class BackendFileController implements BackendController {
 		userConfiguration.getModProfiles().add(testModProfile);
 		userConfiguration.setUserTheme(theme.getName());
 
-		return userDataService.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
+		return USER_DATA_SERVICE.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
 	}
 }
