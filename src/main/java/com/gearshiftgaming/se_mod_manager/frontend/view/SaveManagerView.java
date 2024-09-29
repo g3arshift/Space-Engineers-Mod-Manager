@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -174,7 +175,7 @@ public class SaveManagerView {
 				progressIndicator.setVisible(true);
 				saveList.setMouseTransparent(true);
 				Thread copyThread = getCopyThread();
-				copyThread.start();
+				Platform.runLater(copyThread);
 			} else {
 				Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
 			}
