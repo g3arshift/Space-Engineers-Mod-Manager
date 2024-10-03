@@ -64,6 +64,7 @@ public class UiService {
 
 	@Getter
 	private final ObservableList<Mod> CURRENT_MOD_LIST;
+	//TODO: When changing currentmodlist we need to copy it back to the mod profile before switching. But do NOT save to disk. Saving only happens on the save button press.
 
 	public UiService(Logger LOGGER, ObservableList<LogMessage> USER_LOG,
 					 ObservableList<ModProfile> MOD_PROFILES, ObservableList<SaveProfile> SAVE_PROFILES,

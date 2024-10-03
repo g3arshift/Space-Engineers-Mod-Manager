@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -274,13 +275,12 @@ public class MainWindowView {
 	private void setupModTable() {
 		//TODO: Not displaying name, checkbox for name, or version.
 		//TODO: Categories not parsed properly. String is badly formatted.
-		//TODO: Doesn't work when you change mod profile. Won't even show up unless there's active mods in the first profile loaded.
-		// Check the variable assignment. It might be referencing the old data, even when we update. ACtually, this is def what's happening as backend updates don't propagate forwards
 		//Create the context menus for the table and prepare the table
 		//modTable.itemsProperty().bind(new SimpleObjectProperty<>(FXCollections.observableList(uiService.getCurrentModProfile().getModList())));
+		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<Mod>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell());
 
-		//Format the appearance, styling, and menus of our table cells, rows, and columns
+		//Format the appearance, styling, and men`u`s of our table cells, rows, and columns
 		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
