@@ -28,6 +28,7 @@ import java.util.Objects;
 public class Mod {
 
     //These are the fields required for the sandbox_config.sbc file
+    //For mod.io mods we have to use an actual API here. https://docs.mod.io/support/search-by-id/
     private String id;
     private String friendlyName;
     private String publishedServiceName;
@@ -41,7 +42,7 @@ public class Mod {
     private List<String> categories;
     private boolean active;
     private ModType modType;
-    
+
     public Mod(String id, ModType modType) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";

@@ -2,8 +2,11 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
+import javafx.scene.layout.HBox;
 
 import java.util.Optional;
 
@@ -18,12 +21,19 @@ import java.util.Optional;
  *
  * @author Gear Shift
  */
+//TODO: Save on mod activation status toggle
 public class ModNameCell extends TableCell<Mod, Mod> {
+	private final UiService UI_SERVICE;
 
 	private final CheckBox ACTIVATE_TOGGLE = new CheckBox();
+	private final Label MOD_NAME = new Label();
 
-	public ModNameCell() {
+	private final HBox LAYOUT = new HBox(ACTIVATE_TOGGLE, MOD_NAME);
+
+	public ModNameCell(UiService uiService) {
 		super();
+		this.UI_SERVICE = uiService;
+		LAYOUT.setAlignment(Pos.CENTER_LEFT);
 	}
 
 	@Override
@@ -34,11 +44,14 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			ACTIVATE_TOGGLE.setText(item.getFriendlyName());
 			ACTIVATE_TOGGLE.setSelected(item.isActive());
+			MOD_NAME.setText(item.getFriendlyName());
 
-			ACTIVATE_TOGGLE.setOnAction(actionEvent -> item.setActive(ACTIVATE_TOGGLE.isSelected()));
-			setGraphic(ACTIVATE_TOGGLE);
+			ACTIVATE_TOGGLE.setOnAction(actionEvent -> {
+				item.setActive(ACTIVATE_TOGGLE.isSelected());
+				UI_SERVICE.saveUserData();
+			});
+			setGraphic(LAYOUT);
 		}
 	}
 }

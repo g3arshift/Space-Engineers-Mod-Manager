@@ -58,7 +58,6 @@
                                             <buttons>
                                                 <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
                                                 <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
-                                                <Button fx:id="saveModlist" mnemonicParsing="false" text="Save Modlist" />
                                                 <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist" />
                                                 <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
                                                 <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
@@ -81,7 +80,7 @@
                                     <content>
                                         <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
                                             <content>
-                                                <TextArea />
+                                                <TextArea editable="false" />
                                             </content>
                                         </ScrollPane>
                                     </content>

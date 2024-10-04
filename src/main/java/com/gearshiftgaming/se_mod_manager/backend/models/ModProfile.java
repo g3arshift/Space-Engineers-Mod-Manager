@@ -51,6 +51,7 @@ public class ModProfile {
     }
 
    @XmlElementWrapper(name = "mods")
+   @XmlElement(name = "mod")
     public void setModList(List<Mod> modList) {
         this.modList = modList;
     }

@@ -63,14 +63,11 @@ public class UiService {
 	private ModProfile currentModProfile;
 
 	@Getter
-	private final ObservableList<Mod> CURRENT_MOD_LIST;
-	//TODO: When changing currentmodlist we need to copy it back to the mod profile before switching. But do NOT save to disk. Saving only happens on the save button press.
+	private ObservableList<Mod> currentModList;
 
 	public UiService(Logger LOGGER, ObservableList<LogMessage> USER_LOG,
 					 ObservableList<ModProfile> MOD_PROFILES, ObservableList<SaveProfile> SAVE_PROFILES,
 					 BackendController BACKEND_CONTROLLER, UserConfiguration USER_CONFIGURATION) {
-
-		CURRENT_MOD_LIST = FXCollections.observableArrayList();
 
 		this.LOGGER = LOGGER;
 		this.USER_LOG = USER_LOG;
@@ -95,7 +92,7 @@ public class UiService {
 			currentModProfile = MOD_PROFILES.getFirst();
 		}
 
-		CURRENT_MOD_LIST.addAll(currentModProfile.getModList());
+		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
 	}
 
 	public void log(String message, MessageType messageType) {
@@ -122,10 +119,8 @@ public class UiService {
 		}
 	}
 
-	public boolean saveUserData() {
-		Result<Void> result = BACKEND_CONTROLLER.saveUserData(USER_CONFIGURATION);
-		log(result);
-		return result.isSuccess();
+	public Result<Void> saveUserData() {
+		return BACKEND_CONTROLLER.saveUserData(USER_CONFIGURATION);
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
@@ -161,11 +156,6 @@ public class UiService {
 
 	public void setCurrentModProfile(ModProfile modProfile) {
 		currentModProfile = modProfile;
-		updateCurrentModList(modProfile.getModList());
-	}
-
-	private void updateCurrentModList(List<Mod> modList) {
-		CURRENT_MOD_LIST.clear();
-		CURRENT_MOD_LIST.addAll(modList);
+		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
 	}
 }

@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowCell;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
@@ -16,6 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -64,9 +66,6 @@ public class MainWindowView {
 	private Button exportModlist;
 
 	@FXML
-	private Button saveModlist;
-
-	@FXML
 	private Button resetModlist;
 
 	@FXML
@@ -80,9 +79,8 @@ public class MainWindowView {
 
 	//TODO: Low priority: Fix the alignment of the table headers to be centered, not center left.
 	@FXML
-	private TableView<Mod> modTable; //TODO: Create a new object for the mod items that contains a check box and all the context menu stuff
+	private TableView<Mod> modTable;
 
-	//TODO: The modcell needs properties for each of these https://stackoverflow.com/questions/53751455/how-to-create-a-javafx-tableview-without-warnings
 	@FXML
 	private TableColumn<Mod, Mod> modName;
 
@@ -143,6 +141,8 @@ public class MainWindowView {
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
 	private final StatusBarView STATUS_BAR_VIEW;
 
+	final DataFormat SERIALIZED_MIME_TYPE;
+
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage,
 						 MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
@@ -156,6 +156,8 @@ public class MainWindowView {
 
 		MOD_PROFILES = uiService.getMOD_PROFILES();
 		SAVE_PROFILES = uiService.getSAVE_PROFILES();
+
+		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 	}
 
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -220,11 +222,6 @@ public class MainWindowView {
 	}
 
 	@FXML
-	private void saveModlist() {
-		//TODO: Implement
-	}
-
-	@FXML
 	private void resetModlist() {
 		//TODO: Implement by setting the current modprofile modlist to whatever it is in our user configuration.
 		// Make a popup asking if they're sure they want to reset the modlist.
@@ -273,12 +270,12 @@ public class MainWindowView {
 	}
 
 	private void setupModTable() {
-		//TODO: Not displaying name, checkbox for name, or version.
-		//TODO: Categories not parsed properly. String is badly formatted.
-		//Create the context menus for the table and prepare the table
-		//modTable.itemsProperty().bind(new SimpleObjectProperty<>(FXCollections.observableList(uiService.getCurrentModProfile().getModList())));
-		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<Mod>(cellData.getValue()));
-		modName.setCellFactory(param -> new ModNameCell());
+
+		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		modTable.setRowFactory(new ModTableRowCell(UI_SERVICE, SERIALIZED_MIME_TYPE));
+
+		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
+		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
 
 		//Format the appearance, styling, and men`u`s of our table cells, rows, and columns
 		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
@@ -309,9 +306,10 @@ public class MainWindowView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
-		//TODO: Make the rows alternate colors. Log cell has an implementation for this.
+		//TODO: Set the row factory
+		//TODO: Make the priority value based on current position so long as the ordering of columns/searching isn't set to something specific.
 
-		modTable.setItems(UI_SERVICE.getCURRENT_MOD_LIST());
+		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.

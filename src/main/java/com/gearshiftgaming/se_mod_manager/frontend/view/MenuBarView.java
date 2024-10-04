@@ -4,6 +4,7 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
 import javafx.application.Application;
@@ -243,8 +244,8 @@ public class MenuBarView {
 			}
 		}
 
-		boolean savedUserTheme = UI_SERVICE.saveUserData();
-		if (savedUserTheme) {
+		Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
+		if (savedUserTheme.isSuccess()) {
 			UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
 		} else {
 			UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
@@ -265,6 +266,7 @@ public class MenuBarView {
 	private void selectModProfile() {
 		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 		UI_SERVICE.setCurrentModProfile(modProfile);
+		mainWindowView.getModTable().setItems(UI_SERVICE.getCurrentModList());
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
 	}
 
