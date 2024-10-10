@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,8 +66,8 @@ public class UiService {
 	@Getter
 	private ObservableList<Mod> currentModList;
 
-	public UiService(Logger LOGGER, ObservableList<LogMessage> USER_LOG,
-					 ObservableList<ModProfile> MOD_PROFILES, ObservableList<SaveProfile> SAVE_PROFILES,
+	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
+					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
 					 BackendController BACKEND_CONTROLLER, UserConfiguration USER_CONFIGURATION) {
 
 		this.LOGGER = LOGGER;

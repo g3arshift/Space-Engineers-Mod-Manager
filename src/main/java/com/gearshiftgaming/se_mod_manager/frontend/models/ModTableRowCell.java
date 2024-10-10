@@ -5,8 +5,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableRow;
@@ -40,73 +38,81 @@ import java.util.List;
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
 //TODO: Make rows reorderable
 //TODO: Save on row deletion and reorder
+//TODO: Only update priority when drag-dropping
 public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> {
 
 	private final UiService UI_SERVICE;
 
 	private final DataFormat SERIALIZED_MIME_TYPE;
 
+	final ArrayList<Mod> SELECTIONS;
+
 	public ModTableRowCell(UiService uiService, DataFormat serializedMimeType) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
+		SELECTIONS = new ArrayList<>();
 	}
 
 	@Override
 	public TableRow<Mod> call(TableView<Mod> modTableView) {
-		final ArrayList<Mod> selections = new ArrayList<>();
 		final TableRow<Mod> row = new TableRow<>();
-		//Setup our context menu
-		final MenuItem webBrowseMenuItem = new MenuItem("Open mod page");
-		final ContextMenu tableContextMenu = new ContextMenu();;
 
-		webBrowseMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent actionEvent) {
-				final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
-				for (Mod m : selectedMods) {
-					try {
-						if (m.getModType() == ModType.STEAM) {
-							Desktop.getDesktop().browse(new URI("https://steamcommunity.com/workshop/filedetails/?id=" + m.getId()));
-						} else {
-							Desktop.getDesktop().browse(new URI("https://mod.io/search/mods/" + m.getId()));
-						}
-					} catch (URISyntaxException | IOException e) {
-						throw new RuntimeException(e);
+		//Setup our context menu
+		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");
+		final ContextMenu TABLE_CONTEXT_MENU = new ContextMenu();
+
+		WEB_BROWSE_MENU_ITEM.setOnAction(actionEvent -> {
+			final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
+			for (Mod m : selectedMods) {
+				try {
+					if (m.getModType() == ModType.STEAM) {
+						Desktop.getDesktop().browse(new URI("https://steamcommunity.com/workshop/filedetails/?id=" + m.getId()));
+					} else {
+						Desktop.getDesktop().browse(new URI("https://mod.io/search/mods/" + m.getId()));
 					}
+				} catch (URISyntaxException | IOException e) {
+					throw new RuntimeException(e);
 				}
 			}
 		});
 
-		final MenuItem deleteMenuItem = new MenuItem("Delete selected mod");
-		deleteMenuItem.disableProperty().bind(Bindings.isEmpty(modTableView.getSelectionModel().getSelectedItems()));
-		deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent actionEvent) {
-				final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
-				modTableView.getItems().removeAll(selectedMods);
-				UI_SERVICE.getCurrentModProfile().getModList().removeAll(selectedMods);
-				UI_SERVICE.saveUserData();
+		final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mod");
+		DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTableView.getSelectionModel().getSelectedItems()));
+		DELETE_MENU_ITEM.setOnAction(actionEvent -> {
+			final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
+
+			for (Mod m : selectedMods) {
+				modTableView.getItems().remove(m);
+				UI_SERVICE.getCurrentModProfile().getModList().remove(m);
+			}
+			UI_SERVICE.saveUserData();
+		});
+
+		//TODO: REmove
+		final MenuItem DEV_MENU_ITEM = new MenuItem("Print something");
+		DEV_MENU_ITEM.setOnAction(actionEvent -> {
+			for (Mod m : SELECTIONS) {
+				System.out.println(m.getFriendlyName());
 			}
 		});
 
-		tableContextMenu.getItems().addAll(webBrowseMenuItem, deleteMenuItem);
+		TABLE_CONTEXT_MENU.getItems().addAll(WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM, DEV_MENU_ITEM);
 
 		row.contextMenuProperty().bind(
 				Bindings.when(Bindings.isNotNull(row.itemProperty()))
-						.then(tableContextMenu)
+						.then(TABLE_CONTEXT_MENU)
 						.otherwise((ContextMenu) null));
 
-
-		//TODO: The events are sorta working, the preview functions, but none of the actual drag and drop works.
+		//TODO: The events are sorta working, the preview functions, but none of the actual drag and drop works. Something is probably null somewhere
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
 			if (!row.isEmpty()) {
 				Integer index = row.getIndex();
-				selections.clear();
+				SELECTIONS.clear();
 
 				ObservableList<Mod> items = modTableView.getSelectionModel().getSelectedItems();
 
-				selections.addAll(items);
+				SELECTIONS.addAll(items);
 
 				Dragboard dragboard = row.startDragAndDrop(TransferMode.MOVE);
 				dragboard.setDragView(row.snapshot(null, null));
@@ -143,7 +149,7 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 
 				int delta = 0;
 				if (mod != null) {
-					while (selections.contains(mod)) {
+					while (SELECTIONS.contains(mod)) {
 						delta = 1;
 						--dropIndex;
 						if (dropIndex < 0) {
@@ -155,7 +161,7 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 					}
 				}
 
-				for (Mod m : selections) {
+				for (Mod m : SELECTIONS) {
 					modTableView.getItems().remove(m);
 				}
 
@@ -167,13 +173,23 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 
 				modTableView.getSelectionModel().clearSelection();
 
-				for (Mod m : selections) {
+				for (Mod m : SELECTIONS) {
 					modTableView.getItems().add(dropIndex, m);
 					modTableView.getSelectionModel().select(dropIndex);
 					dropIndex++;
 				}
 				dragEvent.setDropCompleted(true);
-				selections.clear();
+
+				SELECTIONS.clear();
+
+				/*
+					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
+					but for whatever reason the changes aren't propagating without this.
+				 */
+				//TODO: Look into why the changes don't propagate without setting it here
+				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+				UI_SERVICE.saveUserData();
+
 				dragEvent.consume();
 			}
 		});
