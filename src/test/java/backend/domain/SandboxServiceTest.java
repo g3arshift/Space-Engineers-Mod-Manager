@@ -3,7 +3,6 @@ package backend.domain;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

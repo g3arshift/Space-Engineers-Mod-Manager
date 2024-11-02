@@ -39,7 +39,7 @@ import java.util.List;
 //TODO: Make rows reorderable
 //TODO: Save on row deletion and reorder
 //TODO: Only update priority when drag-dropping
-public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> {
+public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod>> {
 
 	private final UiService UI_SERVICE;
 
@@ -47,15 +47,19 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 
 	final ArrayList<Mod> SELECTIONS;
 
-	public ModTableRowCell(UiService uiService, DataFormat serializedMimeType) {
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
 		SELECTIONS = new ArrayList<>();
 	}
 
+
+	//TODO: Add listener for delete key to delete mods
+	//TODO: Add popup for "are you sure you want to delete this/these mods?" Use Popup class.
+
 	@Override
-	public TableRow<Mod> call(TableView<Mod> modTableView) {
-		final TableRow<Mod> row = new TableRow<>();
+	public ModTableRow call(TableView<Mod> modTableView) {
+		final ModTableRow row = new ModTableRow();
 
 		//Setup our context menu
 		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");
@@ -81,6 +85,7 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 		DELETE_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
 
+			//TODO: Switch to removeall
 			for (Mod m : selectedMods) {
 				modTableView.getItems().remove(m);
 				UI_SERVICE.getCurrentModProfile().getModList().remove(m);
@@ -88,22 +93,17 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 			UI_SERVICE.saveUserData();
 		});
 
-		//TODO: REmove
-		final MenuItem DEV_MENU_ITEM = new MenuItem("Print something");
-		DEV_MENU_ITEM.setOnAction(actionEvent -> {
-			for (Mod m : SELECTIONS) {
-				System.out.println(m.getFriendlyName());
-			}
-		});
-
-		TABLE_CONTEXT_MENU.getItems().addAll(WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM, DEV_MENU_ITEM);
+		TABLE_CONTEXT_MENU.getItems().addAll(WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM);
 
 		row.contextMenuProperty().bind(
 				Bindings.when(Bindings.isNotNull(row.itemProperty()))
 						.then(TABLE_CONTEXT_MENU)
 						.otherwise((ContextMenu) null));
 
-		//TODO: The events are sorta working, the preview functions, but none of the actual drag and drop works. Something is probably null somewhere
+		//TODO: https://stackoverflow.com/questions/36087741/javafx-getting-cell-value-on-hover
+		// Make it so that when hovering over a cell and drag dropping, it creates at the bottom of it an arrow or something to indicate where the cells will be dropped when dropped.
+		// Do this maybe by checking if our dragboard for the event has anything?
+		// https://docs.oracle.com/javafx/2/drag_drop/jfxpub-drag_drop.htm This may be a better solution, as it uses DRAG_OVER event handler.
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
 			if (!row.isEmpty()) {
@@ -132,6 +132,10 @@ public class ModTableRowCell implements Callback<TableView<Mod>, TableRow<Mod>> 
 				}
 			}
 		});
+
+		//TODO: Maybe for the arrow thing to show where you're dragging we should use onDragEntered and onDragExited?
+		//TODO: Do it by adding a stackpane to the cell, and stacking an SVG arrow at the bottom of the image when we enter a cell
+		//TODO: Break the arrow up into a line and the arrow so we can programmatically have the line scale. Use JAVAFX line for the line, but SVG for the arrow
 
 		row.setOnDragDropped(dragEvent -> {
 			Dragboard dragboard = dragEvent.getDragboard();

@@ -6,7 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
@@ -47,10 +47,13 @@ import java.util.List;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  * <p>
+ *
  * @author Gear Shift
  */
 @Getter
 public class MainWindowView {
+
+	//TODO: Remove all menu options under file, except for "Close"
 
 	//FXML Items
 	@FXML
@@ -145,7 +148,7 @@ public class MainWindowView {
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage,
-						 MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
+						  MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
@@ -272,7 +275,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowCell(UI_SERVICE, SERIALIZED_MIME_TYPE));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -281,23 +284,26 @@ public class MainWindowView {
 		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
+
+		//TODO: Make it so this only updates when the actual list order changes, not just the tableview. Might also need to make it so this is backed by the modprofile current modlist, but that might need consideration in regards to when that is updated and the currentmodlist wrapper
+		//TODO: Might want to just store a value for priority instead of this, and back modlist with a map instead. Probably easier, especially for load order changing.
 		loadPriority.setCellValueFactory(cellData -> {
 			Mod mod = cellData.getValue();
 			int index = UI_SERVICE.getCurrentModProfile().getModList().indexOf(mod);
 			//This SHOULD always be able to find the cell data because we're calling this FROM a cell. But, just in case, here's a default case.
-			if(index != -1) {
+			if (index != -1) {
 				return new SimpleStringProperty(Integer.toString(index));
 			} else {
 				return new SimpleStringProperty("Error");
 			}
 		});
-		//modSource.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getSource().toString()));
+
 		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
 		modCategory.setCellValueFactory(cellData -> {
 			StringBuilder sb = new StringBuilder();
 			List<String> categories = cellData.getValue().getCategories();
-			for(int i = 0; i < cellData.getValue().getCategories().size(); i++) {
-				if(i + 1 < cellData.getValue().getCategories().size()) {
+			for (int i = 0; i < cellData.getValue().getCategories().size(); i++) {
+				if (i + 1 < cellData.getValue().getCategories().size()) {
 					sb.append(categories.get(i)).append(", ");
 				} else {
 					sb.append(categories.get(i));

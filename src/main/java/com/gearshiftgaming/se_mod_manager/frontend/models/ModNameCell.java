@@ -39,7 +39,6 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 	@Override
 	protected void updateItem(Mod item, boolean empty) {
 		super.updateItem(item, empty);
-
 		if (empty || item == null) {
 			setGraphic(null);
 			setStyle(null);
