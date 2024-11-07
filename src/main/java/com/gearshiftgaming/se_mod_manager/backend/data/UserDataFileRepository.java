@@ -11,8 +11,7 @@ import java.io.*;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- * @author Gear Shift
+
  */
 //TODO: Implement file locks
 //TODO: Add a lock so that only this application can work on the UserData files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.

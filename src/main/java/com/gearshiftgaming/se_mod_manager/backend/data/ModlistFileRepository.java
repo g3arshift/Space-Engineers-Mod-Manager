@@ -18,8 +18,7 @@ import java.util.stream.Collectors;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- * @author Gear Shift
+
  */
 public class ModlistFileRepository implements ModlistRepository {
     private final Pattern STEAM_WORKSHOP_ID_REGEX_PATTERN;

@@ -21,8 +21,7 @@ import java.util.regex.Pattern;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- * @author Gear Shift
+
  */
 public class SandboxService {
     private final SandboxConfigRepository SANDBOX_CONFIG_FILE_REPOSITORY;

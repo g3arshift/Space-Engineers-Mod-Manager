@@ -14,8 +14,7 @@ import java.util.ArrayList;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- * @author Gear Shift
+
  */
 
 @Getter

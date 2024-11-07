@@ -28,9 +28,7 @@ import java.util.List;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- *
- * @author Gear Shift
+
  */
 
 @Getter
@@ -245,6 +243,8 @@ public class MenuBarView {
 		}
 
 		Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
+		//This fixes the selected row being the wrong color until we change selection
+		mainWindowView.getModTable().refresh();
 		if (savedUserTheme.isSuccess()) {
 			UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
 		} else {

@@ -11,8 +11,7 @@ import javafx.scene.control.ListCell;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- * @author Gear Shift
+
  */
 public class ModProfileCell extends ListCell<ModProfile> {
     private final Label PROFILE_NAME = new Label();

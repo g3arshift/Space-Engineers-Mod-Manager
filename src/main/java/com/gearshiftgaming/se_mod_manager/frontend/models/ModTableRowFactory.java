@@ -30,9 +30,7 @@ import java.util.List;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
- * <p>
- *
- * @author Gear Shift
+
  */
 
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
@@ -59,7 +57,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	@Override
 	public ModTableRow call(TableView<Mod> modTableView) {
-		final ModTableRow row = new ModTableRow(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme());
+		final ModTableRow row = new ModTableRow(UI_SERVICE);
 
 		//Setup our context menu
 		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");
