@@ -8,6 +8,7 @@ target/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/fileTemplates/
 *.iws
 *.iml
 *.ipr
@@ -62,3 +63,4 @@ build/
 /Storage/SEMM_DataOLD
 /Storage/fake.sbc
 /Storage/SEMM_TEST_Data.xml
+/.idea/

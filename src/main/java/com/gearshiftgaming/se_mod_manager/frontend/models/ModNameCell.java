@@ -26,11 +26,12 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 	private final CheckBox ACTIVATE_TOGGLE = new CheckBox();
 	private final Label MOD_NAME = new Label();
 
-	private final HBox LAYOUT = new HBox(ACTIVATE_TOGGLE, MOD_NAME);
+	private final HBox LAYOUT;
 
 	public ModNameCell(UiService uiService) {
 		super();
 		this.UI_SERVICE = uiService;
+		 LAYOUT = new HBox(ACTIVATE_TOGGLE, MOD_NAME);
 		LAYOUT.setAlignment(Pos.CENTER_LEFT);
 	}
 

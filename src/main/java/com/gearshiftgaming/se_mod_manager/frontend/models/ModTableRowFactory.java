@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableRow;
@@ -13,6 +14,10 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 
 import java.awt.*;
@@ -30,7 +35,6 @@ import java.util.List;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
@@ -43,7 +47,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private final DataFormat SERIALIZED_MIME_TYPE;
 
-	final ArrayList<Mod> SELECTIONS;
+	private final ArrayList<Mod> SELECTIONS;
 
 	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType) {
 		this.UI_SERVICE = uiService;
@@ -131,9 +135,21 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
-		//TODO: Maybe for the arrow thing to show where you're dragging we should use onDragEntered and onDragExited?
-		//TODO: Do it by adding a stackpane to the cell, and stacking an SVG arrow at the bottom of the image when we enter a cell
-		//TODO: Break the arrow up into a line and the arrow so we can programmatically have the line scale. Use JAVAFX line for the line, but SVG for the arrow
+		row.setOnDragEntered(dragEvent -> {
+			if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
+				if (!row.isEmpty() || (row.getIndex() <= modTableView.getItems().size() && modTableView.getItems().get(row.getIndex() - 1) != null)) {
+					Color indicatorColor = Color.web(getSelectedCellBorderColor());
+					Border dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
+							BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
+							CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
+					row.setBorder(dropIndicator);
+				}
+			}
+		});
+
+		row.setOnDragExited(dragEvent -> {
+			row.setBorder(null);
+		});
 
 		row.setOnDragDropped(dragEvent -> {
 			Dragboard dragboard = dragEvent.getDragboard();
@@ -188,7 +204,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
 					but for whatever reason the changes aren't propagating without this.
 				 */
-				//TODO: Look into why the changes don't propagate without setting it here
+				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue.
 				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 				UI_SERVICE.saveUserData();
 
@@ -197,5 +213,19 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		});
 
 		return row;
+	}
+
+	//This is suboptimal, but as in the case of the ModTableRow, there's no easy way to get the values actually defined in the CSS sheet
+	private String getSelectedCellBorderColor() {
+		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+			case "PrimerLight", "NordLight", "CupertinoLight":
+				yield "#24292f";
+			case "PrimerDark", "CupertinoDark":
+				yield "#f0f6fc";
+			case "NordDark":
+				yield "#ECEFF4";
+			default:
+				yield "#f8f8f2";
+		};
 	}
 }
