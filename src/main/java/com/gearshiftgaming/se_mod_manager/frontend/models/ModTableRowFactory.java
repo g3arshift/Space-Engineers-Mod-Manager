@@ -16,8 +16,6 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.Text;
 import javafx.util.Callback;
 
 import java.awt.*;
@@ -102,10 +100,6 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 						.then(TABLE_CONTEXT_MENU)
 						.otherwise((ContextMenu) null));
 
-		//TODO: https://stackoverflow.com/questions/36087741/javafx-getting-cell-value-on-hover
-		// Make it so that when hovering over a cell and drag dropping, it creates at the bottom of it an arrow or something to indicate where the cells will be dropped when dropped.
-		// Do this maybe by checking if our dragboard for the event has anything?
-		// https://docs.oracle.com/javafx/2/drag_drop/jfxpub-drag_drop.htm This may be a better solution, as it uses DRAG_OVER event handler.
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
 			if (!row.isEmpty()) {
@@ -147,9 +141,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
-		row.setOnDragExited(dragEvent -> {
-			row.setBorder(null);
-		});
+		row.setOnDragExited(dragEvent -> row.setBorder(null));
 
 		row.setOnDragDropped(dragEvent -> {
 			Dragboard dragboard = dragEvent.getDragboard();
@@ -215,7 +207,6 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		return row;
 	}
 
-	//This is suboptimal, but as in the case of the ModTableRow, there's no easy way to get the values actually defined in the CSS sheet
 	private String getSelectedCellBorderColor() {
 		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
 			case "PrimerLight", "NordLight", "CupertinoLight":
