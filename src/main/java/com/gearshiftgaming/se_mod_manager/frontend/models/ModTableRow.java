@@ -2,9 +2,15 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import atlantafx.base.theme.PrimerLight;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import javafx.css.CssMetaData;
+import javafx.css.SimpleStyleableObjectProperty;
+import javafx.css.Styleable;
+import javafx.css.StyleableObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Paint;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -19,8 +25,11 @@ import javafx.scene.control.TableView;
  */
 public class ModTableRow extends TableRow<Mod> {
 
-	public ModTableRow() {
+	private final String themeName;
+
+	public ModTableRow(String themeName) {
 		super();
+		this.themeName = themeName;
 	}
 
 	@Override
@@ -30,8 +39,30 @@ public class ModTableRow extends TableRow<Mod> {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			//TODO: We need to test setting style without totally wiping it. Lookup current name, do lookup(".table-view") or maybe table-cell, needs investigation.
-			// Fundamentally we need to get the existing style and additively alter it.
+			if(this.isSelected()) {
+				setStyle("-color-cell-fg-selected: -color-fg-default;" +
+						"-color-cell-fg-selected-focused: -color-fg-default;" +
+						getSelectedCellColor());
+			} else {
+				setStyle("-fx-background-color: -color-cell-border, -color-cell-bg;" +
+						"-fx-background-insets: 0, 0 0 1 0;" +
+						"-fx-padding: 0;" +
+						"-fx-cell-size: 2.8em;");
+			}
 		}
+	}
+
+	//This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation, but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet.
+	private String getSelectedCellColor() {
+		return switch (themeName) {
+			case "Primer Light", "Nord Light", "Cupertino Light": yield "-color-cell-bg-selected: -color-base-1;" +
+					"-color-cell-bg-selected-focused: -color-base-1;";
+			case "Primer Dark", "Cupertino Dark": yield "-color-cell-bg-selected: -color-base-6;" +
+					"-color-cell-bg-selected-focused: -color-base-6;";
+			case "Nord Dark": yield "-color-cell-bg-selected: -color-base-7;" +
+					"-color-cell-bg-selected-focused: -color-base-7;";
+			default: yield "-color-cell-bg-selected: -color-accent-subtle;" +
+					"-color-cell-bg-selected-focused: -color-accent-subtle;";
+		};
 	}
 }

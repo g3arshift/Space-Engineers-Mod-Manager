@@ -59,7 +59,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	@Override
 	public ModTableRow call(TableView<Mod> modTableView) {
-		final ModTableRow row = new ModTableRow();
+		final ModTableRow row = new ModTableRow(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme());
 
 		//Setup our context menu
 		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");

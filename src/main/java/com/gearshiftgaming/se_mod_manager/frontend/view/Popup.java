@@ -336,8 +336,7 @@ public class Popup {
         VBox textLayout = new VBox(label, hyperlink);
         textLayout.setAlignment(Pos.CENTER);
 
-        HBox dialogBox = new HBox(messageIcon, textLayout);
-        return dialogBox;
+		return new HBox(messageIcon, textLayout);
     }
 
     private static void getIconByMessageType(MessageType messageType, FontIcon messageIcon, Stage stage) {
