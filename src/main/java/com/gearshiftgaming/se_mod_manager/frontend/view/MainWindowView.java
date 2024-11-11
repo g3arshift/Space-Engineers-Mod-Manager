@@ -269,6 +269,7 @@ public class MainWindowView {
 		Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
 	}
 
+	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -276,24 +277,14 @@ public class MainWindowView {
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
+		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
-		//Format the appearance, styling, and men`u`s of our table cells, rows, and columns
+		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
 		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
 
-		//TODO: Make it so this only updates when the actual list order changes, not just the tableview. Might also need to make it so this is backed by the modprofile current modlist, but that might need consideration in regards to when that is updated and the currentmodlist wrapper
-		//TODO: Might want to just store a value for priority instead of this, and back modlist with a map instead. Probably easier, especially for load order changing.
-		loadPriority.setCellValueFactory(cellData -> {
-			Mod mod = cellData.getValue();
-			int index = UI_SERVICE.getCurrentModProfile().getModList().indexOf(mod);
-			//This SHOULD always be able to find the cell data because we're calling this FROM a cell. But, just in case, here's a default case.
-			if (index != -1) {
-				return new SimpleStringProperty(Integer.toString(index));
-			} else {
-				return new SimpleStringProperty("Error");
-			}
-		});
+		loadPriority.setCellValueFactory(cellData -> new SimpleStringProperty(Integer.toString(cellData.getValue().getLoadPriority())));
 
 		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
 		modCategory.setCellValueFactory(cellData -> {
@@ -309,8 +300,6 @@ public class MainWindowView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
-		//TODO: Set the row factory
-		//TODO: Make the priority value based on current position so long as the ordering of columns/searching isn't set to something specific.
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -376,4 +365,17 @@ public class MainWindowView {
 		}
 		mainViewSplit.setDividerPosition(0, 0.7);
 	}
+
+	//TODO:
+
+	//TODO: Add code for onSort. Check when onSort is called if a current sort is active, and if not, sort based on priority. This handles the "none" sort case you get after ascend then descend sorting.
+	/* This is a helpful example on how to do it
+	if (!modTableView.getSortOrder().isEmpty()) {
+				TableColumn<Mod, ?> sortedColumn = modTableView.getSortOrder().getFirst();
+				TableColumn.SortType sortedColumnSortType = modTableView.getSortOrder().getFirst().getSortType();
+				sortedColumn.setSortType(null);
+				modTableView.refresh();
+				sortedColumn.setSortType(sortedColumnSortType);
+			}
+	 */
 }

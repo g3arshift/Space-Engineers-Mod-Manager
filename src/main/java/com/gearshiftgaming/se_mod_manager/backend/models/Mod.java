@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlTransient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -36,6 +37,7 @@ public class Mod {
     //These are the fields for the UI
     private String modVersion;
     private Date lastUpdated;
+
     private int loadPriority;
     //private ModImportSourceType source;
 
@@ -74,5 +76,10 @@ public class Mod {
     @XmlElement(name = "category")
     public void setCategories(List<String> categories) {
         this.categories = categories;
+    }
+
+    @XmlTransient
+    public void setLoadPriority(int loadPriority) {
+        this.loadPriority = loadPriority;
     }
 }

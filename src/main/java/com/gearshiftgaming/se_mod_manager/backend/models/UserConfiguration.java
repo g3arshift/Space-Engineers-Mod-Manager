@@ -49,6 +49,13 @@ public class UserConfiguration {
         modProfiles.add(new ModProfile("Default"));
     }
 
+    public UserConfiguration(UserConfiguration userConfiguration) {
+        this.userTheme = userConfiguration.getUserTheme();
+        this.lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
+        this.saveProfiles = userConfiguration.getSaveProfiles();
+        this.modProfiles = userConfiguration.getModProfiles();
+    }
+
     @XmlElement(name = "userTheme")
     public void setUserTheme(String userTheme) {
         this.userTheme = userTheme;

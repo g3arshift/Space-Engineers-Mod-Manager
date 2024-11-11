@@ -6,10 +6,8 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.scene.control.ContextMenu;
+import javafx.scene.control.*;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
@@ -22,7 +20,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 
@@ -36,9 +34,6 @@ import java.util.List;
  */
 
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
-//TODO: Make rows reorderable
-//TODO: Save on row deletion and reorder
-//TODO: Only update priority when drag-dropping
 public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod>> {
 
 	private final UiService UI_SERVICE;
@@ -85,10 +80,24 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		DELETE_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
 
-			//TODO: Switch to removeall
-			for (Mod m : selectedMods) {
-				modTableView.getItems().remove(m);
-				UI_SERVICE.getCurrentModProfile().getModList().remove(m);
+			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
+			modTableView.getItems().removeAll(selectedMods);
+			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
+			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+
+			//Update the priority of our columns
+
+			modTableView.getItems().sort(Comparator.comparing(Mod::getLoadPriority));
+			for (int i = 0; i < modTableView.getItems().size(); i++) {
+				modTableView.getItems().get(i).setLoadPriority(i + 1);
+			}
+
+			if (!modTableView.getSortOrder().isEmpty()) {
+				TableColumn<Mod, ?> sortedColumn = modTableView.getSortOrder().getFirst();
+				TableColumn.SortType sortedColumnSortType = modTableView.getSortOrder().getFirst().getSortType();
+				sortedColumn.setSortType(null);
+				modTableView.refresh();
+				sortedColumn.setSortType(sortedColumnSortType);
 			}
 			UI_SERVICE.saveUserData();
 		});
@@ -102,20 +111,24 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
-			if (!row.isEmpty()) {
-				Integer index = row.getIndex();
-				SELECTIONS.clear();
+			//Don't allow dragging if a sortOrder is applied, or if the sort order that's applied isn't an ascending sort on loadPriority
+			if (modTableView.getSortOrder().isEmpty() ||
+					(modTableView.getSortOrder().getFirst().getId().equals("loadPriority") && modTableView.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING))) {
+				if (!row.isEmpty()) {
+					Integer index = row.getIndex();
+					SELECTIONS.clear();
 
-				ObservableList<Mod> items = modTableView.getSelectionModel().getSelectedItems();
+					ObservableList<Mod> items = modTableView.getSelectionModel().getSelectedItems();
 
-				SELECTIONS.addAll(items);
+					SELECTIONS.addAll(items);
 
-				Dragboard dragboard = row.startDragAndDrop(TransferMode.MOVE);
-				dragboard.setDragView(row.snapshot(null, null));
-				ClipboardContent clipboardContent = new ClipboardContent();
-				clipboardContent.put(SERIALIZED_MIME_TYPE, index);
-				dragboard.setContent(clipboardContent);
-				dragEvent.consume();
+					Dragboard dragboard = row.startDragAndDrop(TransferMode.MOVE);
+					dragboard.setDragView(row.snapshot(null, null));
+					ClipboardContent clipboardContent = new ClipboardContent();
+					clipboardContent.put(SERIALIZED_MIME_TYPE, index);
+					dragboard.setContent(clipboardContent);
+					dragEvent.consume();
+				}
 			}
 		});
 
@@ -192,11 +205,15 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 				SELECTIONS.clear();
 
+				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+				}
+
 				/*
 					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
 					but for whatever reason the changes aren't propagating without this.
 				 */
-				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue.
+				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
 				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 				UI_SERVICE.saveUserData();
 

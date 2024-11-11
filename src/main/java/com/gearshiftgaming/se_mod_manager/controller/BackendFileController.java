@@ -17,16 +17,18 @@ import jakarta.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the
  * terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class BackendFileController implements BackendController {
 
@@ -49,9 +51,20 @@ public class BackendFileController implements BackendController {
 	}
 
 	public Result<UserConfiguration> getUserData() throws JAXBException {
-		return USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
+		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
+
+		if(userConfigurationResult.isSuccess()) {
+			for(ModProfile modProfile : userConfigurationResult.getPayload().getModProfiles()) {
+				for(int i = 0; i < modProfile.getModList().size(); i ++) {
+					modProfile.getModList().get(i).setLoadPriority(i + 1);
+				}
+			}
+		}
+
+		return userConfigurationResult;
 	}
 
+	//TODO: Sort the incoming mod list based on priority without modifying the actual list
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
 		Result<String> modifiedSandboxConfigResult = SANDBOX_SERVICE.injectModsIntoSandboxConfig(new File(sandboxConfigPath), modList);
 		if (modifiedSandboxConfigResult.isSuccess()) {
@@ -63,8 +76,9 @@ public class BackendFileController implements BackendController {
 		}
 	}
 
+	//Sort our mod profile's mod list by loadPriority when we save so that load priority is preserved
 	public Result<Void> saveUserData(UserConfiguration userConfiguration) {
-		return USER_DATA_SERVICE.saveUserData(userConfiguration, USER_CONFIGURATION_FILE);
+		return USER_DATA_SERVICE.saveUserData(sortUserConfigurationModLists(userConfiguration), USER_CONFIGURATION_FILE);
 	}
 
 	@Override
@@ -97,7 +111,7 @@ public class BackendFileController implements BackendController {
 		return copyResult;
 	}
 
-	//Only here for dev
+	//Only here for development purposes
 	public Result<Void> createTestUserData(Theme theme) {
 
 		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc");
@@ -126,5 +140,16 @@ public class BackendFileController implements BackendController {
 		userConfiguration.setUserTheme(theme.getName());
 
 		return USER_DATA_SERVICE.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
+	}
+
+	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
+		UserConfiguration sortedUserConfiguration = new UserConfiguration(userConfiguration);
+		for (ModProfile m : sortedUserConfiguration.getModProfiles()) {
+			List<Mod> sortedModList = m.getModList().stream()
+					.sorted(Comparator.comparing(Mod::getLoadPriority))
+					.toList();
+			m.setModList(sortedModList);
+		}
+		return sortedUserConfiguration;
 	}
 }
