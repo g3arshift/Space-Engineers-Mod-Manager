@@ -53,7 +53,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 	//TODO: Add popup for "are you sure you want to delete this/these mods?" Use Popup class.
 
 	@Override
-	public ModTableRow call(TableView<Mod> modTableView) {
+	public ModTableRow call(TableView<Mod> modTable) {
 		final ModTableRow row = new ModTableRow(UI_SERVICE);
 
 		//Setup our context menu
@@ -61,7 +61,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		final ContextMenu TABLE_CONTEXT_MENU = new ContextMenu();
 
 		WEB_BROWSE_MENU_ITEM.setOnAction(actionEvent -> {
-			final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
+			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 			for (Mod m : selectedMods) {
 				try {
 					if (m.getModType() == ModType.STEAM) {
@@ -76,27 +76,27 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		});
 
 		final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mod");
-		DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTableView.getSelectionModel().getSelectedItems()));
+		DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTable.getSelectionModel().getSelectedItems()));
 		DELETE_MENU_ITEM.setOnAction(actionEvent -> {
-			final List<Mod> selectedMods = new ArrayList<>(modTableView.getSelectionModel().getSelectedItems());
+			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 
 			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
-			modTableView.getItems().removeAll(selectedMods);
+			modTable.getItems().removeAll(selectedMods);
 			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
 			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 
 			//Update the priority of our columns
 
-			modTableView.getItems().sort(Comparator.comparing(Mod::getLoadPriority));
-			for (int i = 0; i < modTableView.getItems().size(); i++) {
-				modTableView.getItems().get(i).setLoadPriority(i + 1);
+			modTable.getItems().sort(Comparator.comparing(Mod::getLoadPriority));
+			for (int i = 0; i < modTable.getItems().size(); i++) {
+				modTable.getItems().get(i).setLoadPriority(i + 1);
 			}
 
-			if (!modTableView.getSortOrder().isEmpty()) {
-				TableColumn<Mod, ?> sortedColumn = modTableView.getSortOrder().getFirst();
-				TableColumn.SortType sortedColumnSortType = modTableView.getSortOrder().getFirst().getSortType();
+			if (!modTable.getSortOrder().isEmpty()) {
+				TableColumn<Mod, ?> sortedColumn = modTable.getSortOrder().getFirst();
+				TableColumn.SortType sortedColumnSortType = modTable.getSortOrder().getFirst().getSortType();
 				sortedColumn.setSortType(null);
-				modTableView.refresh();
+				modTable.refresh();
 				sortedColumn.setSortType(sortedColumnSortType);
 			}
 			UI_SERVICE.saveUserData();
@@ -112,13 +112,12 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
 			//Don't allow dragging if a sortOrder is applied, or if the sort order that's applied isn't an ascending sort on loadPriority
-			if (modTableView.getSortOrder().isEmpty() ||
-					(modTableView.getSortOrder().getFirst().getId().equals("loadPriority") && modTableView.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING))) {
+			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getId().equals("loadPriority") /*&& modTableView.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING))*/) {
 				if (!row.isEmpty()) {
 					Integer index = row.getIndex();
 					SELECTIONS.clear();
 
-					ObservableList<Mod> items = modTableView.getSelectionModel().getSelectedItems();
+					ObservableList<Mod> items = modTable.getSelectionModel().getSelectedItems();
 
 					SELECTIONS.addAll(items);
 
@@ -144,7 +143,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 		row.setOnDragEntered(dragEvent -> {
 			if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
-				if (!row.isEmpty() || (row.getIndex() <= modTableView.getItems().size() && modTableView.getItems().get(row.getIndex() - 1) != null)) {
+				if (!row.isEmpty() || (row.getIndex() <= modTable.getItems().size() && modTable.getItems().get(row.getIndex() - 1) != null)) {
 					Color indicatorColor = Color.web(getSelectedCellBorderColor());
 					Border dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
 							BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
@@ -164,10 +163,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				Mod mod = null;
 
 				if (row.isEmpty()) {
-					dropIndex = modTableView.getItems().size();
+					dropIndex = modTable.getItems().size();
 				} else {
 					dropIndex = row.getIndex();
-					mod = modTableView.getItems().get(dropIndex);
+					mod = modTable.getItems().get(dropIndex);
 				}
 
 				int delta = 0;
@@ -180,33 +179,40 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 							dropIndex = 0;
 							break;
 						}
-						mod = modTableView.getItems().get(dropIndex);
+						mod = modTable.getItems().get(dropIndex);
 					}
 				}
 
 				for (Mod m : SELECTIONS) {
-					modTableView.getItems().remove(m);
+					modTable.getItems().remove(m);
 				}
 
 				if (mod != null) {
-					dropIndex = modTableView.getItems().indexOf(mod) + delta;
+					dropIndex = modTable.getItems().indexOf(mod) + delta;
 				} else if (dropIndex != 0) {
-					dropIndex = modTableView.getItems().size();
+					dropIndex = modTable.getItems().size();
 				}
 
-				modTableView.getSelectionModel().clearSelection();
+				modTable.getSelectionModel().clearSelection();
 
 				for (Mod m : SELECTIONS) {
-					modTableView.getItems().add(dropIndex, m);
-					modTableView.getSelectionModel().select(dropIndex);
+					modTable.getItems().add(dropIndex, m);
+					modTable.getSelectionModel().select(dropIndex);
 					dropIndex++;
 				}
 				dragEvent.setDropCompleted(true);
 
 				SELECTIONS.clear();
 
-				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+				if (modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+					for(int i = UI_SERVICE.getCurrentModProfile().getModList().size() - 1; i > 0; i--) {
+						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i - 1);
+					}
+				} else {
+					//TODO: This is for ascending order only. Add case for descending as well.
+					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+					}
 				}
 
 				/*

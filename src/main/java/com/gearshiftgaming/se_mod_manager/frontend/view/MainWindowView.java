@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -141,7 +142,9 @@ public class MainWindowView {
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
 	private final StatusBarView STATUS_BAR_VIEW;
 
-	final DataFormat SERIALIZED_MIME_TYPE;
+	private final DataFormat SERIALIZED_MIME_TYPE;
+
+	private final ListChangeListener<TableColumn<Mod, ?>> sortListener;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage,
@@ -158,6 +161,12 @@ public class MainWindowView {
 		SAVE_PROFILES = uiService.getSAVE_PROFILES();
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+
+		sortListener = change -> {
+			if(modTable.getSortOrder().isEmpty()) {
+				applyDefaultSort();
+			}
+		};
 	}
 
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -300,6 +309,7 @@ public class MainWindowView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
+		modTable.getSortOrder().addListener(sortListener);
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -364,6 +374,19 @@ public class MainWindowView {
 			mainViewSplitDividerVisible = true;
 		}
 		mainViewSplit.setDividerPosition(0, 0.7);
+	}
+
+	private void applyDefaultSort() {
+		if(loadPriority != null) {
+			modTable.getSortOrder().removeListener(sortListener);
+
+			loadPriority.setSortType(TableColumn.SortType.ASCENDING);
+			modTable.getSortOrder().add(loadPriority);
+			modTable.sort();
+			modTable.getSortOrder().clear();
+
+			modTable.getSortOrder().addListener(sortListener);
+		}
 	}
 
 	//TODO:
