@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+     <children>
+         <MenuBar prefWidth="1000.0">
+             <menus>
+                 <Menu mnemonicParsing="false" text="File">
+                     <items>
+                         <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save modlist as" />
+                         <MenuItem fx:id="close" mnemonicParsing="false" text="Close" />
+                         <Menu mnemonicParsing="false" text="Add mods">
+                             <items>
+                                 <MenuItem mnemonicParsing="false" text="Add mods by Steam Workshop ID" />
+                                 <MenuItem mnemonicParsing="false" text="Add mods from Steam Collection" />
+                                 <MenuItem mnemonicParsing="false" text="Add mods from Mod.io" />
+                                 <MenuItem mnemonicParsing="false" text="Add mods from modlist file" />
+                             </items>
+                         </Menu>
+                     </items>
+                 </Menu>
+                 <Menu mnemonicParsing="false" text="View">
+                     <items>
+                         <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" onAction="#toggleLog" selected="true" text="Log" />
+                         <CheckMenuItem fx:id="modDescriptionToggle" mnemonicParsing="false" onAction="#toggleModDescription" selected="true" text="Mod Description" />
+                         <Menu fx:id="themes" mnemonicParsing="false" text="Themes">
+                             <items>
+                                 <CheckMenuItem fx:id="primerLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Primer Light" />
+                                 <CheckMenuItem fx:id="primerDarkTheme" mnemonicParsing="false" onAction="#setTheme" text="Primer Dark" />
+                                 <CheckMenuItem fx:id="nordLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Nord Light" />
+                                 <CheckMenuItem fx:id="nordDarkTheme" mnemonicParsing="false" onAction="#setTheme" text="Nord Dark" />
+                                 <CheckMenuItem fx:id="cupertinoLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Cupertino Light" />
+                                 <CheckMenuItem fx:id="cupertinoDarkTheme" mnemonicParsing="false" onAction="#setTheme" text="Cupertino Dark" />
+                                 <CheckMenuItem fx:id="draculaTheme" mnemonicParsing="false" onAction="#setTheme" text="Dracula" />
+                             </items>
+                         </Menu>
+                     </items>
+                 </Menu>
+                 <Menu mnemonicParsing="false" text="Profiles">
+                     <items>
+                         <MenuItem fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Profiles" />
+                         <MenuItem fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage Save Profiles" />
+                     </items>
+                 </Menu>
+                 <Menu mnemonicParsing="false" text="Help">
+                     <items>
+                         <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
+                         <MenuItem fx:id="guide" mnemonicParsing="false" text="How to use" />
+                         <MenuItem fx:id="faq" mnemonicParsing="false" text="FAQ" />
+                     </items>
+                 </Menu>
+             </menus>
+         </MenuBar>
+         <HBox alignment="CENTER_LEFT" spacing="10.0">
+             <children>
+                 <HBox alignment="CENTER_LEFT" spacing="12.0">
+                     <children>
+                         <Label minWidth="-Infinity" text="Mod Profile" />
+                         <ComboBox fx:id="modProfileDropdown" maxWidth="250.0" minWidth="150.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
+                     </children>
+                     <opaqueInsets>
+                         <Insets />
+                     </opaqueInsets>
+                 </HBox>
+                 <HBox alignment="CENTER_LEFT" spacing="12.0">
+                     <children>
+                         <Label minWidth="-Infinity" text="Save Profile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="saveProfileDropdown" maxWidth="250.0" minWidth="150.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
+                     </children>
+                     <opaqueInsets>
+                         <Insets />
+                     </opaqueInsets>
+                 </HBox>
+                 <HBox alignment="CENTER_LEFT" spacing="12.0">
+                     <children>
+                         <Label minWidth="-Infinity" text="Active Mod Count" />
+                         <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
+                             <children>
+                                 <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
+                                 <Text fx:id="activeModCount" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
+                                     <StackPane.margin>
+                                         <Insets right="10.0" />
+                                     </StackPane.margin>
+                                     <font>
+                                         <Font size="14.0" />
+                                     </font>
+                                 </Text>
+                             </children>
+                         </StackPane>
+                     </children>
+                     <opaqueInsets>
+                         <Insets />
+                     </opaqueInsets>
+                 </HBox>
+                 <HBox alignment="CENTER_LEFT" spacing="12.0">
+                     <children>
+                         <Label minWidth="-Infinity" text="Mod Conflicts" />
+                         <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
+                             <children>
+                                 <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
+                                 <Text fx:id="modConflicts" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
+                                     <StackPane.margin>
+                                         <Insets right="10.0" />
+                                     </StackPane.margin>
+                                     <font>
+                                         <Font size="14.0" />
+                                     </font>
+                                 </Text>
+                             </children>
+                         </StackPane>
+                     </children>
+                     <opaqueInsets>
+                         <Insets />
+                     </opaqueInsets>
+                 </HBox>
+                 <StackPane alignment="TOP_CENTER">
+                     <children>
+                         <TextField fx:id="modTableSearchBox" promptText="Search Modlist" />
+                         <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" StackPane.alignment="CENTER_RIGHT">
+                             <children>
+                                 <FontIcon iconLiteral="ci-close" iconSize="16" />
+                                 <Button fx:id="clearSearchBox" mnemonicParsing="false" onAction="#clearSearchBox" opacity="0.0" />
+                             </children>
+                         </StackPane>
+                     </children>
+                 </StackPane>
+             </children>
+             <VBox.margin>
+                 <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+             </VBox.margin>
+         </HBox>
+     </children>
+ </VBox>

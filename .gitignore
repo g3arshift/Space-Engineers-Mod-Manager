@@ -8,6 +8,7 @@ target/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/fileTemplates/
 *.iws
 *.iml
 *.ipr
@@ -49,3 +50,17 @@ build/
 /.idea/vcs.xml
 /out/artifacts/Space_Engineers_Mod_Manager_jar/Space-Engineers-Mod-Manager.jar
 /.idea/jpa-buddy.xml
+/Documents/
+/.idea/artifacts/SEMM_0_9_jar.xml
+/out/
+!/icons/!/Mockups/
+/Mockups/UI Mockup.afphoto
+/Mockups/UI Mockup.psd
+/Storage/SEMM_Data.xml
+/Storage/UserConfigTest.xml
+/Storage/SEMM_Data.OLD
+/.idea/codeStyles/codeStyleConfig.xml
+/Storage/SEMM_DataOLD
+/Storage/fake.sbc
+/Storage/SEMM_TEST_Data.xml
+/.idea/

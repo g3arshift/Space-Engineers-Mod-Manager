@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <BorderPane layoutX="167.0" layoutY="124.0" style="-fx-background-color: -color-bg-subtle;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <bottom>
+            <HBox BorderPane.alignment="CENTER">
+               <children>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
+                    <buttons>
+                      <Button fx:id="selectProfile" mnemonicParsing="false" onAction="#selectProfile" text="Set Active" />
+                        <Button fx:id="closeProfileWindow" mnemonicParsing="false" onAction="#closeProfileWindow" text="Close" />
+                    </buttons>
+                  </ButtonBar>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" right="10.0" top="10.0" />
+               </padding>
+            </HBox>
+         </bottom>
+         <center>
+            <HBox spacing="10.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ListView fx:id="profileList" HBox.hgrow="ALWAYS">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                  </ListView>
+                  <VBox alignment="TOP_CENTER" spacing="10.0">
+                     <children>
+                        <Button fx:id="createNewProfile" minWidth="96.0" mnemonicParsing="false" onAction="#createNewProfile" text="Create New" />
+                        <Button fx:id="copyProfile" minWidth="96.0" mnemonicParsing="false" onAction="#copyProfile" text="Copy" />
+                        <Button fx:id="removeProfile" minWidth="96.0" mnemonicParsing="false" onAction="#removeProfile" text="Remove" />
+                        <Button fx:id="renameProfile" minWidth="96.0" mnemonicParsing="false" onAction="#renameProfile" text="Rename" />
+                     </children>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                  </VBox>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </HBox>
+         </center>
+      </BorderPane>
+   </children>
+</AnchorPane>

@@ -1,68 +1,57 @@
 package com.gearshiftgaming.se_mod_manager;
 
-import com.gearshiftgaming.se_mod_manager.controller.ModManagerController;
-import com.gearshiftgaming.se_mod_manager.data.ModFileRepository;
-import com.gearshiftgaming.se_mod_manager.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.domain.ModService;
-import com.gearshiftgaming.se_mod_manager.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.models.Mod;
-import com.gearshiftgaming.se_mod_manager.ui.ModManagerView;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
+import com.gearshiftgaming.se_mod_manager.controller.ViewController;
+import com.gearshiftgaming.se_mod_manager.frontend.view.Popup;
+import jakarta.xml.bind.JAXBException;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import javax.swing.*;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
+import java.lang.reflect.InvocationTargetException;
 
-public class SpaceEngineersModManager {
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
+ */
+public class SpaceEngineersModManager extends Application {
 
-        final Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
-        logger.info("Started application...");
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException |
-                 IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+	private final static Logger LOGGER = LogManager.getLogger(SpaceEngineersModManager.class);
 
-        List<Mod> modList = new ArrayList<>();
-        ModManagerView modManagerView = new ModManagerView();
-        SandboxService sandboxService = new SandboxService(new SandboxConfigFileRepository());
+	public static void main(String[] args) {
+		launch(args);
+	}
 
-        final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
-        final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
+	@Override
+	public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+		new ViewController(primaryStage, LOGGER);
+		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+			try {
+				logError(t, e);
+			} catch (Throwable ex) {
+				Platform.exit();
+			}
+		});
+		primaryStage.show();
+	}
 
-        if (!Files.isDirectory(Path.of(APP_DATA_PATH))) {
-            logger.warn("Space Engineers save location not found.");
-        }
-
-        Properties properties = new Properties();
-        try (InputStream input = new FileInputStream("src/main/resources/SEMM.properties")) {
-            properties.load(input);
-        } catch (IOException e) {
-            logger.error("Could not load SEMM properties file.");
-        }
-
-        final String CONNECTION_CHECK_URL = properties.getProperty("semm.connectionCheck.steam.url");
-        final String CONNECTION_CHECK_TITLE = properties.getProperty("semm.connectionCheck.steam.title");
-        final String MOD_SCRAPING_SELECTOR = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
-
-        ModService modService = new ModService(new ModFileRepository(), logger, MOD_SCRAPING_SELECTOR);
-
-
-        ModManagerController modManagerController = new ModManagerController(logger, modList, modManagerView, modService, sandboxService, DESKTOP_PATH, APP_DATA_PATH, CONNECTION_CHECK_URL, CONNECTION_CHECK_TITLE);
-
-        //Get the party started
-        modManagerController.injectModList();
-        logger.info("Application finished. Closing.");
-    }
+	//Log the error that caused our stacktrace to the log, and shutdown the application.
+	private static void logError(Thread t, Throwable e) throws Throwable {
+		//Second condition is a dirty hack to prevent it from double displaying errors when we close the platform
+		if (Platform.isFxApplicationThread()) {
+			LOGGER.error("Uncaught exception in thread: " + t.getName(), e);
+			Popup.displaySimpleAlert("An unexpected error was encountered and the application will now exit. " +
+					"Please submit a bug report along with your SEMM.log file located in the logs folder to the below link.", "https://spaceengineersmodmanager.com/bugreport", MessageType.ERROR);
+			throw e;
+		}
+	}
 }
