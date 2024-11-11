@@ -388,17 +388,4 @@ public class MainWindowView {
 			modTable.getSortOrder().addListener(sortListener);
 		}
 	}
-
-	//TODO:
-
-	//TODO: Add code for onSort. Check when onSort is called if a current sort is active, and if not, sort based on priority. This handles the "none" sort case you get after ascend then descend sorting.
-	/* This is a helpful example on how to do it
-	if (!modTableView.getSortOrder().isEmpty()) {
-				TableColumn<Mod, ?> sortedColumn = modTableView.getSortOrder().getFirst();
-				TableColumn.SortType sortedColumnSortType = modTableView.getSortOrder().getFirst().getSortType();
-				sortedColumn.setSortType(null);
-				modTableView.refresh();
-				sortedColumn.setSortType(sortedColumnSortType);
-			}
-	 */
 }
