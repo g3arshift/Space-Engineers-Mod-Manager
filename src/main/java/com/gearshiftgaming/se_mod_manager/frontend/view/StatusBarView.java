@@ -22,6 +22,7 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
+//TODO: Add border to top
 public class StatusBarView {
 
 	@FXML

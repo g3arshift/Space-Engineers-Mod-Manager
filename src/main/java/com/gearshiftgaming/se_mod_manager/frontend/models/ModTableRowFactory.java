@@ -14,6 +14,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.awt.*;
@@ -33,6 +34,7 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
+//TODO: Add autoscrolling when going beyond visible pane https://stackoverflow.com/questions/46471987/javafx-auto-scroll-table-up-or-down-when-dragging-rows-outside-of-viewport#46479277
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
 public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod>> {
 
@@ -42,9 +44,12 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private final ArrayList<Mod> SELECTIONS;
 
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType) {
+	private final Stage STAGE;
+
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, Stage stage) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
+		this.STAGE = stage;
 		SELECTIONS = new ArrayList<>();
 	}
 
@@ -109,10 +114,20 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 						.then(TABLE_CONTEXT_MENU)
 						.otherwise((ContextMenu) null));
 
+		//TODO: Change the cursor so it has a dragboard of the rows, but also clearly indicates that the operation isn't supported.
+		// Can use a font icon for this, like so:
+//		fontIcon.setIconSize(Math.min(width, height)); // size should be within bounds
+//
+//		SnapshotParameters parameters = new SnapshotParameters();
+//		parameters.setFill(backgroundColor != null ? backgroundColor : Color.TRANSPARENT);
+//
+//		WritableImage image = new WritableImage(width, height);
+//		fontIcon.snapshot(parameters, image);
+
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
 			//Don't allow dragging if a sortOrder is applied, or if the sort order that's applied isn't an ascending sort on loadPriority
-			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getId().equals("loadPriority") /*&& modTableView.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING))*/) {
+			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getId().equals("loadPriority")) {
 				if (!row.isEmpty()) {
 					Integer index = row.getIndex();
 					SELECTIONS.clear();
@@ -126,6 +141,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					ClipboardContent clipboardContent = new ClipboardContent();
 					clipboardContent.put(SERIALIZED_MIME_TYPE, index);
 					dragboard.setContent(clipboardContent);
+
 					dragEvent.consume();
 				}
 			}
@@ -201,19 +217,22 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					dropIndex++;
 				}
 				dragEvent.setDropCompleted(true);
-
 				SELECTIONS.clear();
 
-				if (modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-					for(int i = UI_SERVICE.getCurrentModProfile().getModList().size() - 1; i > 0; i--) {
-						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i - 1);
-					}
-				} else {
-					//TODO: This is for ascending order only. Add case for descending as well.
+				//If we are ascending or not sorted then set the load priority equal to the spot in the list, minus one.
+				//If we are descending then set the load priority to its inverse position.
+				if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
 					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
 						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
 					}
+				} else {
+					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
+					}
 				}
+
+				//Redo our sort since our row order has changed
+				modTable.sort();
 
 				/*
 					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
@@ -228,6 +247,17 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		});
 
 		return row;
+	}
+
+	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
+		int intendedLoadPriority;
+		//Check if we are in ascending/default order, else we're in descending order
+		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+			return index;
+		} else {
+			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
+		}
+		return intendedLoadPriority;
 	}
 
 	private String getSelectedCellBorderColor() {
