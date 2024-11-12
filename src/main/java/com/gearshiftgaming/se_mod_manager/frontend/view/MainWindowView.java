@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -141,7 +142,9 @@ public class MainWindowView {
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
 	private final StatusBarView STATUS_BAR_VIEW;
 
-	final DataFormat SERIALIZED_MIME_TYPE;
+	private final DataFormat SERIALIZED_MIME_TYPE;
+
+	private final ListChangeListener<TableColumn<Mod, ?>> sortListener;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage,
@@ -158,6 +161,12 @@ public class MainWindowView {
 		SAVE_PROFILES = uiService.getSAVE_PROFILES();
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+
+		sortListener = change -> {
+			if(modTable.getSortOrder().isEmpty()) {
+				applyDefaultSort();
+			}
+		};
 	}
 
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -273,7 +282,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, STAGE));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -300,6 +309,7 @@ public class MainWindowView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
+		modTable.getSortOrder().addListener(sortListener);
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -366,16 +376,16 @@ public class MainWindowView {
 		mainViewSplit.setDividerPosition(0, 0.7);
 	}
 
-	//TODO:
+	private void applyDefaultSort() {
+		if(loadPriority != null) {
+			modTable.getSortOrder().removeListener(sortListener);
 
-	//TODO: Add code for onSort. Check when onSort is called if a current sort is active, and if not, sort based on priority. This handles the "none" sort case you get after ascend then descend sorting.
-	/* This is a helpful example on how to do it
-	if (!modTableView.getSortOrder().isEmpty()) {
-				TableColumn<Mod, ?> sortedColumn = modTableView.getSortOrder().getFirst();
-				TableColumn.SortType sortedColumnSortType = modTableView.getSortOrder().getFirst().getSortType();
-				sortedColumn.setSortType(null);
-				modTableView.refresh();
-				sortedColumn.setSortType(sortedColumnSortType);
-			}
-	 */
+			loadPriority.setSortType(TableColumn.SortType.ASCENDING);
+			modTable.getSortOrder().add(loadPriority);
+			modTable.sort();
+			modTable.getSortOrder().clear();
+
+			modTable.getSortOrder().addListener(sortListener);
+		}
+	}
 }
