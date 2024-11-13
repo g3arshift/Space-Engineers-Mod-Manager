@@ -420,23 +420,23 @@ public class MainWindowView {
 		double maxScrollValue = verticalScrollBar.getMax();
 		double scrollAmount;
 
+		//Scroll up
 		if (y < modTableTop + SCROLL_THRESHOLD && currentScrollValue > minScrollValue) {
 			scrollAmount = -SCROLL_SPEED * 0.1; // Increase speed
 		}
-		// Smooth scrolling down
+		//Scroll down
 		else if (y > modTableBottom - SCROLL_THRESHOLD && currentScrollValue < maxScrollValue) {
 			scrollAmount = SCROLL_SPEED * 0.1; // Increase speed
 		} else {
 			scrollAmount = 0;
 		}
 
+		//Stop our timeline if it exists. If we don't call this then the timeline runs forever and the scroll wheel won't work, and probably a bunch of other things.
 		if (scrollTimeline != null) {
 			scrollTimeline.stop();
 		}
 
 		if (scrollAmount != 0) {
-			// Stop any ongoing timeline to prevent multiple timers
-
 			// Create a new Timeline to update the scroll position over time
 			scrollTimeline = new Timeline(
 					new KeyFrame(Duration.millis(30), e -> {  // Increase the duration for smoother transitions. Too high will break it though.
