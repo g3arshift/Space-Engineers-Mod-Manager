@@ -47,7 +47,7 @@
                                         </TableView>
                                     </content>
                                 </ScrollPane>
-                                <HBox alignment="CENTER_LEFT" spacing="10.0" VBox.vgrow="NEVER">
+                                <HBox fx:id="tableActions" alignment="CENTER_LEFT" spacing="10.0" VBox.vgrow="NEVER">
                                     <children>
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <children>

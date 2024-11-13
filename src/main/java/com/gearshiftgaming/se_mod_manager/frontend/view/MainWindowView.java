@@ -7,6 +7,10 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
+import javafx.animation.Animation;
+import javafx.animation.AnimationTimer;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
@@ -19,8 +23,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -104,6 +112,9 @@ public class MainWindowView {
 	private TableColumn<Mod, String> modCategory;
 
 	@FXML
+	private HBox tableActions;
+
+	@FXML
 	private TabPane informationPane;
 
 	@FXML
@@ -144,11 +155,16 @@ public class MainWindowView {
 
 	private final DataFormat SERIALIZED_MIME_TYPE;
 
-	private final ListChangeListener<TableColumn<Mod, ?>> sortListener;
+	private final ListChangeListener<TableColumn<Mod, ?>> SORT_LISTENER;
+
+	private final double SCROLL_THRESHOLD;
+
+	private final double SCROLL_SPEED;
+
+	private Timeline scrollTimeline;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage,
-						  MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
+	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
@@ -162,8 +178,11 @@ public class MainWindowView {
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 
-		sortListener = change -> {
-			if(modTable.getSortOrder().isEmpty()) {
+		SCROLL_THRESHOLD = 30.0;
+		SCROLL_SPEED = 0.6;
+
+		SORT_LISTENER = change -> {
+			if (modTable.getSortOrder().isEmpty()) {
 				applyDefaultSort();
 			}
 		};
@@ -202,6 +221,7 @@ public class MainWindowView {
 			}
 		}
 		setupModTable();
+		mainWindowLayout.setOnDragOver(this::handleDragOver);
 	}
 
 	@FXML
@@ -282,7 +302,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, STAGE));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -309,7 +329,7 @@ public class MainWindowView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
-		modTable.getSortOrder().addListener(sortListener);
+		modTable.getSortOrder().addListener(SORT_LISTENER);
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -354,9 +374,7 @@ public class MainWindowView {
 
 		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
-		//TODO: Much of this needs to happen down in the service layer
 		//TODO: Setup a function in ModList service to track conflicts.
-		//TODO: Populate mod table
 	}
 	//TODO: Hookup all the buttons to everything
 
@@ -377,15 +395,64 @@ public class MainWindowView {
 	}
 
 	private void applyDefaultSort() {
-		if(loadPriority != null) {
-			modTable.getSortOrder().removeListener(sortListener);
+		if (loadPriority != null) {
+			modTable.getSortOrder().removeListener(SORT_LISTENER);
 
 			loadPriority.setSortType(TableColumn.SortType.ASCENDING);
 			modTable.getSortOrder().add(loadPriority);
 			modTable.sort();
 			modTable.getSortOrder().clear();
 
-			modTable.getSortOrder().addListener(sortListener);
+			modTable.getSortOrder().addListener(SORT_LISTENER);
 		}
+	}
+
+	//TODO: Increase speed based on distance from the edge
+	private void handleDragOver(DragEvent event) {
+		double y = event.getY();
+		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
+		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
+
+		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+
+		double currentScrollValue = verticalScrollBar.getValue();
+		double minScrollValue = verticalScrollBar.getMin();
+		double maxScrollValue = verticalScrollBar.getMax();
+		double scrollAmount;
+
+		if (y < modTableTop + SCROLL_THRESHOLD && currentScrollValue > minScrollValue) {
+			scrollAmount = -SCROLL_SPEED * 0.1; // Increase speed
+		}
+		// Smooth scrolling down
+		else if (y > modTableBottom - SCROLL_THRESHOLD && currentScrollValue < maxScrollValue) {
+			scrollAmount = SCROLL_SPEED * 0.1; // Increase speed
+		} else {
+			scrollAmount = 0;
+		}
+
+		if (scrollTimeline != null) {
+			scrollTimeline.stop();
+		}
+
+		if (scrollAmount != 0) {
+			// Stop any ongoing timeline to prevent multiple timers
+
+			// Create a new Timeline to update the scroll position over time
+			scrollTimeline = new Timeline(
+					new KeyFrame(Duration.millis(30), e -> {  // Increase the duration for smoother transitions. Too high will break it though.
+						double newValue = currentScrollValue + scrollAmount;
+
+						// Interpolate the new scroll value to create smooth transitions
+						newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue));
+
+						verticalScrollBar.setValue(newValue);
+					})
+			);
+			scrollTimeline.setCycleCount(Animation.INDEFINITE); // Keep updating until stopped
+			scrollTimeline.play(); // Start the scrolling animation
+		}
+
+		event.acceptTransferModes(TransferMode.MOVE);
+		event.consume();
 	}
 }

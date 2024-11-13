@@ -16,8 +16,9 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.scene.control.ScrollBar;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,12 +45,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private final ArrayList<Mod> SELECTIONS;
 
-	private final Stage STAGE;
 
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, Stage stage) {
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
-		this.STAGE = stage;
 		SELECTIONS = new ArrayList<>();
 	}
 
@@ -147,6 +146,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
+		//TODO: not sure where it's breaking, but I can't drag to the bottom of the list anymore.
 		row.setOnDragOver(dragEvent -> {
 			Dragboard dragboard = dragEvent.getDragboard();
 			if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
