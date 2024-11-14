@@ -7,17 +7,14 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
-import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -29,7 +26,6 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -166,7 +162,7 @@ public class MainWindowView {
 
 	private Timeline scrollTimeline;
 
-	private final List<Mod> ROW_SELECTIONS;
+	private final List<Mod> SELECTIONS;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
@@ -186,7 +182,7 @@ public class MainWindowView {
 		SCROLL_THRESHOLD = 30.0;
 		SCROLL_SPEED = 0.6;
 
-		ROW_SELECTIONS = new ArrayList<>();
+		SELECTIONS = new ArrayList<>();
 
 		SORT_LISTENER = change -> {
 			if (modTable.getSortOrder().isEmpty()) {
@@ -230,8 +226,6 @@ public class MainWindowView {
 		setupModTable();
 		mainWindowLayout.setOnDragOver(this::handleModTableDragOver);
 		tableActions.setOnDragDropped(this::handleTableActionsDragOver);
-		tableActions.setOnDragEntered(this::handleTableActionsDragEnter);
-		tableActions.setOnDragExited(dragEvent -> tableActions.setBorder(null));
 	}
 
 	@FXML
@@ -312,7 +306,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, ROW_SELECTIONS));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -340,7 +334,6 @@ public class MainWindowView {
 		});
 
 		modTable.getSortOrder().addListener(SORT_LISTENER);
-		//modTable.setOnDragDropped(this::handleDragDropped);
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -466,22 +459,24 @@ public class MainWindowView {
 		event.consume();
 	}
 
+	//This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
 	private void handleTableActionsDragOver(DragEvent dragEvent) {
 		Dragboard dragboard = dragEvent.getDragboard();
 
 		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
 
-			for (Mod m : ROW_SELECTIONS) {
+			for (Mod m : SELECTIONS) {
 				modTable.getItems().remove(m);
 			}
 
 			modTable.getSelectionModel().clearSelection();
 
-			for (Mod m : ROW_SELECTIONS) {
+			for (Mod m : SELECTIONS) {
 				modTable.getItems().add(m);
 				modTable.getSelectionModel().select(modTable.getItems().size() - 1);
 			}
 
+			//TODO: Need to move the duplicates to a shared helper class. Call it "tableHelper" or something.
 			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
 				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
 					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
@@ -495,26 +490,15 @@ public class MainWindowView {
 			//Redo our sort since our row order has changed
 			modTable.sort();
 
-				/*
-					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
-					but for whatever reason the changes aren't propagating without this.
-				 */
+			/*
+				We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
+				but for whatever reason the changes aren't propagating without this.
+			*/
 			//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
 			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 			UI_SERVICE.saveUserData();
 
 			dragEvent.consume();
-		}
-	}
-
-	//TODO: An okay idea, but it doesn't really do what I want.
-	private void handleTableActionsDragEnter(DragEvent dragEvent) {
-		if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
-			javafx.scene.paint.Color indicatorColor = Color.web(getSelectedCellBorderColor());
-			Border dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
-					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
-					CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
-			tableActions.setBorder(dropIndicator);
 		}
 	}
 
@@ -527,18 +511,5 @@ public class MainWindowView {
 			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
 		}
 		return intendedLoadPriority;
-	}
-
-	private String getSelectedCellBorderColor() {
-		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
-			case "PrimerLight", "NordLight", "CupertinoLight":
-				yield "#24292f";
-			case "PrimerDark", "CupertinoDark":
-				yield "#f0f6fc";
-			case "NordDark":
-				yield "#ECEFF4";
-			default:
-				yield "#f8f8f2";
-		};
 	}
 }
