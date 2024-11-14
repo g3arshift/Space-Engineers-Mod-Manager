@@ -17,6 +17,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.scene.control.ScrollBar;
+import lombok.Getter;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -42,14 +43,13 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 	private final UiService UI_SERVICE;
 
 	private final DataFormat SERIALIZED_MIME_TYPE;
+	private final List<Mod> SELECTIONS;
 
-	private final ArrayList<Mod> SELECTIONS;
 
-
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType) {
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
-		SELECTIONS = new ArrayList<>();
+		this.SELECTIONS = selections;
 	}
 
 
@@ -147,6 +147,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		});
 
 		//TODO: not sure where it's breaking, but I can't drag to the bottom of the list anymore.
+		// Could maybe cheat and check for if we're on the bottom half of the bottom row and apply a bottom shadow... But this is dumb and bad.
 		row.setOnDragOver(dragEvent -> {
 			Dragboard dragboard = dragEvent.getDragboard();
 			if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {

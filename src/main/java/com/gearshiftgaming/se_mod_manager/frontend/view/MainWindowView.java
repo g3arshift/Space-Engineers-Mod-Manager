@@ -8,14 +8,16 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import javafx.animation.Animation;
-import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -24,9 +26,10 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -103,7 +106,7 @@ public class MainWindowView {
 	private TableColumn<Mod, String> modLastUpdated;
 
 	@FXML
-	private TableColumn<Mod, String> loadPriority;
+	private TableColumn<Mod, Integer> loadPriority;
 
 	@FXML
 	private TableColumn<Mod, String> modSource;
@@ -163,6 +166,8 @@ public class MainWindowView {
 
 	private Timeline scrollTimeline;
 
+	private final List<Mod> ROW_SELECTIONS;
+
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
@@ -180,6 +185,8 @@ public class MainWindowView {
 
 		SCROLL_THRESHOLD = 30.0;
 		SCROLL_SPEED = 0.6;
+
+		ROW_SELECTIONS = new ArrayList<>();
 
 		SORT_LISTENER = change -> {
 			if (modTable.getSortOrder().isEmpty()) {
@@ -221,7 +228,10 @@ public class MainWindowView {
 			}
 		}
 		setupModTable();
-		mainWindowLayout.setOnDragOver(this::handleDragOver);
+		mainWindowLayout.setOnDragOver(this::handleModTableDragOver);
+		tableActions.setOnDragDropped(this::handleTableActionsDragOver);
+		tableActions.setOnDragEntered(this::handleTableActionsDragEnter);
+		tableActions.setOnDragExited(dragEvent -> tableActions.setBorder(null));
 	}
 
 	@FXML
@@ -302,7 +312,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, ROW_SELECTIONS));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -313,7 +323,7 @@ public class MainWindowView {
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
 
-		loadPriority.setCellValueFactory(cellData -> new SimpleStringProperty(Integer.toString(cellData.getValue().getLoadPriority())));
+		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
 		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
 		modCategory.setCellValueFactory(cellData -> {
@@ -330,6 +340,7 @@ public class MainWindowView {
 		});
 
 		modTable.getSortOrder().addListener(SORT_LISTENER);
+		//modTable.setOnDragDropped(this::handleDragDropped);
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -408,7 +419,7 @@ public class MainWindowView {
 	}
 
 	//TODO: Increase speed based on distance from the edge
-	private void handleDragOver(DragEvent event) {
+	private void handleModTableDragOver(DragEvent event) {
 		double y = event.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
 		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
@@ -431,10 +442,9 @@ public class MainWindowView {
 			scrollAmount = 0;
 		}
 
-		//Stop our timeline if it exists. If we don't call this then the timeline runs forever and the scroll wheel won't work, and probably a bunch of other things.
-		if (scrollTimeline != null) {
-			scrollTimeline.stop();
-		}
+
+		//TODO: We've got a minor bug that, when our window is big enough to display a scrollbar, but it's also big enough to display all the items, when we move our cursor into the gap between the
+		// tableActions pane and table it resizes our columns a little as the bar disappears and then reappears. If you hold it there it'll keep doing it until you drop.
 
 		if (scrollAmount != 0) {
 			// Create a new Timeline to update the scroll position over time
@@ -448,11 +458,87 @@ public class MainWindowView {
 						verticalScrollBar.setValue(newValue);
 					})
 			);
-			scrollTimeline.setCycleCount(Animation.INDEFINITE); // Keep updating until stopped
+			scrollTimeline.setCycleCount(1); // Keep updating until stopped
 			scrollTimeline.play(); // Start the scrolling animation
 		}
 
 		event.acceptTransferModes(TransferMode.MOVE);
 		event.consume();
+	}
+
+	private void handleTableActionsDragOver(DragEvent dragEvent) {
+		Dragboard dragboard = dragEvent.getDragboard();
+
+		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+
+			for (Mod m : ROW_SELECTIONS) {
+				modTable.getItems().remove(m);
+			}
+
+			modTable.getSelectionModel().clearSelection();
+
+			for (Mod m : ROW_SELECTIONS) {
+				modTable.getItems().add(m);
+				modTable.getSelectionModel().select(modTable.getItems().size() - 1);
+			}
+
+			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+				}
+			} else {
+				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
+				}
+			}
+
+			//Redo our sort since our row order has changed
+			modTable.sort();
+
+				/*
+					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
+					but for whatever reason the changes aren't propagating without this.
+				 */
+			//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
+			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.saveUserData();
+
+			dragEvent.consume();
+		}
+	}
+
+	//TODO: An okay idea, but it doesn't really do what I want.
+	private void handleTableActionsDragEnter(DragEvent dragEvent) {
+		if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
+			javafx.scene.paint.Color indicatorColor = Color.web(getSelectedCellBorderColor());
+			Border dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
+					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
+					CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
+			tableActions.setBorder(dropIndicator);
+		}
+	}
+
+	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
+		int intendedLoadPriority;
+		//Check if we are in ascending/default order, else we're in descending order
+		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+			return index;
+		} else {
+			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
+		}
+		return intendedLoadPriority;
+	}
+
+	private String getSelectedCellBorderColor() {
+		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+			case "PrimerLight", "NordLight", "CupertinoLight":
+				yield "#24292f";
+			case "PrimerDark", "CupertinoDark":
+				yield "#f0f6fc";
+			case "NordDark":
+				yield "#ECEFF4";
+			default:
+				yield "#f8f8f2";
+		};
 	}
 }
