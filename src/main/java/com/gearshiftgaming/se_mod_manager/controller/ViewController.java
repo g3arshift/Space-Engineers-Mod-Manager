@@ -100,7 +100,7 @@ public class ViewController {
 		}
 	}
 
-	//TODO: Move the modtable to its own FXML file and classes due to complexity.
+	//TODO: Move all the content in the center of the MainWindowView into its own fxml and class file.
 	private void setupInterface(Stage stage) throws IOException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Manually inject our controllers into our FXML so we can reuse the FXML for the profile creation elsewhere, and have greater flexibility in controller injection and FXML initialization.
 		//This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
