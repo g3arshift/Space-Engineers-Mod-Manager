@@ -437,10 +437,6 @@ public class MainWindowView {
 			scrollAmount = 0;
 		}
 
-
-		//TODO: We've got a minor bug that, when our window is big enough to display a scrollbar, but it's also big enough to display all the items, when we move our cursor into the gap between the
-		// tableActions pane and table it resizes our columns a little as the bar disappears and then reappears. If you hold it there it'll keep doing it until you drop.
-
 		if (scrollAmount != 0) {
 			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
 				scrollTimeline = new Timeline(
