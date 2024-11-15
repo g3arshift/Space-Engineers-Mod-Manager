@@ -50,8 +50,7 @@ import java.util.List;
  * It contains the center section of the borderpane, but all other sections should be delegated to their own controllers and FXML files.
  * <p>
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
- * You may use, distribute and modify this code under the
- * terms of the GPL3 license.
+ * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
@@ -437,6 +436,7 @@ public class MainWindowView {
 			scrollAmount = 0;
 		}
 
+		//TODO: GEtting a bug where, when we drop outside of the window the scroll animation will keep playing no matter what. Probably need to kill it in the dropComplete on mod table.
 		if (scrollAmount != 0) {
 			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
 				scrollTimeline = new Timeline(
