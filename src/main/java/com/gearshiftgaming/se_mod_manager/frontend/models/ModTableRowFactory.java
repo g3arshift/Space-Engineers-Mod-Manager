@@ -43,16 +43,19 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private TableRow<Mod> previousRow;
 
+	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
+
 	private enum RowBorderType {
 		TOP,
 		BOTTOM
 	}
 
 
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections) {
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, List<TableRow<Mod>> singleTableRow) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
 		this.SELECTIONS = selections;
+		this.SINGLE_TABLE_ROW = singleTableRow;
 	}
 
 
@@ -270,6 +273,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			dragEvent.consume();
 		});
 
+		//This is a dumb hack but I can't get the damn rows any other way
+		if(SINGLE_TABLE_ROW.isEmpty()) {
+			SINGLE_TABLE_ROW.add(row);
+		}
 		return row;
 	}
 

@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -15,7 +16,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -27,7 +27,6 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -162,6 +161,10 @@ public class MainWindowView {
 
 	private final List<Mod> SELECTIONS;
 
+	//This list existing is a really, really dumb hack because it's impossible to get the actual row height from the table otherwise.
+	//It should only ever have one item.
+	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
+
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
 	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
@@ -178,6 +181,8 @@ public class MainWindowView {
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 
 		SELECTIONS = new ArrayList<>();
+
+		SINGLE_TABLE_ROW = new ArrayList<>();
 
 		SORT_LISTENER = change -> {
 			if (modTable.getSortOrder().isEmpty()) {
@@ -301,7 +306,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, SINGLE_TABLE_ROW));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -409,8 +414,8 @@ public class MainWindowView {
 	//TODO: Increase speed based on distance from the edge
 	private void handleModTableDragOver(DragEvent event) {
 		//Enables auto-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
-		final double SCROLL_THRESHOLD = 30.0;
-		final double SCROLL_SPEED = 0.7;
+		final double SCROLL_THRESHOLD = 20.0;
+		final double SCROLL_SPEED = 0.35;
 
 		double y = event.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
@@ -424,12 +429,10 @@ public class MainWindowView {
 		double scrollAmount;
 
 		//Scroll up
-		if (y < modTableTop + SCROLL_THRESHOLD && currentScrollValue > minScrollValue) {
-			scrollAmount = -SCROLL_SPEED * 0.1; // Increase speed
-		}
-		//Scroll down
-		else if (y > modTableBottom - SCROLL_THRESHOLD && currentScrollValue < maxScrollValue) {
-			scrollAmount = SCROLL_SPEED * 0.1; // Increase speed
+		if (y < modTableTop - SCROLL_THRESHOLD && currentScrollValue > minScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
+			scrollAmount = -SCROLL_SPEED * 0.1;
+		} else if (y > modTableBottom + SCROLL_THRESHOLD && currentScrollValue < maxScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
+			scrollAmount = SCROLL_SPEED * 0.1;
 		} else {
 			scrollAmount = 0;
 		}
@@ -439,19 +442,21 @@ public class MainWindowView {
 		// tableActions pane and table it resizes our columns a little as the bar disappears and then reappears. If you hold it there it'll keep doing it until you drop.
 
 		if (scrollAmount != 0) {
-			// Create a new Timeline to update the scroll position over time
-			scrollTimeline = new Timeline(
-					new KeyFrame(Duration.millis(30), e -> {  // Increase the duration for smoother transitions. Too high will break it though.
-						double newValue = currentScrollValue + scrollAmount;
-
-						// Interpolate the new scroll value to create smooth transitions
-						newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue));
-
-						verticalScrollBar.setValue(newValue);
-					})
-			);
-			scrollTimeline.setCycleCount(1); //We only play this for one cycle since we should only be playing the animation when we're actively dragging.
-			scrollTimeline.play(); // Start the scrolling animation
+			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
+				scrollTimeline = new Timeline(
+						new KeyFrame(Duration.millis(16), e -> { // 60 FPS update for smooth animation
+							double newValue = verticalScrollBar.getValue() + scrollAmount;
+							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
+							verticalScrollBar.setValue(newValue);
+						})
+				);
+				scrollTimeline.setCycleCount(Animation.INDEFINITE); //We only play this for one cycle since we should only be playing the animation when we're actively dragging.
+				scrollTimeline.play(); // Start the scrolling animation
+			}
+		} else {
+			if (scrollTimeline != null) {
+				scrollTimeline.stop();
+			}
 		}
 
 		event.acceptTransferModes(TransferMode.MOVE);
