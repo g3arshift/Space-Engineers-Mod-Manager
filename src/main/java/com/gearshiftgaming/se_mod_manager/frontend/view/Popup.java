@@ -139,7 +139,7 @@ public class Popup {
 
     //Creates a simple alert centered on a specific stage
     private static void simpleAlert(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
-        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
+        HBox dialogBox = makeErrorDialogWithLink(label, messageIcon);
 
         //Setup our button
         HBox buttonBar = makeOkBar(childStage);
@@ -149,7 +149,7 @@ public class Popup {
 
     //Creates a simple alert centered on the screen
     private static void simpleAlert(Stage childStage, Label label, FontIcon messageIcon) {
-        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
+        HBox dialogBox = makeErrorDialogWithLink(label, messageIcon);
 
         //Setup our button
         HBox buttonBar = makeOkBar(childStage);
@@ -159,7 +159,7 @@ public class Popup {
 
     //Creates a simple alert centered on the screen, with a clickable link
     private static void simpleAlert(Stage childStage, String message, String link, FontIcon messageIcon) {
-        HBox dialogBox = makeDialogBoxWithLink(message, link, messageIcon);
+        HBox dialogBox = makeErrorDialogWithLink(message, link, messageIcon);
 
         //Setup our button
         HBox buttonBar = makeOkBar(childStage);
@@ -171,7 +171,7 @@ public class Popup {
     private static int yesNoDialog(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
         AtomicInteger choice = new AtomicInteger(-1);
 
-        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
+        HBox dialogBox = makeErrorDialogWithLink(label, messageIcon);
 
         HBox buttonBar = makeYesNoBar(choice, childStage);
 
@@ -184,7 +184,7 @@ public class Popup {
     private static int yesNoDialog(Stage childStage, Label label, FontIcon messageIcon) {
         AtomicInteger choice = new AtomicInteger(-1);
 
-        HBox dialogBox = makeDialogBoxWithLink(label, messageIcon);
+        HBox dialogBox = makeErrorDialogWithLink(label, messageIcon);
 
         HBox buttonBar = makeYesNoBar(choice, childStage);
 
@@ -287,7 +287,7 @@ public class Popup {
     }
 
     //Creates a dialog box message
-    private static HBox makeDialogBoxWithLink(Label label, FontIcon messageIcon) {
+    private static HBox makeErrorDialogWithLink(Label label, FontIcon messageIcon) {
         label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
         messageIcon.getStyleClass().clear();
         messageIcon.setIconSize(ICON_SIZE);
@@ -303,7 +303,7 @@ public class Popup {
     }
 
     //Creates a dialog box message, with a hyperlink
-    private static HBox makeDialogBoxWithLink(String message, String link, FontIcon messageIcon) {
+    private static HBox makeErrorDialogWithLink(String message, String link, FontIcon messageIcon) {
         messageIcon.getStyleClass().clear();
         messageIcon.setIconSize(ICON_SIZE);
 
@@ -311,7 +311,7 @@ public class Popup {
         label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
         label.setWrapText(true);
 
-        HBox dialogBox = createLinkBox(link, messageIcon, label);
+        HBox dialogBox = createErrorLinkBox(link, messageIcon, label);
         dialogBox.setAlignment(Pos.TOP_LEFT);
         dialogBox.setPadding(new Insets(0, 5, 0, 5));
         dialogBox.setSpacing(5d);
@@ -320,7 +320,7 @@ public class Popup {
         return dialogBox;
     }
 
-    private static HBox createLinkBox(String link, FontIcon messageIcon, Label label) {
+    private static HBox createErrorLinkBox(String link, FontIcon messageIcon, Label label) {
         Hyperlink hyperlink = new Hyperlink("https://spaceengineersmodmanager.com/bugreport");
         hyperlink.setStyle("-fx-font-size: " + FONT_SIZE + ";");
 
