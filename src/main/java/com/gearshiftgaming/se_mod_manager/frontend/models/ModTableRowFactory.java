@@ -14,10 +14,9 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 import javafx.util.Callback;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,23 +33,29 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-//TODO: Add autoscrolling when going beyond visible pane https://stackoverflow.com/questions/46471987/javafx-auto-scroll-table-up-or-down-when-dragging-rows-outside-of-viewport#46479277
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
 public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod>> {
 
 	private final UiService UI_SERVICE;
 
 	private final DataFormat SERIALIZED_MIME_TYPE;
+	private final List<Mod> SELECTIONS;
 
-	private final ArrayList<Mod> SELECTIONS;
+	private TableRow<Mod> previousRow;
 
-	private final Stage STAGE;
+	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
 
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, Stage stage) {
+	private enum RowBorderType {
+		TOP,
+		BOTTOM
+	}
+
+
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, List<TableRow<Mod>> singleTableRow) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
-		this.STAGE = stage;
-		SELECTIONS = new ArrayList<>();
+		this.SELECTIONS = selections;
+		this.SINGLE_TABLE_ROW = singleTableRow;
 	}
 
 
@@ -107,6 +112,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			UI_SERVICE.saveUserData();
 		});
 
+
 		TABLE_CONTEXT_MENU.getItems().addAll(WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM);
 
 		row.contextMenuProperty().bind(
@@ -158,20 +164,34 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		});
 
 		row.setOnDragEntered(dragEvent -> {
+			if (previousRow != null && !row.isEmpty()) {
+				previousRow.setBorder(null);
+			}
+
+			if (!row.isEmpty()) {
+				previousRow = row;
+			}
+
 			if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
-				if (!row.isEmpty() || (row.getIndex() <= modTable.getItems().size() && modTable.getItems().get(row.getIndex() - 1) != null)) {
-					Color indicatorColor = Color.web(getSelectedCellBorderColor());
-					Border dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
-							BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
-							CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
-					row.setBorder(dropIndicator);
+				if (!row.isEmpty()) {
+					addBorderToRow(RowBorderType.TOP, modTable, row);
 				}
 			}
+			dragEvent.consume();
 		});
 
-		row.setOnDragExited(dragEvent -> row.setBorder(null));
+		row.setOnDragExited(dragEvent -> {
+			//If we are not the last item and the row isn't blank, set it to null. Else, set a bottom border.
+			if (!row.isEmpty() && row.getIndex() == modTable.getItems().size() - 1) {
+				addBorderToRow(RowBorderType.BOTTOM, modTable, row);
+			} else {
+				row.setBorder(null);
+			}
+			dragEvent.consume();
+		});
 
 		row.setOnDragDropped(dragEvent -> {
+			row.setBorder(null);
 			Dragboard dragboard = dragEvent.getDragboard();
 
 			if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
@@ -238,6 +258,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
 					but for whatever reason the changes aren't propagating without this.
 				 */
+
 				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
 				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 				UI_SERVICE.saveUserData();
@@ -246,7 +267,34 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
+		row.setOnDragDone(dragEvent -> {
+			// Remove any borders and perform clean-up actions here
+			previousRow.setBorder(null);
+			dragEvent.consume();
+		});
+
+		//This is a dumb hack but I can't get the damn rows any other way
+		if(SINGLE_TABLE_ROW.isEmpty()) {
+			SINGLE_TABLE_ROW.add(row);
+		}
 		return row;
+	}
+
+	private void addBorderToRow(RowBorderType rowBorderType, TableView<Mod> modTable, ModTableRow row) {
+		if (!row.isEmpty() || (row.getIndex() <= modTable.getItems().size() && modTable.getItems().get(row.getIndex() - 1) != null)) {
+			Color indicatorColor = Color.web(getSelectedCellBorderColor());
+			Border dropIndicator;
+			if (rowBorderType.equals(RowBorderType.TOP)) {
+				dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
+						BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
+						CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
+			} else {
+				dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
+						BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE,
+						CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
+			}
+			row.setBorder(dropIndicator);
+		}
 	}
 
 	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {

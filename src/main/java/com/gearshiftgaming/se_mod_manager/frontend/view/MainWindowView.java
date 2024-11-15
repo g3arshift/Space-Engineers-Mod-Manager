@@ -7,7 +7,11 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -19,8 +23,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.DataFormat;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -95,13 +103,16 @@ public class MainWindowView {
 	private TableColumn<Mod, String> modLastUpdated;
 
 	@FXML
-	private TableColumn<Mod, String> loadPriority;
+	private TableColumn<Mod, Integer> loadPriority;
 
 	@FXML
 	private TableColumn<Mod, String> modSource;
 
 	@FXML
 	private TableColumn<Mod, String> modCategory;
+
+	@FXML
+	private HBox tableActions;
 
 	@FXML
 	private TabPane informationPane;
@@ -144,11 +155,18 @@ public class MainWindowView {
 
 	private final DataFormat SERIALIZED_MIME_TYPE;
 
-	private final ListChangeListener<TableColumn<Mod, ?>> sortListener;
+	private final ListChangeListener<TableColumn<Mod, ?>> SORT_LISTENER;
+
+	private Timeline scrollTimeline;
+
+	private final List<Mod> SELECTIONS;
+
+	//This list existing is a really, really dumb hack because it's impossible to get the actual row height from the table otherwise.
+	//It should only ever have one item.
+	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage,
-						  MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
+	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
@@ -162,8 +180,12 @@ public class MainWindowView {
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 
-		sortListener = change -> {
-			if(modTable.getSortOrder().isEmpty()) {
+		SELECTIONS = new ArrayList<>();
+
+		SINGLE_TABLE_ROW = new ArrayList<>();
+
+		SORT_LISTENER = change -> {
+			if (modTable.getSortOrder().isEmpty()) {
 				applyDefaultSort();
 			}
 		};
@@ -202,6 +224,8 @@ public class MainWindowView {
 			}
 		}
 		setupModTable();
+		mainWindowLayout.setOnDragOver(this::handleModTableDragOver);
+		tableActions.setOnDragDropped(this::handleTableActionsDragOver);
 	}
 
 	@FXML
@@ -282,7 +306,7 @@ public class MainWindowView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, STAGE));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, SINGLE_TABLE_ROW));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -293,7 +317,7 @@ public class MainWindowView {
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
 
-		loadPriority.setCellValueFactory(cellData -> new SimpleStringProperty(Integer.toString(cellData.getValue().getLoadPriority())));
+		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
 		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
 		modCategory.setCellValueFactory(cellData -> {
@@ -309,7 +333,7 @@ public class MainWindowView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
-		modTable.getSortOrder().addListener(sortListener);
+		modTable.getSortOrder().addListener(SORT_LISTENER);
 
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
@@ -354,9 +378,7 @@ public class MainWindowView {
 
 		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
 
-		//TODO: Much of this needs to happen down in the service layer
 		//TODO: Setup a function in ModList service to track conflicts.
-		//TODO: Populate mod table
 	}
 	//TODO: Hookup all the buttons to everything
 
@@ -377,15 +399,117 @@ public class MainWindowView {
 	}
 
 	private void applyDefaultSort() {
-		if(loadPriority != null) {
-			modTable.getSortOrder().removeListener(sortListener);
+		if (loadPriority != null) {
+			modTable.getSortOrder().removeListener(SORT_LISTENER);
 
 			loadPriority.setSortType(TableColumn.SortType.ASCENDING);
 			modTable.getSortOrder().add(loadPriority);
 			modTable.sort();
 			modTable.getSortOrder().clear();
 
-			modTable.getSortOrder().addListener(sortListener);
+			modTable.getSortOrder().addListener(SORT_LISTENER);
 		}
+	}
+
+	//TODO: Increase speed based on distance from the edge
+	private void handleModTableDragOver(DragEvent event) {
+		//Enables auto-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
+		final double SCROLL_THRESHOLD = 20.0;
+		final double SCROLL_SPEED = 0.35;
+
+		double y = event.getY();
+		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
+		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
+
+		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+
+		double currentScrollValue = verticalScrollBar.getValue();
+		double minScrollValue = verticalScrollBar.getMin();
+		double maxScrollValue = verticalScrollBar.getMax();
+		double scrollAmount;
+
+		//Scroll up
+		if (y < modTableTop - SCROLL_THRESHOLD && currentScrollValue > minScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
+			scrollAmount = -SCROLL_SPEED * 0.1;
+		} else if (y > modTableBottom + SCROLL_THRESHOLD && currentScrollValue < maxScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
+			scrollAmount = SCROLL_SPEED * 0.1;
+		} else {
+			scrollAmount = 0;
+		}
+
+		if (scrollAmount != 0) {
+			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
+				scrollTimeline = new Timeline(
+						new KeyFrame(Duration.millis(16), e -> { // 60 FPS update for smooth animation
+							double newValue = verticalScrollBar.getValue() + scrollAmount;
+							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
+							verticalScrollBar.setValue(newValue);
+						})
+				);
+				scrollTimeline.setCycleCount(Animation.INDEFINITE); //We only play this for one cycle since we should only be playing the animation when we're actively dragging.
+				scrollTimeline.play(); // Start the scrolling animation
+			}
+		} else {
+			if (scrollTimeline != null) {
+				scrollTimeline.stop();
+			}
+		}
+
+		event.acceptTransferModes(TransferMode.MOVE);
+		event.consume();
+	}
+
+	//This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
+	private void handleTableActionsDragOver(DragEvent dragEvent) {
+		Dragboard dragboard = dragEvent.getDragboard();
+
+		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+
+			for (Mod m : SELECTIONS) {
+				modTable.getItems().remove(m);
+			}
+
+			modTable.getSelectionModel().clearSelection();
+
+			for (Mod m : SELECTIONS) {
+				modTable.getItems().add(m);
+				modTable.getSelectionModel().select(modTable.getItems().size() - 1);
+			}
+
+			//TODO: Need to move the duplicates to a shared helper class. Call it "tableHelper" or something.
+			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+				}
+			} else {
+				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
+				}
+			}
+
+			//Redo our sort since our row order has changed
+			modTable.sort();
+
+			/*
+				We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
+				but for whatever reason the changes aren't propagating without this.
+			*/
+			//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
+			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.saveUserData();
+
+			dragEvent.consume();
+		}
+	}
+
+	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
+		int intendedLoadPriority;
+		//Check if we are in ascending/default order, else we're in descending order
+		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+			return index;
+		} else {
+			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
+		}
+		return intendedLoadPriority;
 	}
 }

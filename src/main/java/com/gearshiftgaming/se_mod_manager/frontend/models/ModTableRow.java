@@ -52,6 +52,7 @@ public class ModTableRow extends TableRow<Mod> {
 		}
 	}
 
+	//TODO: Maybe make them a brighter color? Like, for light make it blue. Not sure for darks. Red? Green for Dracula? Some better color contrast would work a LOT better.
 	//This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation, but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet, then add onto it.
 	private String getSelectedCellColor(String themeName) {
 		return switch (themeName) {

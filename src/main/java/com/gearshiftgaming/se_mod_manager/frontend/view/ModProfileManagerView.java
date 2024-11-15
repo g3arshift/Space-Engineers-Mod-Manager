@@ -66,9 +66,9 @@ public class ModProfileManagerView {
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
     }
 
-    public void initView(Parent root, Properties properties, MenuBarView mainWindowView) {
+    public void initView(Parent root, Properties properties, MenuBarView menuBarView) {
         Scene scene = new Scene(root);
-        this.menuBarView = mainWindowView;
+        this.menuBarView = menuBarView;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
