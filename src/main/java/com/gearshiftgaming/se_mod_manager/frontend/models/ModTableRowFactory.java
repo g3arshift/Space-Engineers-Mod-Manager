@@ -33,7 +33,6 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-//TODO: Add autoscrolling when going beyond visible pane https://stackoverflow.com/questions/46471987/javafx-auto-scroll-table-up-or-down-when-dragging-rows-outside-of-viewport#46479277
 //TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
 public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod>> {
 

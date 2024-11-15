@@ -15,6 +15,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -26,6 +27,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -156,10 +158,6 @@ public class MainWindowView {
 
 	private final ListChangeListener<TableColumn<Mod, ?>> SORT_LISTENER;
 
-	private final double SCROLL_THRESHOLD;
-
-	private final double SCROLL_SPEED;
-
 	private Timeline scrollTimeline;
 
 	private final List<Mod> SELECTIONS;
@@ -178,9 +176,6 @@ public class MainWindowView {
 		SAVE_PROFILES = uiService.getSAVE_PROFILES();
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
-
-		SCROLL_THRESHOLD = 30.0;
-		SCROLL_SPEED = 0.6;
 
 		SELECTIONS = new ArrayList<>();
 
@@ -413,6 +408,10 @@ public class MainWindowView {
 
 	//TODO: Increase speed based on distance from the edge
 	private void handleModTableDragOver(DragEvent event) {
+		//Enables auto-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
+		final double SCROLL_THRESHOLD = 30.0;
+		final double SCROLL_SPEED = 0.7;
+
 		double y = event.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
 		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
@@ -451,7 +450,7 @@ public class MainWindowView {
 						verticalScrollBar.setValue(newValue);
 					})
 			);
-			scrollTimeline.setCycleCount(1); // Keep updating until stopped
+			scrollTimeline.setCycleCount(1); //We only play this for one cycle since we should only be playing the animation when we're actively dragging.
 			scrollTimeline.play(); // Start the scrolling animation
 		}
 
