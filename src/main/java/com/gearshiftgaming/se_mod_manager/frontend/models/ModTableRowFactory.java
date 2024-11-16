@@ -275,7 +275,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			dragEvent.consume();
 		});
 
-		//This is a dumb hack but I can't get the rows height any other way
+		//This is a dumb hack but I can't get the row's height any other way
 		if (MODLIST_MANAGER_VIEW.getSingleTableRow() == null) MODLIST_MANAGER_VIEW.setSingleTableRow(row);
 
 		return row;
@@ -298,15 +298,17 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		}
 	}
 
+	/*
+		Gets the actual position for our load priority. If we are in descending order, we actually need to set load priority to the exact opposite number in the list from where it was dropped.
+		So if we are descending and drop the item at the very top of the list, we actually want to make its load priority the last, while keeping its actual position in the list where we dropped it.
+	 */
 	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
-		int intendedLoadPriority;
 		//Check if we are in ascending/default order, else we're in descending order
 		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
 			return index;
 		} else {
-			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
+			return UI_SERVICE.getCurrentModList().size() - index;
 		}
-		return intendedLoadPriority;
 	}
 
 	private String getSelectedCellBorderColor() {
