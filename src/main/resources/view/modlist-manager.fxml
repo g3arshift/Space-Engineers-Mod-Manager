@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<SplitPane fx:id="mainViewSplit" dividerPositions="0.7" orientation="VERTICAL" BorderPane.alignment="CENTER" xmlns:fx="http://javafx.com/fxml/1">
+    <VBox>
+        <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+            <TableView fx:id="modTable" maxHeight="1.7976931348623157E308"
+                       maxWidth="1.7976931348623157E308">
+                <placeholder>
+                    <Label text="No Mods Installed"/>
+                </placeholder>
+                <columns>
+                    <TableColumn fx:id="modName" prefWidth="200.0" text="Mod Name"/>
+                    <TableColumn fx:id="loadPriority" prefWidth="85.0" text="Priority"/>
+                    <TableColumn fx:id="modLastUpdated" prefWidth="115.0" text="Last Updated"/>
+                    <TableColumn fx:id="modVersion" prefWidth="85.0" text="Version"/>
+                    <TableColumn fx:id="modSource" prefWidth="85.0" text="Import Source" visible="false"/>
+                    <TableColumn fx:id="modType" prefWidth="100.0" text="Source"/>
+                    <TableColumn fx:id="modCategory" prefWidth="125.0" text="Category/Tags"/>
+                </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+            </TableView>
+        </ScrollPane>
+        <HBox fx:id="tableActions" alignment="CENTER_LEFT" spacing="10.0" VBox.vgrow="NEVER">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <ComboBox fx:id="modImportDropdown" prefWidth="250.0" promptText="Add mods from..."/>
+                    </children>
+                </HBox>
+                <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
+                    <buttons>
+                        <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist"/>
+                        <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist"/>
+                        <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist"/>
+                        <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist"
+                                text="Apply Modlist"/>
+                        <Button fx:id="launchSpaceEngineers" mnemonicParsing="false"
+                                onAction="#launchSpaceEngineers" text="Launch SE"/>
+                    </buttons>
+                </ButtonBar>
+                <HBox alignment="CENTER_LEFT" spacing="10.0"/>
+            </children>
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+            <padding>
+                <Insets bottom="5.0" left="10.0" right="10.0" top="5.0"/>
+            </padding>
+        </HBox>
+    </VBox>
+    <TabPane fx:id="informationPane" tabDragPolicy="REORDER">
+        <tabs>
+            <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
+                <content>
+                    <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS"
+                                maxWidth="1.7976931348623157E308">
+                        <content>
+                            <TextArea editable="false"/>
+                        </content>
+                    </ScrollPane>
+                </content>
+            </Tab>
+            <Tab fx:id="logTab" onClosed="#closeLogTab" text="Log">
+                <content>
+                    <ListView fx:id="viewableLog" focusTraversable="false"/>
+                </content>
+            </Tab>
+        </tabs>
+        <padding>
+            <Insets bottom="5.0"/>
+        </padding>
+    </TabPane>
+</SplitPane>

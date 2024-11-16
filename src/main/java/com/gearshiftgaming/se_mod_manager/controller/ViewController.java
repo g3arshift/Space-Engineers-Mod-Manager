@@ -15,6 +15,7 @@ import jakarta.xml.bind.JAXBException;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
@@ -107,61 +108,67 @@ public class ViewController {
 		//For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
 
 		//View for adding a new Save Profile
-		FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
-		SaveInputView saveInputView = new SaveInputView(UI_SERVICE);
-		saveListInputLoader.setController(saveInputView);
-		Parent saveListInputRoot = saveListInputLoader.load();
-		saveInputView.initView(saveListInputRoot);
+		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
+		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(UI_SERVICE);
+		SAVE_LIST_INPUT_LOADER.setController(SAVE_INPUT_VIEW);
+		final Parent SAVE_LIST_INPUT_ROOT = SAVE_LIST_INPUT_LOADER.load();
+		SAVE_INPUT_VIEW.initView(SAVE_LIST_INPUT_ROOT);
 
 		//View for text input when creating a new save profile.
-		FXMLLoader saveProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
-		ProfileInputView saveProfileInputView = new ProfileInputView();
-		saveProfileManagerLoader.setController(saveProfileInputView);
-		Parent saveListInputSecondStepRoot = saveProfileManagerLoader.load();
-		saveProfileInputView.initView(saveListInputSecondStepRoot);
+		final FXMLLoader SAVE_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
+		final ProfileInputView SAVE_PROFILE_INPUT_VIEW = new ProfileInputView();
+		SAVE_PROFILE_MANAGER_LOADER.setController(SAVE_PROFILE_INPUT_VIEW);
+		final Parent SAVE_PROFILE_MANAGER_ROOT = SAVE_PROFILE_MANAGER_LOADER.load();
+		SAVE_PROFILE_INPUT_VIEW.initView(SAVE_PROFILE_MANAGER_ROOT);
 
 		//View for text input when adding a new Mod Profile
-		FXMLLoader modProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
-		ProfileInputView modProfileInputView = new ProfileInputView();
-		modProfileManagerLoader.setController(modProfileInputView);
-		Parent modProfileCreateRoot = modProfileManagerLoader.load();
-		modProfileInputView.initView(modProfileCreateRoot);
+		final FXMLLoader MOD_PROFILE_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
+		final ProfileInputView MOD_PROFILE_INPUT_VIEW = new ProfileInputView();
+		MOD_PROFILE_INPUT_LOADER.setController(MOD_PROFILE_INPUT_VIEW);
+		final Parent MOD_PROFILE_INPUT_ROOT = MOD_PROFILE_INPUT_LOADER.load();
+		MOD_PROFILE_INPUT_VIEW.initView(MOD_PROFILE_INPUT_ROOT);
 
 		//View for managing Save Profiles
-		FXMLLoader saveManagerLoader = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
-		SaveManagerView saveManagerView = new SaveManagerView(UI_SERVICE, saveInputView, saveProfileInputView);
-		saveManagerLoader.setController(saveManagerView);
-		Parent saveManagerRoot = saveManagerLoader.load();
+		final FXMLLoader SAVE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
+		final SaveManagerView SAVE_MANAGER_VIEW = new SaveManagerView(UI_SERVICE, SAVE_INPUT_VIEW, SAVE_PROFILE_INPUT_VIEW);
+		SAVE_MANAGER_LOADER.setController(SAVE_MANAGER_VIEW);
+		final Parent SAVE_MANAGER_ROOT = SAVE_MANAGER_LOADER.load();
 
 		//View for managing Mod Profiles
-		FXMLLoader modProfilerManagerLoader = new FXMLLoader(getClass().getResource("/view/mod-profile-manager.fxml"));
-		ModProfileManagerView modProfileManagerView = new ModProfileManagerView(UI_SERVICE, modProfileInputView);
-		modProfilerManagerLoader.setController(modProfileManagerView);
-		Parent modProfileRoot = modProfilerManagerLoader.load();
-
-		//View for the menubar section of the main window
-		FXMLLoader menuBarLoader = new FXMLLoader(getClass().getResource("/view/menubar.fxml"));
-		MenuBarView menuBarView = new MenuBarView(UI_SERVICE, modProfileManagerView, saveManagerView);
-		menuBarLoader.setController(menuBarView);
-		Parent menuBarRoot = menuBarLoader.load();
+		final FXMLLoader MOD_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/mod-profile-manager.fxml"));
+		final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW = new ModProfileManagerView(UI_SERVICE, MOD_PROFILE_INPUT_VIEW);
+		MOD_PROFILE_MANAGER_LOADER.setController(MOD_PROFILE_MANAGER_VIEW);
+		final Parent MOD_PROFILE_MANAGER_ROOT = MOD_PROFILE_MANAGER_LOADER.load();
 
 		//View for the statusbar section of the main window
-		FXMLLoader statusBarLoader = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
-		StatusBarView statusBarView = new StatusBarView(UI_SERVICE);
-		statusBarLoader.setController(statusBarView);
-		Parent statusBarRoot = statusBarLoader.load();
+		final FXMLLoader STATUS_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
+		final StatusBarView STATUS_BAR_VIEW = new StatusBarView(UI_SERVICE);
+		STATUS_BAR_LOADER.setController(STATUS_BAR_VIEW);
+		final Parent STATUS_BAR_ROOT = STATUS_BAR_LOADER.load();
 
-		//View for the primary application window
-		FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
-		MainWindowView mainWindowView = new MainWindowView(PROPERTIES, stage,
-				menuBarView, statusBarView, UI_SERVICE);
-		mainViewLoader.setController(mainWindowView);
-		Parent mainViewRoot = mainViewLoader.load();
-		mainWindowView.initView(mainViewRoot, menuBarRoot, statusBarRoot);
+		//View for managing the actual mod lists. This is the center section of the main window
+		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, STATUS_BAR_VIEW);
+		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
+		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
+
+		//View for the menubar section of the main window
+		final FXMLLoader MENU_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/menubar.fxml"));
+		final MenuBarView MENU_BAR_VIEW = new MenuBarView(UI_SERVICE, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, MODLIST_MANAGER_VIEW);
+		MENU_BAR_LOADER.setController(MENU_BAR_VIEW);
+		final Parent MENU_BAR_ROOT = MENU_BAR_LOADER.load();
 
 		//The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-		modProfileManagerView.initView(modProfileRoot, PROPERTIES, menuBarView);
-		saveManagerView.initView(saveManagerRoot, PROPERTIES, menuBarView);
+		MOD_PROFILE_MANAGER_VIEW.initView(MOD_PROFILE_MANAGER_ROOT, PROPERTIES, MENU_BAR_VIEW);
+		SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, PROPERTIES, MENU_BAR_VIEW);
+
+		//View for the primary application window
+		final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
+		final MainWindowView MAIN_WINDOW_VIEW = new MainWindowView(PROPERTIES, stage,
+				MENU_BAR_VIEW, MODLIST_MANAGER_VIEW, STATUS_BAR_VIEW, UI_SERVICE);
+		MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
+		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
+		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);
 
 		//Save our changes that were made to the user config, such as removing missing profiles, to disk
 		UI_SERVICE.saveUserData();

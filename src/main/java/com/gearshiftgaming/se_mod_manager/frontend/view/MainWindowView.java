@@ -1,50 +1,26 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import java.awt.*;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.List;
-
 /**
  * This represents the main window of the application, with a border pane at its core.
  * It contains the center section of the borderpane, but all other sections should be delegated to their own controllers and FXML files.
@@ -64,69 +40,7 @@ public class MainWindowView {
 	@FXML
 	private BorderPane mainWindowLayout;
 
-	@FXML
-	private ComboBox<String> modImportDropdown;
-
-	@FXML
-	private Button importModlist;
-
-	@FXML
-	private Button exportModlist;
-
-	@FXML
-	private Button resetModlist;
-
-	@FXML
-	private Button injectModlist;
-
-	@FXML
-	private Button launchSpaceEngineers;
-
-	@FXML
-	private SplitPane mainViewSplit;
-
-	//TODO: Low priority: Fix the alignment of the table headers to be centered, not center left.
-	@FXML
-	private TableView<Mod> modTable;
-
-	@FXML
-	private TableColumn<Mod, Mod> modName;
-
-	@FXML
-	private TableColumn<Mod, String> modType;
-
-	@FXML
-	private TableColumn<Mod, String> modVersion;
-
-	@FXML
-	private TableColumn<Mod, String> modLastUpdated;
-
-	@FXML
-	private TableColumn<Mod, Integer> loadPriority;
-
-	@FXML
-	private TableColumn<Mod, String> modSource;
-
-	@FXML
-	private TableColumn<Mod, String> modCategory;
-
-	@FXML
-	private HBox tableActions;
-
-	@FXML
-	private TabPane informationPane;
-
-	@FXML
-	private Tab logTab;
-
-	@FXML
-	private Tab modDescriptionTab;
-
-	@FXML
-	private ListView<LogMessage> viewableLog;
-
 	//TODO: We need to replace the window control bar for the window.
-	private final ObservableList<LogMessage> USER_LOG;
 
 	private final Properties PROPERTIES;
 
@@ -136,68 +50,40 @@ public class MainWindowView {
 
 	private Scene scene;
 
-	private boolean mainViewSplitDividerVisible = true;
-
 	private final UserConfiguration USER_CONFIGURATION;
-
-	//This is just a wrapper for the userConfiguration modProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private final ObservableList<ModProfile> MOD_PROFILES;
-
-	//This is just a wrapper for the userConfiguration saveProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private final ObservableList<SaveProfile> SAVE_PROFILES;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
 	private final MenuBarView MENU_BAR_VIEW;
 
+	//This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
+	private final ModlistManagerView MODLIST_MANAGER_VIEW;
+
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane
 	private final StatusBarView STATUS_BAR_VIEW;
 
-	private final DataFormat SERIALIZED_MIME_TYPE;
-
-	private final ListChangeListener<TableColumn<Mod, ?>> SORT_LISTENER;
-
-	private Timeline scrollTimeline;
-
-	private final List<Mod> SELECTIONS;
-
-	//This list existing is a really, really dumb hack because it's impossible to get the actual row height from the table otherwise.
-	//It should only ever have one item.
-	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
-
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, StatusBarView statusBarView, UiService uiService) {
+	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
 		this.UI_SERVICE = uiService;
-		this.USER_LOG = this.UI_SERVICE.getUSER_LOG();
 		this.MENU_BAR_VIEW = menuBarView;
+		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
-
-		MOD_PROFILES = uiService.getMOD_PROFILES();
-		SAVE_PROFILES = uiService.getSAVE_PROFILES();
-
-		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
-
-		SELECTIONS = new ArrayList<>();
-
-		SINGLE_TABLE_ROW = new ArrayList<>();
-
-		SORT_LISTENER = change -> {
-			if (modTable.getSortOrder().isEmpty()) {
-				applyDefaultSort();
-			}
-		};
 	}
 
-	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
-		MENU_BAR_VIEW.initView(this);
+		MENU_BAR_VIEW.initView();
+		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getActiveModCount(), MENU_BAR_VIEW.getModConflicts(), MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle());
 		STATUS_BAR_VIEW.initView();
 		mainWindowLayout.setTop(menuBarRoot);
+		mainWindowLayout.setCenter(modlistManagerRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
-		setupMainViewItems();
+
+
+		final ObservableList<SaveProfile> SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 
 		//Prompt the user to remove any saves that no longer exist on the file system.
 		if (SAVE_PROFILES.size() != 1 &&
@@ -222,121 +108,8 @@ public class MainWindowView {
 				}
 			}
 		}
-		setupModTable();
-		mainWindowLayout.setOnDragOver(this::handleModTableDragOver);
-		tableActions.setOnDragDropped(this::handleTableActionsDragOver);
+		mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
 	}
-
-	@FXML
-	private void closeLogTab() {
-		MENU_BAR_VIEW.getLogToggle().setSelected(false);
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		}
-	}
-
-	@FXML
-	private void closeModDescriptionTab() {
-		MENU_BAR_VIEW.getModDescriptionToggle().setSelected(false);
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		}
-	}
-
-
-	private void importModlist() {
-		//TODO: Implement. Allow importing modlists from either sandbox file or exported list.
-	}
-
-	@FXML
-	private void exportModlist() {
-		//TODO: Implement. Export in our own format (use XML).
-	}
-
-	@FXML
-	private void resetModlist() {
-		//TODO: Implement by setting the current modprofile modlist to whatever it is in our user configuration.
-		// Make a popup asking if they're sure they want to reset the modlist.
-		// Also make a popup if the list was never saved and can't be found in the user configuration.
-	}
-
-	//Apply the modlist the user is currently using to the save profile they're currently using.
-	//TODO: This whole thing likely need rewritten
-	@FXML
-	private void applyModlist() throws IOException {
-//		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
-//		ModProfile currentModProfile = uiService.getCurrentModProfile();
-//		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
-//		if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
-//			//TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
-//			Result<Void> modlistResult = uiService.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
-//			uiService.log(modlistResult);
-//			if (!modlistResult.isSuccess()) {
-//				currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
-//			} else {
-//				currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
-//
-//				//TODO: This and the currentSave profile are both null, but they aren't actually. Why? This logic probably needs all looked over and rewritten.
-//				int modProfileIndex = modProfiles.indexOf(currentModProfile);
-//				modProfiles.set(modProfileIndex, currentModProfile);
-//
-//				int saveProfileIndex = saveProfiles.indexOf(currentSaveProfile);
-//				saveProfiles.set(saveProfileIndex, currentSaveProfile);
-//
-//				uiService.log(uiService.saveUserData(userConfiguration));
-//				currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
-//			}
-//			statusBarView.update(currentSaveProfile);
-//		} else {
-//			//Save or Mod profile not setup yet. Create both a Save and Mod profile to be able to apply a modlist.
-//			String errorMessage = "Save profile not setup yet. Create a save profile to apply a modlist.";
-//			uiService.log(errorMessage, MessageType.ERROR);
-//			Popup.displaySimpleAlert(errorMessage, stage, MessageType.ERROR);
-//		}
-	}
-
-	@FXML
-	private void launchSpaceEngineers() throws URISyntaxException, IOException {
-		//TODO: Check this works on systems with no previous steam url association
-		Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
-	}
-
-	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
-	private void setupModTable() {
-
-		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, SINGLE_TABLE_ROW));
-
-		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
-		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
-		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
-
-		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
-		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
-		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
-				cellData.getValue().getLastUpdated().toString() : "Unknown"));
-
-		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
-
-		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
-		modCategory.setCellValueFactory(cellData -> {
-			StringBuilder sb = new StringBuilder();
-			List<String> categories = cellData.getValue().getCategories();
-			for (int i = 0; i < cellData.getValue().getCategories().size(); i++) {
-				if (i + 1 < cellData.getValue().getCategories().size()) {
-					sb.append(categories.get(i)).append(", ");
-				} else {
-					sb.append(categories.get(i));
-				}
-			}
-			return new SimpleStringProperty(sb.toString());
-		});
-
-		modTable.getSortOrder().addListener(SORT_LISTENER);
-		modTable.setItems(UI_SERVICE.getCurrentModList());
-	}
-
-	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
 
 	/**
 	 * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
@@ -360,154 +133,9 @@ public class MainWindowView {
 
 		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
 		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
-			if (!this.isMainViewSplitDividerVisible()) {
-				this.getMainViewSplit().setDividerPosition(0, 1);
+			if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+				MODLIST_MANAGER_VIEW.getMainViewSplit().setDividerPosition(0, 1);
 			}
 		});
-	}
-
-	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
-	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
-	public void setupMainViewItems() {
-		viewableLog.setItems(USER_LOG);
-		viewableLog.setCellFactory(param -> new LogCell());
-		//Disable selecting rows in the log.
-		viewableLog.setSelectionModel(null);
-
-		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
-
-		//TODO: Setup a function in ModList service to track conflicts.
-	}
-	//TODO: Hookup all the buttons to everything
-
-	protected void disableSplitPaneDivider() {
-		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
-			node.setVisible(false);
-			mainViewSplitDividerVisible = false;
-		}
-		mainViewSplit.setDividerPosition(0, 1);
-	}
-
-	protected void enableSplitPaneDivider() {
-		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
-			node.setVisible(true);
-			mainViewSplitDividerVisible = true;
-		}
-		mainViewSplit.setDividerPosition(0, 0.7);
-	}
-
-	private void applyDefaultSort() {
-		if (loadPriority != null) {
-			modTable.getSortOrder().removeListener(SORT_LISTENER);
-
-			loadPriority.setSortType(TableColumn.SortType.ASCENDING);
-			modTable.getSortOrder().add(loadPriority);
-			modTable.sort();
-			modTable.getSortOrder().clear();
-
-			modTable.getSortOrder().addListener(SORT_LISTENER);
-		}
-	}
-
-	//TODO: Increase speed based on distance from the edge
-	private void handleModTableDragOver(DragEvent event) {
-		//Enables auto-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
-		final double SCROLL_THRESHOLD = 20.0;
-		final double SCROLL_SPEED = 0.3;
-
-		double y = event.getY();
-		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
-		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
-
-		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-
-		double currentScrollValue = verticalScrollBar.getValue();
-		double minScrollValue = verticalScrollBar.getMin();
-		double maxScrollValue = verticalScrollBar.getMax();
-		double scrollAmount;
-
-		//Scroll up
-		if (y < modTableTop - SCROLL_THRESHOLD && currentScrollValue > minScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
-			scrollAmount = -SCROLL_SPEED * 0.1;
-		} else if (y > modTableBottom + SCROLL_THRESHOLD && currentScrollValue < maxScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
-			scrollAmount = SCROLL_SPEED * 0.1;
-		} else {
-			scrollAmount = 0;
-		}
-
-		if (scrollAmount != 0) {
-			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
-				scrollTimeline = new Timeline(
-						new KeyFrame(Duration.millis(16), e -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
-							double newValue = verticalScrollBar.getValue() + scrollAmount;
-							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
-							verticalScrollBar.setValue(newValue);
-						})
-				);
-				scrollTimeline.setCycleCount(60); //One second of animation is 60 cycles, so set this to 60 so we don't end up with infinite animations.
-				scrollTimeline.play(); // Start the scrolling animation
-			}
-		} else {
-			if (scrollTimeline != null) {
-				scrollTimeline.stop();
-			}
-		}
-
-		event.acceptTransferModes(TransferMode.MOVE);
-		event.consume();
-	}
-
-	//This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
-	private void handleTableActionsDragOver(DragEvent dragEvent) {
-		Dragboard dragboard = dragEvent.getDragboard();
-
-		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
-
-			for (Mod m : SELECTIONS) {
-				modTable.getItems().remove(m);
-			}
-
-			modTable.getSelectionModel().clearSelection();
-
-			for (Mod m : SELECTIONS) {
-				modTable.getItems().add(m);
-				modTable.getSelectionModel().select(modTable.getItems().size() - 1);
-			}
-
-			//TODO: Need to move the duplicates to a shared helper class. Call it "tableHelper" or something.
-			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
-				}
-			} else {
-				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
-				}
-			}
-
-			//Redo our sort since our row order has changed
-			modTable.sort();
-
-			/*
-				We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
-				but for whatever reason the changes aren't propagating without this.
-			*/
-			//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
-			UI_SERVICE.saveUserData();
-
-			dragEvent.consume();
-		}
-	}
-
-	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
-		int intendedLoadPriority;
-		//Check if we are in ascending/default order, else we're in descending order
-		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-			return index;
-		} else {
-			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
-		}
-		return intendedLoadPriority;
 	}
 }
