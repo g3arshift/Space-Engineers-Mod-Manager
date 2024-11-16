@@ -29,8 +29,6 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-
-@Getter
 public class MenuBarView {
 
 	//FXML Items
@@ -38,9 +36,11 @@ public class MenuBarView {
 	private MenuItem saveModlistAs;
 
 	@FXML
+	@Getter
 	private CheckMenuItem logToggle;
 
 	@FXML
+	@Getter
 	private CheckMenuItem modDescriptionToggle;
 
 	@FXML
@@ -65,19 +65,23 @@ public class MenuBarView {
 	private MenuItem manageSaveProfiles;
 
 	@FXML
+	@Getter
 	private ComboBox<ModProfile> modProfileDropdown;
 
 	@FXML
+	@Getter
 	private ComboBox<SaveProfile> saveProfileDropdown;
 
 	@FXML
+	@Getter
 	private Text activeModCount;
 
 	@FXML
+	@Getter
 	private Text modConflicts;
 
 	@FXML
-	private TextField modTableSearchBox;
+	private TextField modTableSearchField;
 
 	@FXML
 	private Button clearSearchBox;
@@ -103,15 +107,12 @@ public class MenuBarView {
 	@FXML
 	private CheckMenuItem draculaTheme;
 
-	private MainWindowView mainWindowView;
+	//TODO: Should replace this with a ModlistManagerView
+	private final ModlistManagerView MODLIST_MANAGER_VIEW;
 
 	private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
 
 	private final UiService UI_SERVICE;
-
-	private final ObservableList<ModProfile> MOD_PROFILES;
-
-	private final ObservableList<SaveProfile> SAVE_PROFILES;
 
 	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
 
@@ -119,7 +120,7 @@ public class MenuBarView {
 
 	//TODO: On dropdown select, change active profile
 
-	public MenuBarView(UiService UI_SERVICE, ModProfileManagerView MOD_PROFILE_MANAGER_VIEW, SaveManagerView SAVE_MANAGER_VIEW) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public MenuBarView(UiService uiService, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -127,16 +128,13 @@ public class MenuBarView {
 		//		buttonCellFix.setText(saveProfile.getProfileName());
 		//		topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 		//	in saveManagerView fixes it?! WHY?!
-		this.UI_SERVICE = UI_SERVICE;
-		this.MOD_PROFILE_MANAGER_VIEW = MOD_PROFILE_MANAGER_VIEW;
-		this.SAVE_MANAGER_VIEW = SAVE_MANAGER_VIEW;
-
-		MOD_PROFILES = UI_SERVICE.getMOD_PROFILES();
-		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
+		this.UI_SERVICE = uiService;
+		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
+		this.SAVE_MANAGER_VIEW = saveManagerView;
+		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 	}
 
-	public void initView(MainWindowView mainWindowView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		this.mainWindowView = mainWindowView;
+	public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
 		THEME_LIST.add(primerLightTheme);
 		THEME_LIST.add(primerDarkTheme);
@@ -152,7 +150,7 @@ public class MenuBarView {
 		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell());
 		saveProfileDropdown.setButtonCell(new SaveProfileCell());
 
-		modProfileDropdown.setItems(MOD_PROFILES);
+		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
@@ -186,32 +184,33 @@ public class MenuBarView {
 
 	@FXML
 	private void toggleLog() {
-		TabPane informationPane = mainWindowView.getInformationPane();
-		Tab logTab = mainWindowView.getLogTab();
+		TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
+		Tab logTab = MODLIST_MANAGER_VIEW.getLogTab();
 
 		if (!logToggle.isSelected()) {
 			informationPane.getTabs().remove(logTab);
 		} else informationPane.getTabs().add(logTab);
 
 		if (informationPane.getTabs().isEmpty()) {
-			mainWindowView.disableSplitPaneDivider();
-		} else if (!mainWindowView.isMainViewSplitDividerVisible()) {
-			mainWindowView.enableSplitPaneDivider();
+			MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
+		} else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+			MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
 		}
 	}
 
 	@FXML
 	private void toggleModDescription() {
-		TabPane informationPane = mainWindowView.getInformationPane();
-		Tab modDescriptionTab = mainWindowView.getModDescriptionTab();
+		TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
+		Tab modDescriptionTab = MODLIST_MANAGER_VIEW.getModDescriptionTab();
+
 		if (!modDescriptionToggle.isSelected()) {
 			informationPane.getTabs().remove(modDescriptionTab);
 		} else informationPane.getTabs().add(modDescriptionTab);
 
 		if (informationPane.getTabs().isEmpty()) {
-			mainWindowView.disableSplitPaneDivider();
-		} else if (!mainWindowView.isMainViewSplitDividerVisible()) {
-			mainWindowView.enableSplitPaneDivider();
+			MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
+		} else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+			MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
 		}
 	}
 
@@ -243,7 +242,7 @@ public class MenuBarView {
 
 		Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
 		//This fixes the selected row being the wrong color until we change selection
-		mainWindowView.getModTable().refresh();
+		MODLIST_MANAGER_VIEW.getModTable().refresh();
 		if (savedUserTheme.isSuccess()) {
 			UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
 		} else {
@@ -265,7 +264,7 @@ public class MenuBarView {
 	private void selectModProfile() {
 		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 		UI_SERVICE.setCurrentModProfile(modProfile);
-		mainWindowView.getModTable().setItems(UI_SERVICE.getCurrentModList());
+		MODLIST_MANAGER_VIEW.getModTable().setItems(UI_SERVICE.getCurrentModList());
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
 	}
 
@@ -277,6 +276,6 @@ public class MenuBarView {
 
 	@FXML
 	private void clearSearchBox() {
-		modTableSearchBox.clear();
+		modTableSearchField.clear();
 	}
 }

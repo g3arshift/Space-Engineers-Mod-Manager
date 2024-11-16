@@ -131,7 +131,7 @@
                  </HBox>
                  <StackPane alignment="TOP_CENTER">
                      <children>
-                         <TextField fx:id="modTableSearchBox" promptText="Search Modlist" />
+                         <TextField fx:id="modTableSearchField" promptText="Search Modlist" />
                          <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" StackPane.alignment="CENTER_RIGHT">
                              <children>
                                  <FontIcon iconLiteral="ci-close" iconSize="16" />
