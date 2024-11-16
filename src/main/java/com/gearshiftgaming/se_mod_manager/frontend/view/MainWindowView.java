@@ -50,8 +50,7 @@ import java.util.List;
  * It contains the center section of the borderpane, but all other sections should be delegated to their own controllers and FXML files.
  * <p>
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
- * You may use, distribute and modify this code under the
- * terms of the GPL3 license.
+ * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
@@ -334,7 +333,6 @@ public class MainWindowView {
 		});
 
 		modTable.getSortOrder().addListener(SORT_LISTENER);
-
 		modTable.setItems(UI_SERVICE.getCurrentModList());
 	}
 
@@ -415,7 +413,7 @@ public class MainWindowView {
 	private void handleModTableDragOver(DragEvent event) {
 		//Enables auto-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
 		final double SCROLL_THRESHOLD = 20.0;
-		final double SCROLL_SPEED = 0.35;
+		final double SCROLL_SPEED = 0.3;
 
 		double y = event.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
@@ -440,13 +438,13 @@ public class MainWindowView {
 		if (scrollAmount != 0) {
 			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
 				scrollTimeline = new Timeline(
-						new KeyFrame(Duration.millis(16), e -> { // 60 FPS update for smooth animation
+						new KeyFrame(Duration.millis(16), e -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
 							double newValue = verticalScrollBar.getValue() + scrollAmount;
 							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
 							verticalScrollBar.setValue(newValue);
 						})
 				);
-				scrollTimeline.setCycleCount(Animation.INDEFINITE); //We only play this for one cycle since we should only be playing the animation when we're actively dragging.
+				scrollTimeline.setCycleCount(60); //One second of animation is 60 cycles, so set this to 60 so we don't end up with infinite animations.
 				scrollTimeline.play(); // Start the scrolling animation
 			}
 		} else {
