@@ -29,6 +29,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.awt.*;
 import java.io.IOException;
@@ -128,13 +129,15 @@ public class ModlistManagerView {
 
 	private ListChangeListener<TableColumn<Mod, ?>> sortListener;
 
+	@Getter
 	private Timeline scrollTimeline;
 
 	private final List<Mod> SELECTIONS;
 
-	//This list existing is a really, really dumb hack because it's impossible to get the actual row height from the table otherwise.
-	//It should only ever have one item.
-	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
+	@Getter
+	@Setter
+	//This is a really dumb hack that we have to use to actually get a row as it is styled in the application.
+	private TableRow<Mod> singleTableRow;
 
 	//TODO: We might not need this if we setup a listener properly on the active mod count, but I'm not sure how we can since it has to be done in ModNameCell.
 	private Text activeModCount;
@@ -158,7 +161,6 @@ public class ModlistManagerView {
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
-		SINGLE_TABLE_ROW = new ArrayList<>();
 	}
 
 	public void initView(Text activeModCount, Text modConflicts, CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
@@ -183,7 +185,7 @@ public class ModlistManagerView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, SINGLE_TABLE_ROW));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -348,10 +350,11 @@ public class ModlistManagerView {
 		double maxScrollValue = verticalScrollBar.getMax();
 		double scrollAmount;
 
+
 		//Scroll up
-		if (y < modTableTop - SCROLL_THRESHOLD && currentScrollValue > minScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
+		if (y < modTableTop - SCROLL_THRESHOLD && currentScrollValue > minScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) {
 			scrollAmount = -SCROLL_SPEED * 0.1;
-		} else if (y > modTableBottom + SCROLL_THRESHOLD && currentScrollValue < maxScrollValue && modTable.getItems().size() * SINGLE_TABLE_ROW.getFirst().getHeight() > modTable.getHeight()) {
+		} else if (y > modTableBottom + SCROLL_THRESHOLD && currentScrollValue < maxScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) {
 			scrollAmount = SCROLL_SPEED * 0.1;
 		} else {
 			scrollAmount = 0;

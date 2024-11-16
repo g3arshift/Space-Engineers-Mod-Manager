@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.view.ModlistManagerView;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -42,7 +43,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private TableRow<Mod> previousRow;
 
-	private final List<TableRow<Mod>> SINGLE_TABLE_ROW;
+	private final ModlistManagerView MODLIST_MANAGER_VIEW;
 
 	private enum RowBorderType {
 		TOP,
@@ -50,11 +51,11 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 	}
 
 
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, List<TableRow<Mod>> singleTableRow) {
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, ModlistManagerView modlistManagerView) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
 		this.SELECTIONS = selections;
-		this.SINGLE_TABLE_ROW = singleTableRow;
+		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 	}
 
 
@@ -266,19 +267,17 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
-		//TODO: Getting a bug where, when we stop dragging, if we were dragged over when we let go it keeps dragging to the top or bottom.
-		// We need to pass the timeline in and stop it. This might not work though cause of dereferencing. Might honestly at this point be better to, for both this *and* the row size stuff, move the center content to its own class and pass that as a variable here.
 		row.setOnDragDone(dragEvent -> {
-			System.out.println("Stopping scroll");
+			if (MODLIST_MANAGER_VIEW.getScrollTimeline() != null) MODLIST_MANAGER_VIEW.getScrollTimeline().stop();
+
 			// Remove any borders and perform clean-up actions here
-			previousRow.setBorder(null);
+			if (previousRow != null) previousRow.setBorder(null);
 			dragEvent.consume();
 		});
 
-		//This is a dumb hack but I can't get the damn rows any other way
-		if(SINGLE_TABLE_ROW.isEmpty()) {
-			SINGLE_TABLE_ROW.add(row);
-		}
+		//This is a dumb hack but I can't get the row's height any other way
+		if (MODLIST_MANAGER_VIEW.getSingleTableRow() == null) MODLIST_MANAGER_VIEW.setSingleTableRow(row);
+
 		return row;
 	}
 
@@ -299,15 +298,17 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		}
 	}
 
+	/*
+		Gets the actual position for our load priority. If we are in descending order, we actually need to set load priority to the exact opposite number in the list from where it was dropped.
+		So if we are descending and drop the item at the very top of the list, we actually want to make its load priority the last, while keeping its actual position in the list where we dropped it.
+	 */
 	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
-		int intendedLoadPriority;
 		//Check if we are in ascending/default order, else we're in descending order
 		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
 			return index;
 		} else {
-			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
+			return UI_SERVICE.getCurrentModList().size() - index;
 		}
-		return intendedLoadPriority;
 	}
 
 	private String getSelectedCellBorderColor() {
