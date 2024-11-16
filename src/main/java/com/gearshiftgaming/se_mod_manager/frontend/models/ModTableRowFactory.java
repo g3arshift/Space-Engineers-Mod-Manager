@@ -266,7 +266,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
+		//TODO: Getting a bug where, when we stop dragging, if we were dragged over when we let go it keeps dragging to the top or bottom.
+		// We need to pass the timeline in and stop it. This might not work though cause of dereferencing. Might honestly at this point be better to, for both this *and* the row size stuff, move the center content to its own class and pass that as a variable here.
 		row.setOnDragDone(dragEvent -> {
+			System.out.println("Stopping scroll");
 			// Remove any borders and perform clean-up actions here
 			previousRow.setBorder(null);
 			dragEvent.consume();
