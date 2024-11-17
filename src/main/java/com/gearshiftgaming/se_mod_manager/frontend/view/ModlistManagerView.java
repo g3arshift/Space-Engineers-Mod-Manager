@@ -351,6 +351,8 @@ public class ModlistManagerView {
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
 		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
 
+		//TODO: I really want to have this only looked up once or twice. Test if it can be actually changed to being set once, like an observable value, instead of constantly doing lookups. Do the same for header row.
+		// If it can, also pass that to row factory instead of it doing lookups too. Only for vertical bar, though.
 		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		TableHeaderRow headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 
