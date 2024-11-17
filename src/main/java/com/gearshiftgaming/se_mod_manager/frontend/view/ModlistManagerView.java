@@ -99,7 +99,7 @@ public class ModlistManagerView {
 	private TableColumn<Mod, String> modCategory;
 
 	@FXML
-	private HBox tableActions;
+	private HBox actions;
 
 	@FXML
 	@Getter
@@ -185,9 +185,9 @@ public class ModlistManagerView {
 
 		setupMainViewItems();
 		setupModTable();
-		tableActions.setOnDragDropped(this::handleTableActionsOnDragDrop);
-		tableActions.setOnDragOver(this::handleTableActionsOnDragOver);
-		tableActions.setOnDragExited(this::handleTableActionsOnDragExit);
+		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
+		actions.setOnDragOver(this::handleTableActionsOnDragOver);
+		actions.setOnDragExited(this::handleTableActionsOnDragExit);
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -363,7 +363,7 @@ public class ModlistManagerView {
 		//Scroll up
 		if (y < modTableTop && currentScrollValue > minScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) {
 			scrollAmount = -SCROLL_SPEED * 0.1;
-		} else if (y > modTableBottom + tableActions.getHeight() && currentScrollValue < maxScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
+		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
 			scrollAmount = SCROLL_SPEED * 0.1;
 		} else {
 			scrollAmount = 0;
@@ -389,7 +389,7 @@ public class ModlistManagerView {
 			}
 		}
 
-		if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + tableActions.getHeight()) {
+		if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + actions.getHeight()) {
 			dragEvent.acceptTransferModes(TransferMode.MOVE);
 		}
 
@@ -400,7 +400,7 @@ public class ModlistManagerView {
 	private void handleTableActionsOnDragDrop(DragEvent dragEvent) {
 		Dragboard dragboard = dragEvent.getDragboard();
 
-		tableActions.setBorder(null);
+		actions.setBorder(null);
 
 		//TODO:
 		/*
@@ -460,12 +460,12 @@ public class ModlistManagerView {
 			dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
 					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
 					CornerRadii.EMPTY, new BorderWidths(2, 0, 0, 0), new Insets(-2, verticalScrollBar.getWidth(), 0, 0)));
-			tableActions.setBorder(dropIndicator);
+			actions.setBorder(dropIndicator);
 		}
 	}
 
 	private void handleTableActionsOnDragExit(DragEvent dragEvent) {
-		tableActions.setBorder(null);
+		actions.setBorder(null);
 	}
 
 	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
