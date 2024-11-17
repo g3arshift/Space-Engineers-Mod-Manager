@@ -120,16 +120,6 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 						.then(TABLE_CONTEXT_MENU)
 						.otherwise((ContextMenu) null));
 
-		//TODO: Change the cursor so it has a dragboard of the rows, but also clearly indicates that the operation isn't supported.
-		// Can use a font icon for this, like so:
-//		fontIcon.setIconSize(Math.min(width, height)); // size should be within bounds
-//
-//		SnapshotParameters parameters = new SnapshotParameters();
-//		parameters.setFill(backgroundColor != null ? backgroundColor : Color.TRANSPARENT);
-//
-//		WritableImage image = new WritableImage(width, height);
-//		fontIcon.snapshot(parameters, image);
-
 		//Setup drag and drop reordering for the table
 		row.setOnDragDetected(dragEvent -> {
 			//Don't allow dragging if a sortOrder is applied, or if the sort order that's applied isn't an ascending sort on loadPriority
@@ -170,6 +160,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 			if (!row.isEmpty()) {
 				previousRow = row;
+				MODLIST_MANAGER_VIEW.setPreviousRow(previousRow);
 			}
 
 			if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
@@ -182,8 +173,15 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 		row.setOnDragExited(dragEvent -> {
 			//If we are not the last item and the row isn't blank, set it to null. Else, set a bottom border.
-			if (!row.isEmpty() && row.getIndex() == modTable.getItems().size() - 1) {
-				addBorderToRow(RowBorderType.BOTTOM, modTable, row);
+			if (!row.isEmpty() && previousRow.getItem().equals(modTable.getItems().getLast())) {
+				//Our if conditions are organized this way because the .lookup function is not wholly inexpensive and it's getting called often.
+				ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+				//We don't want to add a border if the table isn't big enough to display all mods at once since we'll end up with a double border
+				if (!verticalScrollBar.isVisible()) {
+					addBorderToRow(RowBorderType.BOTTOM, modTable, row);
+				} else {
+					row.setBorder(null);
+				}
 			} else {
 				row.setBorder(null);
 			}
@@ -239,6 +237,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				dragEvent.setDropCompleted(true);
 				SELECTIONS.clear();
 
+				//TODO: Move to a helper class
 				//If we are ascending or not sorted then set the load priority equal to the spot in the list, minus one.
 				//If we are descending then set the load priority to its inverse position.
 				if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
@@ -292,7 +291,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			} else {
 				dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
 						BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE,
-						CornerRadii.EMPTY, new BorderWidths(2), Insets.EMPTY));
+						CornerRadii.EMPTY, new BorderWidths(2), new Insets(0, 0, 2, 0)));
 			}
 			row.setBorder(dropIndicator);
 		}

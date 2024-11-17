@@ -51,19 +51,19 @@ public class ModTableRow extends TableRow<Mod> {
 		}
 	}
 
-	//TODO: Maybe make them a brighter color? Like, for light make it blue. Not sure for darks. Red? Green for Dracula? Some better color contrast would work a LOT better.
+	//TODO: Maybe make them a brighter color? Like, for light themes make it blue. Not sure for darks. Red? Some better color contrast would look a lot better. Look at what Dracula does.
 	//This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation, but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet, then add onto it.
 	private String getSelectedCellColor(String themeName) {
 		return switch (themeName) {
 			case "PrimerLight", "NordLight", "CupertinoLight": yield
 					"-color-cell-bg-selected: -color-base-2;" +
-					"-color-cell-bg-selected-focused: -color-base-2;";
+					"-color-cell-bg-selected-focused: -color-accent-2;";
 			case "PrimerDark", "CupertinoDark": yield
 					"-color-cell-bg-selected: -color-base-5;" +
-					"-color-cell-bg-selected-focused: -color-base-5;";
+					"-color-cell-bg-selected-focused: -color-accent-5;";
 			case "NordDark": yield
 					"-color-cell-bg-selected: -color-base-6;" +
-					"-color-cell-bg-selected-focused: -color-base-6;";
+					"-color-cell-bg-selected-focused: -color-accent-6;";
 			default: yield
 					"-color-cell-bg-selected: -color-accent-subtle;" +
 					"-color-cell-bg-selected-focused: -color-accent-subtle;";
