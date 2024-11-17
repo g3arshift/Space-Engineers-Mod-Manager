@@ -42,7 +42,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
@@ -343,7 +344,7 @@ public class ModlistManagerView {
 	}
 
 	protected void handleModTableDragOver(DragEvent dragEvent) {
-		//Enables auto-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
+		//Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
 		final double SCROLL_SPEED = 0.3;
 
 		double y = dragEvent.getY();
@@ -370,6 +371,7 @@ public class ModlistManagerView {
 
 		if (scrollAmount != 0) {
 			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
+				//We disable the transfer mode here since we know that if we're scrolling we're outside the valid drop zone
 				dragEvent.acceptTransferModes(TransferMode.NONE);
 				scrollTimeline = new Timeline(
 						new KeyFrame(Duration.millis(16), e -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
@@ -387,7 +389,7 @@ public class ModlistManagerView {
 			}
 		}
 
-		if(y > modTableTop + headerRow.getHeight() && y < modTableBottom + tableActions.getHeight()) {
+		if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + tableActions.getHeight()) {
 			dragEvent.acceptTransferModes(TransferMode.MOVE);
 		}
 
@@ -408,39 +410,42 @@ public class ModlistManagerView {
 		 */
 
 		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
-
-			for (Mod m : SELECTIONS) {
-				modTable.getItems().remove(m);
-			}
-
-			modTable.getSelectionModel().clearSelection();
-
-			for (Mod m : SELECTIONS) {
-				modTable.getItems().add(m);
-				modTable.getSelectionModel().select(modTable.getItems().size() - 1);
-			}
-
-			//TODO: Need to move the duplicates to a shared helper class. Call it "tableHelper" or something.
-			if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+			//I'd love to get a class level reference of this, but we need to progressively get it as the view changes
+			ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+			if (verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
+				for (Mod m : SELECTIONS) {
+					modTable.getItems().remove(m);
 				}
-			} else {
-				for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-					UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
-				}
-			}
 
-			//Redo our sort since our row order has changed
-			modTable.sort();
+				modTable.getSelectionModel().clearSelection();
+
+				for (Mod m : SELECTIONS) {
+					modTable.getItems().add(m);
+					modTable.getSelectionModel().select(modTable.getItems().size() - 1);
+				}
+
+				//TODO: Need to move the duplicates to a shared helper class. Call it "tableHelper" or something.
+				if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
+					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
+					}
+				} else {
+					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
+						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
+					}
+				}
+
+				//Redo our sort since our row order has changed
+				modTable.sort();
 
 			/*
 				We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
 				but for whatever reason the changes aren't propagating without this.
 			*/
-			//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
-			UI_SERVICE.saveUserData();
+				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
+				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+				UI_SERVICE.saveUserData();
+			}
 
 			dragEvent.consume();
 		}
@@ -449,7 +454,7 @@ public class ModlistManagerView {
 	private void handleTableActionsOnDragOver(DragEvent dragEvent) {
 		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 
-		if(verticalScrollBar.isVisible()) {
+		if (verticalScrollBar.isVisible() && verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
 			javafx.scene.paint.Color indicatorColor = Color.web(getSelectedCellBorderColor());
 			Border dropIndicator;
 			dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
@@ -459,7 +464,7 @@ public class ModlistManagerView {
 		}
 	}
 
-	private void handleTableActionsOnDragExit(DragEvent dragEvent){
+	private void handleTableActionsOnDragExit(DragEvent dragEvent) {
 		tableActions.setBorder(null);
 	}
 

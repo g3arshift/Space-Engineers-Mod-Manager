@@ -176,6 +176,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			if (!row.isEmpty() && previousRow.getItem().equals(modTable.getItems().getLast())) {
 				//Our if conditions are organized this way because the .lookup function is not wholly inexpensive and it's getting called often.
 				ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+				//We don't want to add a border if the table isn't big enough to display all mods at once since we'll end up with a double border
 				if (!verticalScrollBar.isVisible()) {
 					addBorderToRow(RowBorderType.BOTTOM, modTable, row);
 				} else {
