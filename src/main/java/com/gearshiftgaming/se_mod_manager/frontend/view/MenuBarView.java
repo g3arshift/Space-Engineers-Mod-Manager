@@ -12,6 +12,9 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import lombok.Getter;
@@ -32,6 +35,9 @@ import java.util.List;
 public class MenuBarView {
 
 	//FXML Items
+	@FXML
+	private VBox menuBarRoot;
+
 	@FXML
 	private MenuItem saveModlistAs;
 
@@ -107,7 +113,6 @@ public class MenuBarView {
 	@FXML
 	private CheckMenuItem draculaTheme;
 
-	//TODO: Should replace this with a ModlistManagerView
 	private final ModlistManagerView MODLIST_MANAGER_VIEW;
 
 	private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
