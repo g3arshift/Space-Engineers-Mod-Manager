@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.ModlistManagerView;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ModlistManagerHelper;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -237,18 +238,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				dragEvent.setDropCompleted(true);
 				SELECTIONS.clear();
 
-				//TODO: Move to a helper class
-				//If we are ascending or not sorted then set the load priority equal to the spot in the list, minus one.
-				//If we are descending then set the load priority to its inverse position.
-				if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
-					}
-				} else {
-					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
-					}
-				}
+				ModlistManagerHelper.setCurrentModListLoadPriority(modTable, UI_SERVICE);
 
 				//Redo our sort since our row order has changed
 				modTable.sort();
@@ -282,7 +272,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private void addBorderToRow(RowBorderType rowBorderType, TableView<Mod> modTable, ModTableRow row) {
 		if (!row.isEmpty() || (row.getIndex() <= modTable.getItems().size() && modTable.getItems().get(row.getIndex() - 1) != null)) {
-			Color indicatorColor = Color.web(getSelectedCellBorderColor());
+			Color indicatorColor = Color.web(ModlistManagerHelper.getSelectedCellBorderColor(UI_SERVICE));
 			Border dropIndicator;
 			if (rowBorderType.equals(RowBorderType.TOP)) {
 				dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
@@ -301,25 +291,4 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		Gets the actual position for our load priority. If we are in descending order, we actually need to set load priority to the exact opposite number in the list from where it was dropped.
 		So if we are descending and drop the item at the very top of the list, we actually want to make its load priority the last, while keeping its actual position in the list where we dropped it.
 	 */
-	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
-		//Check if we are in ascending/default order, else we're in descending order
-		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-			return index;
-		} else {
-			return UI_SERVICE.getCurrentModList().size() - index;
-		}
-	}
-
-	private String getSelectedCellBorderColor() {
-		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
-			case "PrimerLight", "NordLight", "CupertinoLight":
-				yield "#24292f";
-			case "PrimerDark", "CupertinoDark":
-				yield "#f0f6fc";
-			case "NordDark":
-				yield "#ECEFF4";
-			default:
-				yield "#f8f8f2";
-		};
-	}
 }

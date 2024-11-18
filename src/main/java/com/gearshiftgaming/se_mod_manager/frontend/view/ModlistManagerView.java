@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ModlistManagerHelper;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -404,13 +405,6 @@ public class ModlistManagerView {
 
 		actions.setBorder(null);
 
-		//TODO:
-		/*
-		  1. Set the top border of the tableactions when we enter it with padding that shifts it over the length of the scrollbar
-		  	1a. Only set this if we have a visible scrollbar
-		  2. On exit, null it out
-		 */
-
 		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
 			//I'd love to get a class level reference of this, but we need to progressively get it as the view changes
 			ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
@@ -426,16 +420,7 @@ public class ModlistManagerView {
 					modTable.getSelectionModel().select(modTable.getItems().size() - 1);
 				}
 
-				//TODO: Need to move the duplicates to a shared helper class. Call it "tableHelper" or something.
-				if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
-					}
-				} else {
-					for (int i = 0; i < UI_SERVICE.getCurrentModProfile().getModList().size(); i++) {
-						UI_SERVICE.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i));
-					}
-				}
+				ModlistManagerHelper.setCurrentModListLoadPriority(modTable, UI_SERVICE);
 
 				//Redo our sort since our row order has changed
 				modTable.sort();
@@ -457,7 +442,7 @@ public class ModlistManagerView {
 		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 
 		if (verticalScrollBar.isVisible() && verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
-			javafx.scene.paint.Color indicatorColor = Color.web(getSelectedCellBorderColor());
+			javafx.scene.paint.Color indicatorColor = Color.web(ModlistManagerHelper.getSelectedCellBorderColor(UI_SERVICE));
 			Border dropIndicator;
 			dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
 					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
@@ -468,30 +453,5 @@ public class ModlistManagerView {
 
 	private void handleTableActionsOnDragExit(DragEvent dragEvent) {
 		actions.setBorder(null);
-	}
-
-	private int getIntendedLoadPriority(TableView<Mod> modTable, int index) {
-		int intendedLoadPriority;
-		//Check if we are in ascending/default order, else we're in descending order
-		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-			return index;
-		} else {
-			intendedLoadPriority = UI_SERVICE.getCurrentModList().size() - index;
-		}
-		return intendedLoadPriority;
-	}
-
-	//TODO: move to a shared helper class
-	private String getSelectedCellBorderColor() {
-		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
-			case "PrimerLight", "NordLight", "CupertinoLight":
-				yield "#24292f";
-			case "PrimerDark", "CupertinoDark":
-				yield "#f0f6fc";
-			case "NordDark":
-				yield "#ECEFF4";
-			default:
-				yield "#f8f8f2";
-		};
 	}
 }
