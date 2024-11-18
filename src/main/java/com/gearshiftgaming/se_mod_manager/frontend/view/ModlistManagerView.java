@@ -9,7 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -161,12 +161,15 @@ public class ModlistManagerView {
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
 	private final StatusBarView STATUS_BAR_VIEW;
 
+	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
+
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
 		this.SAVE_PROFILES = uiService.getSAVE_PROFILES();
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
+		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
@@ -196,7 +199,7 @@ public class ModlistManagerView {
 	private void setupModTable() {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this));
+		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
 
 		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -420,7 +423,7 @@ public class ModlistManagerView {
 					modTable.getSelectionModel().select(modTable.getItems().size() - 1);
 				}
 
-				ModlistManagerHelper.setCurrentModListLoadPriority(modTable, UI_SERVICE);
+				MODLIST_MANAGER_HELPER.setCurrentModListLoadPriority(modTable, UI_SERVICE);
 
 				//Redo our sort since our row order has changed
 				modTable.sort();
@@ -442,7 +445,7 @@ public class ModlistManagerView {
 		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 
 		if (verticalScrollBar.isVisible() && verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
-			javafx.scene.paint.Color indicatorColor = Color.web(ModlistManagerHelper.getSelectedCellBorderColor(UI_SERVICE));
+			javafx.scene.paint.Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
 			Border dropIndicator;
 			dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
 					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,

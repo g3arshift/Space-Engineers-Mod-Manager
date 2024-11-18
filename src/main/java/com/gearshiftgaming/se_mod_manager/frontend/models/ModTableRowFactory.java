@@ -4,7 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.ModlistManagerView;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -46,17 +46,20 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private final ModlistManagerView MODLIST_MANAGER_VIEW;
 
+	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
+
 	private enum RowBorderType {
 		TOP,
 		BOTTOM
 	}
 
 
-	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, ModlistManagerView modlistManagerView) {
+	public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, ModlistManagerView modlistManagerView, ModlistManagerHelper modlistManagerHelper) {
 		this.UI_SERVICE = uiService;
 		this.SERIALIZED_MIME_TYPE = serializedMimeType;
 		this.SELECTIONS = selections;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
+		this.MODLIST_MANAGER_HELPER = modlistManagerHelper;
 	}
 
 
@@ -238,7 +241,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				dragEvent.setDropCompleted(true);
 				SELECTIONS.clear();
 
-				ModlistManagerHelper.setCurrentModListLoadPriority(modTable, UI_SERVICE);
+				MODLIST_MANAGER_HELPER.setCurrentModListLoadPriority(modTable, UI_SERVICE);
 
 				//Redo our sort since our row order has changed
 				modTable.sort();
@@ -272,7 +275,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private void addBorderToRow(RowBorderType rowBorderType, TableView<Mod> modTable, ModTableRow row) {
 		if (!row.isEmpty() || (row.getIndex() <= modTable.getItems().size() && modTable.getItems().get(row.getIndex() - 1) != null)) {
-			Color indicatorColor = Color.web(ModlistManagerHelper.getSelectedCellBorderColor(UI_SERVICE));
+			Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
 			Border dropIndicator;
 			if (rowBorderType.equals(RowBorderType.TOP)) {
 				dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,

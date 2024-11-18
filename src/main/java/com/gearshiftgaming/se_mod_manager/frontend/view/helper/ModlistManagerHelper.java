@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
+package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
@@ -16,7 +16,7 @@ import javafx.scene.control.TableView;
  */
 public class ModlistManagerHelper {
 
-	public static void setCurrentModListLoadPriority(TableView<Mod> modTable, UiService uiService){
+	public void setCurrentModListLoadPriority(TableView<Mod> modTable, UiService uiService){
 		//If we are ascending or not sorted then set the load priority equal to the spot in the list, minus one.
 		//If we are descending then set the load priority to its inverse position.
 		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
@@ -30,7 +30,7 @@ public class ModlistManagerHelper {
 		}
 	}
 
-	private static int getIntendedLoadPriority(TableView<Mod> modTable, int index, UiService uiService) {
+	private int getIntendedLoadPriority(TableView<Mod> modTable, int index, UiService uiService) {
 		//Check if we are in ascending/default order, else we're in descending order
 		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
 			return index;
@@ -39,7 +39,7 @@ public class ModlistManagerHelper {
 		}
 	}
 
-	public static String getSelectedCellBorderColor(UiService uiService) {
+	public String getSelectedCellBorderColor(UiService uiService) {
 		return switch (uiService.getUSER_CONFIGURATION().getUserTheme()) {
 			case "PrimerLight", "NordLight", "CupertinoLight":
 				yield "#24292f";
