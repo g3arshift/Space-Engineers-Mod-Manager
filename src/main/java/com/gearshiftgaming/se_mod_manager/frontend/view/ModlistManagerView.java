@@ -23,7 +23,6 @@ import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
@@ -31,7 +30,6 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
@@ -157,6 +155,11 @@ public class ModlistManagerView {
 
 	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
 
+	@Getter
+	private ScrollBar modTableVerticalScrollBar;
+
+	private TableHeaderRow headerRow;
+
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
@@ -220,6 +223,9 @@ public class ModlistManagerView {
 
 		modTable.getSortOrder().addListener(sortListener);
 		modTable.setItems(UI_SERVICE.getCurrentModList());
+
+		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 	}
 
 
@@ -353,14 +359,18 @@ public class ModlistManagerView {
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
 		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
 
-		//TODO: I really want to have this only looked up once or twice. Test if it can be actually changed to being set once, like an observable value, instead of constantly doing lookups. Do the same for header row.
-		// If it can, also pass that to row factory instead of it doing lookups too. Only for vertical bar, though.
-		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-		TableHeaderRow headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
+		//These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
+		if(modTableVerticalScrollBar == null) {
+			modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+		}
 
-		double currentScrollValue = verticalScrollBar.getValue();
-		double minScrollValue = verticalScrollBar.getMin();
-		double maxScrollValue = verticalScrollBar.getMax();
+		if(headerRow == null) {
+			headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
+		}
+
+		double currentScrollValue = modTableVerticalScrollBar.getValue();
+		double minScrollValue = modTableVerticalScrollBar.getMin();
+		double maxScrollValue = modTableVerticalScrollBar.getMax();
 		double scrollAmount;
 
 
@@ -379,9 +389,9 @@ public class ModlistManagerView {
 				dragEvent.acceptTransferModes(TransferMode.NONE);
 				scrollTimeline = new Timeline(
 						new KeyFrame(Duration.millis(16), e -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
-							double newValue = verticalScrollBar.getValue() + scrollAmount;
+							double newValue = modTableVerticalScrollBar.getValue() + scrollAmount;
 							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
-							verticalScrollBar.setValue(newValue);
+							modTableVerticalScrollBar.setValue(newValue);
 						})
 				);
 				scrollTimeline.setCycleCount(60); //One second of animation is 60 cycles, so set this to 60 so we don't end up with infinite animations.
@@ -408,8 +418,12 @@ public class ModlistManagerView {
 
 		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
 			//I'd love to get a class level reference of this, but we need to progressively get it as the view changes
-			ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-			if (verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
+
+			if(modTableVerticalScrollBar == null) {
+				modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+			}
+
+			if (modTableVerticalScrollBar.getValue() == modTableVerticalScrollBar.getMax()) {
 				for (Mod m : SELECTIONS) {
 					modTable.getItems().remove(m);
 				}

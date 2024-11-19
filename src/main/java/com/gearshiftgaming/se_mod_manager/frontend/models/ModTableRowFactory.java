@@ -48,6 +48,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
 
+	private ScrollBar modTableVerticalScrollBar;
+
 	private enum RowBorderType {
 		TOP,
 		BOTTOM
@@ -68,6 +70,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 	@Override
 	public ModTableRow call(TableView<Mod> modTable) {
+		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		final ModTableRow row = new ModTableRow(UI_SERVICE);
 
 		//Setup our context menu
@@ -178,10 +181,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		row.setOnDragExited(dragEvent -> {
 			//If we are not the last item and the row isn't blank, set it to null. Else, set a bottom border.
 			if (!row.isEmpty() && previousRow.getItem().equals(modTable.getItems().getLast())) {
-				//Our if conditions are organized this way because the .lookup function is not wholly inexpensive and it's getting called often.
-				ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 				//We don't want to add a border if the table isn't big enough to display all mods at once since we'll end up with a double border
-				if (!verticalScrollBar.isVisible()) {
+				if (!modTableVerticalScrollBar.isVisible()) {
 					addBorderToRow(RowBorderType.BOTTOM, modTable, row);
 				} else {
 					row.setBorder(null);
