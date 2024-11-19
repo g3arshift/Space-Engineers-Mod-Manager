@@ -8,8 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.layout.HBox;
 
-import java.util.Optional;
-
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -30,7 +28,7 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 	public ModNameCell(UiService uiService) {
 		super();
 		this.UI_SERVICE = uiService;
-		 LAYOUT = new HBox(ACTIVATE_TOGGLE, MOD_NAME);
+		LAYOUT = new HBox(ACTIVATE_TOGGLE, MOD_NAME);
 		LAYOUT.setAlignment(Pos.CENTER_LEFT);
 	}
 
@@ -46,6 +44,7 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 
 			ACTIVATE_TOGGLE.setOnAction(actionEvent -> {
 				item.setActive(ACTIVATE_TOGGLE.isSelected());
+				UI_SERVICE.modifyActiveModCount(item);
 				UI_SERVICE.saveUserData();
 			});
 			setGraphic(LAYOUT);

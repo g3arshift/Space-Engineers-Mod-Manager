@@ -23,6 +23,7 @@ import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
@@ -73,7 +74,6 @@ public class ModlistManagerView {
 	@Getter
 	private SplitPane mainViewSplit;
 
-	//TODO: Low priority: Fix the alignment of the table headers to be centered, not center left.
 	@FXML
 	@Getter
 	private TableView<Mod> modTable;
@@ -147,18 +147,12 @@ public class ModlistManagerView {
 	@Getter
 	@Setter
 	private TableRow<Mod> previousRow;
-
-	//TODO: We might not need this if we setup a listener properly on the active mod count, but I'm not sure how we can since it has to be done in ModNameCell.
-	private Text activeModCount;
-
-	//TODO: We might not need this if we setup a listener properly on the active mod count, but I'm not sure how we can since it has to be done in ModNameCell.
-	private Text modConflicts;
-
 	private CheckMenuItem logToggle;
 
 	private CheckMenuItem modDescriptionToggle;
 
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
+	//TODO: Hook this up
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
@@ -175,9 +169,7 @@ public class ModlistManagerView {
 		SELECTIONS = new ArrayList<>();
 	}
 
-	public void initView(Text activeModCount, Text modConflicts, CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
-		this.activeModCount = activeModCount;
-		this.modConflicts = modConflicts;
+	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
 		this.logToggle = logToggle;
 		this.modDescriptionToggle = modDescriptionToggle;
 

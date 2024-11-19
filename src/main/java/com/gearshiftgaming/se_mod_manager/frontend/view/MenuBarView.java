@@ -80,11 +80,11 @@ public class MenuBarView {
 
 	@FXML
 	@Getter
-	private Text activeModCount;
+	private Label activeModCount;
 
 	@FXML
 	@Getter
-	private Text modConflicts;
+	private Label modConflicts;
 
 	@FXML
 	private TextField modTableSearchField;
@@ -183,6 +183,8 @@ public class MenuBarView {
 				return null;
 			}
 		});
+
+		activeModCount.textProperty().bind(UI_SERVICE.getActiveModCount().asString());
 
 		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
 	}
