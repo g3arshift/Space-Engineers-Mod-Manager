@@ -260,6 +260,16 @@ public class ModlistManagerView {
 	}
 
 	@FXML
+	private void manageModProfiles() {
+		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
+	}
+
+	@FXML
+	private void manageSaveProfiles() {
+		SAVE_MANAGER_VIEW.getStage().showAndWait();
+	}
+
+	@FXML
 	private void importModlist() {
 		//TODO: Implement. Allow importing modlists from either sandbox file or exported list.
 		// For our own applications lists, aka exported ones, create a custom file extension. Like, .SEMM. Then just marshall the modlist only.
@@ -269,16 +279,6 @@ public class ModlistManagerView {
 	@FXML
 	private void exportModlist() {
 		//TODO: Implement. Export in our own format (use XML). Make our file end in .SEMM
-	}
-
-	@FXML
-	private void resetModlist() {
-		//TODO: Implement
-		// To implement this, when we first load the app, and also when we change modlists, set a variable in the UiService to be an instantaneous copy of that ModList.
-		// Then, anytime we apply the modlist, update that copy to the most current version.
-		// When the user hits the button, we remove all items from the current modlist and then add all the ones, in order, from the copy. We do this, however, after making a popup asking the user if they're sure they want to reset the modlist.
-		// Make a popup asking if they're sure they want to reset the modlist.
-		// Also make a popup if the list was never saved and can't be found in the user configuration.
 	}
 
 	//Apply the modlist the user is currently using to the save profile they're currently using.

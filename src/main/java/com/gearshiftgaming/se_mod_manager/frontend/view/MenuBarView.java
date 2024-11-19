@@ -65,12 +65,6 @@ public class MenuBarView {
 	private MenuItem faq;
 
 	@FXML
-	private MenuItem manageModProfiles;
-
-	@FXML
-	private MenuItem manageSaveProfiles;
-
-	@FXML
 	@Getter
 	private ComboBox<ModProfile> modProfileDropdown;
 
@@ -257,6 +251,9 @@ public class MenuBarView {
 		}
 	}
 
+
+	//TODO: Move all this to ModlistManagerView
+	//TODO: Adjust min size of SEMM to be just a tiny bit wider
 	@FXML
 	private void manageModProfiles() {
 		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
