@@ -14,7 +14,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox fx:id="menuBarRoot" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
@@ -93,14 +92,17 @@
                          <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
                              <children>
                                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
-                                 <Text fx:id="activeModCount" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
-                                     <StackPane.margin>
-                                         <Insets right="10.0" />
-                                     </StackPane.margin>
-                                     <font>
-                                         <Font size="14.0" />
-                                     </font>
-                                 </Text>
+                        <Label fx:id="activeModCount" text="0" StackPane.alignment="CENTER_RIGHT">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                        </Label>
                              </children>
                          </StackPane>
                      </children>
@@ -114,14 +116,14 @@
                          <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
                              <children>
                                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
-                                 <Text fx:id="modConflicts" text="0" textAlignment="RIGHT" StackPane.alignment="CENTER_RIGHT">
-                                     <StackPane.margin>
-                                         <Insets right="10.0" />
-                                     </StackPane.margin>
-                                     <font>
-                                         <Font size="14.0" />
-                                     </font>
-                                 </Text>
+                        <Label fx:id="modConflicts" text="0" StackPane.alignment="CENTER_RIGHT">
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
                              </children>
                          </StackPane>
                      </children>

@@ -76,7 +76,7 @@ public class MainWindowView {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
 		MENU_BAR_VIEW.initView();
-		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getActiveModCount(), MENU_BAR_VIEW.getModConflicts(), MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle());
+		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle());
 		STATUS_BAR_VIEW.initView();
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);

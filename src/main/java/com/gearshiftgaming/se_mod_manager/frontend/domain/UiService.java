@@ -10,6 +10,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.controller.BackendController;
 import javafx.application.Application;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.CheckMenuItem;
@@ -63,6 +65,10 @@ public class UiService {
 	@Getter
 	private ObservableList<Mod> currentModList;
 
+	@Getter
+	private final IntegerProperty activeModCount;
+
+
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
 					 BackendController BACKEND_CONTROLLER, UserConfiguration USER_CONFIGURATION) {
@@ -90,7 +96,10 @@ public class UiService {
 			currentModProfile = MOD_PROFILES.getFirst();
 		}
 
+		//A little bit of duplication, but the order of construction is a big different than setCurrentModProfile
+		//currentModProfile.getModList()
 		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
+		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
 	}
 
 	public void log(String message, MessageType messageType) {
@@ -155,5 +164,14 @@ public class UiService {
 	public void setCurrentModProfile(ModProfile modProfile) {
 		currentModProfile = modProfile;
 		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
+		activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
+	}
+
+	public void modifyActiveModCount(Mod mod) {
+		if(mod.isActive()) {
+			activeModCount.set(activeModCount.get() + 1);
+		} else {
+			activeModCount.set(activeModCount.get() - 1);
+		}
 	}
 }
