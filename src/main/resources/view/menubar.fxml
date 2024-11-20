@@ -51,12 +51,6 @@
                          </Menu>
                      </items>
                  </Menu>
-                 <Menu disable="true" mnemonicParsing="false" text="Profiles" visible="false">
-                     <items>
-                         <MenuItem fx:id="manageModProfiles" mnemonicParsing="false" text="Manage Mod Profiles" />
-                         <MenuItem fx:id="manageSaveProfiles" mnemonicParsing="false" text="Manage Save Profiles" />
-                     </items>
-                 </Menu>
                  <Menu mnemonicParsing="false" text="Help">
                      <items>
                          <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
