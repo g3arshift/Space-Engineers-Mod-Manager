@@ -328,7 +328,6 @@ public class ModlistManagerView {
 //		}
 	}
 
-	//TODO: Maybe move this to the menubar?
 	@FXML
 	private void launchSpaceEngineers() throws URISyntaxException, IOException {
 		//TODO: Check this works on systems with no previous steam url association
