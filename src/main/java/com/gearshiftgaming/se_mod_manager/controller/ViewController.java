@@ -147,13 +147,13 @@ public class ViewController {
 
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, STATUS_BAR_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 
 		//View for the menubar section of the main window
 		final FXMLLoader MENU_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/menubar.fxml"));
-		final MenuBarView MENU_BAR_VIEW = new MenuBarView(UI_SERVICE, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, MODLIST_MANAGER_VIEW);
+		final MenuBarView MENU_BAR_VIEW = new MenuBarView(UI_SERVICE, MODLIST_MANAGER_VIEW);
 		MENU_BAR_LOADER.setController(MENU_BAR_VIEW);
 		final Parent MENU_BAR_ROOT = MENU_BAR_LOADER.load();
 

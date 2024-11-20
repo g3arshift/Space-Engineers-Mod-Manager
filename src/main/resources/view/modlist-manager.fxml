@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<SplitPane fx:id="mainViewSplit" dividerPositions="0.7" orientation="VERTICAL" BorderPane.alignment="CENTER" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/21">
+<SplitPane fx:id="mainViewSplit" dividerPositions="0.7" orientation="VERTICAL" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
     <VBox>
         <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
             <TableView fx:id="modTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
@@ -39,50 +39,39 @@
             </TableView>
         </ScrollPane>
         <HBox fx:id="actions" alignment="CENTER_LEFT" spacing="10.0" VBox.vgrow="NEVER">
-            <children>
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
-                    <children>
-                        <ComboBox fx:id="modImportDropdown" prefWidth="250.0" promptText="Add mods from..." />
-                    </children>
-                </HBox>
-                <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
-                    <buttons>
-                        <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
-                        <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
-                        <Button fx:id="resetModlist" mnemonicParsing="false" text="Reset Modlist" />
-                        <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
-                        <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
-                    </buttons>
-                </ButtonBar>
-                <HBox alignment="CENTER_LEFT" spacing="10.0" />
-            </children>
             <VBox.margin>
                 <Insets />
             </VBox.margin>
             <padding>
                 <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
             </padding>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <ComboBox fx:id="modImportDropdown" promptText="Add mods from..." />
+            </HBox>
+            <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
+                <buttons>
+               <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Lists" />
+               <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage SE Saves" />
+                    <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
+                    <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
+                    <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
+                    <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
+                </buttons>
+            </ButtonBar>
+            <HBox alignment="CENTER_LEFT" spacing="10.0" />
         </HBox>
     </VBox>
     <TabPane fx:id="informationPane" tabDragPolicy="REORDER">
-        <tabs>
-            <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
-                <content>
-                    <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
-                        <content>
-                            <TextArea editable="false" />
-                        </content>
-                    </ScrollPane>
-                </content>
-            </Tab>
-            <Tab fx:id="logTab" onClosed="#closeLogTab" text="Log">
-                <content>
-                    <ListView fx:id="viewableLog" focusTraversable="false" />
-                </content>
-            </Tab>
-        </tabs>
         <padding>
             <Insets bottom="5.0" />
         </padding>
+        <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
+            <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
+                <TextArea editable="false" />
+            </ScrollPane>
+        </Tab>
+        <Tab fx:id="logTab" onClosed="#closeLogTab" text="Log">
+            <ListView fx:id="viewableLog" focusTraversable="false" />
+        </Tab>
     </TabPane>
 </SplitPane>

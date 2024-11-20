@@ -160,13 +160,20 @@ public class ModlistManagerView {
 
 	private TableHeaderRow headerRow;
 
-	public ModlistManagerView(UiService uiService, StatusBarView statusBarView) {
+	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
+
+	private final SaveManagerView SAVE_MANAGER_VIEW;
+
+	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
 		this.SAVE_PROFILES = uiService.getSAVE_PROFILES();
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
+
+		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
+		this.SAVE_MANAGER_VIEW = saveManagerView;
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
@@ -237,7 +244,11 @@ public class ModlistManagerView {
 		//Disable selecting rows in the log.
 		viewableLog.setSelectionModel(null);
 
-		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
+		//TODO: We need to make the buttons open a new menu, but the dropdown contents stay the same with the previews still saying "Add mods from..."
+		modImportDropdown.getItems().addAll("Steam Workshop ID",
+				"Steam Collection",
+				"Mod.io",
+				"Modlist file");
 
 		//TODO: Setup a function in ModList service to track conflicts.
 	}
@@ -259,6 +270,17 @@ public class ModlistManagerView {
 		}
 	}
 
+	//TODO: Make the window slightly larger to accommodate the new buttons
+	@FXML
+	private void manageModProfiles() {
+		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
+	}
+
+	@FXML
+	private void manageSaveProfiles() {
+		SAVE_MANAGER_VIEW.getStage().showAndWait();
+	}
+
 	@FXML
 	private void importModlist() {
 		//TODO: Implement. Allow importing modlists from either sandbox file or exported list.
@@ -269,16 +291,6 @@ public class ModlistManagerView {
 	@FXML
 	private void exportModlist() {
 		//TODO: Implement. Export in our own format (use XML). Make our file end in .SEMM
-	}
-
-	@FXML
-	private void resetModlist() {
-		//TODO: Implement
-		// To implement this, when we first load the app, and also when we change modlists, set a variable in the UiService to be an instantaneous copy of that ModList.
-		// Then, anytime we apply the modlist, update that copy to the most current version.
-		// When the user hits the button, we remove all items from the current modlist and then add all the ones, in order, from the copy. We do this, however, after making a popup asking the user if they're sure they want to reset the modlist.
-		// Make a popup asking if they're sure they want to reset the modlist.
-		// Also make a popup if the list was never saved and can't be found in the user configuration.
 	}
 
 	//Apply the modlist the user is currently using to the save profile they're currently using.
