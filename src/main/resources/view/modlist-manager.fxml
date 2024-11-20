@@ -50,8 +50,8 @@
             </HBox>
             <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                 <buttons>
-               <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Profiles" />
-               <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage Save Profiles" />
+               <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Lists" />
+               <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage SE Saves" />
                     <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
                     <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
                     <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
