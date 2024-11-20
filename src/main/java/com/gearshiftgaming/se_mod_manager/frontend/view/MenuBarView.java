@@ -113,13 +113,9 @@ public class MenuBarView {
 
 	private final UiService UI_SERVICE;
 
-	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
-
-	private final SaveManagerView SAVE_MANAGER_VIEW;
-
 	//TODO: On dropdown select, change active profile
 
-	public MenuBarView(UiService uiService, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public MenuBarView(UiService uiService, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -128,8 +124,6 @@ public class MenuBarView {
 		//		topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 		//	in saveManagerView fixes it?! WHY?!
 		this.UI_SERVICE = uiService;
-		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
-		this.SAVE_MANAGER_VIEW = saveManagerView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 	}
 
@@ -249,19 +243,6 @@ public class MenuBarView {
 		} else {
 			UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
 		}
-	}
-
-
-	//TODO: Move all this to ModlistManagerView
-	//TODO: Adjust min size of SEMM to be just a tiny bit wider
-	@FXML
-	private void manageModProfiles() {
-		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
-	}
-
-	@FXML
-	private void manageSaveProfiles() {
-		SAVE_MANAGER_VIEW.getStage().showAndWait();
 	}
 
 	@FXML

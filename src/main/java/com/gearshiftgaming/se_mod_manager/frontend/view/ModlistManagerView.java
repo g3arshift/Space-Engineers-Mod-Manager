@@ -160,13 +160,20 @@ public class ModlistManagerView {
 
 	private TableHeaderRow headerRow;
 
-	public ModlistManagerView(UiService uiService, StatusBarView statusBarView) {
+	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
+
+	private final SaveManagerView SAVE_MANAGER_VIEW;
+
+	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
 		this.SAVE_PROFILES = uiService.getSAVE_PROFILES();
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
+
+		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
+		this.SAVE_MANAGER_VIEW = saveManagerView;
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
@@ -237,7 +244,11 @@ public class ModlistManagerView {
 		//Disable selecting rows in the log.
 		viewableLog.setSelectionModel(null);
 
-		modImportDropdown.getItems().addAll("Add mods by Steam Workshop ID", "Add mods from Steam Collection", "Add mods from Mod.io", "Add mods from modlist file");
+		//TODO: We need to make the buttons open a new menu, but the dropdown contents stay the same with the previews still saying "Add mods from..."
+		modImportDropdown.getItems().addAll("Steam Workshop ID",
+				"Steam Collection",
+				"Mod.io",
+				"Modlist file");
 
 		//TODO: Setup a function in ModList service to track conflicts.
 	}
@@ -259,6 +270,7 @@ public class ModlistManagerView {
 		}
 	}
 
+	//TODO: Make the window slightly larger to accommodate the new buttons
 	@FXML
 	private void manageModProfiles() {
 		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
@@ -316,6 +328,7 @@ public class ModlistManagerView {
 //		}
 	}
 
+	//TODO: Maybe move this to the menubar?
 	@FXML
 	private void launchSpaceEngineers() throws URISyntaxException, IOException {
 		//TODO: Check this works on systems with no previous steam url association

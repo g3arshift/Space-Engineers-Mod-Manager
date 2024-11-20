@@ -51,10 +51,10 @@
                          </Menu>
                      </items>
                  </Menu>
-                 <Menu mnemonicParsing="false" text="Profiles">
+                 <Menu disable="true" mnemonicParsing="false" text="Profiles" visible="false">
                      <items>
-                         <MenuItem fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Profiles" />
-                         <MenuItem fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage Save Profiles" />
+                         <MenuItem fx:id="manageModProfiles" mnemonicParsing="false" text="Manage Mod Profiles" />
+                         <MenuItem fx:id="manageSaveProfiles" mnemonicParsing="false" text="Manage Save Profiles" />
                      </items>
                  </Menu>
                  <Menu mnemonicParsing="false" text="Help">
