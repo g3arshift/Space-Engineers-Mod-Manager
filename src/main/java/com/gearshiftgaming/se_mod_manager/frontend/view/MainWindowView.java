@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -43,6 +44,9 @@ public class MainWindowView {
 	//FXML Items
 	@FXML
 	private BorderPane mainWindowLayout;
+
+	@FXML
+	private Label appNameVersion;
 
 	@FXML
 	private Button minimizeButton;
@@ -162,6 +166,7 @@ public class MainWindowView {
 		//Add title and icon to the stage
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model = reader.read(new FileReader("pom.xml"));
+
 		STAGE.setTitle("SEMM v" + model.getVersion());
 		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
@@ -181,6 +186,7 @@ public class MainWindowView {
 	//TODO: Implement functionality
 	//TODO: Change the icon to a better one. It's blurry.
 	//TODO: This bar stuff all needs to be made into its own class and attached at the top of every window. Make it an FXML file on its own.
+	// We also need to add the app icon and a title to it all
 	@FXML
 	private void maximizeOrRestore() {
 		if(maximizeRestoreIcon.getIconLiteral().equals("codicon-chrome-maximize")) {
