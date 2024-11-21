@@ -142,6 +142,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- Visual Styling for JavaFX -->
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-javafx</artifactId>
@@ -150,6 +152,11 @@
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-carbonicons-pack</artifactId>
+            <version>12.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-codicons-pack</artifactId>
             <version>12.3.1</version>
         </dependency>
         <dependency>

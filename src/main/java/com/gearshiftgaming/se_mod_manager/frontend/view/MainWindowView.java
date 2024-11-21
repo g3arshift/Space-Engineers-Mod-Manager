@@ -3,10 +3,12 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -14,6 +16,7 @@ import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -21,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
 /**
  * This represents the main window of the application, with a border pane at its core.
  * It contains the center section of the borderpane, but all other sections should be delegated to their own controllers and FXML files.
@@ -39,6 +43,18 @@ public class MainWindowView {
 	//FXML Items
 	@FXML
 	private BorderPane mainWindowLayout;
+
+	@FXML
+	private Button minimizeButton;
+
+	@FXML
+	private Button maximizeRestoreButton;
+
+	@FXML
+	private FontIcon maximizeRestoreIcon;
+
+	@FXML
+	private Button closeButton;
 
 	//TODO: We need to replace the window control bar for the window.
 
@@ -109,6 +125,24 @@ public class MainWindowView {
 			}
 		}
 		mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
+
+		minimizeButton.setStyle("-fx-background-radius: 0;" +
+				"-fx-text-fill: -color-button-fg;" +
+				"-color-button-bg: -color-bg-default;" +
+				"-color-button-border-pressed: transparent;" +
+				"-color-button-border: transparent;");
+
+		maximizeRestoreButton.setStyle("-fx-background-radius: 0;" +
+				"-fx-text-fill: -color-button-fg;" +
+				"-color-button-bg: -color-bg-default;" +
+				"-color-button-border-pressed: transparent;" +
+				"-color-button-border: transparent;");
+
+		closeButton.setStyle("-fx-background-radius: 0;" +
+				"-fx-text-fill: -color-button-fg;" +
+				"-color-button-bg: -color-bg-default;" +
+				"-color-button-border-pressed: transparent;" +
+				"-color-button-border: transparent;");
 	}
 
 	/**
@@ -137,5 +171,29 @@ public class MainWindowView {
 				MODLIST_MANAGER_VIEW.getMainViewSplit().setDividerPosition(0, 1);
 			}
 		});
+	}
+
+	@FXML
+	private void minimize() {
+		STAGE.setIconified(true);
+	}
+
+	//TODO: Implement functionality
+	//TODO: Change the icon to a better one. It's blurry.
+	//TODO: This bar stuff all needs to be made into its own class and attached at the top of every window. Make it an FXML file on its own.
+	@FXML
+	private void maximizeOrRestore() {
+		if(maximizeRestoreIcon.getIconLiteral().equals("codicon-chrome-maximize")) {
+			maximizeRestoreIcon.setIconLiteral("codicon-chrome-restore");
+		} else {
+			maximizeRestoreIcon.setIconLiteral("codicon-chrome-maximize");
+		}
+
+		System.out.println("Max or mini!");
+	}
+
+	@FXML
+	private void closeSemm() {
+		Platform.exit();
 	}
 }

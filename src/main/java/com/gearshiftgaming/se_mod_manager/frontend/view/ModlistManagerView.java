@@ -236,7 +236,7 @@ public class ModlistManagerView {
 	}
 
 
-	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
+	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
 	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
 	public void setupMainViewItems() {
 		viewableLog.setItems(USER_LOG);
