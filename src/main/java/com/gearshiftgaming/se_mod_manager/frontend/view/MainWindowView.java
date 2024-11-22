@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -13,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -43,22 +45,10 @@ public class MainWindowView {
 
 	//FXML Items
 	@FXML
+	private AnchorPane mainWindowRoot;
+
+	@FXML
 	private BorderPane mainWindowLayout;
-
-	@FXML
-	private Label appNameVersion;
-
-	@FXML
-	private Button minimizeButton;
-
-	@FXML
-	private Button maximizeRestoreButton;
-
-	@FXML
-	private FontIcon maximizeRestoreIcon;
-
-	@FXML
-	private Button closeButton;
 
 	//TODO: We need to replace the window control bar for the window.
 
@@ -72,6 +62,8 @@ public class MainWindowView {
 
 	private final UserConfiguration USER_CONFIGURATION;
 
+	private TitleBarView TITLE_BAR_VIEW;
+
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
 	private final MenuBarView MENU_BAR_VIEW;
 
@@ -82,7 +74,7 @@ public class MainWindowView {
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) {
+	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) throws IOException {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
@@ -90,6 +82,8 @@ public class MainWindowView {
 		this.MENU_BAR_VIEW = menuBarView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
+
+		//STAGE.initStyle(StageStyle.UNDECORATED);
 	}
 
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -101,6 +95,14 @@ public class MainWindowView {
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
+
+//		//Each window needs its own title bar so we initialize it in each class that runs in a new window.
+//		final FXMLLoader TITLE_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/title-bar.fxml"));
+//		this.TITLE_BAR_VIEW = new TitleBarView(STAGE);
+//		TITLE_BAR_LOADER.setController(TITLE_BAR_VIEW);
+//		TITLE_BAR_LOADER.load();
+
+		//mainWindowRoot.getChildren().addFirst(TITLE_BAR_VIEW.getTitleBar());
 
 
 		final ObservableList<SaveProfile> SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
@@ -129,24 +131,6 @@ public class MainWindowView {
 			}
 		}
 		mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
-
-		minimizeButton.setStyle("-fx-background-radius: 0;" +
-				"-fx-text-fill: -color-button-fg;" +
-				"-color-button-bg: -color-bg-default;" +
-				"-color-button-border-pressed: transparent;" +
-				"-color-button-border: transparent;");
-
-		maximizeRestoreButton.setStyle("-fx-background-radius: 0;" +
-				"-fx-text-fill: -color-button-fg;" +
-				"-color-button-bg: -color-bg-default;" +
-				"-color-button-border-pressed: transparent;" +
-				"-color-button-border: transparent;");
-
-		closeButton.setStyle("-fx-background-radius: 0;" +
-				"-fx-text-fill: -color-button-fg;" +
-				"-color-button-bg: -color-bg-default;" +
-				"-color-button-border-pressed: transparent;" +
-				"-color-button-border: transparent;");
 	}
 
 	/**
@@ -176,30 +160,5 @@ public class MainWindowView {
 				MODLIST_MANAGER_VIEW.getMainViewSplit().setDividerPosition(0, 1);
 			}
 		});
-	}
-
-	@FXML
-	private void minimize() {
-		STAGE.setIconified(true);
-	}
-
-	//TODO: Implement functionality
-	//TODO: Change the icon to a better one. It's blurry.
-	//TODO: This bar stuff all needs to be made into its own class and attached at the top of every window. Make it an FXML file on its own.
-	// We also need to add the app icon and a title to it all
-	@FXML
-	private void maximizeOrRestore() {
-		if(maximizeRestoreIcon.getIconLiteral().equals("codicon-chrome-maximize")) {
-			maximizeRestoreIcon.setIconLiteral("codicon-chrome-restore");
-		} else {
-			maximizeRestoreIcon.setIconLiteral("codicon-chrome-maximize");
-		}
-
-		System.out.println("Max or mini!");
-	}
-
-	@FXML
-	private void closeSemm() {
-		Platform.exit();
 	}
 }

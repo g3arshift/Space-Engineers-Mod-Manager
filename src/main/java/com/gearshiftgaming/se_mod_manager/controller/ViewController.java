@@ -11,6 +11,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarHelper;
 import jakarta.xml.bind.JAXBException;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
@@ -171,5 +172,7 @@ public class ViewController {
 
 		//Save our changes that were made to the user config, such as removing missing profiles, to disk
 		UI_SERVICE.saveUserData();
+
+		TitleBarHelper.setDarkMode(stage, true);
 	}
 }
