@@ -172,7 +172,5 @@ public class ViewController {
 
 		//Save our changes that were made to the user config, such as removing missing profiles, to disk
 		UI_SERVICE.saveUserData();
-
-		TitleBarHelper.setDarkMode(stage, true);
 	}
 }
