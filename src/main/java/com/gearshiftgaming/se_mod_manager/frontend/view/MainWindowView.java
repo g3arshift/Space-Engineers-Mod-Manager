@@ -62,8 +62,6 @@ public class MainWindowView {
 
 	private final UserConfiguration USER_CONFIGURATION;
 
-	private TitleBarView TITLE_BAR_VIEW;
-
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
 	private final MenuBarView MENU_BAR_VIEW;
 
@@ -95,15 +93,6 @@ public class MainWindowView {
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
-
-//		//Each window needs its own title bar so we initialize it in each class that runs in a new window.
-//		final FXMLLoader TITLE_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/title-bar.fxml"));
-//		this.TITLE_BAR_VIEW = new TitleBarView(STAGE);
-//		TITLE_BAR_LOADER.setController(TITLE_BAR_VIEW);
-//		TITLE_BAR_LOADER.load();
-
-		//mainWindowRoot.getChildren().addFirst(TITLE_BAR_VIEW.getTitleBar());
-
 
 		final ObservableList<SaveProfile> SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 
