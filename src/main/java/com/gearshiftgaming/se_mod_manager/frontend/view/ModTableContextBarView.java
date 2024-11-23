@@ -28,8 +28,9 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public class MenuBarView {
+public class ModTableContextBarView {
 
+	//TODO: We need to move the actual titlebar stuff like "File" up to the real titlebar now that it exists
 	//FXML Items
 	@FXML
 	private VBox menuBarRoot;
@@ -111,7 +112,7 @@ public class MenuBarView {
 
 	//TODO: On dropdown select, change active profile
 
-	public MenuBarView(UiService uiService, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -136,8 +137,8 @@ public class MenuBarView {
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell());
-		saveProfileDropdown.setButtonCell(new SaveProfileCell());
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell(""));
+		saveProfileDropdown.setButtonCell(new SaveProfileCell(""));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();

@@ -28,10 +28,13 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 
 	private final HBox LAYOUT = new HBox(STACK_PANE);
 
-	public SaveProfileCell() {
+	private final String style;
+
+	public SaveProfileCell(String style) {
 		super();
 		HBox.setHgrow(STACK_PANE, Priority.ALWAYS);
 		STACK_PANE.setAlignment(Pos.CENTER_LEFT);
+		this.style = style;
 	}
 
 	@Override
@@ -41,7 +44,6 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 			setStyle(null);
 			setGraphic(null);
 		} else {
-			String style = "-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;";
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			SAVE_NAME.setText("Save name: " + item.getSaveName());
 			PROFILE_NAME.setText(item.getProfileName());
