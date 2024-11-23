@@ -10,8 +10,11 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
@@ -43,7 +46,8 @@ public class SpaceEngineersModManager extends Application {
 		});
 
 		primaryStage.show();
-		TitleBarHelper test = new TitleBarHelper("#ffffff", primaryStage.getTitle());
+		//TODO: Somehow need to cram this lower
+		TitleBarHelper test = new TitleBarHelper(primaryStage.getTitle());
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

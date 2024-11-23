@@ -74,7 +74,7 @@ public class SaveManagerView {
 
 	private final ProfileInputView PROFILE_INPUT_VIEW;
 
-	private MenuBarView menuBarView;
+	private ModTableContextBarView modTableContextBarView;
 
 	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView) {
 		this.UI_SERVICE = UI_SERVICE;
@@ -83,8 +83,8 @@ public class SaveManagerView {
 		this.PROFILE_INPUT_VIEW = saveListInputSecondStepView;
 	}
 
-	public void initView(Parent root, Properties properties, MenuBarView menuBarView) {
-		this.menuBarView = menuBarView;
+	public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
+		this.modTableContextBarView = modTableContextBarView;
 		Scene scene = new Scene(root);
 
 		stage = new Stage();
@@ -97,7 +97,7 @@ public class SaveManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		saveList.setItems(SAVE_PROFILES);
-		saveList.setCellFactory(param -> new SaveProfileCell());
+		saveList.setCellFactory(param -> new SaveProfileCell("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;"));
 
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -138,10 +138,10 @@ public class SaveManagerView {
 								UI_SERVICE.setCurrentSaveProfile(saveProfile);
 
 								//TODO: This only partially works. It fixes the styling, but leaves the text as "None" for the button cell.
-								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
+								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;");
 								buttonCellFix.setItem(saveProfile);
 								buttonCellFix.setText(saveProfile.getProfileName());
-								menuBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
+								modTableContextBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 								saveList.refresh();
 							} else {
 								SAVE_PROFILES.add(saveProfile);
@@ -249,7 +249,7 @@ public class SaveManagerView {
 	@FXML
 	private void selectSave() {
 		UI_SERVICE.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
-		menuBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
+		modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
 	}
 
 	@FXML

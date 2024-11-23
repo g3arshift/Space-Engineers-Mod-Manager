@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.view.win_native;
+package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.BaseTSD;
@@ -22,7 +22,7 @@ public class CustomDecorationWindowProc implements WinUser.WindowProc {
 	private BaseTSD.LONG_PTR defWndProc;
 
 	public CustomDecorationWindowProc() {
-		INSTANCEEx = (User32Ex) Native.load("user32", User32Ex.class, W32APIOptions.DEFAULT_OPTIONS);
+		INSTANCEEx = Native.load("user32", User32Ex.class, W32APIOptions.DEFAULT_OPTIONS);
 	}
 
 	public void init(WinDef.HWND hwnd) {
@@ -101,7 +101,7 @@ public class CustomDecorationWindowProc implements WinUser.WindowProc {
 		return new LRESULT(hitTests[uRow][uCol]);
 	}
 
-	public static final boolean is64Bit()
+	public static boolean is64Bit()
 	{
 		String model=System.getProperty("sun.arch.data.model",
 				System.getProperty("com.ibm.vm.bitmode"));

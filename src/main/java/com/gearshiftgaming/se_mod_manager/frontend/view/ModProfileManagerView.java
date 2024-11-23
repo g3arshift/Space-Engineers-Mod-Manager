@@ -55,7 +55,7 @@ public class ModProfileManagerView {
 
     private final ProfileInputView PROFILE_INPUT_VIEW;
 
-    private MenuBarView menuBarView;
+    private ModTableContextBarView modTableContextBarView;
 
     private final ObservableList<ModProfile> MOD_PROFILES;
 
@@ -65,9 +65,9 @@ public class ModProfileManagerView {
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
     }
 
-    public void initView(Parent root, Properties properties, MenuBarView menuBarView) {
+    public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
         Scene scene = new Scene(root);
-        this.menuBarView = menuBarView;
+        this.modTableContextBarView = modTableContextBarView;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -165,8 +165,8 @@ public class ModProfileManagerView {
                 profileList.refresh();
 
                 //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
-                menuBarView.getModProfileDropdown().getSelectionModel().selectNext();
-                menuBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
 
                 PROFILE_INPUT_VIEW.getProfileNameInput().clear();
                 UI_SERVICE.log("Successfully renamed profile.", MessageType.INFO);
@@ -178,7 +178,7 @@ public class ModProfileManagerView {
     @FXML
     private void selectProfile() {
         UI_SERVICE.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
-        menuBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
+        modTableContextBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
     }
 
     @FXML

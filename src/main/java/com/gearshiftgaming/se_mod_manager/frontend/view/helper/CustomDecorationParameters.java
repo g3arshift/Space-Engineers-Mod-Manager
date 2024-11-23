@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.view.win_native;
+package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,12 +8,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CustomDecorationParameters {
 
-	//TODO: I need to actually figure out these dang values
+	//TODO: I need to actually figure out these dang values. They're all placeholder.
 	//TODO: Also need to rename a bunch of the other classes
-	private static AtomicInteger titleBarHeight = new AtomicInteger(27);
-	private static AtomicInteger controlBoxWidth = new AtomicInteger(150);
+	//TODO: Sometimes changing the theme breaks the entire UI's interactivity. Might be due to these values, or pointer dereferencing... GC?
+	private static AtomicInteger titleBarHeight = new AtomicInteger(30);
+	private static AtomicInteger controlBoxWidth = new AtomicInteger(160);
 	private static AtomicInteger iconWidth = new AtomicInteger(40);
-	private static AtomicInteger extraLeftReservedWidth = new AtomicInteger(0);
+	private static AtomicInteger extraLeftReservedWidth = new AtomicInteger(200);
 	private static AtomicInteger extraRightReservedWidth = new AtomicInteger(0);
 	private static AtomicInteger maximizedWindowFrameThickness = new AtomicInteger(10);
 	private static AtomicInteger frameResizeBorderThickness = new AtomicInteger(4);

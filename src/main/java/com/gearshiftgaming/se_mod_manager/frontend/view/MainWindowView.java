@@ -3,24 +3,18 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarHelper;
-import javafx.application.Platform;
+import com.gearshiftgaming.se_mod_manager.frontend.models.WindowType;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -63,10 +57,10 @@ public class MainWindowView {
 
 	private final UserConfiguration USER_CONFIGURATION;
 
-	private TitleBarView TITLE_BAR_VIEW;
+	private final TitleBarView TITLE_BAR_VIEW;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
-	private final MenuBarView MENU_BAR_VIEW;
+	private final ModTableContextBarView MENU_BAR_VIEW;
 
 	//This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
 	private final ModlistManagerView MODLIST_MANAGER_VIEW;
@@ -75,16 +69,15 @@ public class MainWindowView {
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) throws IOException {
+	public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) throws IOException {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
 		this.UI_SERVICE = uiService;
-		this.MENU_BAR_VIEW = menuBarView;
+		this.MENU_BAR_VIEW = modTableContextBarView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
-
-		//STAGE.initStyle(StageStyle.UNDECORATED);
+		this.TITLE_BAR_VIEW = new TitleBarView(stage, WindowType.ROOT);
 	}
 
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -97,11 +90,7 @@ public class MainWindowView {
 		mainWindowLayout.setCenter(modlistManagerRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
 
-				//Each window needs its own title bar so we initialize it in each class that runs in a new window.
-		final FXMLLoader TITLE_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/title-bar.fxml"));
-		this.TITLE_BAR_VIEW = new TitleBarView(STAGE);
-		TITLE_BAR_LOADER.setController(TITLE_BAR_VIEW);
-		TITLE_BAR_LOADER.load();
+		//Each window needs its own title bar so we initialize it in each class that runs in a new window.
 		mainWindowRoot.getChildren().addFirst(TITLE_BAR_VIEW.getTitleBar());
 
 		TITLE_BAR_VIEW.initView();
@@ -152,6 +141,9 @@ public class MainWindowView {
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model = reader.read(new FileReader("pom.xml"));
 
+		TITLE_BAR_VIEW.getAPP_NAME_VERSION().setText("SEMM v" + model.getVersion());
+
+		//This is set so we can actually get the hwnd of the window
 		STAGE.setTitle("SEMM v" + model.getVersion());
 
 		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
