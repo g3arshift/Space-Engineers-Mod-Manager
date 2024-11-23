@@ -3,6 +3,7 @@ package backend.domain;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,15 +49,15 @@ public class SandboxServiceTest {
         illegalSavePath = "src/test/resources/Save$#%.sbc";
 
         modList = new ArrayList<>();
-        modList.add(new SteamMod("2777644246")); //Binoculars
+        modList.add(new Mod("2777644246", ModType.STEAM)); //Binoculars
         modList.getFirst().setFriendlyName("Binoculars");
         modList.getFirst().setPublishedServiceName("Steam");
 
-        modList.add(new SteamMod("2668820525")); //TouchScreenAPI
+        modList.add(new Mod("2668820525", ModType.STEAM)); //TouchScreenAPI
         modList.get(1).setFriendlyName("TouchScreenAPI");
         modList.get(1).setPublishedServiceName("Steam");
 
-        modList.add(new SteamMod("1902970975")); //Assertive Combat Systems
+        modList.add(new Mod("1902970975", ModType.STEAM)); //Assertive Combat Systems
         modList.getLast().setFriendlyName("Assertive Combat Systems");
         modList.getLast().setPublishedServiceName("Steam");
 

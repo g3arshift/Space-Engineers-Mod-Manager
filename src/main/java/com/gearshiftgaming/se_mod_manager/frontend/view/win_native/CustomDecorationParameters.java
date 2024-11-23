@@ -7,6 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 public class CustomDecorationParameters {
+
+	//TODO: I need to actually figure out these dang values
+	//TODO: Also need to rename a bunch of the other classes
 	private static AtomicInteger titleBarHeight = new AtomicInteger(27);
 	private static AtomicInteger controlBoxWidth = new AtomicInteger(150);
 	private static AtomicInteger iconWidth = new AtomicInteger(40);
