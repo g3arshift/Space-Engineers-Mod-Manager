@@ -1,13 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
-import com.sun.jna.Native;
-import com.sun.jna.Pointer;
+import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.platform.win32.WinUser;
 import javafx.stage.Stage;
 import lombok.val;
-import org.apache.commons.lang3.SystemUtils;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -19,20 +16,29 @@ import org.apache.commons.lang3.SystemUtils;
 //TODO: Class is junk, read this https://medium.com/swlh/customizing-the-title-bar-of-an-application-window-50a4ac3ed27e
 public class TitleBarHelper {
 
-	public TitleBarHelper(String title, Stage stage) {
-		val dwmapi = Dwmapi.INSTANCE;
-		WinDef.BOOLByReference ref = new WinDef.BOOLByReference(new WinDef.BOOL(true));
+	public static void SetTitleBar(Stage stage, String theme) {
+		if (Platform.isWindows()) {
+			val dwmapi = Dwmapi.INSTANCE;
+			WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, stage.getTitle());
+			WinDef.BOOLByReference ref;
+			if (!theme.contains("Light")) {
+				ref = new WinDef.BOOLByReference(new WinDef.BOOL(true));
+			} else {
+				ref = new WinDef.BOOLByReference(new WinDef.BOOL(false));
+			}
 
-		dwmapi.DwmSetWindowAttribute(User32.INSTANCE.FindWindow(null, title), 20, ref, WinDef.BOOL.SIZE);
-
-
-
-		forceRedrawOfWindowTitleBar(stage);
+			dwmapi.DwmSetWindowAttribute(hwnd, 20, ref, WinDef.BOOL.SIZE);
+			forceRedrawOfWindowTitleBar(stage);
+		}
 	}
 
 	private static void forceRedrawOfWindowTitleBar(Stage stage) {
-		val maximized = stage.isMaximized();
-		stage.setMaximized(!maximized);
-		stage.setMaximized(maximized);
+		stage.setIconified(true);
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		stage.setIconified(false);
 	}
 }

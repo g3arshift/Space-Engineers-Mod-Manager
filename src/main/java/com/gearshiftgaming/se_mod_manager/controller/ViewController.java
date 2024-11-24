@@ -18,6 +18,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
+import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
@@ -46,6 +47,7 @@ public class ViewController {
 
 	private final Properties PROPERTIES;
 
+	@Getter
 	private final UiService UI_SERVICE;
 
 	//TODO: Check for file locks to prevent two copies of the app from running simultaneously
@@ -152,7 +154,7 @@ public class ViewController {
 
 		//View for the menubar section of the main window
 		final FXMLLoader MOD_TABLE_CONTEXT_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
-		final ModTableContextBarView MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBarView(UI_SERVICE, MODLIST_MANAGER_VIEW);
+		final ModTableContextBarView MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBarView(UI_SERVICE, MODLIST_MANAGER_VIEW, stage);
 		MOD_TABLE_CONTEXT_BAR_LOADER.setController(MOD_TABLE_CONTEXT_BAR_VIEW);
 		final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
 

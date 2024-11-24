@@ -32,7 +32,7 @@ public class SpaceEngineersModManager extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		new ViewController(primaryStage, LOGGER);
+		ViewController viewController = new ViewController(primaryStage, LOGGER);
 		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
 			try {
 				logError(t, e);
@@ -42,9 +42,8 @@ public class SpaceEngineersModManager extends Application {
 		});
 
 		primaryStage.show();
-		//TODO: Somehow need to cram this lower
-		//TitleBarHelper test = new TitleBarHelper(primaryStage.getTitle());
-		new TitleBarHelper(primaryStage.getTitle(), primaryStage);
+
+		TitleBarHelper.SetTitleBar(primaryStage, viewController.getUI_SERVICE().getUSER_CONFIGURATION().getUserTheme());
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

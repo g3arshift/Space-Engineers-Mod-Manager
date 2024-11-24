@@ -7,11 +7,13 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarHelper;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
@@ -30,10 +32,9 @@ import java.util.List;
  */
 public class ModTableContextBarView {
 
-	//TODO: We need to move the actual titlebar stuff like "File" up to the real titlebar now that it exists
 	//FXML Items
 	@FXML
-	private VBox menuBarRoot;
+	private VBox modTableContextBarRoot;
 
 	@FXML
 	private MenuItem saveModlistAs;
@@ -110,9 +111,11 @@ public class ModTableContextBarView {
 
 	private final UiService UI_SERVICE;
 
+	private final Stage STAGE;
+
 	//TODO: On dropdown select, change active profile
 
-	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -122,6 +125,7 @@ public class ModTableContextBarView {
 		//	in saveManagerView fixes it?! WHY?!
 		this.UI_SERVICE = uiService;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
+		this.STAGE = stage;
 	}
 
 	public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -229,6 +233,7 @@ public class ModTableContextBarView {
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
 				UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
+				TitleBarHelper.SetTitleBar(STAGE, selectedTheme);
 			}
 		}
 

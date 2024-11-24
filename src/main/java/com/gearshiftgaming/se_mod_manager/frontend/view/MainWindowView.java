@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.WindowType;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarHelper;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -57,8 +58,6 @@ public class MainWindowView {
 
 	private final UserConfiguration USER_CONFIGURATION;
 
-	private final TitleBarView TITLE_BAR_VIEW;
-
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
 	private final ModTableContextBarView MENU_BAR_VIEW;
 
@@ -77,7 +76,6 @@ public class MainWindowView {
 		this.MENU_BAR_VIEW = modTableContextBarView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
-		this.TITLE_BAR_VIEW = new TitleBarView(stage, WindowType.ROOT);
 	}
 
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -89,11 +87,6 @@ public class MainWindowView {
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
-
-		//Each window needs its own title bar so we initialize it in each class that runs in a new window.
-		mainWindowRoot.getChildren().addFirst(TITLE_BAR_VIEW.getTitleBar());
-
-		TITLE_BAR_VIEW.initView();
 
 		final ObservableList<SaveProfile> SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 
@@ -141,9 +134,6 @@ public class MainWindowView {
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model = reader.read(new FileReader("pom.xml"));
 
-		TITLE_BAR_VIEW.getAPP_NAME_VERSION().setText("SEMM v" + model.getVersion());
-
-		//This is set so we can actually get the hwnd of the window
 		STAGE.setTitle("SEMM v" + model.getVersion());
 
 		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));

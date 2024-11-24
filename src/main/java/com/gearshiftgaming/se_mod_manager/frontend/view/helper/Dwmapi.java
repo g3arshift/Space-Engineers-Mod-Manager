@@ -16,6 +16,6 @@ public interface Dwmapi extends Library {
 
 	Dwmapi INSTANCE = Native.load("dwmapi", Dwmapi.class);
 
-	int DwmSetWindowAttribute(WinDef.HWND hwnd, int dwAttribute, PointerType pvAttribute, int cbAttribute);
+	void DwmSetWindowAttribute(WinDef.HWND hwnd, int dwAttribute, PointerType pvAttribute, int cbAttribute);
 
 }
