@@ -85,7 +85,7 @@
                          <Label minWidth="-Infinity" text="Active Mod Count" />
                          <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
                              <children>
-                                 <Rectangle fx:id="activeModCountRectangle" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
+                                 <Rectangle fx:id="activeModCountBox" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
                         <Label fx:id="activeModCount" text="0" StackPane.alignment="CENTER_RIGHT">
                            <font>
                               <Font size="14.0" />
@@ -109,7 +109,7 @@
                          <Label minWidth="-Infinity" text="Mod Conflicts" />
                          <StackPane alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="63.0">
                              <children>
-                                 <Rectangle fx:id="modConflictRectangle" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
+                                 <Rectangle fx:id="modConflictBox" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="BLACK" strokeType="INSIDE" width="63.0" />
                         <Label fx:id="modConflicts" text="0" StackPane.alignment="CENTER_RIGHT">
                            <padding>
                               <Insets right="10.0" />

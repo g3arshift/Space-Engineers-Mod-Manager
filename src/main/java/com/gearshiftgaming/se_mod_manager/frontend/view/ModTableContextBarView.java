@@ -13,6 +13,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
@@ -71,8 +73,14 @@ public class ModTableContextBarView {
 	private ComboBox<SaveProfile> saveProfileDropdown;
 
 	@FXML
+	private Rectangle activeModCountBox;
+
+	@FXML
 	@Getter
 	private Label activeModCount;
+
+	@FXML
+	private Rectangle modConflictBox;
 
 	@FXML
 	@Getter
@@ -175,6 +183,9 @@ public class ModTableContextBarView {
 
 		activeModCount.textProperty().bind(UI_SERVICE.getActiveModCount().asString());
 
+		activeModCountBox.setStroke(getThemeBoxColor());
+		modConflictBox.setStroke(getThemeBoxColor());
+
 		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
 	}
 
@@ -233,6 +244,9 @@ public class ModTableContextBarView {
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
 				UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
+				activeModCountBox.setStroke(getThemeBoxColor());
+				modConflictBox.setStroke(getThemeBoxColor());
+
 				TitleBarUtility.SetTitleBar(STAGE);
 			}
 		}
@@ -265,5 +279,18 @@ public class ModTableContextBarView {
 	@FXML
 	private void clearSearchBox() {
 		modTableSearchField.clear();
+	}
+
+	private Color getThemeBoxColor() {
+		return switch(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+			case "PrimerLight", "NordLight", "CupertinoLight":
+				yield Color.web("#000000");
+			case "PrimerDark", "CupertinoDark":
+				yield Color.web("#748393");
+			case "NordDark":
+				yield Color.web("#5e6675");
+			default:
+				yield Color.web("#685ab3");
+		};
 	}
 }
