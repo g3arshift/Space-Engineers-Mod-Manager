@@ -151,19 +151,19 @@ public class ViewController {
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 
 		//View for the menubar section of the main window
-		final FXMLLoader MENU_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
-		final ModTableContextBarView MENU_BAR_VIEW = new ModTableContextBarView(UI_SERVICE, MODLIST_MANAGER_VIEW);
-		MENU_BAR_LOADER.setController(MENU_BAR_VIEW);
-		final Parent MENU_BAR_ROOT = MENU_BAR_LOADER.load();
+		final FXMLLoader MOD_TABLE_CONTEXT_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
+		final ModTableContextBarView MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBarView(UI_SERVICE, MODLIST_MANAGER_VIEW);
+		MOD_TABLE_CONTEXT_BAR_LOADER.setController(MOD_TABLE_CONTEXT_BAR_VIEW);
+		final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
 
 		//The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-		MOD_PROFILE_MANAGER_VIEW.initView(MOD_PROFILE_MANAGER_ROOT, PROPERTIES, MENU_BAR_VIEW);
-		SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, PROPERTIES, MENU_BAR_VIEW);
+		MOD_PROFILE_MANAGER_VIEW.initView(MOD_PROFILE_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
+		SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
 
 		//View for the primary application window
 		final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
 		final MainWindowView MAIN_WINDOW_VIEW = new MainWindowView(PROPERTIES, stage,
-				MENU_BAR_VIEW, MODLIST_MANAGER_VIEW, STATUS_BAR_VIEW, UI_SERVICE);
+				MOD_TABLE_CONTEXT_BAR_VIEW, MODLIST_MANAGER_VIEW, STATUS_BAR_VIEW, UI_SERVICE);
 		MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
 		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
 		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);

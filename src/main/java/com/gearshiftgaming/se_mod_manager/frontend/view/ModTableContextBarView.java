@@ -245,6 +245,7 @@ public class ModTableContextBarView {
 	@FXML
 	private void selectModProfile() {
 		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
+
 		UI_SERVICE.setCurrentModProfile(modProfile);
 		MODLIST_MANAGER_VIEW.getModTable().setItems(UI_SERVICE.getCurrentModList());
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!

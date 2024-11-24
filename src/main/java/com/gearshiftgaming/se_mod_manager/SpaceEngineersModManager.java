@@ -10,11 +10,8 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
@@ -24,7 +21,6 @@ import java.lang.reflect.InvocationTargetException;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class SpaceEngineersModManager extends Application {
 
@@ -47,7 +43,8 @@ public class SpaceEngineersModManager extends Application {
 
 		primaryStage.show();
 		//TODO: Somehow need to cram this lower
-		TitleBarHelper test = new TitleBarHelper(primaryStage.getTitle());
+		//TitleBarHelper test = new TitleBarHelper(primaryStage.getTitle());
+		new TitleBarHelper(primaryStage.getTitle(), primaryStage);
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

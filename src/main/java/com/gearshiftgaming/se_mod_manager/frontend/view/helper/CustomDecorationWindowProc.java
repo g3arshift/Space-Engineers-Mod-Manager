@@ -1,3 +1,4 @@
+// Copyright 2020 Kalkidan Betre Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
 import com.sun.jna.Native;
@@ -9,17 +10,13 @@ import com.sun.jna.win32.W32APIOptions;
 
 import static com.sun.jna.platform.win32.WinUser.*;
 
-/**
- * Copyright 2020 Kalkidan Betre Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
- */
-
 public class CustomDecorationWindowProc implements WinUser.WindowProc {
-	private final int WM_NCCALCSIZE = 0x0083;
-	private final int WM_NCHITTEST = 0x0084;
+	final int WM_NCCALCSIZE = 0x0083;
+	final int WM_NCHITTEST = 0x0084;
 
-	private final User32Ex INSTANCEEx;
-	private WinDef.HWND hwnd = new WinDef.HWND();
-	private BaseTSD.LONG_PTR defWndProc;
+	final User32Ex INSTANCEEx;
+	WinDef.HWND hwnd = new WinDef.HWND();
+	BaseTSD.LONG_PTR defWndProc;
 
 	public CustomDecorationWindowProc() {
 		INSTANCEEx = Native.load("user32", User32Ex.class, W32APIOptions.DEFAULT_OPTIONS);
@@ -59,7 +56,7 @@ public class CustomDecorationWindowProc implements WinUser.WindowProc {
 		}
 	}
 
-	LRESULT BorderLessHitTest(HWND hWnd, int message, WPARAM wParam, LPARAM lParam) {
+	private LRESULT BorderLessHitTest(HWND hWnd, int message, WPARAM wParam, LPARAM lParam) {
 		int borderOffset = CustomDecorationParameters.getMaximizedWindowFrameThickness();
 		int borderThickness = CustomDecorationParameters.getFrameResizeBorderThickness();
 

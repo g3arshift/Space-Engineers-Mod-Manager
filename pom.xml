@@ -32,11 +32,19 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <javafx.version>21</javafx.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.9.23</kotlin.version>
     </properties>
+    <repositories>
+        <repository>
+            <id>openjfx</id>
+            <url>https://openjfx.io/repo</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -100,16 +108,7 @@
         </dependency>
 
         <!-- Maven Utilities -->
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>3.4.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.7.1</version>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
@@ -120,28 +119,27 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>21</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>21</version>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>11.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.dlsc.formsfx</groupId>
-            <artifactId>formsfx-core</artifactId>
-            <version>11.6.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.openjfx</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Visual Styling for JavaFX -->
@@ -270,7 +268,8 @@
                         <configuration>
                             <mainClass>com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager</mainClass>
                             <options>
-                                <option>-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:8000,suspend=y</option>
+                                <option>-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:8000,suspend=y
+                                </option>
                             </options>
                         </configuration>
                     </execution>
