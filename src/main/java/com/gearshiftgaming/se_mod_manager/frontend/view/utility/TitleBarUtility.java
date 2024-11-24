@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
+package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
 import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.User32;

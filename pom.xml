@@ -154,11 +154,6 @@
             <version>12.3.1</version>
         </dependency>
         <dependency>
-            <groupId>org.kordamp.ikonli</groupId>
-            <artifactId>ikonli-coreui-pack</artifactId>
-            <version>12.3.1</version>
-        </dependency>
-        <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
             <version>2.0.1</version>

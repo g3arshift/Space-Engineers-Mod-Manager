@@ -10,7 +10,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

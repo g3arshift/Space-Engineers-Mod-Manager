@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;

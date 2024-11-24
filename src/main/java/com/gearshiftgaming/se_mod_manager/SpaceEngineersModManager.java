@@ -2,8 +2,8 @@ package com.gearshiftgaming.se_mod_manager;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;

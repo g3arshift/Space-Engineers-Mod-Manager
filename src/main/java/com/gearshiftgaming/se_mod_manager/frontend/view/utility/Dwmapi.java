@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
+package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
