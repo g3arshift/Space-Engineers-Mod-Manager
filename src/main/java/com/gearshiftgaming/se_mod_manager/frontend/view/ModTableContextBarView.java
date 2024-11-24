@@ -7,7 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -233,7 +233,7 @@ public class ModTableContextBarView {
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
 				UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
-				TitleBarHelper.SetTitleBar(STAGE, selectedTheme);
+				TitleBarUtility.SetTitleBar(STAGE);
 			}
 		}
 

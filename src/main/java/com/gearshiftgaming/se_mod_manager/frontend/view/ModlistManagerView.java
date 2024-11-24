@@ -10,6 +10,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -272,13 +273,15 @@ public class ModlistManagerView {
 
 	//TODO: Make the window slightly larger to accommodate the new buttons
 	@FXML
-	private void manageModProfiles() {
-		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
+	private void manageModProfiles() throws InterruptedException {
+		MOD_PROFILE_MANAGER_VIEW.getStage().show();
+		TitleBarUtility.SetTitleBar(MOD_PROFILE_MANAGER_VIEW.getStage());
 	}
 
 	@FXML
 	private void manageSaveProfiles() {
-		SAVE_MANAGER_VIEW.getStage().showAndWait();
+		SAVE_MANAGER_VIEW.getStage().show();
+		TitleBarUtility.SetTitleBar(SAVE_MANAGER_VIEW.getStage());
 	}
 
 	@FXML

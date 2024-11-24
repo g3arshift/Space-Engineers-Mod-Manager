@@ -47,7 +47,6 @@ public class ViewController {
 
 	private final Properties PROPERTIES;
 
-	@Getter
 	private final UiService UI_SERVICE;
 
 	//TODO: Check for file locks to prevent two copies of the app from running simultaneously

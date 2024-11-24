@@ -3,7 +3,7 @@ package com.gearshiftgaming.se_mod_manager;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
 import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -32,7 +32,7 @@ public class SpaceEngineersModManager extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		ViewController viewController = new ViewController(primaryStage, LOGGER);
+		new ViewController(primaryStage, LOGGER);
 		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
 			try {
 				logError(t, e);
@@ -43,7 +43,7 @@ public class SpaceEngineersModManager extends Application {
 
 		primaryStage.show();
 
-		TitleBarHelper.SetTitleBar(primaryStage, viewController.getUI_SERVICE().getUSER_CONFIGURATION().getUserTheme());
+		TitleBarUtility.SetTitleBar(primaryStage);
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

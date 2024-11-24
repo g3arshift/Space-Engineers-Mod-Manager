@@ -3,8 +3,11 @@ package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
+import javafx.application.Application;
 import javafx.stage.Stage;
 import lombok.val;
+
+import java.util.Locale;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -14,14 +17,16 @@ import lombok.val;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 //TODO: Class is junk, read this https://medium.com/swlh/customizing-the-title-bar-of-an-application-window-50a4ac3ed27e
-public class TitleBarHelper {
+public class TitleBarUtility {
 
-	public static void SetTitleBar(Stage stage, String theme) {
+	public static void SetTitleBar(Stage stage) {
+		//TODO: The linux equivalent
+		//TODO: Does this work on windows 11?
 		if (Platform.isWindows()) {
 			val dwmapi = Dwmapi.INSTANCE;
 			WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, stage.getTitle());
 			WinDef.BOOLByReference ref;
-			if (!theme.contains("Light")) {
+			if (!Application.getUserAgentStylesheet().toLowerCase(Locale.ROOT).contains("light")) {
 				ref = new WinDef.BOOLByReference(new WinDef.BOOL(true));
 			} else {
 				ref = new WinDef.BOOLByReference(new WinDef.BOOL(false));
@@ -32,13 +37,8 @@ public class TitleBarHelper {
 		}
 	}
 
+	//We can't actually set the stage back to its original size or the refresh doesn't actually set in.
 	private static void forceRedrawOfWindowTitleBar(Stage stage) {
-		stage.setIconified(true);
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		stage.setIconified(false);
+		stage.setHeight(stage.getHeight() + 1);
 	}
 }

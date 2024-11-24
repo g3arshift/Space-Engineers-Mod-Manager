@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -334,7 +335,7 @@ public class Popup {
         VBox textLayout = new VBox(label, hyperlink);
         textLayout.setAlignment(Pos.CENTER);
 
-		return new HBox(messageIcon, textLayout);
+        return new HBox(messageIcon, textLayout);
     }
 
     private static void getIconByMessageType(MessageType messageType, FontIcon messageIcon, Stage stage) {
@@ -367,7 +368,8 @@ public class Popup {
 
         centerStage(childStage, parentStage);
 
-        childStage.showAndWait();
+        childStage.show();
+        TitleBarUtility.SetTitleBar(childStage);
     }
 
     private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
@@ -375,7 +377,8 @@ public class Popup {
 
         centerStage(childStage);
 
-        childStage.showAndWait();
+        childStage.show();
+        TitleBarUtility.SetTitleBar(childStage);
     }
 
     private static void prepareStage(Stage childStage, HBox dialogBox, HBox buttonBar) {

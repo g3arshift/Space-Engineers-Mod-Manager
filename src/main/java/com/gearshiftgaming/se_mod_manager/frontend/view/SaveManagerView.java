@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.TitleBarUtility;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -111,7 +112,8 @@ public class SaveManagerView {
 		Result<SaveProfile> result;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
-			SAVE_INPUT_VIEW.getStage().showAndWait();
+			SAVE_INPUT_VIEW.getStage().show();
+			TitleBarUtility.SetTitleBar(SAVE_INPUT_VIEW.getStage());
 			result = SAVE_INPUT_VIEW.getSaveProfileResult();
 			if (result.isSuccess()) {
 				SaveProfile saveProfile = result.getPayload();
@@ -125,7 +127,8 @@ public class SaveManagerView {
 					do {
 						PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 						PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-						PROFILE_INPUT_VIEW.getStage().showAndWait();
+						PROFILE_INPUT_VIEW.getStage().show();
+						TitleBarUtility.SetTitleBar(PROFILE_INPUT_VIEW.getStage());
 						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
 						if (duplicateProfileName) {
@@ -234,7 +237,8 @@ public class SaveManagerView {
 	private void renameProfile() {
 		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 		PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-		PROFILE_INPUT_VIEW.getStage().showAndWait();
+		PROFILE_INPUT_VIEW.getStage().show();
+		TitleBarUtility.SetTitleBar(PROFILE_INPUT_VIEW.getStage());
 
 		String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
 		if(profileNameAlreadyExists(newProfileName)) {
