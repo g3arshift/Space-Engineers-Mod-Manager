@@ -16,7 +16,6 @@ import java.util.Locale;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-//TODO: Class is junk, read this https://medium.com/swlh/customizing-the-title-bar-of-an-application-window-50a4ac3ed27e
 public class TitleBarUtility {
 
 	public static void SetTitleBar(Stage stage) {

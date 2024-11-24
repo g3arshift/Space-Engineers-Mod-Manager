@@ -26,7 +26,6 @@ import java.util.Objects;
 @NoArgsConstructor
 public class Mod {
 
-    //TODO: Look at the SWEN 646 project to see an example of proper JAXB abstraction handling.
     //These are the fields required for the sandbox_config.sbc file
     //For mod.io mods we have to use an actual API here. https://docs.mod.io/support/search-by-id/
     //TODO: In the future I might need to actually make certain values like friendly name and such observable. Or, instead, run the update code for the entire lists information
