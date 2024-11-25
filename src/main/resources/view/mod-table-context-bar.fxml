@@ -22,16 +22,7 @@
              <menus>
                  <Menu mnemonicParsing="false" text="File">
                      <items>
-                         <MenuItem fx:id="saveModlistAs" mnemonicParsing="false" text="Save modlist as" />
-                         <MenuItem fx:id="close" mnemonicParsing="false" text="Close" />
-                         <Menu mnemonicParsing="false" text="Add mods">
-                             <items>
-                                 <MenuItem mnemonicParsing="false" text="Add mods by Steam Workshop ID" />
-                                 <MenuItem mnemonicParsing="false" text="Add mods from Steam Collection" />
-                                 <MenuItem mnemonicParsing="false" text="Add mods from Mod.io" />
-                                 <MenuItem mnemonicParsing="false" text="Add mods from modlist file" />
-                             </items>
-                         </Menu>
+                         <MenuItem fx:id="close" mnemonicParsing="false" onAction="#exit" text="Close" />
                      </items>
                  </Menu>
                  <Menu mnemonicParsing="false" text="View">
@@ -127,7 +118,7 @@
                  </HBox>
                  <StackPane alignment="TOP_CENTER">
                      <children>
-                         <TextField fx:id="modTableSearchField" promptText="Search Modlist" />
+                         <TextField fx:id="modTableSearchField" promptText="Search Mod Name" />
                          <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" StackPane.alignment="CENTER_RIGHT">
                              <children>
                                  <FontIcon iconLiteral="ci-close" iconSize="16" />
