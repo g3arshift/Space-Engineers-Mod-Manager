@@ -298,6 +298,7 @@ public class ModlistManagerView {
 	//TODO: This whole thing likely need rewritten
 	@FXML
 	private void applyModlist() throws IOException {
+		//TODO: Disable this button when our save profile save is not found
 //		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
 //		ModProfile currentModProfile = uiService.getCurrentModProfile();
 //		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.

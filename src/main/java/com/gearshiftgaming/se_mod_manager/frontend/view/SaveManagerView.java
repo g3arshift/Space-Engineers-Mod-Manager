@@ -35,7 +35,6 @@ import java.util.Properties;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 
 public class SaveManagerView {
@@ -217,7 +216,7 @@ public class SaveManagerView {
 			if (choice == 1) {
 				int profileIndex = saveList.getSelectionModel().getSelectedIndex();
 				SAVE_PROFILES.remove(profileIndex);
-				if(profileIndex > SAVE_PROFILES.size()) {
+				if (profileIndex > SAVE_PROFILES.size()) {
 					saveList.getSelectionModel().select(profileIndex - 1);
 				} else {
 					saveList.getSelectionModel().select(profileIndex);
@@ -231,15 +230,19 @@ public class SaveManagerView {
 	private void renameProfile() {
 		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 		PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-		PROFILE_INPUT_VIEW.show();
+		if (saveList.getSelectionModel().getSelectedItem() != null) {
 
-		String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
-		if(profileNameAlreadyExists(newProfileName)) {
-			Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-		} else if (!newProfileName.isBlank()){
-			saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
-			saveList.refresh();
-			UI_SERVICE.saveUserData();
+
+			PROFILE_INPUT_VIEW.show();
+
+			String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
+			if (profileNameAlreadyExists(newProfileName)) {
+				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+			} else if (!newProfileName.isBlank()) {
+				saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
+				saveList.refresh();
+				UI_SERVICE.saveUserData();
+			}
 		}
 	}
 
@@ -252,6 +255,7 @@ public class SaveManagerView {
 	@FXML
 	private void closeSaveWindow() {
 		stage.close();
+		saveList.getSelectionModel().clearSelection();
 		Platform.exitNestedEventLoop(stage, null);
 	}
 

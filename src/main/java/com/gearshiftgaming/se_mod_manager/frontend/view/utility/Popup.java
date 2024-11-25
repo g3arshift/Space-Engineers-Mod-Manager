@@ -369,6 +369,7 @@ public class Popup {
 		}
 	}
 
+	//TODO: We need a line above the box before title bar. Blends together too much
 	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
 		prepareStage(childStage, dialogBox, buttonBar);
 
