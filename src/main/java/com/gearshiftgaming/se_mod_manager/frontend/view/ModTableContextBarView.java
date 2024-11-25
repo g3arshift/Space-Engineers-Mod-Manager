@@ -150,7 +150,9 @@ public class ModTableContextBarView {
 		//TODO: Set a max size on the box. Do it through polymorphism.
 		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownCell());
 		saveProfileDropdown.setButtonCell(new SaveProfileDropdownCell());
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownCell()));
 
+		//TODO: Setup polymorphism for this
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
 
