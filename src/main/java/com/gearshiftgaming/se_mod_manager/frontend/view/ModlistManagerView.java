@@ -274,14 +274,12 @@ public class ModlistManagerView {
 	//TODO: Make the window slightly larger to accommodate the new buttons
 	@FXML
 	private void manageModProfiles() throws InterruptedException {
-		MOD_PROFILE_MANAGER_VIEW.getStage().show();
-		TitleBarUtility.SetTitleBar(MOD_PROFILE_MANAGER_VIEW.getStage());
+		MOD_PROFILE_MANAGER_VIEW.show();
 	}
 
 	@FXML
 	private void manageSaveProfiles() {
-		SAVE_MANAGER_VIEW.getStage().show();
-		TitleBarUtility.SetTitleBar(SAVE_MANAGER_VIEW.getStage());
+		SAVE_MANAGER_VIEW.show();
 	}
 
 	@FXML

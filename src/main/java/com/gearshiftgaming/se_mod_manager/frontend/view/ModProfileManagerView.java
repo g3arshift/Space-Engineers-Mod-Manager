@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -94,8 +95,7 @@ public class ModProfileManagerView {
 
 		do {
 			PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-			PROFILE_INPUT_VIEW.getStage().show();
-			TitleBarUtility.SetTitleBar(PROFILE_INPUT_VIEW.getStage());
+			PROFILE_INPUT_VIEW.show();
 			ModProfile newModProfile = new ModProfile(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
@@ -155,9 +155,8 @@ public class ModProfileManagerView {
 			PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 			PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
 			if (profileList.getSelectionModel().getSelectedItem() != null) {
-				PROFILE_INPUT_VIEW.getStage().show();
+				PROFILE_INPUT_VIEW.show();
 
-				TitleBarUtility.SetTitleBar(PROFILE_INPUT_VIEW.getStage());
 				duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
 				if (duplicateProfileName) {
@@ -194,10 +193,17 @@ public class ModProfileManagerView {
 	private void closeProfileWindow() {
 		stage.close();
         profileList.getSelectionModel().clearSelection();
+		Platform.exitNestedEventLoop(stage, null);
 	}
 
 	private boolean profileNameExists(String profileName) {
 		return MOD_PROFILES.stream()
 				.anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));
+	}
+
+	public void show() {
+		stage.show();
+		TitleBarUtility.SetTitleBar(stage);
+		Platform.enterNestedEventLoop(stage);
 	}
 }

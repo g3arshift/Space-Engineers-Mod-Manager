@@ -2,6 +2,8 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -34,7 +36,6 @@ public class ProfileInputView {
     @FXML
     private Button profileCreateCancel;
 
-    @Getter
     private Stage stage;
 
     public void initView(Parent root) {
@@ -54,6 +55,7 @@ public class ProfileInputView {
             Popup.displaySimpleAlert("Profile name cannot be empty!", stage, MessageType.WARN);
         } else {
             stage.close();
+            Platform.exitNestedEventLoop(stage, null);
         }
     }
 
@@ -61,5 +63,12 @@ public class ProfileInputView {
     private void closeWindow() {
         profileNameInput.clear();
         stage.close();
+        Platform.exitNestedEventLoop(stage, null);
+    }
+
+    public void show() {
+        stage.show();
+        TitleBarUtility.SetTitleBar(stage);
+        Platform.enterNestedEventLoop(stage);
     }
 }

@@ -56,7 +56,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="12.0">
                      <children>
                          <Label minWidth="-Infinity" text="Mod List" />
-                         <ComboBox fx:id="modProfileDropdown" maxWidth="250.0" minWidth="150.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="modProfileDropdown" maxWidth="175.0" minWidth="175.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />
@@ -65,7 +65,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="12.0">
                      <children>
                          <Label minWidth="-Infinity" text="SE Save" HBox.hgrow="ALWAYS" />
-                         <ComboBox fx:id="saveProfileDropdown" maxWidth="250.0" minWidth="150.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="saveProfileDropdown" maxWidth="175.0" minWidth="175.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />
