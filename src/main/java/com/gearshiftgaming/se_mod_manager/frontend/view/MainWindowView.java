@@ -123,11 +123,15 @@ public class MainWindowView {
 		//Prepare the scene
 		int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));
 		int minHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minHeight"));
+		int prefWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.prefWidth"));
+		int prefHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.prefHeight"));
 
 		//Prepare the stage
 		STAGE.setScene(scene);
 		STAGE.setMinWidth(minWidth);
 		STAGE.setMinHeight(minHeight);
+		STAGE.setWidth(prefWidth);
+		STAGE.setHeight(prefHeight);
 
 		//Add title and icon to the stage
 		MavenXpp3Reader reader = new MavenXpp3Reader();
