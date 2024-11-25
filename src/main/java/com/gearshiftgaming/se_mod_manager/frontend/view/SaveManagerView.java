@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Platform;
@@ -65,7 +66,6 @@ public class SaveManagerView {
 	@FXML
 	private RingProgressIndicator progressIndicator;
 
-	@Getter
 	private Stage stage;
 
 	private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -78,11 +78,11 @@ public class SaveManagerView {
 
 	private ModTableContextBarView modTableContextBarView;
 
-	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView) {
+	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView profileInputView) {
 		this.UI_SERVICE = UI_SERVICE;
 		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 		this.SAVE_INPUT_VIEW = saveInputViewFirstStepView;
-		this.PROFILE_INPUT_VIEW = saveListInputSecondStepView;
+		this.PROFILE_INPUT_VIEW = profileInputView;
 	}
 
 	public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
@@ -99,7 +99,7 @@ public class SaveManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		saveList.setItems(SAVE_PROFILES);
-		saveList.setCellFactory(param -> new SaveProfileCell("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;"));
+		saveList.setCellFactory(param -> new SaveProfileManagerCell());
 
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -113,8 +113,7 @@ public class SaveManagerView {
 		Result<SaveProfile> result;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
-			SAVE_INPUT_VIEW.getStage().show();
-			TitleBarUtility.SetTitleBar(SAVE_INPUT_VIEW.getStage());
+			SAVE_INPUT_VIEW.show();
 			result = SAVE_INPUT_VIEW.getSaveProfileResult();
 			if (result.isSuccess()) {
 				SaveProfile saveProfile = result.getPayload();
@@ -128,8 +127,7 @@ public class SaveManagerView {
 					do {
 						PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 						PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-						PROFILE_INPUT_VIEW.getStage().show();
-						TitleBarUtility.SetTitleBar(PROFILE_INPUT_VIEW.getStage());
+						PROFILE_INPUT_VIEW.show();
 						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
 						if (duplicateProfileName) {
@@ -141,11 +139,6 @@ public class SaveManagerView {
 								SAVE_PROFILES.set(0, saveProfile);
 								UI_SERVICE.setCurrentSaveProfile(saveProfile);
 
-								//TODO: This only partially works. It fixes the styling, but leaves the text as "None" for the button cell.
-								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;");
-								buttonCellFix.setItem(saveProfile);
-								buttonCellFix.setText(saveProfile.getProfileName());
-								modTableContextBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 								saveList.refresh();
 							} else {
 								SAVE_PROFILES.add(saveProfile);
@@ -238,8 +231,7 @@ public class SaveManagerView {
 	private void renameProfile() {
 		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 		PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-		PROFILE_INPUT_VIEW.getStage().show();
-		TitleBarUtility.SetTitleBar(PROFILE_INPUT_VIEW.getStage());
+		PROFILE_INPUT_VIEW.show();
 
 		String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
 		if(profileNameAlreadyExists(newProfileName)) {
@@ -260,6 +252,7 @@ public class SaveManagerView {
 	@FXML
 	private void closeSaveWindow() {
 		stage.close();
+		Platform.exitNestedEventLoop(stage, null);
 	}
 
 	private boolean saveAlreadyExists(String savePath) {
@@ -270,5 +263,11 @@ public class SaveManagerView {
 	private boolean profileNameAlreadyExists(String profileName) {
 		return SAVE_PROFILES.stream()
 				.anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
+	}
+
+	public void show() {
+		stage.show();
+		TitleBarUtility.SetTitleBar(stage);
+		Platform.enterNestedEventLoop(stage);
 	}
 }

@@ -6,9 +6,10 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -37,9 +38,6 @@ public class ModTableContextBarView {
 	//FXML Items
 	@FXML
 	private VBox modTableContextBarRoot;
-
-	@FXML
-	private MenuItem saveModlistAs;
 
 	@FXML
 	@Getter
@@ -149,8 +147,9 @@ public class ModTableContextBarView {
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell(""));
-		saveProfileDropdown.setButtonCell(new SaveProfileCell(""));
+		//TODO: Set a max size on the box. Do it through polymorphism.
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownCell());
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownCell());
 
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
@@ -279,6 +278,11 @@ public class ModTableContextBarView {
 	@FXML
 	private void clearSearchBox() {
 		modTableSearchField.clear();
+	}
+
+	@FXML
+	private void exit() {
+		Platform.exit();
 	}
 
 	private Color getThemeBoxColor() {

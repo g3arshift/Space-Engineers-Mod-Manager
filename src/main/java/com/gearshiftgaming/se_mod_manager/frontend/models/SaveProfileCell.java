@@ -9,15 +9,19 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import lombok.Getter;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
-public class SaveProfileCell extends ListCell<SaveProfile> {
+
+//TODO: DO the same abstraction for the mod profile cell.
+public abstract class SaveProfileCell extends ListCell<SaveProfile> {
+
+	@Getter
 	private final Text PROFILE_NAME = new Text();
 
 	private final Tooltip SAVE_NAME = new Tooltip();
@@ -26,6 +30,7 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 
 	private final StackPane STACK_PANE = new StackPane(PROFILE_NAME, REGION);
 
+	@Getter
 	private final HBox LAYOUT = new HBox(STACK_PANE);
 
 	private final String style;
@@ -47,8 +52,9 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			SAVE_NAME.setText("Save name: " + item.getSaveName());
 			PROFILE_NAME.setText(item.getProfileName());
+
+			//TODO: Erroneously this is bleeding over to other items
 			if(!item.isSaveExists()) {
-				//TODO: Sometimes this throws an error about lookup for -fx-fill,but it doesn't seem to actually cause a problem.
 				PROFILE_NAME.setStyle("-fx-fill: -color-danger-emphasis;");
 				PROFILE_NAME.setStrikethrough(true);
 			}
