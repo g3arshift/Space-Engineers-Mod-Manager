@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.models.helper.DropdownLabelHelper;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Tooltip;
@@ -34,9 +35,8 @@ public class SaveProfileDropdownButtonCell extends SaveProfileCell{
 		} else {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
-			getPROFILE_NAME().setText(truncateWithEllipsis(item.getProfileName(), preferredWidth));
+			getPROFILE_NAME().setText(DropdownLabelHelper.truncateWithEllipsisWithRealWidth(item.getProfileName(), preferredWidth));
 
-			//TODO: We need the profile name to actually get ellipsis functionality
 			if(!item.isSaveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
 				getPROFILE_NAME().setStrikethrough(true);
@@ -45,32 +45,5 @@ public class SaveProfileDropdownButtonCell extends SaveProfileCell{
 			setStyle(getCellStyle());
 			setGraphic(getLAYOUT());
 		}
-	}
-
-	private String truncateWithEllipsis(String text, double maxWidth) {
-		Text tempText = new Text(text);
-
-		//I have no idea why this works, but without these two lines it won't get the proper calculation. You'd think applyCss is all you'd need, but no.
-		new Scene(new Group(tempText));
-		tempText.applyCss();
-
-		if (tempText.getBoundsInLocal().getWidth() <= maxWidth) {
-			return text;
-		}
-
-		// If the text is too long, truncate it
-		String ellipsis = "...";
-		String truncatedText = text;
-
-		while (tempText.getBoundsInLocal().getWidth() + 15 > maxWidth - tempText.getFont().getSize()) {
-			if (truncatedText.length() <= 1) {
-				return truncatedText; // Prevent empty string or single character
-			}
-			truncatedText = truncatedText.substring(0, truncatedText.length() - 1);
-			tempText.setText(truncatedText + ellipsis);
-		}
-
-		return truncatedText + ellipsis;
-
 	}
 }

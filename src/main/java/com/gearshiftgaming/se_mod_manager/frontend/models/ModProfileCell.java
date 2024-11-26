@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import lombok.Getter;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -12,12 +13,17 @@ import javafx.scene.control.ListCell;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public class ModProfileCell extends ListCell<ModProfile> {
+
+@Getter
+public abstract class ModProfileCell extends ListCell<ModProfile> {
     private final Label PROFILE_NAME = new Label();
 
-    public ModProfileCell() {
+    private final String cellStyle;
+
+    public ModProfileCell(String cellStyle) {
         super();
         PROFILE_NAME.setAlignment(Pos.CENTER_LEFT);
+        this.cellStyle = cellStyle;
     }
 
     @Override
@@ -28,7 +34,7 @@ public class ModProfileCell extends ListCell<ModProfile> {
             setStyle(null);
         } else {
             PROFILE_NAME.setText(item.getProfileName());
-            setStyle("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;");
+            setStyle(cellStyle);
             setGraphic(PROFILE_NAME);
         }
     }

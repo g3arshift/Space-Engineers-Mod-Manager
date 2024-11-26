@@ -4,6 +4,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Platform;
@@ -81,7 +83,7 @@ public class ModProfileManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		profileList.setItems(MOD_PROFILES);
-		profileList.setCellFactory(param -> new ModProfileCell());
+		profileList.setCellFactory(param -> new ModProfileManagerCell());
 
 		profileList.setStyle("-fx-background-color: -color-bg-default;");
 

@@ -51,7 +51,6 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 			SAVE_NAME.setText("Save name: " + item.getSaveName());
 			PROFILE_NAME.setText(item.getProfileName());
 
-			//TODO: We need the profile name to actually get ellipsis functionality
 			if(!item.isSaveExists()) {
 				PROFILE_NAME.setStyle("-fx-fill: -color-danger-emphasis;");
 				PROFILE_NAME.setStrikethrough(true);

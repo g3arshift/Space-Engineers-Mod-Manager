@@ -6,6 +6,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
@@ -152,9 +154,12 @@ public class ModTableContextBarView {
 		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell());
 		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell()));
 
-		//TODO: Setup polymorphism for this
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
+
+		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell());
+		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell());
+		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell()));
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 
