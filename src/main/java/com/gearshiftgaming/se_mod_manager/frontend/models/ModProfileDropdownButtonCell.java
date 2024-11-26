@@ -12,6 +12,8 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelU
  */
 public class ModProfileDropdownButtonCell extends ModProfileCell {
 
+	//TODO: Install a region for a tooltip with the full untruncated profile name
+
 	public ModProfileDropdownButtonCell() {
 		super("");
 	}
