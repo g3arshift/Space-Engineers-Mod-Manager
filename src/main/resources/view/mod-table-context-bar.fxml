@@ -53,7 +53,7 @@
          </MenuBar>
          <HBox alignment="CENTER_LEFT" spacing="10.0">
              <children>
-                 <HBox alignment="CENTER_LEFT" spacing="12.0">
+                 <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                          <Label minWidth="-Infinity" text="Mod List" />
                          <ComboBox fx:id="modProfileDropdown" maxWidth="175.0" minWidth="175.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
@@ -62,7 +62,7 @@
                          <Insets />
                      </opaqueInsets>
                  </HBox>
-                 <HBox alignment="CENTER_LEFT" spacing="12.0">
+                 <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                          <Label minWidth="-Infinity" text="SE Save" HBox.hgrow="ALWAYS" />
                          <ComboBox fx:id="saveProfileDropdown" maxWidth="175.0" minWidth="175.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />

@@ -18,10 +18,9 @@ import lombok.Getter;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-//TODO: DO the same abstraction for the mod profile cell.
+@Getter
 public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 
-	@Getter
 	private final Text PROFILE_NAME = new Text();
 
 	private final Tooltip SAVE_NAME = new Tooltip();
@@ -30,16 +29,15 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 
 	private final StackPane STACK_PANE = new StackPane(PROFILE_NAME, REGION);
 
-	@Getter
 	private final HBox LAYOUT = new HBox(STACK_PANE);
 
-	private final String style;
+	private final String cellStyle;
 
-	public SaveProfileCell(String style) {
+	public SaveProfileCell(String cellStyle) {
 		super();
 		HBox.setHgrow(STACK_PANE, Priority.ALWAYS);
 		STACK_PANE.setAlignment(Pos.CENTER_LEFT);
-		this.style = style;
+		this.cellStyle = cellStyle;
 	}
 
 	@Override
@@ -53,14 +51,13 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 			SAVE_NAME.setText("Save name: " + item.getSaveName());
 			PROFILE_NAME.setText(item.getProfileName());
 
-			//TODO: Erroneously this is bleeding over to other items
 			//TODO: We need the profile name to actually get ellipsis functionality
 			if(!item.isSaveExists()) {
 				PROFILE_NAME.setStyle("-fx-fill: -color-danger-emphasis;");
 				PROFILE_NAME.setStrikethrough(true);
 			}
 			Tooltip.install(REGION, SAVE_NAME);
-			setStyle(style);
+			setStyle(cellStyle);
 			setGraphic(LAYOUT);
 		}
 	}

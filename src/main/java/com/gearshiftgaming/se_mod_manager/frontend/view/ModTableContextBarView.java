@@ -6,7 +6,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -147,10 +148,9 @@ public class ModTableContextBarView {
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
-		//TODO: Set a max size on the box. Do it through polymorphism.
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownCell());
-		saveProfileDropdown.setButtonCell(new SaveProfileDropdownCell());
-		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownCell()));
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell());
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell());
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell()));
 
 		//TODO: Setup polymorphism for this
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
