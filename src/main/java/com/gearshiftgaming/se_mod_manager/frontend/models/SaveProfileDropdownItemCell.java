@@ -1,11 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.frontend.models.helper.DropdownLabelHelper;
-import javafx.scene.Group;
-import javafx.scene.Scene;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelUtility;
 import javafx.scene.control.Tooltip;
-import javafx.scene.text.Text;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -16,14 +13,9 @@ import javafx.scene.text.Text;
  */
 public class SaveProfileDropdownItemCell extends SaveProfileCell {
 
-	private final int preferredWidth;
 
 	public SaveProfileDropdownItemCell() {
 		super("");
-		preferredWidth = 240;
-		getLAYOUT().setMaxWidth(preferredWidth);
-		getLAYOUT().setPrefWidth(preferredWidth);
-		getLAYOUT().setMinWidth(preferredWidth);
 	}
 
 	@Override
@@ -36,7 +28,7 @@ public class SaveProfileDropdownItemCell extends SaveProfileCell {
 		} else {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
-			getPROFILE_NAME().setText(DropdownLabelHelper.truncateWithEllipsis(item.getProfileName(), preferredWidth));
+			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsis(item.getProfileName(), 240));
 
 			//TODO: We need the profile name to actually get ellipsis functionality
 			if(!item.isSaveExists()) {

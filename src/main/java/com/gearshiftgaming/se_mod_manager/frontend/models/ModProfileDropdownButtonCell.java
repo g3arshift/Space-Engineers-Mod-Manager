@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.frontend.models.helper.DropdownLabelHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelUtility;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -12,13 +12,8 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.helper.DropdownLabelHe
  */
 public class ModProfileDropdownButtonCell extends ModProfileCell {
 
-	private final int preferredWidth;
 	public ModProfileDropdownButtonCell() {
 		super("");
-		preferredWidth = 175;
-		getPROFILE_NAME().setMaxWidth(preferredWidth);
-		getPROFILE_NAME().setPrefWidth(preferredWidth);
-		getPROFILE_NAME().setMinWidth(preferredWidth);
 	}
 
 	@Override
@@ -28,7 +23,7 @@ public class ModProfileDropdownButtonCell extends ModProfileCell {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			getPROFILE_NAME().setText(DropdownLabelHelper.truncateWithEllipsisWithRealWidth(item.getProfileName(), preferredWidth));
+			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 175));
 			setStyle(getCellStyle());
 			setGraphic(getPROFILE_NAME());
 		}

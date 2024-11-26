@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.frontend.models.helper;
+package com.gearshiftgaming.se_mod_manager.frontend.models.utility;
 
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -11,12 +11,13 @@ import javafx.scene.text.Text;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class DropdownLabelHelper {
+public class DropdownLabelUtility {
 
 	public static String truncateWithEllipsisWithRealWidth(String text, double maxWidth) {
 		Text tempText = new Text(text);
 
-		//I have no idea why this works, but without these two lines it won't get the proper calculation. You'd think applyCss is all you'd need, but no.
+		//I have no idea why this works, but without these two lines it won't get the proper text size calculation. You'd think applyCss is all you'd need, but no.
+		//Likely something with actually rendering the text.
 		new Scene(new Group(tempText));
 		tempText.applyCss();
 
