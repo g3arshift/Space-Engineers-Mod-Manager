@@ -10,6 +10,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -236,7 +237,7 @@ public class ModlistManagerView {
 	}
 
 
-	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection"
+	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
 	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
 	public void setupMainViewItems() {
 		viewableLog.setItems(USER_LOG);
@@ -272,13 +273,13 @@ public class ModlistManagerView {
 
 	//TODO: Make the window slightly larger to accommodate the new buttons
 	@FXML
-	private void manageModProfiles() {
-		MOD_PROFILE_MANAGER_VIEW.getStage().showAndWait();
+	private void manageModProfiles() throws InterruptedException {
+		MOD_PROFILE_MANAGER_VIEW.show();
 	}
 
 	@FXML
 	private void manageSaveProfiles() {
-		SAVE_MANAGER_VIEW.getStage().showAndWait();
+		SAVE_MANAGER_VIEW.show();
 	}
 
 	@FXML
@@ -297,6 +298,7 @@ public class ModlistManagerView {
 	//TODO: This whole thing likely need rewritten
 	@FXML
 	private void applyModlist() throws IOException {
+		//TODO: Disable this button when our save profile save is not found
 //		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
 //		ModProfile currentModProfile = uiService.getCurrentModProfile();
 //		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.

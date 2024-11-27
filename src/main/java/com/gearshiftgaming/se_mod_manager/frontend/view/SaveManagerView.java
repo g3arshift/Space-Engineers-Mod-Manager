@@ -7,6 +7,9 @@ import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -32,7 +35,6 @@ import java.util.Properties;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 
 public class SaveManagerView {
@@ -63,7 +65,6 @@ public class SaveManagerView {
 	@FXML
 	private RingProgressIndicator progressIndicator;
 
-	@Getter
 	private Stage stage;
 
 	private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -74,17 +75,17 @@ public class SaveManagerView {
 
 	private final ProfileInputView PROFILE_INPUT_VIEW;
 
-	private MenuBarView menuBarView;
+	private ModTableContextBarView modTableContextBarView;
 
-	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView saveListInputSecondStepView) {
+	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView profileInputView) {
 		this.UI_SERVICE = UI_SERVICE;
 		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 		this.SAVE_INPUT_VIEW = saveInputViewFirstStepView;
-		this.PROFILE_INPUT_VIEW = saveListInputSecondStepView;
+		this.PROFILE_INPUT_VIEW = profileInputView;
 	}
 
-	public void initView(Parent root, Properties properties, MenuBarView menuBarView) {
-		this.menuBarView = menuBarView;
+	public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
+		this.modTableContextBarView = modTableContextBarView;
 		Scene scene = new Scene(root);
 
 		stage = new Stage();
@@ -97,7 +98,7 @@ public class SaveManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		saveList.setItems(SAVE_PROFILES);
-		saveList.setCellFactory(param -> new SaveProfileCell());
+		saveList.setCellFactory(param -> new SaveProfileManagerCell());
 
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -111,7 +112,7 @@ public class SaveManagerView {
 		Result<SaveProfile> result;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
-			SAVE_INPUT_VIEW.getStage().showAndWait();
+			SAVE_INPUT_VIEW.show();
 			result = SAVE_INPUT_VIEW.getSaveProfileResult();
 			if (result.isSuccess()) {
 				SaveProfile saveProfile = result.getPayload();
@@ -125,7 +126,7 @@ public class SaveManagerView {
 					do {
 						PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 						PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-						PROFILE_INPUT_VIEW.getStage().showAndWait();
+						PROFILE_INPUT_VIEW.show();
 						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
 
 						if (duplicateProfileName) {
@@ -137,11 +138,6 @@ public class SaveManagerView {
 								SAVE_PROFILES.set(0, saveProfile);
 								UI_SERVICE.setCurrentSaveProfile(saveProfile);
 
-								//TODO: This only partially works. It fixes the styling, but leaves the text as "None" for the button cell.
-								ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
-								buttonCellFix.setItem(saveProfile);
-								buttonCellFix.setText(saveProfile.getProfileName());
-								menuBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
 								saveList.refresh();
 							} else {
 								SAVE_PROFILES.add(saveProfile);
@@ -220,7 +216,7 @@ public class SaveManagerView {
 			if (choice == 1) {
 				int profileIndex = saveList.getSelectionModel().getSelectedIndex();
 				SAVE_PROFILES.remove(profileIndex);
-				if(profileIndex > SAVE_PROFILES.size()) {
+				if (profileIndex > SAVE_PROFILES.size()) {
 					saveList.getSelectionModel().select(profileIndex - 1);
 				} else {
 					saveList.getSelectionModel().select(profileIndex);
@@ -234,27 +230,33 @@ public class SaveManagerView {
 	private void renameProfile() {
 		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
 		PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
-		PROFILE_INPUT_VIEW.getStage().showAndWait();
+		if (saveList.getSelectionModel().getSelectedItem() != null) {
 
-		String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
-		if(profileNameAlreadyExists(newProfileName)) {
-			Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-		} else if (!newProfileName.isBlank()){
-			saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
-			saveList.refresh();
-			UI_SERVICE.saveUserData();
+
+			PROFILE_INPUT_VIEW.show();
+
+			String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
+			if (profileNameAlreadyExists(newProfileName)) {
+				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+			} else if (!newProfileName.isBlank()) {
+				saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
+				saveList.refresh();
+				UI_SERVICE.saveUserData();
+			}
 		}
 	}
 
 	@FXML
 	private void selectSave() {
 		UI_SERVICE.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
-		menuBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
+		modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
 	}
 
 	@FXML
 	private void closeSaveWindow() {
 		stage.close();
+		saveList.getSelectionModel().clearSelection();
+		Platform.exitNestedEventLoop(stage, null);
 	}
 
 	private boolean saveAlreadyExists(String savePath) {
@@ -265,5 +267,11 @@ public class SaveManagerView {
 	private boolean profileNameAlreadyExists(String profileName) {
 		return SAVE_PROFILES.stream()
 				.anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
+	}
+
+	public void show() {
+		stage.show();
+		TitleBarUtility.SetTitleBar(stage);
+		Platform.enterNestedEventLoop(stage);
 	}
 }

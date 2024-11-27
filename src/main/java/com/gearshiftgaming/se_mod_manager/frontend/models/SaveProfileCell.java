@@ -9,15 +9,18 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import lombok.Getter;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
-public class SaveProfileCell extends ListCell<SaveProfile> {
+
+@Getter
+public abstract class SaveProfileCell extends ListCell<SaveProfile> {
+
 	private final Text PROFILE_NAME = new Text();
 
 	private final Tooltip SAVE_NAME = new Tooltip();
@@ -28,10 +31,13 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 
 	private final HBox LAYOUT = new HBox(STACK_PANE);
 
-	public SaveProfileCell() {
+	private final String cellStyle;
+
+	public SaveProfileCell(String cellStyle) {
 		super();
 		HBox.setHgrow(STACK_PANE, Priority.ALWAYS);
 		STACK_PANE.setAlignment(Pos.CENTER_LEFT);
+		this.cellStyle = cellStyle;
 	}
 
 	@Override
@@ -41,17 +47,16 @@ public class SaveProfileCell extends ListCell<SaveProfile> {
 			setStyle(null);
 			setGraphic(null);
 		} else {
-			String style = "-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;";
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			SAVE_NAME.setText("Save name: " + item.getSaveName());
 			PROFILE_NAME.setText(item.getProfileName());
+
 			if(!item.isSaveExists()) {
-				//TODO: Sometimes this throws an error about lookup for -fx-fill,but it doesn't seem to actually cause a problem.
 				PROFILE_NAME.setStyle("-fx-fill: -color-danger-emphasis;");
 				PROFILE_NAME.setStrikethrough(true);
 			}
 			Tooltip.install(REGION, SAVE_NAME);
-			setStyle(style);
+			setStyle(cellStyle);
 			setGraphic(LAYOUT);
 		}
 	}

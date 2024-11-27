@@ -4,6 +4,9 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -43,7 +46,6 @@ public class SaveInputView {
     @FXML
     private Button cancelAddSave;
 
-    @Getter
     private Stage stage;
 
     private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
@@ -109,6 +111,7 @@ public class SaveInputView {
             Popup.displaySimpleAlert("You must select a save!", stage, MessageType.ERROR);
         } else {
             stage.close();
+            Platform.exitNestedEventLoop(stage, null);
         }
     }
 
@@ -116,5 +119,12 @@ public class SaveInputView {
     private void cancelAddSave() {
         saveProfileResult = new Result<>();
         stage.close();
+        Platform.exitNestedEventLoop(stage, null);
+    }
+
+    public void show() {
+        stage.show();
+        TitleBarUtility.SetTitleBar(stage);
+        Platform.enterNestedEventLoop(stage);
     }
 }

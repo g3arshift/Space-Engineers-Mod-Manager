@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -21,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
 /**
  * This represents the main window of the application, with a border pane at its core.
  * It contains the center section of the borderpane, but all other sections should be delegated to their own controllers and FXML files.
@@ -38,6 +40,9 @@ public class MainWindowView {
 
 	//FXML Items
 	@FXML
+	private AnchorPane mainWindowRoot;
+
+	@FXML
 	private BorderPane mainWindowLayout;
 
 	//TODO: We need to replace the window control bar for the window.
@@ -53,7 +58,7 @@ public class MainWindowView {
 	private final UserConfiguration USER_CONFIGURATION;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
-	private final MenuBarView MENU_BAR_VIEW;
+	private final ModTableContextBarView MENU_BAR_VIEW;
 
 	//This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
 	private final ModlistManagerView MODLIST_MANAGER_VIEW;
@@ -62,12 +67,12 @@ public class MainWindowView {
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage, MenuBarView menuBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) {
+	public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) throws IOException {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
 		this.UI_SERVICE = uiService;
-		this.MENU_BAR_VIEW = menuBarView;
+		this.MENU_BAR_VIEW = modTableContextBarView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
 	}
@@ -81,7 +86,6 @@ public class MainWindowView {
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);
 		mainWindowLayout.setBottom(statusBarRoot);
-
 
 		final ObservableList<SaveProfile> SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 
@@ -119,16 +123,22 @@ public class MainWindowView {
 		//Prepare the scene
 		int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));
 		int minHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minHeight"));
+		int prefWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.prefWidth"));
+		int prefHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.prefHeight"));
 
 		//Prepare the stage
 		STAGE.setScene(scene);
 		STAGE.setMinWidth(minWidth);
 		STAGE.setMinHeight(minHeight);
+		STAGE.setWidth(prefWidth);
+		STAGE.setHeight(prefHeight);
 
 		//Add title and icon to the stage
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		Model model = reader.read(new FileReader("pom.xml"));
+
 		STAGE.setTitle("SEMM v" + model.getVersion());
+
 		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
 		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible

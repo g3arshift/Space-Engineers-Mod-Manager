@@ -2,7 +2,8 @@ package com.gearshiftgaming.se_mod_manager;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -20,7 +21,6 @@ import java.lang.reflect.InvocationTargetException;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class SpaceEngineersModManager extends Application {
 
@@ -40,7 +40,10 @@ public class SpaceEngineersModManager extends Application {
 				Platform.exit();
 			}
 		});
+
 		primaryStage.show();
+
+		TitleBarUtility.SetTitleBar(primaryStage);
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

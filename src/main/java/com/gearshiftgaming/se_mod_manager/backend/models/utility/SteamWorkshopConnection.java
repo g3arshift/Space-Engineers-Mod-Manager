@@ -1,7 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.models.utility;
 
 import lombok.Getter;
-import lombok.extern.java.Log;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 

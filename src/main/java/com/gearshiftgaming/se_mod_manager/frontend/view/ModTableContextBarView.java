@@ -6,16 +6,20 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.application.Application;
-import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
@@ -32,14 +36,11 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public class MenuBarView {
+public class ModTableContextBarView {
 
 	//FXML Items
 	@FXML
-	private VBox menuBarRoot;
-
-	@FXML
-	private MenuItem saveModlistAs;
+	private VBox modTableContextBarRoot;
 
 	@FXML
 	@Getter
@@ -73,8 +74,14 @@ public class MenuBarView {
 	private ComboBox<SaveProfile> saveProfileDropdown;
 
 	@FXML
+	private Rectangle activeModCountBox;
+
+	@FXML
 	@Getter
 	private Label activeModCount;
+
+	@FXML
+	private Rectangle modConflictBox;
 
 	@FXML
 	@Getter
@@ -113,9 +120,11 @@ public class MenuBarView {
 
 	private final UiService UI_SERVICE;
 
+	private final Stage STAGE;
+
 	//TODO: On dropdown select, change active profile
 
-	public MenuBarView(UiService uiService, ModlistManagerView modlistManagerView) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
 		// - For some reason, calling:
 		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
@@ -125,6 +134,7 @@ public class MenuBarView {
 		//	in saveManagerView fixes it?! WHY?!
 		this.UI_SERVICE = uiService;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
+		this.STAGE = stage;
 	}
 
 	public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -140,11 +150,16 @@ public class MenuBarView {
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileCell());
-		saveProfileDropdown.setButtonCell(new SaveProfileCell());
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell());
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell());
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell()));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
+
+		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell());
+		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell());
+		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell()));
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 
@@ -173,6 +188,9 @@ public class MenuBarView {
 		});
 
 		activeModCount.textProperty().bind(UI_SERVICE.getActiveModCount().asString());
+
+		activeModCountBox.setStroke(getThemeBoxColor());
+		modConflictBox.setStroke(getThemeBoxColor());
 
 		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
 	}
@@ -232,6 +250,10 @@ public class MenuBarView {
 				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
 				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
 				UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
+				activeModCountBox.setStroke(getThemeBoxColor());
+				modConflictBox.setStroke(getThemeBoxColor());
+
+				TitleBarUtility.SetTitleBar(STAGE);
 			}
 		}
 
@@ -248,6 +270,7 @@ public class MenuBarView {
 	@FXML
 	private void selectModProfile() {
 		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
+
 		UI_SERVICE.setCurrentModProfile(modProfile);
 		MODLIST_MANAGER_VIEW.getModTable().setItems(UI_SERVICE.getCurrentModList());
 		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
@@ -262,5 +285,23 @@ public class MenuBarView {
 	@FXML
 	private void clearSearchBox() {
 		modTableSearchField.clear();
+	}
+
+	@FXML
+	private void exit() {
+		Platform.exit();
+	}
+
+	private Color getThemeBoxColor() {
+		return switch(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+			case "PrimerLight", "NordLight", "CupertinoLight":
+				yield Color.web("#000000");
+			case "PrimerDark", "CupertinoDark":
+				yield Color.web("#748393");
+			case "NordDark":
+				yield Color.web("#5e6675");
+			default:
+				yield Color.web("#685ab3");
+		};
 	}
 }

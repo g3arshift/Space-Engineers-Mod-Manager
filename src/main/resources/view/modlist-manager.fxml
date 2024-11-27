@@ -67,7 +67,7 @@
         </padding>
         <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
             <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
-                <TextArea editable="false" />
+                <TextArea editable="false" mouseTransparent="true" />
             </ScrollPane>
         </Tab>
         <Tab fx:id="logTab" onClosed="#closeLogTab" text="Log">
