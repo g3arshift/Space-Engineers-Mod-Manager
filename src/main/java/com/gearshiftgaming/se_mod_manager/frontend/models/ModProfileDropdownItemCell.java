@@ -2,6 +2,13 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelUtility;
+import javafx.geometry.Pos;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -11,8 +18,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelU
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ModProfileDropdownItemCell extends ModProfileCell {
-
-	//TODO: Install a region for a tooltip with the full untruncated profile name
 
 	public ModProfileDropdownItemCell() {
 		super("");
@@ -25,9 +30,18 @@ public class ModProfileDropdownItemCell extends ModProfileCell {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsis(item.getProfileName(), 240));
+			final Region REGION = new Region();
+			final Tooltip EXTENDED_PROFILE_NAME = new Tooltip();
+			StackPane STACK_PANE = new StackPane(new Text(DropdownLabelUtility.truncateWithEllipsis(item.getProfileName(), 240)), REGION);
+			HBox LAYOUT = new HBox(STACK_PANE);
+			HBox.setHgrow(STACK_PANE, Priority.ALWAYS);
+			STACK_PANE.setAlignment(Pos.CENTER_LEFT);
+
+			EXTENDED_PROFILE_NAME.setText(DropdownLabelUtility.truncateWithEllipsis("Profile Name: " + item.getProfileName(), 600));
+			Tooltip.install(REGION, EXTENDED_PROFILE_NAME);
+
 			setStyle(getCellStyle());
-			setGraphic(getPROFILE_NAME());
+			setGraphic(LAYOUT);
 		}
 	}
 }
