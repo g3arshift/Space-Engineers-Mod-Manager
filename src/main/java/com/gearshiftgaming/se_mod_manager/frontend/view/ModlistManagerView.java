@@ -167,6 +167,8 @@ public class ModlistManagerView {
 	private final SaveManagerView SAVE_MANAGER_VIEW;
 
 	@Getter
+	@Setter
+
 	private FilteredList<Mod> filteredModList;
 
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
@@ -183,7 +185,7 @@ public class ModlistManagerView {
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
 
-		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList());
+		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
@@ -201,6 +203,7 @@ public class ModlistManagerView {
 		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
+
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -236,7 +239,7 @@ public class ModlistManagerView {
 		});
 
 		modTable.getSortOrder().addListener(sortListener);
-		modTable.setItems(filteredModList);
+		modTable.setItems(getFilteredModList());
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
@@ -395,9 +398,9 @@ public class ModlistManagerView {
 
 
 		//Scroll up
-		if (y < modTableTop && currentScrollValue > minScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) {
+		if (y < modTableTop && currentScrollValue > minScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) {
 			scrollAmount = -SCROLL_SPEED * 0.1;
-		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
+		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
 			scrollAmount = SCROLL_SPEED * 0.1;
 		} else {
 			scrollAmount = 0;
@@ -445,14 +448,14 @@ public class ModlistManagerView {
 
 			if (modTableVerticalScrollBar.getValue() == modTableVerticalScrollBar.getMax()) {
 				for (Mod m : SELECTIONS) {
-					modTable.getItems().remove(m);
+					UI_SERVICE.getCurrentModList().remove(m);
 				}
 
 				modTable.getSelectionModel().clearSelection();
 
 				for (Mod m : SELECTIONS) {
-					modTable.getItems().add(m);
-					modTable.getSelectionModel().select(modTable.getItems().size() - 1);
+					UI_SERVICE.getCurrentModList().add(m);
+					modTable.getSelectionModel().select(UI_SERVICE.getCurrentModList().size() - 1);
 				}
 
 				MODLIST_MANAGER_HELPER.setCurrentModListLoadPriority(modTable, UI_SERVICE);

@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
@@ -13,6 +14,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownIte
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -24,9 +26,12 @@ import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -125,13 +130,6 @@ public class ModTableContextBarView {
 	//TODO: On dropdown select, change active profile
 
 	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		//FIXME: For some reason a tiny section of the saveProfileDropdown isn't highlighted blue when selected. It's an issue with the button cell.
-		// - For some reason, calling:
-		//		ListCell<SaveProfile> buttonCellFix = new SaveProfileCell();
-		//		buttonCellFix.setItem(saveProfile);
-		//		buttonCellFix.setText(saveProfile.getProfileName());
-		//		topBarView.getSaveProfileDropdown().setButtonCell(buttonCellFix);
-		//	in saveManagerView fixes it?! WHY?!
 		this.UI_SERVICE = uiService;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STAGE = stage;
@@ -184,6 +182,15 @@ public class ModTableContextBarView {
 			@Override
 			public ModProfile fromString(String s) {
 				return null;
+			}
+		});
+
+		modTableSearchField.textProperty().addListener(observable -> {
+			String filter = modTableSearchField.getText();
+			if (filter == null || filter.isBlank()) {
+				MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> true);
+			} else {
+				MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
 			}
 		});
 
@@ -271,15 +278,16 @@ public class ModTableContextBarView {
 	private void selectModProfile() {
 		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 
+		clearSearchBox();
+
 		UI_SERVICE.setCurrentModProfile(modProfile);
-		MODLIST_MANAGER_VIEW.getModTable().setItems(UI_SERVICE.getCurrentModList());
-		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
+		MODLIST_MANAGER_VIEW.setFilteredModList(new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true));
+		MODLIST_MANAGER_VIEW.getModTable().setItems(MODLIST_MANAGER_VIEW.getFilteredModList());
 	}
 
 	@FXML
 	private void selectSaveProfile() {
 		UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
-		//TODO: Update the mod table. Wrap the modlist in the profile with an observable list!
 	}
 
 	@FXML

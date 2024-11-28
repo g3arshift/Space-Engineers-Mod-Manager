@@ -98,15 +98,14 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 
 			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
-			modTable.getItems().removeAll(selectedMods);
 			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
 			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 
 			//Update the priority of our columns
 
-			modTable.getItems().sort(Comparator.comparing(Mod::getLoadPriority));
-			for (int i = 0; i < modTable.getItems().size(); i++) {
-				modTable.getItems().get(i).setLoadPriority(i + 1);
+			UI_SERVICE.getCurrentModList().sort(Comparator.comparing(Mod::getLoadPriority));
+			for (int i = 0; i < UI_SERVICE.getCurrentModList().size(); i++) {
+				UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);
 			}
 
 			if (!modTable.getSortOrder().isEmpty()) {
@@ -180,7 +179,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 		row.setOnDragExited(dragEvent -> {
 			//If we are not the last item and the row isn't blank, set it to null. Else, set a bottom border.
-			if (!row.isEmpty() && previousRow.getItem().equals(modTable.getItems().getLast())) {
+			if (!row.isEmpty() && previousRow.getItem().equals(UI_SERVICE.getCurrentModList().getLast())) {
 				//We don't want to add a border if the table isn't big enough to display all mods at once since we'll end up with a double border
 				if (!modTableVerticalScrollBar.isVisible()) {
 					addBorderToRow(RowBorderType.BOTTOM, modTable, row);
@@ -202,10 +201,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				Mod mod = null;
 
 				if (row.isEmpty()) {
-					dropIndex = modTable.getItems().size();
+					dropIndex = UI_SERVICE.getCurrentModList().size();
 				} else {
 					dropIndex = row.getIndex();
-					mod = modTable.getItems().get(dropIndex);
+					mod = UI_SERVICE.getCurrentModList().get(dropIndex);
 				}
 
 				int delta = 0;
@@ -218,24 +217,24 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 							dropIndex = 0;
 							break;
 						}
-						mod = modTable.getItems().get(dropIndex);
+						mod = UI_SERVICE.getCurrentModList().get(dropIndex);
 					}
 				}
 
 				for (Mod m : SELECTIONS) {
-					modTable.getItems().remove(m);
+					UI_SERVICE.getCurrentModList().remove(m);
 				}
 
 				if (mod != null) {
-					dropIndex = modTable.getItems().indexOf(mod) + delta;
+					dropIndex = UI_SERVICE.getCurrentModList().indexOf(mod) + delta;
 				} else if (dropIndex != 0) {
-					dropIndex = modTable.getItems().size();
+					dropIndex = UI_SERVICE.getCurrentModList().size();
 				}
 
 				modTable.getSelectionModel().clearSelection();
 
 				for (Mod m : SELECTIONS) {
-					modTable.getItems().add(dropIndex, m);
+					UI_SERVICE.getCurrentModList().add(dropIndex, m);
 					modTable.getSelectionModel().select(dropIndex);
 					dropIndex++;
 				}
@@ -275,7 +274,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 	}
 
 	private void addBorderToRow(RowBorderType rowBorderType, TableView<Mod> modTable, ModTableRow row) {
-		if (!row.isEmpty() || (row.getIndex() <= modTable.getItems().size() && modTable.getItems().get(row.getIndex() - 1) != null)) {
+		if (!row.isEmpty() || (row.getIndex() <= UI_SERVICE.getCurrentModList().size() && UI_SERVICE.getCurrentModList().get(row.getIndex() - 1) != null)) {
 			Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
 			Border dropIndicator;
 			if (rowBorderType.equals(RowBorderType.TOP)) {
