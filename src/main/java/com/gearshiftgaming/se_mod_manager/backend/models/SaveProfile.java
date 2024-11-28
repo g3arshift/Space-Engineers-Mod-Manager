@@ -33,7 +33,7 @@ public class SaveProfile {
 
     private UUID lastUsedModProfile;
 
-    @Setter
+    @Setter 
     private ModlistChangeSourceType lastModifiedBy;
 
     @Setter

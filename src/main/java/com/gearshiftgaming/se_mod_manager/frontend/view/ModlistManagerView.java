@@ -19,6 +19,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.*;
@@ -165,6 +166,9 @@ public class ModlistManagerView {
 
 	private final SaveManagerView SAVE_MANAGER_VIEW;
 
+	@Getter
+	private FilteredList<Mod> filteredModList;
+
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
@@ -178,6 +182,8 @@ public class ModlistManagerView {
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
+
+		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList());
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
@@ -230,7 +236,7 @@ public class ModlistManagerView {
 		});
 
 		modTable.getSortOrder().addListener(sortListener);
-		modTable.setItems(UI_SERVICE.getCurrentModList());
+		modTable.setItems(filteredModList);
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
