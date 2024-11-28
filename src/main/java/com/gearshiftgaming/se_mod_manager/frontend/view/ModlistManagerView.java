@@ -494,6 +494,9 @@ public class ModlistManagerView {
 		actions.setBorder(null);
 	}
 
+	//This is where we update the actual contents of the mod table when we want to set it, such as if we switch mod profiles.
+	//This wraps our filtered list in a sorted list so that we can properly use the column sorts in the UI, while also maintaining searchability
+	//We leave the filteredList as an attribute as we need to access it in the ModTableContextBarView to set a listener on it
 	public void updateModTableContents() {
 		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 		SortedList<Mod> sortedList = new SortedList<>(filteredModList);

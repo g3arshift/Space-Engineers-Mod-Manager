@@ -23,7 +23,7 @@ public class ModProfileDropdownButtonCell extends ModProfileCell {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 175));
+			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 165));
 			setStyle(getCellStyle());
 			setGraphic(getPROFILE_NAME());
 		}

@@ -2,7 +2,6 @@ package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.sun.javafx.tk.Toolkit;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
