@@ -20,6 +20,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.*;
@@ -168,7 +169,6 @@ public class ModlistManagerView {
 
 	@Getter
 	@Setter
-
 	private FilteredList<Mod> filteredModList;
 
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
@@ -239,7 +239,9 @@ public class ModlistManagerView {
 		});
 
 		modTable.getSortOrder().addListener(sortListener);
-		modTable.setItems(getFilteredModList());
+		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
+		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
+		modTable.setItems(sortedList);
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
@@ -491,5 +493,13 @@ public class ModlistManagerView {
 
 	private void handleTableActionsOnDragExit(DragEvent dragEvent) {
 		actions.setBorder(null);
+	}
+
+	private void updateModListContents() {
+		//TODO: Implement. Also remove the getters/setters for the modlist item like filtered list. Maybe? Might need them somewhere else. It's late and I need to stop now before I break something, but this is generally, I think, how this should go.
+		// We need to do the following, and use this function ANYWHERE WE USE modTable.setItems()
+		// 1. Create a new filtered list based on the contents of UI_SERVICE.getCurrentModlist()
+		// 2. Create a sorted list based on that filtered list
+		// 3. Set the mod table to that sorted list.
 	}
 }
