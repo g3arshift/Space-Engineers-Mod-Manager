@@ -1,7 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
@@ -14,7 +13,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownIte
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -26,12 +24,9 @@ import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -281,8 +276,9 @@ public class ModTableContextBarView {
 		clearSearchBox();
 
 		UI_SERVICE.setCurrentModProfile(modProfile);
-		MODLIST_MANAGER_VIEW.setFilteredModList(new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true));
-		MODLIST_MANAGER_VIEW.getModTable().setItems(MODLIST_MANAGER_VIEW.getFilteredModList());
+//		MODLIST_MANAGER_VIEW.setFilteredModList(new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true));
+//		MODLIST_MANAGER_VIEW.getModTable().setItems(MODLIST_MANAGER_VIEW.getFilteredModList());
+		MODLIST_MANAGER_VIEW.updateModTableContents();
 	}
 
 	@FXML

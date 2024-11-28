@@ -10,7 +10,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -168,7 +167,6 @@ public class ModlistManagerView {
 	private final SaveManagerView SAVE_MANAGER_VIEW;
 
 	@Getter
-	@Setter
 	private FilteredList<Mod> filteredModList;
 
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
@@ -239,9 +237,10 @@ public class ModlistManagerView {
 		});
 
 		modTable.getSortOrder().addListener(sortListener);
-		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
-		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
-		modTable.setItems(sortedList);
+//		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
+//		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
+		//modTable.setItems(sortedList);
+		updateModTableContents();
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
@@ -495,11 +494,10 @@ public class ModlistManagerView {
 		actions.setBorder(null);
 	}
 
-	private void updateModListContents() {
-		//TODO: Implement. Also remove the getters/setters for the modlist item like filtered list. Maybe? Might need them somewhere else. It's late and I need to stop now before I break something, but this is generally, I think, how this should go.
-		// We need to do the following, and use this function ANYWHERE WE USE modTable.setItems()
-		// 1. Create a new filtered list based on the contents of UI_SERVICE.getCurrentModlist()
-		// 2. Create a sorted list based on that filtered list
-		// 3. Set the mod table to that sorted list.
+	public void updateModTableContents() {
+		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
+		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
+		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
+		modTable.setItems(sortedList);
 	}
 }
