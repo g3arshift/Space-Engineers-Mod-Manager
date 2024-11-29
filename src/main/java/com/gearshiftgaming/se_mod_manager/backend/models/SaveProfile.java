@@ -31,10 +31,9 @@ public class SaveProfile {
     @Setter
     private String savePath;
 
-    @Setter
     private UUID lastUsedModProfile;
 
-    @Setter
+    @Setter 
     private ModlistChangeSourceType lastModifiedBy;
 
     @Setter

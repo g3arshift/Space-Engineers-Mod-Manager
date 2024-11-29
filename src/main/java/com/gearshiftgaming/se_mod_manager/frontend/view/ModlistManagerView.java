@@ -10,7 +10,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -19,6 +18,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.*;
@@ -165,6 +166,9 @@ public class ModlistManagerView {
 
 	private final SaveManagerView SAVE_MANAGER_VIEW;
 
+	@Getter
+	private FilteredList<Mod> filteredModList;
+
 	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
@@ -178,6 +182,8 @@ public class ModlistManagerView {
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
+
+		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
@@ -195,6 +201,7 @@ public class ModlistManagerView {
 		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
+
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -230,7 +237,10 @@ public class ModlistManagerView {
 		});
 
 		modTable.getSortOrder().addListener(sortListener);
-		modTable.setItems(UI_SERVICE.getCurrentModList());
+//		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
+//		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
+		//modTable.setItems(sortedList);
+		updateModTableContents();
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
@@ -389,9 +399,9 @@ public class ModlistManagerView {
 
 
 		//Scroll up
-		if (y < modTableTop && currentScrollValue > minScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) {
+		if (y < modTableTop && currentScrollValue > minScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) {
 			scrollAmount = -SCROLL_SPEED * 0.1;
-		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && modTable.getItems().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
+		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
 			scrollAmount = SCROLL_SPEED * 0.1;
 		} else {
 			scrollAmount = 0;
@@ -439,14 +449,14 @@ public class ModlistManagerView {
 
 			if (modTableVerticalScrollBar.getValue() == modTableVerticalScrollBar.getMax()) {
 				for (Mod m : SELECTIONS) {
-					modTable.getItems().remove(m);
+					UI_SERVICE.getCurrentModList().remove(m);
 				}
 
 				modTable.getSelectionModel().clearSelection();
 
 				for (Mod m : SELECTIONS) {
-					modTable.getItems().add(m);
-					modTable.getSelectionModel().select(modTable.getItems().size() - 1);
+					UI_SERVICE.getCurrentModList().add(m);
+					modTable.getSelectionModel().select(UI_SERVICE.getCurrentModList().size() - 1);
 				}
 
 				MODLIST_MANAGER_HELPER.setCurrentModListLoadPriority(modTable, UI_SERVICE);
@@ -482,5 +492,15 @@ public class ModlistManagerView {
 
 	private void handleTableActionsOnDragExit(DragEvent dragEvent) {
 		actions.setBorder(null);
+	}
+
+	//This is where we update the actual contents of the mod table when we want to set it, such as if we switch mod profiles.
+	//This wraps our filtered list in a sorted list so that we can properly use the column sorts in the UI, while also maintaining searchability
+	//We leave the filteredList as an attribute as we need to access it in the ModTableContextBarView to set a listener on it
+	public void updateModTableContents() {
+		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
+		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
+		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
+		modTable.setItems(sortedList);
 	}
 }

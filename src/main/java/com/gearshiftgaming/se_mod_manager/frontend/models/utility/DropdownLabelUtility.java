@@ -21,28 +21,16 @@ public class DropdownLabelUtility {
 		new Scene(new Group(tempText));
 		tempText.applyCss();
 
-		if (tempText.getBoundsInLocal().getWidth() <= maxWidth) {
-			return text;
-		}
-
-		// If the text is too long, truncate it
-		String ellipsis = "...";
-		String truncatedText = text;
-
-		while (tempText.getBoundsInLocal().getWidth() + 15 > maxWidth - tempText.getFont().getSize()) {
-			if (truncatedText.length() <= 1) {
-				return truncatedText; // Prevent empty string or single character
-			}
-			truncatedText = truncatedText.substring(0, truncatedText.length() - 1);
-			tempText.setText(truncatedText + ellipsis);
-		}
-
-		return truncatedText + ellipsis;
+		return getTruncatedText(text, maxWidth, tempText);
 	}
 
 	public static String truncateWithEllipsis(String text, double maxWidth) {
 		Text tempText = new Text(text);
 
+		return getTruncatedText(text, maxWidth, tempText);
+	}
+
+	private static String getTruncatedText(String text, double maxWidth, Text tempText) {
 		if (tempText.getBoundsInLocal().getWidth() <= maxWidth) {
 			return text;
 		}
@@ -53,7 +41,7 @@ public class DropdownLabelUtility {
 
 		while (tempText.getBoundsInLocal().getWidth() > maxWidth - tempText.getFont().getSize()) {
 			if (truncatedText.length() <= 1) {
-				return truncatedText; // Prevent empty string or single character
+				return truncatedText;
 			}
 			truncatedText = truncatedText.substring(0, truncatedText.length() - 1);
 			tempText.setText(truncatedText + ellipsis);
