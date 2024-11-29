@@ -11,7 +11,7 @@ import javafx.scene.text.Text;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class DropdownLabelUtility {
+public class TextTruncationUtility {
 
 	public static String truncateWithEllipsisWithRealWidth(String text, double maxWidth) {
 		Text tempText = new Text(text);

@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import javafx.scene.control.Tooltip;
 
 /**
@@ -27,7 +27,7 @@ public class SaveProfileDropdownButtonCell extends SaveProfileCell{
 		} else {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
-			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 165));
+			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 165));
 
 			if(!item.isSaveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");

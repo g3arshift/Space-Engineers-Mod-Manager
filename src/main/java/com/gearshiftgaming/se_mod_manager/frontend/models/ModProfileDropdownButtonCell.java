@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.frontend.models.utility.DropdownLabelUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -23,7 +23,7 @@ public class ModProfileDropdownButtonCell extends ModProfileCell {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			getPROFILE_NAME().setText(DropdownLabelUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 165));
+			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 165));
 			setStyle(getCellStyle());
 			setGraphic(getPROFILE_NAME());
 		}
