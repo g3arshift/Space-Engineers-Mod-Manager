@@ -5,11 +5,15 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -32,6 +36,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,6 +48,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -169,13 +175,16 @@ public class ModlistManagerView {
 	@Getter
 	private FilteredList<Mod> filteredModList;
 
-	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView) {
+	private final Stage STAGE;
+
+	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, Stage stage) {
 		this.UI_SERVICE = uiService;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
 		this.SAVE_PROFILES = uiService.getSAVE_PROFILES();
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
+		this.STAGE = stage;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -202,6 +211,17 @@ public class ModlistManagerView {
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
 
+		modImportDropdown.setButtonCell(new ListCell<>() {
+			@Override
+			protected void updateItem(String item, boolean empty) {
+				if (empty || item == null) {
+					setStyle(null);
+					setGraphic(null);
+				} else {
+					setText("Add mods from...");
+				}
+			}
+		});
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -247,38 +267,65 @@ public class ModlistManagerView {
 	}
 
 
-	//TODO: Make it so that when we change the modlist and save it, but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
-	//TODO: Set a limit on the modprofile and saveprofile maximum sizes that's reasonable. If they're too large they messup the appearance of the prompt text for the search bar.
+	//TODO: Make it so that when we change the modlist but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
 	public void setupMainViewItems() {
 		viewableLog.setItems(USER_LOG);
 		viewableLog.setCellFactory(param -> new LogCell());
 		//Disable selecting rows in the log.
 		viewableLog.setSelectionModel(null);
 
-		//TODO: We need to make the buttons open a new menu, but the dropdown contents stay the same with the previews still saying "Add mods from..."
-		modImportDropdown.getItems().addAll("Steam Workshop ID",
-				"Steam Collection",
-				"Mod.io",
-				"Modlist file");
+		// Just do this by manually setting the selected item after we select an item. To actually call code, call one function on selection/action in the dropdown, that determines which function to call and do stuff in the rest of the code, then reset the selected item.
+		modImportDropdown.getItems().addAll(ModImportType.STEAM_ID.getName(),
+				ModImportType.STEAM_COLLECTION.getName(),
+				ModImportType.MOD_IO.getName(),
+				ModImportType.FILE.getName());
 
 		//TODO: Setup a function in ModList service to track conflicts.
 	}
-	//TODO: Hookup all the buttons to everything
 
+	//TODO: Hookup all the buttons to everything
 	@FXML
-	private void closeLogTab() {
-		logToggle.setSelected(false);
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
+	private void addMod() {
+		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
+		//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
+
+		Result<Void> importResult = switch (Objects.requireNonNull(selectedImportOption)) {
+			case STEAM_ID:
+			case STEAM_COLLECTION:
+				yield addModsFromSteamCollection();
+			case MOD_IO:
+				yield addModFromModIoId();
+			case FILE:
+				yield addModsFromFile();
+		};
+
+		if (Objects.requireNonNull(importResult).isSuccess()) {
+			//TODO: Create a success alert in popup
+		} else {
+			UI_SERVICE.log(importResult);
+			Popup.displaySimpleAlert(importResult, STAGE);
 		}
+
 	}
 
-	@FXML
-	private void closeModDescriptionTab() {
-		modDescriptionToggle.setSelected(false);
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		}
+	private Result<Void> addModFromSteamWorkshopId() {
+		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		return null;
+	}
+
+	private Result<Void> addModsFromSteamCollection() {
+		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		return null;
+	}
+
+	private Result<Void> addModFromModIoId() {
+		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		return null;
+	}
+
+	private Result<Void> addModsFromFile() {
+		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		return null;
 	}
 
 	//TODO: Make the window slightly larger to accommodate the new buttons
@@ -346,6 +393,22 @@ public class ModlistManagerView {
 		Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
 	}
 
+	@FXML
+	private void closeLogTab() {
+		logToggle.setSelected(false);
+		if (informationPane.getTabs().isEmpty()) {
+			disableSplitPaneDivider();
+		}
+	}
+
+	@FXML
+	private void closeModDescriptionTab() {
+		modDescriptionToggle.setSelected(false);
+		if (informationPane.getTabs().isEmpty()) {
+			disableSplitPaneDivider();
+		}
+	}
+
 	protected void disableSplitPaneDivider() {
 		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
 			node.setVisible(false);
@@ -384,11 +447,11 @@ public class ModlistManagerView {
 		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
 
 		//These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
-		if(modTableVerticalScrollBar == null) {
+		if (modTableVerticalScrollBar == null) {
 			modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		}
 
-		if(headerRow == null) {
+		if (headerRow == null) {
 			headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 		}
 
@@ -443,7 +506,7 @@ public class ModlistManagerView {
 		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
 			//I'd love to get a class level reference of this, but we need to progressively get it as the view changes
 
-			if(modTableVerticalScrollBar == null) {
+			if (modTableVerticalScrollBar == null) {
 				modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 			}
 
@@ -481,7 +544,7 @@ public class ModlistManagerView {
 		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 
 		if (verticalScrollBar.isVisible() && verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
-			javafx.scene.paint.Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
+			Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
 			Border dropIndicator;
 			dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
 					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,

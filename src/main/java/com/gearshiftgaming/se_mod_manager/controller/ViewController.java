@@ -147,7 +147,7 @@ public class ViewController {
 
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, stage);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 
