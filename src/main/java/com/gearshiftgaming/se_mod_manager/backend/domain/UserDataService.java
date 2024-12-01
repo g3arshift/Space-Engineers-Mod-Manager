@@ -2,8 +2,8 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;

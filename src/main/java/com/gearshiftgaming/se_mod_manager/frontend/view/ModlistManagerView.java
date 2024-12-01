@@ -4,9 +4,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
@@ -48,7 +47,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -287,10 +285,12 @@ public class ModlistManagerView {
 	@FXML
 	private void addMod() {
 		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
+		modImportDropdown.getSelectionModel().clearSelection();
 		//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
 
-		Result<Void> importResult = switch (Objects.requireNonNull(selectedImportOption)) {
+		Result<Void> importResult = switch (selectedImportOption) {
 			case STEAM_ID:
+				yield addModFromSteamId();
 			case STEAM_COLLECTION:
 				yield addModsFromSteamCollection();
 			case MOD_IO:
@@ -299,8 +299,10 @@ public class ModlistManagerView {
 				yield addModsFromFile();
 		};
 
-		if (Objects.requireNonNull(importResult).isSuccess()) {
+		if (importResult.isSuccess()) {
 			//TODO: Create a success alert in popup
+			// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
+			// Finally, select the very first of the added mods in the list
 		} else {
 			UI_SERVICE.log(importResult);
 			Popup.displaySimpleAlert(importResult, STAGE);
@@ -308,27 +310,35 @@ public class ModlistManagerView {
 
 	}
 
-	private Result<Void> addModFromSteamWorkshopId() {
-		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+	private Result<Void> addModFromSteamId() {
+		//TODO: Have the user enter the mod ID.
+		//TODO: The actual adding to the modlist should happen here
+		//TODO: Once we check our result, move our selection in modTable to the new mod.
+		Result<Mod> modImportResult = UI_SERVICE.addModFromSteamId();
 		return null;
 	}
 
 	private Result<Void> addModsFromSteamCollection() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		//TODO: The actual adding to the modlist should happen here
+		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromSteamWorkshopCollection();
 		return null;
 	}
 
 	private Result<Void> addModFromModIoId() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		//TODO: The actual adding to the modlist should happen here
+		//Result<Mod> modImportResult = UI_SERVICE.addModFromModIoId();
 		return null;
 	}
 
 	private Result<Void> addModsFromFile() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+		//TODO: The actual adding to the modlist should happen here
+		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
 		return null;
 	}
 
-	//TODO: Make the window slightly larger to accommodate the new buttons
 	@FXML
 	private void manageModProfiles() throws InterruptedException {
 		MOD_PROFILE_MANAGER_VIEW.show();

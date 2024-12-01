@@ -2,11 +2,10 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.controls.RingProgressIndicator;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
@@ -17,13 +16,11 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import lombok.Getter;
 
 import java.util.Objects;
 import java.util.Properties;

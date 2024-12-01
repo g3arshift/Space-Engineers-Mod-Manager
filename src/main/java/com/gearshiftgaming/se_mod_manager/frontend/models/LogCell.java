@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;

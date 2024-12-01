@@ -5,10 +5,11 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.controller.BackendController;
+import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
+import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -41,7 +42,9 @@ import java.util.Optional;
 public class UiService {
 	private final Logger LOGGER;
 
-	private final BackendController BACKEND_CONTROLLER;
+	private final BackendStorageController BACKEND_STORAGE_CONTROLLER;
+
+	private final ModInfoController MOD_INFO_CONTROLLER;
 
 	@Getter
 	private final ObservableList<LogMessage> USER_LOG;
@@ -71,13 +74,14 @@ public class UiService {
 
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-					 BackendController BACKEND_CONTROLLER, UserConfiguration USER_CONFIGURATION) {
+					 BackendStorageController backendStorageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION) {
 
 		this.LOGGER = LOGGER;
+		this.MOD_INFO_CONTROLLER = modInfoController;
 		this.USER_LOG = USER_LOG;
 		this.MOD_PROFILES = MOD_PROFILES;
 		this.SAVE_PROFILES = SAVE_PROFILES;
-		this.BACKEND_CONTROLLER = BACKEND_CONTROLLER;
+		this.BACKEND_STORAGE_CONTROLLER = backendStorageController;
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
 
 		//Initialize our current mod and save profiles
@@ -127,19 +131,19 @@ public class UiService {
 	}
 
 	public Result<Void> saveUserData() {
-		return BACKEND_CONTROLLER.saveUserData(USER_CONFIGURATION);
+		return BACKEND_STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		return BACKEND_CONTROLLER.applyModlist(modList, sandboxConfigPath);
+		return BACKEND_STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
 	}
 
 	public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-		return BACKEND_CONTROLLER.copySaveProfile(saveProfile);
+		return BACKEND_STORAGE_CONTROLLER.copySaveProfile(saveProfile);
 	}
 
 	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-		return BACKEND_CONTROLLER.getSaveProfile(sandboxConfigFile);
+		return BACKEND_STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
 	}
 
 	public void firstTimeSetup() {
@@ -173,5 +177,31 @@ public class UiService {
 		} else {
 			activeModCount.set(activeModCount.get() - 1);
 		}
+	}
+
+	public Result<Mod> addModFromSteamId(String modId) {
+		try {
+			MOD_INFO_CONTROLLER.addModBySteamId(modId);
+			//TODO: Actually add it to the current list
+		} catch (IOException e) {
+			//TODO: Return a bad result
+			throw new RuntimeException(e);
+		}
+		return null;
+	}
+
+	public Result<List<Mod>> addModsFromSteamCollection() {
+		//TODO: Implement
+		return null;
+	}
+
+	public Result<Mod> addModFromModIoId() {
+		//TODO: Implement
+		return null;
+	}
+
+	public Result<List<Mod>> addModsFromFile() {
+		//TODO: Implement
+		return null;
 	}
 }

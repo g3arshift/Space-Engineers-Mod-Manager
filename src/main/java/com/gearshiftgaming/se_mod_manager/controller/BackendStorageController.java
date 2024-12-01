@@ -4,7 +4,7 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
@@ -18,7 +18,7 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public interface BackendController {
+public interface BackendStorageController {
     Result<UserConfiguration> getUserData() throws JAXBException;
 
     Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException;

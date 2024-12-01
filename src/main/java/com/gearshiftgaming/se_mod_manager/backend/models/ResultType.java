@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.backend.models.utility;
+package com.gearshiftgaming.se_mod_manager.backend.models;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -7,10 +7,10 @@ package com.gearshiftgaming.se_mod_manager.backend.models.utility;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public enum MessageType {
-    INFO,
-    WARN,
-    ERROR,
-    DEBUG,
-    UNKNOWN
+public enum ResultType {
+    SUCCESS,
+    INVALID,
+    CANCELLED,
+    FAILED,
+    NOT_INITIALIZED
 }

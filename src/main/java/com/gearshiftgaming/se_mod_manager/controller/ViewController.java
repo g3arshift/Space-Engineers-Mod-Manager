@@ -7,8 +7,8 @@ import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import jakarta.xml.bind.JAXBException;
@@ -18,7 +18,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
-import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
@@ -61,21 +60,21 @@ public class ViewController {
 			throw (e);
 		}
 
-		BackendController backendController = new BackendFileController(new SandboxConfigFileRepository(),
-				new ModlistFileRepository(),
+		BackendStorageController backendStorageController = new BackendFileStorageController(new SandboxConfigFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
 				PROPERTIES,
 				new File(PROPERTIES.getProperty("semm.userData.default.location")));
 
-		Result<UserConfiguration> userConfigurationResult = backendController.getUserData();
+
+		Result<UserConfiguration> userConfigurationResult = backendStorageController.getUserData();
 		UserConfiguration userConfiguration;
 
 		if (userConfigurationResult.isSuccess()) {
 			userConfiguration = userConfigurationResult.getPayload();
 		} else {
 			userConfiguration = new UserConfiguration();
-			backendController.saveUserData(userConfiguration);
+			backendStorageController.saveUserData(userConfiguration);
 		}
 
 		ObservableList<ModProfile> modProfiles = FXCollections.observableList(userConfiguration.getModProfiles());
@@ -88,7 +87,9 @@ public class ViewController {
 						logMessage.MESSAGE_TYPEProperty()
 				});
 
-		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
+		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
+
+		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendStorageController, modInfoController, userConfiguration);
 		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);
