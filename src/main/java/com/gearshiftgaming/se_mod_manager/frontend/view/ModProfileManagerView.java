@@ -56,13 +56,13 @@ public class ModProfileManagerView {
 
 	private final UiService UI_SERVICE;
 
-	private final ProfileInputView PROFILE_INPUT_VIEW;
+	private final SimpleInputView PROFILE_INPUT_VIEW;
 
 	private ModTableContextBarView modTableContextBarView;
 
 	private final ObservableList<ModProfile> MOD_PROFILES;
 
-	public ModProfileManagerView(UiService UI_SERVICE, ProfileInputView PROFILE_INPUT_VIEW) {
+	public ModProfileManagerView(UiService UI_SERVICE, SimpleInputView PROFILE_INPUT_VIEW) {
 		this.UI_SERVICE = UI_SERVICE;
 		MOD_PROFILES = UI_SERVICE.getMOD_PROFILES();
 		this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
@@ -94,17 +94,17 @@ public class ModProfileManagerView {
 		boolean duplicateProfileName;
 
 		do {
-			PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			PROFILE_INPUT_VIEW.show();
-			ModProfile newModProfile = new ModProfile(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
-			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+			ModProfile newModProfile = new ModProfile(PROFILE_INPUT_VIEW.getInput().getText());
+			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText());
 
 			if (duplicateProfileName) {
 				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-			} else if (!PROFILE_INPUT_VIEW.getProfileNameInput().getText().isBlank()) {
+			} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
 				MOD_PROFILES.add(newModProfile);
-				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getProfileNameInput().getText(), MessageType.INFO);
-				PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
+				PROFILE_INPUT_VIEW.getInput().clear();
 				UI_SERVICE.saveUserData();
 			}
 		} while (duplicateProfileName);
@@ -152,19 +152,19 @@ public class ModProfileManagerView {
 		boolean duplicateProfileName;
 
 		do {
-			PROFILE_INPUT_VIEW.getProfileNameInput().clear();
-			PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+			PROFILE_INPUT_VIEW.getInput().clear();
+			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			if (profileList.getSelectionModel().getSelectedItem() != null) {
 				PROFILE_INPUT_VIEW.show();
 
-				duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+				duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText());
 
 				if (duplicateProfileName) {
 					Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-				} else if (!PROFILE_INPUT_VIEW.getProfileNameInput().getText().isBlank()) {
+				} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
 					//We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
 					int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-					MOD_PROFILES.get(profileIndex).setProfileName(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+					MOD_PROFILES.get(profileIndex).setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
 
 					//We manually refresh here because the original profile won't update its name while it's selected in the list
 					profileList.refresh();
@@ -173,7 +173,7 @@ public class ModProfileManagerView {
 					modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
 					modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
 
-					PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+					PROFILE_INPUT_VIEW.getInput().clear();
 					UI_SERVICE.log("Successfully renamed profile.", MessageType.INFO);
 					UI_SERVICE.saveUserData();
 				}

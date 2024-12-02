@@ -14,15 +14,15 @@
    <children>
       <VBox spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <Label text="Enter a name for the profile:" />
-            <TextField fx:id="profileNameInput" minWidth="450.0" promptText="Profile name" />
+            <Label fx:id="inputInstructions" text="Enter a name for the profile:" />
+            <TextField fx:id="input" minWidth="450.0" promptText="Profile name" />
             <HBox>
                <children>
                   <Region HBox.hgrow="ALWAYS" />
                   <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                     <buttons>
-                      <Button fx:id="profileCreateAccept" mnemonicParsing="false" onAction="#getProfileName" text="OK" />
-                        <Button fx:id="profileCreateCancel" mnemonicParsing="false" onAction="#closeWindow" text="Cancel" />
+                      <Button fx:id="accept" mnemonicParsing="false" onAction="#acceptInput" text="OK" />
+                        <Button fx:id="cancel" cancelButton="true" mnemonicParsing="false" onAction="#closeWindow" text="Cancel" />
                     </buttons>
                   </ButtonBar>
                </children>

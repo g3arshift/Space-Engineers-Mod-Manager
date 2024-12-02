@@ -8,12 +8,14 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 
 import javafx.scene.control.TextField;
+import lombok.Setter;
 
 import java.util.Objects;
 
@@ -24,22 +26,29 @@ import java.util.Objects;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public class ProfileInputView {
+public class SimpleInputView {
 
     @Getter
     @FXML
-    private TextField profileNameInput;
+    private TextField input;
 
     @FXML
-    private Button profileCreateAccept;
+    private Label inputInstructions;
 
     @FXML
-    private Button profileCreateCancel;
+    private Button accept;
+
+    @FXML
+    private Button cancel;
 
     private Stage stage;
 
+    @Setter
+    private String emptyTextMessage;
+
     public void initView(Parent root) {
         Scene scene = new Scene(root);
+        emptyTextMessage = "Profile name cannot be empty!";
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -50,9 +59,9 @@ public class ProfileInputView {
     }
 
     @FXML
-    private void getProfileName() {
-        if (profileNameInput.getText().isEmpty() || profileNameInput.getText().isBlank()) {
-            Popup.displaySimpleAlert("Profile name cannot be empty!", stage, MessageType.WARN);
+    private void acceptInput() {
+        if (input.getText().isEmpty() || input.getText().isBlank()) {
+            Popup.displaySimpleAlert(emptyTextMessage, stage, MessageType.WARN);
         } else {
             stage.close();
             Platform.exitNestedEventLoop(stage, null);
@@ -61,7 +70,7 @@ public class ProfileInputView {
 
     @FXML
     private void closeWindow() {
-        profileNameInput.clear();
+        input.clear();
         stage.close();
         Platform.exitNestedEventLoop(stage, null);
     }
@@ -70,5 +79,17 @@ public class ProfileInputView {
         stage.show();
         TitleBarUtility.SetTitleBar(stage);
         Platform.enterNestedEventLoop(stage);
+    }
+
+    public void setTitle(String title) {
+        stage.setTitle(title);
+    }
+
+    public void setPromptText(String promptText) {
+        input.setPromptText(promptText);
+    }
+
+    public void setInputInstructions(String inputInstructions) {
+        this.inputInstructions.setText(inputInstructions);
     }
 }

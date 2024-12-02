@@ -175,14 +175,18 @@ public class ModlistManagerView {
 
 	private final Stage STAGE;
 
-	public ModlistManagerView(UiService uiService, StatusBarView statusBarView, ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, Stage stage) {
+	private final SimpleInputView ID_AND_URL_MOD_ADDITION_INPUT;
+
+	public ModlistManagerView(UiService uiService, Stage stage, StatusBarView statusBarView,
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modAdditionInputView) {
 		this.UI_SERVICE = uiService;
+		this.STAGE = stage;
 		this.MOD_PROFILES = uiService.getMOD_PROFILES();
 		this.SAVE_PROFILES = uiService.getSAVE_PROFILES();
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
-		this.STAGE = stage;
+		this.ID_AND_URL_MOD_ADDITION_INPUT = modAdditionInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -311,10 +315,13 @@ public class ModlistManagerView {
 	}
 
 	private Result<Void> addModFromSteamId() {
-		//TODO: Have the user enter the mod ID.
+		setModAddingInputViewText("Steam Workshop Mod ID",
+				"Enter the Steam Workshop Mod ID",
+				"Mod ID");
+		String modId = getUserModLocationInput();
+		Result<Mod> modImportResult = UI_SERVICE.addModFromSteamId(modId);
 		//TODO: The actual adding to the modlist should happen here
 		//TODO: Once we check our result, move our selection in modTable to the new mod.
-		Result<Mod> modImportResult = UI_SERVICE.addModFromSteamId();
 		return null;
 	}
 
@@ -575,5 +582,16 @@ public class ModlistManagerView {
 		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
 		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
 		modTable.setItems(sortedList);
+	}
+
+	private String getUserModLocationInput() {
+		ID_AND_URL_MOD_ADDITION_INPUT.show();
+		return ID_AND_URL_MOD_ADDITION_INPUT.getInput().getText();
+	}
+
+	private void setModAddingInputViewText(String title, String instructions, String promptText) {
+		ID_AND_URL_MOD_ADDITION_INPUT.setTitle(title);
+		ID_AND_URL_MOD_ADDITION_INPUT.setInputInstructions(instructions);
+		ID_AND_URL_MOD_ADDITION_INPUT.setPromptText(promptText);
 	}
 }

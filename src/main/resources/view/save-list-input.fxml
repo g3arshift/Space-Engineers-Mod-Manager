@@ -30,7 +30,7 @@
                   <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                     <buttons>
                       <Button fx:id="addSave" mnemonicParsing="false" onAction="#addSave" text="Next" />
-                        <Button fx:id="cancelAddSave" mnemonicParsing="false" onAction="#cancelAddSave" text="Cancel" />
+                        <Button fx:id="cancelAddSave" cancelButton="true" mnemonicParsing="false" onAction="#cancelAddSave" text="Cancel" />
                     </buttons>
                   </ButtonBar>
                </children>
