@@ -165,7 +165,7 @@ public class SaveManagerView {
 				progressIndicator.setVisible(true);
 				saveList.setMouseTransparent(true);
 				Thread copyThread = getCopyThread();
-				Platform.runLater(copyThread);
+				copyThread.start();
 			} else {
 				Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
 			}
@@ -183,7 +183,7 @@ public class SaveManagerView {
 			}
 		};
 
-		TASK.setOnSucceeded(event -> {
+		TASK.setOnSucceeded(event -> Platform.runLater(() -> {
 			Result<SaveProfile> profileCopyResult = TASK.getValue();
 
 			if (profileCopyResult.isSuccess()) {
@@ -197,9 +197,9 @@ public class SaveManagerView {
 			progressIndicator.setVisible(false);
 			saveList.setMouseTransparent(false);
 			UI_SERVICE.saveUserData();
-		});
+		}));
 
-		Thread thread = new Thread(TASK);
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
 		return thread;
 	}
