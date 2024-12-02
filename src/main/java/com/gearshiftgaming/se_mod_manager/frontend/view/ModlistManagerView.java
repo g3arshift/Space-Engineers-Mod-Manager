@@ -89,8 +89,6 @@ public class ModlistManagerView {
 	@FXML
 	private TableColumn<Mod, String> modType;
 
-	@FXML
-	private TableColumn<Mod, String> modVersion;
 
 	@FXML
 	private TableColumn<Mod, String> modLastUpdated;
@@ -227,7 +225,6 @@ public class ModlistManagerView {
 		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
 		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
-		modVersion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getModVersion()));
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().toString() : "Unknown"));
 
@@ -252,6 +249,8 @@ public class ModlistManagerView {
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
+
+		modTable.setFixedCellSize(40);
 	}
 
 
@@ -299,7 +298,7 @@ public class ModlistManagerView {
 				"Enter the Steam Workshop Mod ID",
 				"Mod ID");
 		String modId = getUserModLocationInput();
-		UI_SERVICE.addModFromSteamId(modId);
+		UI_SERVICE.addModFromSteamId(modId, STAGE);
 		//TODO: Get the progress indicator pane stuff from SaveManagerView and apply it here.
 		// Or, better yet, do a real progress bar! https://stackoverflow.com/questions/33394428/javafx-version-of-executorservice
 		// Might only need that for the collections though.

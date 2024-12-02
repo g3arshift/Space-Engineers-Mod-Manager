@@ -4,6 +4,7 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -13,6 +14,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -176,11 +178,11 @@ public class UiService {
 		}
 	}
 
-	public void addModFromSteamId(String modId) {
+	public void addModFromSteamId(String modId, Stage stage) {
 		Mod mod = new Mod(modId, ModType.STEAM);
 		try {
 			Future<String> modInfoScrape = MOD_INFO_CONTROLLER.addModBySteamId(mod);
-			Thread singleModThread = getSingleModAddThread(mod, modInfoScrape);
+			Thread singleModThread = getSingleModAddThread(mod, modInfoScrape, stage);
 			singleModThread.start();
 		} catch (IOException | ExecutionException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -202,13 +204,13 @@ public class UiService {
 		return null;
 	}
 
-	private Thread getSingleModAddThread(Mod mod, Future<String> scrapedModInfo) {
+	//TODO: We need to debug when we give it bad input. It doesn't do anything.
+	private Thread getSingleModAddThread(Mod mod, Future<String> scrapedModInfo, Stage stage) {
 		final Task<Result<Void>> TASK = new Task<>() {
 			@Override
 			protected Result<Void> call() {
 				Result<Void> modInfoResult = new Result<>();
 				String[] modInfo;
-
 				if (mod.getModType() == ModType.STEAM) {
 					try {
 						//Calling .get on a future is a blocking task which is why we're calling it in a thread that'll get run by Platform.runlater
@@ -226,9 +228,10 @@ public class UiService {
 				if (mod.getFriendlyName().equals("_NOT_A_MOD")) {
 					modInfoResult.addMessage("The supplied Mod ID is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
 				} else {
-					modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
+					modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 				}
 				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
+				//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
 				// Do it with Platform.run
 				return modInfoResult;
 			}
@@ -240,17 +243,22 @@ public class UiService {
 			if (modScrapeResult.isSuccess()) {
 				//TODO: Save the changes
 				//TODO: Might need to do the modprofile trickery thing here. Like in the cell factories.
+				//TODO: Add duplicate mod check for if it's already in our modlist.
+				//TODO: Load priority is wrong. Need to fix that. ModListHelper might work, but we can also just set it to the size of the list for singles since it'll add at the end.
 				currentModList.add(mod);
+				currentModProfile.setModList(currentModList);
+				saveUserData();
 				//TODO: Popup success message and clear the UI progress bar/whatever we use
 			} else {
 				log(modScrapeResult);
 				//TODO: We need to bring in the modlist manager object to get its stage and shit here.
-				//TODO: Create a success alert in popup
+				//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
 				// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
 				// Finally, select the very first of the added mods in the list
 				//TODO: Still need to populate rest of mod info fields
-				//Popup.displaySimpleAlert(modScrapeResult, );
 			}
+			log(modScrapeResult);
+			Popup.displaySimpleAlert(modScrapeResult, stage);
 		}));
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);

@@ -35,7 +35,6 @@ public class Mod {
     private String publishedServiceName;
 
     //These are the fields for the UI
-    private String modVersion;
     private Date lastUpdated;
 
     private int loadPriority;
@@ -52,7 +51,6 @@ public class Mod {
         //this.source = source;
         categories = new ArrayList<>();
         this.modType = modType;
-        this.modVersion = "Unknown";
     }
 
     @Override

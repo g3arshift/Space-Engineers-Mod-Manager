@@ -28,7 +28,6 @@
                     <TableColumn fx:id="modName" prefWidth="200.0" text="Mod Name" />
                     <TableColumn fx:id="loadPriority" prefWidth="85.0" text="Priority" />
                     <TableColumn fx:id="modLastUpdated" prefWidth="115.0" text="Last Updated" />
-                    <TableColumn fx:id="modVersion" prefWidth="85.0" text="Version" />
                     <TableColumn fx:id="modSource" prefWidth="85.0" text="Import Source" visible="false" />
                     <TableColumn fx:id="modType" prefWidth="100.0" text="Source" />
                     <TableColumn fx:id="modCategory" prefWidth="125.0" text="Category/Tags" />
@@ -46,7 +45,7 @@
                 <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
             </padding>
             <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <ComboBox fx:id="modImportDropdown" onAction="#addMod" promptText="Add mods from..." />
+                <ComboBox fx:id="modImportDropdown" maxWidth="165.0" onAction="#addMod" promptText="Add mods from..." />
             </HBox>
             <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                 <buttons>

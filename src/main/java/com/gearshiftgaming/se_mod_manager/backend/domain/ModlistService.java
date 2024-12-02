@@ -83,6 +83,9 @@ public class ModlistService {
 
 		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 			future = executorService.submit(scrapeModInformation(mod));
+			//TODO: Remove this catch
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 		return future;
 	}
@@ -99,6 +102,9 @@ public class ModlistService {
 			for (Mod m : modList) {
 				futures.add(executorService.submit(scrapeModInformation(m)));
 			}
+			//TODO: Remove this catch
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 
 		for (int i = 0; i < modList.size(); i++) {
@@ -119,11 +125,15 @@ public class ModlistService {
 
 	//TODO: We should probably store the dom object with how much we're going to have to be checking on these pages
 	//Scrape the Steam Workshop HTML pages for their titles, which are our friendly names
-	private Callable<String> scrapeModInformation(Mod mod) {
+	private Callable<String> scrapeModInformation(Mod mod) throws IOException {
 		if (mod.getModType() == ModType.STEAM) {
+			Element element = Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get().body();
 			return () -> Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get().title() + (checkIfModIsMod(mod) ? "" : "_NOT_A_MOD");
 		} else {
 			//TODO: Implement modIO stuff.
+			//TODO: REmove this, here for testing and figuring out how to get the mod info I need
+			Document doc = Jsoup.connect(MODIO_URL + mod.getId()).get();
+			System.out.println("Hold here");
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
 			return null;
 		}
