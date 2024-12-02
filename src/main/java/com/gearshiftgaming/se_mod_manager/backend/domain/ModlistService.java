@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
@@ -58,6 +59,10 @@ public class ModlistService {
 		this.MODIO_MOD_SCRAPING_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
 	}
 
+	public Future<String> getModInfoById(Mod mod) throws IOException, ExecutionException, InterruptedException {
+			return generateModInformation(mod);
+	}
+
 	public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
 		File modlistFile = new File(modFilePath);
 		Result<List<Mod>> result = new Result<>();
@@ -73,22 +78,20 @@ public class ModlistService {
 		return result;
 	}
 
-	public Result<Void> getModInfoById(Mod mod) throws IOException {
-		if (mod.getModType() == ModType.STEAM) {
+	private Future<String> generateModInformation(Mod mod) throws ExecutionException, InterruptedException {
+		Future<String> future;
 
-		} else {
-
+		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+			future = executorService.submit(scrapeModInformation(mod));
 		}
-
-		return null;
+		return future;
 	}
 
 	//TODO: Should instead create a function called generateModList or something more appropriate that calls two methods, one to generate info for steam mods, the other for ModIO mods, and perform those operations on the given modlist.
 	// Or, better yet, just have a flag for mod type and pass that to our scrape and check. They also need type flags.
 	//TODO: Do this with the concurrency API
-	//TODO: Move this to the backend service since that's where we need to actually go
 	//Take in our list of mod ID's and fill out the rest of their fields.
-	public void generateModListInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
+	private void generateModListInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
 		List<Future<String>> futures = new ArrayList<>(modList.size());
 
 		//Create multiple virtual threads to efficiently scrape the page. We're using virtual ones here since this is IO intensive, not CPU
@@ -101,12 +104,16 @@ public class ModlistService {
 		for (int i = 0; i < modList.size(); i++) {
 			//TODO: Is this supposed to have a space?
 			String[] modInfo = futures.get(i).get().split(" Workshop::");
-			if (modInfo[0].contains("_NOT_A_MOD")) {
-				modList.get(i).setFriendlyName(modInfo[0]);
-			} else {
-				modList.get(i).setPublishedServiceName(modInfo[0]);
-				modList.get(i).setFriendlyName(modInfo[1]);
-			}
+			setModInformation(modList.get(i), modInfo);
+		}
+	}
+
+	public void setModInformation(Mod mod, String[] modInfo) {
+		if (modInfo[0].contains("_NOT_A_MOD")) {
+			mod.setFriendlyName(modInfo[0]);
+		} else {
+			mod.setPublishedServiceName(modInfo[0]);
+			mod.setFriendlyName(modInfo[1]);
 		}
 	}
 
@@ -116,6 +123,7 @@ public class ModlistService {
 		if (mod.getModType() == ModType.STEAM) {
 			return () -> Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get().title() + (checkIfModIsMod(mod) ? "" : "_NOT_A_MOD");
 		} else {
+			//TODO: Implement modIO stuff.
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
 			return null;
 		}

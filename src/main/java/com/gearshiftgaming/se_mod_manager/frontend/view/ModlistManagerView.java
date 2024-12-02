@@ -16,6 +16,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -212,18 +213,6 @@ public class ModlistManagerView {
 		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
-
-		modImportDropdown.setButtonCell(new ListCell<>() {
-			@Override
-			protected void updateItem(String item, boolean empty) {
-				if (empty || item == null) {
-					setStyle(null);
-					setGraphic(null);
-				} else {
-					setText("Add mods from...");
-				}
-			}
-		});
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -259,9 +248,6 @@ public class ModlistManagerView {
 		});
 
 		modTable.getSortOrder().addListener(sortListener);
-//		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
-//		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
-		//modTable.setItems(sortedList);
 		updateModTableContents();
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
@@ -277,10 +263,13 @@ public class ModlistManagerView {
 		viewableLog.setSelectionModel(null);
 
 		// Just do this by manually setting the selected item after we select an item. To actually call code, call one function on selection/action in the dropdown, that determines which function to call and do stuff in the rest of the code, then reset the selected item.
-		modImportDropdown.getItems().addAll(ModImportType.STEAM_ID.getName(),
+		modImportDropdown.getItems().addAll("Add mods from...",
+				ModImportType.STEAM_ID.getName(),
 				ModImportType.STEAM_COLLECTION.getName(),
 				ModImportType.MOD_IO.getName(),
 				ModImportType.FILE.getName());
+
+
 
 		//TODO: Setup a function in ModList service to track conflicts.
 	}
@@ -289,61 +278,51 @@ public class ModlistManagerView {
 	@FXML
 	private void addMod() {
 		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
-		modImportDropdown.getSelectionModel().clearSelection();
+		modImportDropdown.getSelectionModel().selectFirst();
+		modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
+
 		//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
 
-		Result<Void> importResult = switch (selectedImportOption) {
-			case STEAM_ID:
-				yield addModFromSteamId();
-			case STEAM_COLLECTION:
-				yield addModsFromSteamCollection();
-			case MOD_IO:
-				yield addModFromModIoId();
-			case FILE:
-				yield addModsFromFile();
-		};
-
-		if (importResult.isSuccess()) {
-			//TODO: Create a success alert in popup
-			// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
-			// Finally, select the very first of the added mods in the list
-		} else {
-			UI_SERVICE.log(importResult);
-			Popup.displaySimpleAlert(importResult, STAGE);
+		if (selectedImportOption != null) {
+			switch (selectedImportOption) {
+				case STEAM_ID -> addModFromSteamId();
+				case STEAM_COLLECTION -> addModsFromSteamCollection();
+				case MOD_IO -> addModFromModIoId();
+				case FILE -> addModsFromFile();
+				default -> System.out.println("test");
+			}
 		}
-
 	}
 
-	private Result<Void> addModFromSteamId() {
+	private void addModFromSteamId() {
 		setModAddingInputViewText("Steam Workshop Mod ID",
 				"Enter the Steam Workshop Mod ID",
 				"Mod ID");
 		String modId = getUserModLocationInput();
-		Result<Mod> modImportResult = UI_SERVICE.addModFromSteamId(modId);
+		UI_SERVICE.addModFromSteamId(modId);
+		//TODO: Get the progress indicator pane stuff from SaveManagerView and apply it here.
+		// Or, better yet, do a real progress bar! https://stackoverflow.com/questions/33394428/javafx-version-of-executorservice
+		// Might only need that for the collections though.
 		//TODO: The actual adding to the modlist should happen here
 		//TODO: Once we check our result, move our selection in modTable to the new mod.
-		return null;
 	}
 
-	private Result<Void> addModsFromSteamCollection() {
+	private void addModsFromSteamCollection() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		//TODO: The actual adding to the modlist should happen here
 		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromSteamWorkshopCollection();
-		return null;
 	}
 
-	private Result<Void> addModFromModIoId() {
+	private void addModFromModIoId() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		//TODO: The actual adding to the modlist should happen here
 		//Result<Mod> modImportResult = UI_SERVICE.addModFromModIoId();
-		return null;
 	}
 
-	private Result<Void> addModsFromFile() {
+	private void addModsFromFile() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		//TODO: The actual adding to the modlist should happen here
 		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
-		return null;
 	}
 
 	@FXML
