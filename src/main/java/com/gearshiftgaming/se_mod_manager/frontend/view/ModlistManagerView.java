@@ -196,7 +196,7 @@ public class ModlistManagerView {
 		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 	}
 
-	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle) {
+	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize) {
 		this.logToggle = logToggle;
 		this.modDescriptionToggle = modDescriptionToggle;
 
@@ -207,7 +207,7 @@ public class ModlistManagerView {
 		};
 
 		setupMainViewItems();
-		setupModTable();
+		setupModTable(modTableCellSize);
 		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
@@ -215,7 +215,7 @@ public class ModlistManagerView {
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
 	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
-	private void setupModTable() {
+	private void setupModTable(int modTableCellSize) {
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
@@ -250,7 +250,7 @@ public class ModlistManagerView {
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 
-		modTable.setFixedCellSize(40);
+		modTable.setFixedCellSize(modTableCellSize);
 	}
 
 

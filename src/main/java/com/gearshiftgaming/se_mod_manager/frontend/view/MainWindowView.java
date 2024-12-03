@@ -81,7 +81,7 @@ public class MainWindowView {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
 		MENU_BAR_VIEW.initView();
-		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle());
+		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle(), Integer.parseInt(PROPERTIES.getProperty("semm.modTable.cellSize")));
 		STATUS_BAR_VIEW.initView();
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);
