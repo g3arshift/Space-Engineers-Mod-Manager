@@ -46,6 +46,8 @@ public class Mod {
     private boolean active;
     private ModType modType;
 
+    private String description;
+
     public Mod(String id, ModType modType) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
