@@ -118,6 +118,10 @@ public class UiService {
 		log(result.getCurrentMessage(), messageType);
 	}
 
+	public <T> void log(Exception e) {
+		log(String.valueOf(e), MessageType.ERROR);
+	}
+
 	public void logPrivate(String message, MessageType messageType) {
 		switch (messageType) {
 			case INFO -> LOGGER.info(message);

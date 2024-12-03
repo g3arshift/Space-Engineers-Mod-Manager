@@ -1,22 +1,15 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -24,24 +17,25 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.skin.TableHeaderRow;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.EventTarget;
+import org.w3c.dom.html.HTMLAnchorElement;
 
 import java.awt.*;
 import java.io.IOException;
@@ -224,6 +218,8 @@ public class ModlistManagerView {
 		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
+
+		//Setup the mod description handlers
 		modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
 			Mod selectedMod = modTable.getSelectionModel().getSelectedItem();
 			if (selectedMod != null) {
@@ -233,7 +229,13 @@ public class ModlistManagerView {
 			}
 		});
 
-		//TODO: Prevent the webview from navigating itself to other pages, only open in system browser.
+		modDescription.getEngine().getLoadWorker().stateProperty().addListener((observableValue, oldState, newState) -> {
+			if (newState == Worker.State.SUCCEEDED) {
+				redirectHyperlinks();
+			}
+		});
+
+		modDescription.setContextMenuEnabled(false);
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -593,5 +595,25 @@ public class ModlistManagerView {
 		ID_AND_URL_MOD_ADDITION_INPUT.setTitle(title);
 		ID_AND_URL_MOD_ADDITION_INPUT.setInputInstructions(instructions);
 		ID_AND_URL_MOD_ADDITION_INPUT.setPromptText(promptText);
+	}
+
+	private void redirectHyperlinks() {
+		NodeList nodeList = modDescription.getEngine().getDocument().getElementsByTagName("a");
+
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			org.w3c.dom.Node node = nodeList.item(i);
+			EventTarget eventTarget = (EventTarget) node;
+			eventTarget.addEventListener("click", evt -> {
+				EventTarget target = evt.getCurrentTarget();
+				HTMLAnchorElement anchorElement = (HTMLAnchorElement) target;
+				String href = anchorElement.getHref();
+				try {
+					Desktop.getDesktop().browse(new URI(href));
+				} catch (IOException | URISyntaxException e) {
+					UI_SERVICE.log(e);
+				}
+				evt.preventDefault();
+			}, false);
+		}
 	}
 }
