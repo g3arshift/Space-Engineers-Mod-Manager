@@ -36,6 +36,8 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -118,6 +120,11 @@ public class ModlistManagerView {
 	@FXML
 	@Getter
 	private Tab modDescriptionTab;
+
+	@FXML
+	private StackPane modDescriptionBackground;
+	@FXML
+	private WebView modDescription;
 
 	@FXML
 	private ListView<LogMessage> viewableLog;
@@ -217,6 +224,16 @@ public class ModlistManagerView {
 		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
+		modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
+			Mod selectedMod = modTable.getSelectionModel().getSelectedItem();
+			if (selectedMod != null) {
+				modDescription.getEngine().loadContent(selectedMod.getDescription());
+			} else {
+				modDescription.getEngine().loadContent("");
+			}
+		});
+
+		//TODO: Prevent the webview from navigating itself to other pages, only open in system browser.
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.

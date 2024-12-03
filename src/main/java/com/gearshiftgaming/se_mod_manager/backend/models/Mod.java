@@ -95,4 +95,9 @@ public class Mod {
     public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
+
+    @XmlJavaTypeAdapter(value = ModDescriptionZipper.class)
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

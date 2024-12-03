@@ -11,6 +11,7 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -119,6 +120,8 @@ public class ModlistService {
 			List<String> modTags = List.of(modInfo[2].split(","));
 			mod.setCategories(modTags);
 
+			mod.setDescription(modInfo[3]);
+
 			//TODO: Remove this catch
 		} catch (IOException | ExecutionException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -197,7 +200,6 @@ public class ModlistService {
 			modInfo[3] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
 
 			return () -> modInfo;
-			//return () -> Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get().title() + (checkIfModIsMod(mod) ? "" : "_NOT_A_MOD");
 		} else {
 			//TODO: Implement modIO stuff.
 			//TODO: REmove this, here for testing and figuring out how to get the mod info I need

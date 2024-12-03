@@ -12,12 +12,13 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
 
-<SplitPane fx:id="mainViewSplit" dividerPositions="0.7" orientation="VERTICAL" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<SplitPane fx:id="mainViewSplit" dividerPositions="0.7" orientation="VERTICAL" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <VBox>
         <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
             <TableView fx:id="modTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
@@ -49,8 +50,8 @@
             </HBox>
             <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                 <buttons>
-               <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Lists" />
-               <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage SE Saves" />
+                    <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Lists" />
+                    <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage SE Saves" />
                     <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
                     <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
                     <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
@@ -65,9 +66,13 @@
             <Insets bottom="5.0" />
         </padding>
         <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
-            <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="ALWAYS" maxWidth="1.7976931348623157E308">
-                <TextArea editable="false" mouseTransparent="true" />
-            </ScrollPane>
+         <content>
+            <StackPane fx:id="modDescriptionBackground">
+               <children>
+                  <WebView fx:id="modDescription" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" />
+               </children>
+            </StackPane>
+         </content>
         </Tab>
         <Tab fx:id="logTab" onClosed="#closeLogTab" text="Log">
             <ListView fx:id="viewableLog" focusTraversable="false" />

@@ -204,7 +204,6 @@ public class UiService {
 			@Override
 			protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
 				Result<Void> modInfoResult = new Result<>();
-				String[] modInfo;
 
 				if (mod.getModType() == ModType.STEAM) {
 					try {
@@ -216,7 +215,6 @@ public class UiService {
 					}
 				} else {
 					//TODO: REMOVE. TEST SETUP.
-					modInfo = new String[0];
 					//TODO: Implement modIO stuff here.
 				}
 
