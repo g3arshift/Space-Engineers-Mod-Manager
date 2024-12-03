@@ -45,9 +45,12 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -176,7 +179,9 @@ public class ModlistManagerView {
 
 	private final SimpleInputView ID_AND_URL_MOD_ADDITION_INPUT;
 
-	public ModlistManagerView(UiService uiService, Stage stage, StatusBarView statusBarView,
+	private final String MOD_DATE_FORMAT;
+
+	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
 							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modAdditionInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
@@ -189,6 +194,8 @@ public class ModlistManagerView {
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
+
+		this.MOD_DATE_FORMAT = properties.getProperty("semm.mod.dateFormat");
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
@@ -226,7 +233,10 @@ public class ModlistManagerView {
 
 		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
-				cellData.getValue().getLastUpdated().toString() : "Unknown"));
+				cellData.getValue().getLastUpdated().format(new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(MOD_DATE_FORMAT)
+						.toFormatter()) : "Unknown"));
 
 		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
@@ -267,7 +277,6 @@ public class ModlistManagerView {
 				ModImportType.STEAM_COLLECTION.getName(),
 				ModImportType.MOD_IO.getName(),
 				ModImportType.FILE.getName());
-
 
 
 		//TODO: Setup a function in ModList service to track conflicts.

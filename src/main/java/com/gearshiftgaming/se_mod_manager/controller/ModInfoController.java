@@ -3,16 +3,10 @@ package com.gearshiftgaming.se_mod_manager.controller;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import javafx.application.Platform;
 
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -32,7 +26,7 @@ public class ModInfoController {
 	}
 
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
-	public Future<String> addModBySteamId(Mod mod) throws IOException, ExecutionException, InterruptedException {
+	public void fillOutModInformation(Mod mod) throws IOException, ExecutionException, InterruptedException {
 		//TODO:
 		// When we are implementing this, here is how we want it to flow. Total rewrite of this class.
 		// future.get is a blocking call. It will pause code execution until it's done.
@@ -47,10 +41,6 @@ public class ModInfoController {
 		// 6. Call executor.shutdown() on the executor.
 		// We HAVE to do it this way cause you can only update the UI on the JFX thread, which you access through Platform.runLater, and the service layer shouldn't need access to the UI down here.
 
-		return MODLIST_SERVICE.getModInfoById(mod);
-	}
-
-	public void setModInformation(Mod mod, String[] modInfo) {
-		MODLIST_SERVICE.setModInformation(mod, modInfo);
+		MODLIST_SERVICE.fillOutModInfoById(mod);
 	}
 }

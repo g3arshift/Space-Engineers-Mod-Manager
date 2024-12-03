@@ -4,7 +4,6 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -27,7 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -179,14 +177,10 @@ public class UiService {
 	}
 
 	public void addModFromSteamId(String modId, Stage stage) {
+		//TODO: Allow parsing of URL's too.
 		Mod mod = new Mod(modId, ModType.STEAM);
-		try {
-			Future<String> modInfoScrape = MOD_INFO_CONTROLLER.addModBySteamId(mod);
-			Thread singleModThread = getSingleModAddThread(mod, modInfoScrape, stage);
-			singleModThread.start();
-		} catch (IOException | ExecutionException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
+		Thread singleModThread = getSingleModAddThread(mod, stage);
+		singleModThread.start();
 	}
 
 	public Result<List<Mod>> addModsFromSteamCollection() {
@@ -205,16 +199,18 @@ public class UiService {
 	}
 
 	//TODO: We need to debug when we give it bad input. It doesn't do anything.
-	private Thread getSingleModAddThread(Mod mod, Future<String> scrapedModInfo, Stage stage) {
+	private Thread getSingleModAddThread(Mod mod, Stage stage) {
 		final Task<Result<Void>> TASK = new Task<>() {
 			@Override
-			protected Result<Void> call() {
+			protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
 				Result<Void> modInfoResult = new Result<>();
 				String[] modInfo;
+
 				if (mod.getModType() == ModType.STEAM) {
 					try {
 						//Calling .get on a future is a blocking task which is why we're calling it in a thread that'll get run by Platform.runlater
-						modInfo = scrapedModInfo.get().split(" Workshop::");
+						//modInfo = scrapedModInfo.get().split(" Workshop::");
+						MOD_INFO_CONTROLLER.fillOutModInformation(mod);
 					} catch (InterruptedException | ExecutionException e) {
 						throw new RuntimeException(e);
 					}
@@ -224,7 +220,7 @@ public class UiService {
 					//TODO: Implement modIO stuff here.
 				}
 
-				MOD_INFO_CONTROLLER.setModInformation(mod, modInfo);
+				//MOD_INFO_CONTROLLER.setModInformation(mod, modInfo);
 				if (mod.getFriendlyName().equals("_NOT_A_MOD")) {
 					modInfoResult.addMessage("The supplied Mod ID is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
 				} else {
@@ -232,7 +228,6 @@ public class UiService {
 				}
 				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
 				//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
-				// Do it with Platform.run
 				return modInfoResult;
 			}
 		};
@@ -251,7 +246,6 @@ public class UiService {
 				//TODO: Popup success message and clear the UI progress bar/whatever we use
 			} else {
 				log(modScrapeResult);
-				//TODO: We need to bring in the modlist manager object to get its stage and shit here.
 				//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
 				// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
 				// Finally, select the very first of the added mods in the list

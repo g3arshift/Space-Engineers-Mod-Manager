@@ -4,10 +4,12 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -35,7 +37,7 @@ public class Mod {
     private String publishedServiceName;
 
     //These are the fields for the UI
-    private Date lastUpdated;
+    private LocalDateTime lastUpdated;
 
     private int loadPriority;
     //private ModImportSourceType source;
@@ -51,6 +53,12 @@ public class Mod {
         //this.source = source;
         categories = new ArrayList<>();
         this.modType = modType;
+
+        if(modType == ModType.STEAM) {
+            publishedServiceName = "Steam";
+        } else {
+            publishedServiceName = "Mod.io";
+        }
     }
 
     @Override
@@ -79,5 +87,10 @@ public class Mod {
     @XmlTransient
     public void setLoadPriority(int loadPriority) {
         this.loadPriority = loadPriority;
+    }
+
+    @XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 }
