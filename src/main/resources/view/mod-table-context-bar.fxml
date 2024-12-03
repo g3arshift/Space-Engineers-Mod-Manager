@@ -22,6 +22,7 @@
              <menus>
                  <Menu mnemonicParsing="false" text="File">
                      <items>
+                  <MenuItem fx:id="updateMods" mnemonicParsing="false" onAction="#updateModInformation" text="Update Mod Information" />
                          <MenuItem fx:id="close" mnemonicParsing="false" onAction="#exit" text="Close" />
                      </items>
                  </Menu>

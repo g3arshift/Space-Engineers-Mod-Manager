@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -233,10 +232,7 @@ public class ModlistManagerView {
 
 		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
-				cellData.getValue().getLastUpdated().format(new DateTimeFormatterBuilder()
-						.parseCaseInsensitive()
-						.appendPattern(MOD_DATE_FORMAT)
-						.toFormatter()) : "Unknown"));
+				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
 
 		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 

@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -108,9 +109,11 @@ public class ModlistService {
 					.parseCaseInsensitive()
 					.appendPattern(MOD_DATE_FORMAT)
 					.toFormatter();
-			ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
-			ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
-			mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
+			//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
+//			ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
+//			ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
+//			mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
+			mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
 
 			//TODO: We need to set mod description.
 			List<String> modTags = List.of(modInfo[2].split(","));
@@ -157,7 +160,8 @@ public class ModlistService {
 	private Callable<String[]> scrapeModInformation(Mod mod) throws IOException {
 		if (mod.getModType() == ModType.STEAM) {
 			//TODO: We need to scrape mode description too
-			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get();
+			Connection.Response response = Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).execute();
+			Document modPage = response.parse();
 			//The first item is mod name, the second is last updated, and the third is a combined string of the tags.
 			String[] modInfo = new String[4];
 			String modName = modPage.title().split("Workshop::")[1];

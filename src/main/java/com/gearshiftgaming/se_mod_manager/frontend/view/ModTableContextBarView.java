@@ -57,6 +57,9 @@ public class ModTableContextBarView {
 	private MenuItem close;
 
 	@FXML
+	private MenuItem updateMods;
+
+	@FXML
 	private MenuItem about;
 
 	@FXML
@@ -294,6 +297,10 @@ public class ModTableContextBarView {
 	@FXML
 	private void exit() {
 		Platform.exit();
+	}
+
+	@FXML
+	private void updateModInformation() {
 	}
 
 	private Color getThemeBoxColor() {
