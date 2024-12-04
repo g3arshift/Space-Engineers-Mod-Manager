@@ -321,7 +321,6 @@ public class ModlistManagerView {
 				case STEAM_COLLECTION -> addModsFromSteamCollection();
 				case MOD_IO -> addModFromModIoId();
 				case FILE -> addModsFromFile();
-				default -> System.out.println("test");
 			}
 		}
 	}

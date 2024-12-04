@@ -183,8 +183,15 @@ public class UiService {
 	public void addModFromSteamId(String modId, Stage stage) {
 		//TODO: Allow parsing of URL's too.
 		Mod mod = new Mod(modId, ModType.STEAM);
-		Thread singleModThread = getSingleModAddThread(mod, stage);
-		singleModThread.start();
+		Optional<Mod> duplicateMod = currentModList.stream()
+				.filter(mod1 -> mod.getId().equals(mod1.getId()))
+				.findFirst();
+		if(duplicateMod.isPresent()) {
+			Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+		} else {
+			Thread singleModThread = getSingleModAddThread(mod, stage);
+			singleModThread.start();
+		}
 	}
 
 	public Result<List<Mod>> addModsFromSteamCollection() {
