@@ -52,8 +52,8 @@
                 <buttons>
                     <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Lists" />
                     <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage SE Saves" />
-                    <Button fx:id="importModlist" mnemonicParsing="false" text="Import Modlist" />
-                    <Button fx:id="exportModlist" mnemonicParsing="false" text="Export Modlist" />
+                    <Button fx:id="importModlist" mnemonicParsing="false" onAction="#importModlist" text="Import Modlist" />
+                    <Button fx:id="exportModlist" mnemonicParsing="false" onAction="#exportModlist" text="Export Modlist" />
                     <Button fx:id="injectModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
                     <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
                 </buttons>
@@ -62,9 +62,6 @@
         </HBox>
     </VBox>
     <TabPane fx:id="informationPane" tabDragPolicy="REORDER">
-        <padding>
-            <Insets bottom="5.0" />
-        </padding>
         <Tab fx:id="modDescriptionTab" onClosed="#closeModDescriptionTab" text="Mod Description">
          <content>
             <StackPane fx:id="modDescriptionBackground">

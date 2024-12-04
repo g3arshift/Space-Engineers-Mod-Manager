@@ -32,6 +32,7 @@ public class ModTableRow extends TableRow<Mod> {
 			setGraphic(null);
 			setStyle(null);
 		} else {
+
 			if(this.isSelected()) {
 				setStyle("-color-cell-fg-selected: -color-fg-default;" +
 						"-color-cell-fg-selected-focused: -color-fg-default;" +
@@ -51,7 +52,6 @@ public class ModTableRow extends TableRow<Mod> {
 		}
 	}
 
-	//TODO: Maybe make them a brighter color? Like, for light themes make it blue. Not sure for darks. Red? Some better color contrast would look a lot better. Look at what Dracula does.
 	//This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation, but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet, then add onto it.
 	private String getSelectedCellColor(String themeName) {
 		return switch (themeName) {

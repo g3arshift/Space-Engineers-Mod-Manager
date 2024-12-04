@@ -11,7 +11,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -96,7 +95,7 @@ public class Mod {
         this.lastUpdated = lastUpdated;
     }
 
-    @XmlJavaTypeAdapter(value = ModDescriptionZipper.class)
+    @XmlJavaTypeAdapter(value = ModDescriptionCompacterAdapter.class)
     public void setDescription(String description) {
         this.description = description;
     }

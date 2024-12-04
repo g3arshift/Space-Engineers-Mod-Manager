@@ -5,8 +5,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 
-
- <HBox alignment="CENTER_RIGHT" spacing="10.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<HBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
      <children>
          <Label fx:id="lastInjected">
              <graphic>
@@ -26,7 +25,7 @@
          </Label>
      </children>
      <padding>
-         <Insets bottom="5.0" left="5.0" right="5.0" />
+         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
      </padding>
      <opaqueInsets>
          <Insets />

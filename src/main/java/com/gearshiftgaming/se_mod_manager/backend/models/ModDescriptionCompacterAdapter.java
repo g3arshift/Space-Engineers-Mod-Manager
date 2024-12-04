@@ -5,7 +5,6 @@ import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -17,7 +16,7 @@ import java.util.zip.GZIPOutputStream;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ModDescriptionZipper extends XmlAdapter<String, String> {
+public class ModDescriptionCompacterAdapter extends XmlAdapter<String, String> {
 
 	//Load
 	@Override

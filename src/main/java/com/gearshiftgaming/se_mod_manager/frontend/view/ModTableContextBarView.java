@@ -258,6 +258,9 @@ public class ModTableContextBarView {
 				activeModCountBox.setStroke(getThemeBoxColor());
 				modConflictBox.setStroke(getThemeBoxColor());
 
+				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+
 				TitleBarUtility.SetTitleBar(STAGE);
 			}
 		}

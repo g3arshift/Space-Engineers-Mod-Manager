@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
@@ -10,6 +11,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHel
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -23,7 +25,6 @@ import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -33,6 +34,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -117,7 +119,9 @@ public class ModlistManagerView {
 
 	@FXML
 	private StackPane modDescriptionBackground;
+
 	@FXML
+	@Getter
 	private WebView modDescription;
 
 	@FXML
@@ -235,7 +239,12 @@ public class ModlistManagerView {
 			}
 		});
 
+		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_primer-light.css");
+		modDescriptionBackground.setStyle("-fx-border-color: -color-border-default; -fx-border-width:1px");
 		modDescription.setContextMenuEnabled(false);
+
+		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
