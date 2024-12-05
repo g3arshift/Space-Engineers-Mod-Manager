@@ -182,17 +182,24 @@ public class UiService {
 		}
 	}
 
-	public Result<Void> fillOutModInformation(Mod mod) throws IOException, ExecutionException, InterruptedException {
-		Result<Void> modInfoResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
-		if (modInfoResult.isSuccess()) {
-			mod.setLoadPriority(currentModList.size() + 1);
-			currentModList.add(mod);
-			currentModProfile.setModList(currentModList);
-			saveUserData();
+	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws IOException, ExecutionException, InterruptedException {
+		List<Result<Void>> modInfoResults = MOD_INFO_CONTROLLER.fillOutModInformation(modList);
 
-			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
+		for(int i = 0; i < modList.size(); i++) {
+			Mod currentMod = modList.get(i);
+			Result<Void> currentModInfoResult = modInfoResults.get(i);
+
+			if (currentModInfoResult.isSuccess()) {
+				currentMod.setLoadPriority(currentModList.size() + 1);
+				currentModList.add(currentMod);
+				currentModProfile.setModList(currentModList);
+				saveUserData();
+
+				currentModInfoResult.addMessage("Mod \"" + currentMod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
+			}
 		}
-		return modInfoResult;
+
+		return modInfoResults;
 	}
 
 	public Result<List<Mod>> addModsFromSteamCollection() {

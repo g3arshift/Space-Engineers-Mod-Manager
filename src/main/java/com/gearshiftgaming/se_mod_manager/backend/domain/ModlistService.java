@@ -2,6 +2,8 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
@@ -80,10 +82,6 @@ public class ModlistService {
 		this.MOD_DATE_FORMAT = PROPERTIES.getProperty("semm.mod.dateFormat");
 	}
 
-	public Result<Void> fillOutModInfoById(Mod mod) throws IOException, ExecutionException, InterruptedException {
-		return generateModInformation(mod);
-	}
-
 	public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
 		File modlistFile = new File(modFilePath);
 		Result<List<Mod>> result = new Result<>();
@@ -99,42 +97,52 @@ public class ModlistService {
 		return result;
 	}
 
-	private Result<Void> generateModInformation(Mod mod) {
-		Future<Result<String[]>> future;
-		Result<Void> modGenerationResult = new Result<>();
+	public List<Result<Void>> generateModInformation(List<Mod> mods) {
+		List<Future<Result<String[]>>> futures = new ArrayList<>(mods.size());
+		List<Result<Void>> modGenerationResults = new ArrayList<>(mods.size());
+
 		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-			future = executorService.submit(scrapeModInformation(mod.getId(), mod.getModType()));
+			for (Mod m : mods) {
+				futures.add(executorService.submit(scrapeModInformation(m.getId(), m.getModType())));
+			}
 
-			if (future.get().isSuccess()) {
-				String[] modInfo = future.get().getPayload();
+			for (int i = 0; i < mods.size(); i++) {
+				Result<Void> currentModGenerationResult = new Result<>();
+				Future<Result<String[]>> currentFuture = futures.get(i);
+				Mod currentMod = mods.get(i);
+				if (currentFuture.get().isSuccess()) {
+					String[] modInfo = currentFuture.get().getPayload();
 
-				mod.setFriendlyName(modInfo[0]);
+					currentMod.setFriendlyName(modInfo[0]);
 
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-						.parseCaseInsensitive()
-						.appendPattern(MOD_DATE_FORMAT)
-						.toFormatter();
-				//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
+					DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+							.parseCaseInsensitive()
+							.appendPattern(MOD_DATE_FORMAT)
+							.toFormatter();
+					//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
 //				ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
 //				ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
 //				mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
-				mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+					currentMod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
 
-				List<String> modTags = List.of(modInfo[2].split(","));
-				mod.setCategories(modTags);
+					List<String> modTags = List.of(modInfo[2].split(","));
+					currentMod.setCategories(modTags);
 
-				mod.setDescription(modInfo[3]);
+					currentMod.setDescription(modInfo[3]);
 
-				modGenerationResult.addMessage(future.get().getCurrentMessage(), future.get().getType());
-			} else {
-				modGenerationResult.addMessage(future.get().getCurrentMessage(), future.get().getType());
+					currentModGenerationResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
+				} else {
+					currentModGenerationResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
+				}
+				modGenerationResults.add(currentModGenerationResult);
 			}
-			//TODO: Remove this catch
 		} catch (IOException | ExecutionException | InterruptedException e) {
+			Result<Void> modGenerationResult = new Result<>();
 			modGenerationResult.addMessage(String.valueOf(e), ResultType.FAILED);
+			modGenerationResults.add(modGenerationResult);
 		}
 
-		return modGenerationResult;
+		return modGenerationResults;
 	}
 
 	//Take in our list of mod ID's and fill out the rest of their fields.

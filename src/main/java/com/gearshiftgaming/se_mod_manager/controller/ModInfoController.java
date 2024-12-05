@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -27,7 +28,7 @@ public class ModInfoController {
 	}
 
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
-	public Result<Void> fillOutModInformation(Mod mod) throws IOException, ExecutionException, InterruptedException {
+	public List<Result<Void>> fillOutModInformation(List<Mod> modList) {
 		//TODO:
 		// When we are implementing this, here is how we want it to flow. Total rewrite of this class.
 		// future.get is a blocking call. It will pause code execution until it's done.
@@ -42,6 +43,6 @@ public class ModInfoController {
 		// 6. Call executor.shutdown() on the executor.
 		// We HAVE to do it this way cause you can only update the UI on the JFX thread, which you access through Platform.runLater, and the service layer shouldn't need access to the UI down here.
 
-		return MODLIST_SERVICE.fillOutModInfoById(mod);
+		return MODLIST_SERVICE.generateModInformation(modList);
 	}
 }

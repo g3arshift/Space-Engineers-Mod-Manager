@@ -342,6 +342,7 @@ public class ModlistManagerView {
 				.map(MatchResult::group)
 				.collect(Collectors.joining(""));
 
+		//This condition handles us hitting cancel on the input view
 		if(!modId.isEmpty()) {
 			Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
 					.filter(mod -> modId.equals(mod.getId()))
@@ -362,8 +363,6 @@ public class ModlistManagerView {
 		//TODO: Get the progress indicator pane stuff from SaveManagerView and apply it here.
 		// Or, better yet, do a real progress bar! https://stackoverflow.com/questions/33394428/javafx-version-of-executorservice
 		// Might only need that for the collections though.
-		//TODO: The actual adding to the modlist should happen here
-		//TODO: Once we check our result, move our selection in modTable to the new mod.
 	}
 
 	private void addModsFromSteamCollection() {
@@ -654,38 +653,53 @@ public class ModlistManagerView {
 		}
 	}
 
-	//TODO: We need to debug when we give it bad input. It doesn't do anything.
-	private Thread getModAdditionThread(List<Mod> mods) {
-		final Task<Result<Void>> TASK;
+	private Thread getModAdditionThread(List<Mod> modList) {
+		final Task<List<Result<Void>>> TASK;
 
-		if(mods.size() == 1) {
 			TASK = new Task<>() {
 				@Override
-				protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
-					return UI_SERVICE.fillOutModInformation(mods.getFirst());
+				protected List<Result<Void>> call() throws IOException, ExecutionException, InterruptedException {
+					return UI_SERVICE.fillOutModInformation(modList);
 				}
 			};
 
 			TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
 				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
 				//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
-				Result<Void> modScrapeResult = TASK.getValue();
+				List<Result<Void>> modInfoFillOutResults = TASK.getValue();
 
-				if (modScrapeResult.isSuccess()) {
-					modTable.sort();
-					//TODO: Popup success message and clear the UI progress bar/whatever we use
-				} else {
-					//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
-					// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
-					// Finally, select the very first of the added mods in the list
-					//TODO: Still need to populate rest of mod info fields
+				int successfulScrapes = 0;
+				int failedScrapes = 0;
+
+				for(int i = 0; i < modInfoFillOutResults.size(); i++) {
+					Result<Void> currentModInfoFillOutResult = modInfoFillOutResults.get(i);
+
+					if (currentModInfoFillOutResult.isSuccess()) {
+						successfulScrapes++;
+						modTable.sort();
+						//TODO: This might be unwanted behavior from users. Requires actual experience testing.
+						modTable.getSelectionModel().clearSelection();
+						modTable.getSelectionModel().select(modList.getFirst());
+						//TODO: Popup success message and clear the UI progress bar/whatever we use
+						// When we do the progress indicator stuff, we need to actually disable the dropdown comboboxes and reenable when done.
+					} else {
+						failedScrapes++;
+						//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
+						// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
+						// Finally, select the very first of the added mods in the list
+						//TODO: Still need to populate rest of mod info fields
+					}
+					UI_SERVICE.log(currentModInfoFillOutResult);
 				}
-				UI_SERVICE.log(modScrapeResult);
-				Popup.displaySimpleAlert(modScrapeResult, STAGE);
+
+				if(modList.size() == 1) {
+					Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
+				} else {
+					String modFillOutResultMessage = successfulScrapes + " mods were successfully added. " +
+							failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
+					Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
+				}
 			}));
-		} else {
-			return null;
-		}
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
