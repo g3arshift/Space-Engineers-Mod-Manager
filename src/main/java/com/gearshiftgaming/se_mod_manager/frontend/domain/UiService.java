@@ -13,6 +13,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
@@ -118,7 +120,7 @@ public class UiService {
 		log(result.getCurrentMessage(), messageType);
 	}
 
-	public <T> void log(Exception e) {
+	public void log(Exception e) {
 		log(String.valueOf(e), MessageType.ERROR);
 	}
 
@@ -180,18 +182,18 @@ public class UiService {
 		}
 	}
 
-	public void addModFromSteamId(String modId, Stage stage) {
-		//TODO: Allow parsing of URL's too.
-		Mod mod = new Mod(modId, ModType.STEAM);
-		Optional<Mod> duplicateMod = currentModList.stream()
-				.filter(mod1 -> mod.getId().equals(mod1.getId()))
-				.findFirst();
-		if(duplicateMod.isPresent()) {
-			Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
-		} else {
-			Thread singleModThread = getSingleModAddThread(mod, stage);
-			singleModThread.start();
+	public Result<Void> fillOutModInformation(Mod mod) throws IOException, ExecutionException, InterruptedException {
+		Result<Void> modInfoResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
+		if (modInfoResult.isSuccess()) {
+			mod.setLoadPriority(currentModList.size() + 1);
+			currentModList.add(mod);
+			currentModProfile.setModList(currentModList);
+			saveUserData();
+
+			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 		}
+
+		return modInfoResult;
 	}
 
 	public Result<List<Mod>> addModsFromSteamCollection() {
@@ -207,65 +209,5 @@ public class UiService {
 	public Result<List<Mod>> addModsFromFile() {
 		//TODO: Implement
 		return null;
-	}
-
-	//TODO: We need to debug when we give it bad input. It doesn't do anything.
-	private Thread getSingleModAddThread(Mod mod, Stage stage) {
-		final Task<Result<Void>> TASK = new Task<>() {
-			@Override
-			protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
-				Result<Void> modInfoResult = new Result<>();
-
-				if (mod.getModType() == ModType.STEAM) {
-					try {
-						//Calling .get on a future is a blocking task which is why we're calling it in a thread that'll get run by Platform.runlater
-						//modInfo = scrapedModInfo.get().split(" Workshop::");
-						MOD_INFO_CONTROLLER.fillOutModInformation(mod);
-					} catch (InterruptedException | ExecutionException e) {
-						throw new RuntimeException(e);
-					}
-				} else {
-					//TODO: REMOVE. TEST SETUP.
-					//TODO: Implement modIO stuff here.
-				}
-
-				//MOD_INFO_CONTROLLER.setModInformation(mod, modInfo);
-				if (mod.getFriendlyName().equals("_NOT_A_MOD")) {
-					modInfoResult.addMessage("The supplied Mod ID is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
-				} else {
-					modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
-				}
-				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
-				//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
-				return modInfoResult;
-			}
-		};
-
-		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-			Result<Void> modScrapeResult = TASK.getValue();
-
-			if (modScrapeResult.isSuccess()) {
-				//TODO: Save the changes
-				//TODO: Might need to do the modprofile trickery thing here. Like in the cell factories.
-				//TODO: Add duplicate mod check for if it's already in our modlist.
-				//TODO: Load priority is wrong. Need to fix that. ModListHelper might work, but we can also just set it to the size of the list for singles since it'll add at the end.
-				currentModList.add(mod);
-				currentModProfile.setModList(currentModList);
-				saveUserData();
-				//TODO: Popup success message and clear the UI progress bar/whatever we use
-			} else {
-				log(modScrapeResult);
-				//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
-				// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
-				// Finally, select the very first of the added mods in the list
-				//TODO: Still need to populate rest of mod info fields
-			}
-			log(modScrapeResult);
-			Popup.displaySimpleAlert(modScrapeResult, stage);
-		}));
-
-		Thread thread = Thread.ofVirtual().unstarted(TASK);
-		thread.setDaemon(true);
-		return thread;
 	}
 }

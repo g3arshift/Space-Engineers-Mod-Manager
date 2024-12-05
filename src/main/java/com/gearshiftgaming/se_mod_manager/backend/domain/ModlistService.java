@@ -52,6 +52,8 @@ public class ModlistService {
 
 	private final String STEAM_MOD_DESCRIPTION_SELECTOR;
 
+	private final String STEAM_MOD_NOT_FOUND_SELECTOR;
+
 	private final String MODIO_MOD_SCRAPING_SELECTOR;
 
 	private final String MOD_DATE_FORMAT;
@@ -71,14 +73,15 @@ public class ModlistService {
 		this.STEAM_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
 		this.STEAM_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
 		this.STEAM_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
+		this.STEAM_MOD_NOT_FOUND_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.notFound.cssSelector");
 
 		this.MODIO_MOD_SCRAPING_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
 
 		this.MOD_DATE_FORMAT = PROPERTIES.getProperty("semm.mod.dateFormat");
 	}
 
-	public void fillOutModInfoById(Mod mod) throws IOException, ExecutionException, InterruptedException {
-			generateModInformation(mod);
+	public Result<Void> fillOutModInfoById(Mod mod) throws IOException, ExecutionException, InterruptedException {
+		return generateModInformation(mod);
 	}
 
 	public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
@@ -96,36 +99,42 @@ public class ModlistService {
 		return result;
 	}
 
-	private void generateModInformation(Mod mod) {
-		Future<String[]> future;
-
+	private Result<Void> generateModInformation(Mod mod) {
+		Future<Result<String[]>> future;
+		Result<Void> modGenerationResult = new Result<>();
 		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-			future = executorService.submit(scrapeModInformation(mod));
+			future = executorService.submit(scrapeModInformation(mod.getId(), mod.getModType()));
 
-			String[] modInfo = future.get();
+			if (future.get().isSuccess()) {
+				String[] modInfo = future.get().getPayload();
 
-			mod.setFriendlyName(modInfo[0]);
+				mod.setFriendlyName(modInfo[0]);
 
-			DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-					.parseCaseInsensitive()
-					.appendPattern(MOD_DATE_FORMAT)
-					.toFormatter();
-			//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(MOD_DATE_FORMAT)
+						.toFormatter();
+				//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
 //			ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
 //			ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
 //			mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
-			mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+				mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
 
-			//TODO: We need to set mod description.
-			List<String> modTags = List.of(modInfo[2].split(","));
-			mod.setCategories(modTags);
+				List<String> modTags = List.of(modInfo[2].split(","));
+				mod.setCategories(modTags);
 
-			mod.setDescription(modInfo[3]);
+				mod.setDescription(modInfo[3]);
 
+				modGenerationResult.addMessage(future.get().getCurrentMessage(), future.get().getType());
+			} else {
+				modGenerationResult.addMessage(future.get().getCurrentMessage(), future.get().getType());
+			}
 			//TODO: Remove this catch
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			throw new RuntimeException(e);
+			modGenerationResult.addMessage(String.valueOf(e), ResultType.FAILED);
 		}
+
+		return modGenerationResult;
 	}
 
 	//Take in our list of mod ID's and fill out the rest of their fields.
@@ -160,60 +169,71 @@ public class ModlistService {
 
 	//TODO: This isn't even getting entered when we put in a very bad value
 	//Scrape the web pages of the mods we want the information from
-	private Callable<String[]> scrapeModInformation(Mod mod) throws IOException {
-		if (mod.getModType() == ModType.STEAM) {
-			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + mod.getId()).get();
-			//The first item is mod name, the second is last updated, and the third is a combined string of the tags.
-			String[] modInfo = new String[4];
-			String modName = modPage.title().split("Workshop::")[1];
-			modInfo[0] = modName + (checkIfModIsMod(mod, modPage) ? "" : "_NOT_A_MOD");
+	private Callable<Result<String[]>> scrapeModInformation(String modId, ModType modType) throws IOException {
+		Result<String[]> modScrapeResult = new Result<>();
+		if (modType == ModType.STEAM) {
+			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
 
-			String lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
-					"<div class=\"detailsStatRight\">\n ",
-					"\n</div>");
-			//Append a year if we don't find one.
-			Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
-			if(!yearPattern.matcher(lastUpdated).find()) {
-				String[] lastUpdatedParts = lastUpdated.split(" @ ");
-				lastUpdatedParts[0] += ", " + Year.now();
-				lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
-			}
-			modInfo[1] = lastUpdated;
+			System.out.println(StringUtils.substringBetween(modPage.select(STEAM_MOD_NOT_FOUND_SELECTOR).toString(), "<h3>", "</h3>"));
+			//The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
+			String extractedMissingModName = StringUtils.substringBetween(modPage.select(STEAM_MOD_NOT_FOUND_SELECTOR).toString(), "<h3>", "</h3>");
+			if (extractedMissingModName.equals("That item does not exist. It may have been removed by the author.")) {
+				modScrapeResult.addMessage("Item with ID \"" + modId + "\" cannot be found. It may have been removed by the author.", ResultType.FAILED);
+			} else {
+				String[] modInfo = new String[4];
+				String modName = modPage.title().split("Workshop::")[1];
+				if (checkIfModIsMod(modId, modType, modPage)) {
+					modInfo[0] = modName;
 
-			Element modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
-			List<String> modTags = new ArrayList<>();
-			for(int i = 1; i < modTagElement.childNodes().size(); i+=2) {
-				modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
-			}
-			StringBuilder concatenatedModTags = new StringBuilder();
-			for(int i = 0; i < modTags.size(); i++) {
-				if(i + 1 < modTags.size()) {
-					concatenatedModTags.append(modTags.get(i)).append(",");
+					String lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
+							"<div class=\"detailsStatRight\">\n ",
+							"\n</div>");
+					//Append a year if we don't find one.
+					Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
+					if (!yearPattern.matcher(lastUpdated).find()) {
+						String[] lastUpdatedParts = lastUpdated.split(" @ ");
+						lastUpdatedParts[0] += ", " + Year.now();
+						lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
+					}
+					modInfo[1] = lastUpdated;
+
+					Element modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
+					List<String> modTags = new ArrayList<>();
+					for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
+						modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
+					}
+					StringBuilder concatenatedModTags = new StringBuilder();
+					for (int i = 0; i < modTags.size(); i++) {
+						if (i + 1 < modTags.size()) {
+							concatenatedModTags.append(modTags.get(i)).append(",");
+						} else {
+							concatenatedModTags.append(modTags.get(i));
+						}
+					}
+					modInfo[2] = concatenatedModTags.toString();
+
+					modInfo[3] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
+
+					modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
+					modScrapeResult.setPayload(modInfo);
 				} else {
-					concatenatedModTags.append(modTags.get(i));
+					modScrapeResult.addMessage(modId + " is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
 				}
 			}
-			modInfo[2] = concatenatedModTags.toString();
-
-			//TODO: We need to scrape mode description too. We also need to actually get proper links and make them clickable in the mod description tab.
-			//TODO: This is the correct scrape, but full of the HTML stuff. We want to preserve links and make them hyperlinks in the mod description though.
-			modInfo[3] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
-
-			return () -> modInfo;
 		} else {
 			//TODO: Implement modIO stuff.
 			//TODO: REmove this, here for testing and figuring out how to get the mod info I need
-			Document doc = Jsoup.connect(MODIO_URL + mod.getId()).get();
+			Document doc = Jsoup.connect(MODIO_URL + modId).get();
 			System.out.println("Hold here");
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
-			return null;
 		}
+		return () -> modScrapeResult;
 	}
 
 	//Check if the mod we're scraping is actually a workshop mod.
 	//Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-	private boolean checkIfModIsMod(Mod mod, Document modPage) throws IOException {
-		if (mod.getModType() == ModType.STEAM) {
+	private boolean checkIfModIsMod(String modId, ModType modType, Document modPage) throws IOException {
+		if (modType == ModType.STEAM) {
 			return (modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Mod"));
 		} else {
 			//TODO: This all likely can be replaced with a document as well, same as above.
@@ -221,7 +241,7 @@ public class ModlistService {
 			Element element;
 
 			try {
-				driver.get(MODIO_URL + mod.getId());
+				driver.get(MODIO_URL + modId);
 				WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 				wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(MODIO_MOD_SCRAPING_SELECTOR)));
 

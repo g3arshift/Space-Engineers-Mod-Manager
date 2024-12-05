@@ -8,10 +8,12 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -19,6 +21,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -35,6 +38,7 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -44,10 +48,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -328,9 +331,22 @@ public class ModlistManagerView {
 	private void addModFromSteamId() {
 		setModAddingInputViewText("Steam Workshop Mod ID",
 				"Enter the Steam Workshop Mod ID",
-				"Mod ID");
+				"Mod ID",
+				"Mod ID cannot be blank!");
 		String modId = getUserModLocationInput();
-		UI_SERVICE.addModFromSteamId(modId, STAGE);
+
+		Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
+				.filter(mod -> modId.equals(mod.getId()))
+				.findFirst();
+		if (duplicateMod.isPresent()) {
+			Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+		} else {
+			Mod mod = new Mod(modId, ModType.STEAM);
+			Thread singleModThread = getSingleModAddThread(mod);
+			singleModThread.start();
+		}
+
+		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
 		//TODO: Get the progress indicator pane stuff from SaveManagerView and apply it here.
 		// Or, better yet, do a real progress bar! https://stackoverflow.com/questions/33394428/javafx-version-of-executorservice
 		// Might only need that for the collections though.
@@ -599,10 +615,11 @@ public class ModlistManagerView {
 		return ID_AND_URL_MOD_ADDITION_INPUT.getInput().getText();
 	}
 
-	private void setModAddingInputViewText(String title, String instructions, String promptText) {
+	private void setModAddingInputViewText(String title, String instructions, String promptText, String emptyTextMessage) {
 		ID_AND_URL_MOD_ADDITION_INPUT.setTitle(title);
 		ID_AND_URL_MOD_ADDITION_INPUT.setInputInstructions(instructions);
 		ID_AND_URL_MOD_ADDITION_INPUT.setPromptText(promptText);
+		ID_AND_URL_MOD_ADDITION_INPUT.setEmptyTextMessage(emptyTextMessage);
 	}
 
 	private void redirectHyperlinks() {
@@ -623,5 +640,37 @@ public class ModlistManagerView {
 				evt.preventDefault();
 			}, false);
 		}
+	}
+
+	//TODO: We need to debug when we give it bad input. It doesn't do anything.
+	private Thread getSingleModAddThread(Mod mod) {
+		final Task<Result<Void>> TASK = new Task<>() {
+			@Override
+			protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
+				return UI_SERVICE.fillOutModInformation(mod);
+			}
+		};
+
+		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
+			//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
+			//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
+			Result<Void> modScrapeResult = TASK.getValue();
+
+			if (modScrapeResult.isSuccess()) {
+				modTable.sort();
+				//TODO: Popup success message and clear the UI progress bar/whatever we use
+			} else {
+				//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
+				// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
+				// Finally, select the very first of the added mods in the list
+				//TODO: Still need to populate rest of mod info fields
+			}
+			UI_SERVICE.log(modScrapeResult);
+			Popup.displaySimpleAlert(modScrapeResult, STAGE);
+		}));
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
 	}
 }
