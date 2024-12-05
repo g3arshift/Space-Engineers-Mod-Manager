@@ -5,7 +5,9 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import javafx.application.Application;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -71,16 +73,17 @@ public class UiService {
 	@Getter
 	private final IntegerProperty activeModCount;
 
-	@Getter
-	private int modAdditionProgressNumerator;
 
-	@Getter
 	@Setter
-	private int modAdditionProgressDenominator;
+	private IntegerProperty modAdditionProgressNumerator;
 
-	@Getter
+
 	@Setter
-	private int modAdditionProgressPercentage;
+	private IntegerProperty modAdditionProgressDenominator;
+
+
+	@Setter
+	private DoubleProperty modAdditionProgressPercentage;
 
 	private final String MOD_DATE_FORMAT;
 
@@ -118,10 +121,6 @@ public class UiService {
 		//currentModProfile.getModList()
 		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
 		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
-
-		modAdditionProgressNumerator = 0;
-		modAdditionProgressDenominator = 0;
-		modAdditionProgressPercentage = 0;
 	}
 
 	public void log(String message, MessageType messageType) {
@@ -210,8 +209,10 @@ public class UiService {
 		}
 	}
 
+	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
+	// bars to work properly.
 	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
-		modAdditionProgressDenominator = modList.size();
+		modAdditionProgressDenominator.set(modList.size());
 		List<Future<Result<String[]>>> modInfoScrapingResults;
 		List<Result<Void>> modInfoResults = new ArrayList<>(modList.size());
 
@@ -249,10 +250,11 @@ public class UiService {
 				currentModInfoResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
 			}
 			modInfoResults.add(currentModInfoResult);
-			modAdditionProgressNumerator++;
-			modAdditionProgressPercentage = modAdditionProgressNumerator / modAdditionProgressDenominator;
+			modAdditionProgressNumerator.set(modAdditionProgressNumerator.get() + 1);
+			modAdditionProgressPercentage.set((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
 		}
 
+		currentModProfile.setModList(currentModList);
 		saveUserData();
 
 		return modInfoResults;
@@ -271,5 +273,38 @@ public class UiService {
 	public Result<List<Mod>> addModsFromFile() {
 		//TODO: Implement
 		return null;
+	}
+
+	public IntegerProperty getModAdditionProgressNumeratorProperty() {
+		if(modAdditionProgressNumerator == null) {
+			modAdditionProgressNumerator = new SimpleIntegerProperty(0);
+		}
+		return modAdditionProgressNumerator;
+	}
+
+	public int getModAdditionProgressNumerator() {
+		return modAdditionProgressNumerator.get();
+	}
+
+	public IntegerProperty getModAdditionProgressDenominatorProperty() {
+		if(modAdditionProgressDenominator == null) {
+			modAdditionProgressDenominator = new SimpleIntegerProperty(0);
+		}
+		return modAdditionProgressDenominator;
+	}
+
+	public int getModAdditionProgressDenominator() {
+		return modAdditionProgressDenominator.get();
+	}
+
+	public DoubleProperty getModAdditionProgressPercentageProperty() {
+		if(modAdditionProgressPercentage == null) {
+			modAdditionProgressPercentage = new SimpleDoubleProperty(0d);
+		}
+		return modAdditionProgressPercentage;
+	}
+
+	public double getModAdditionProgressPercentage() {
+		return modAdditionProgressPercentage.get();
 	}
 }

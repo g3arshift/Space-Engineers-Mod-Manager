@@ -58,7 +58,7 @@
                                  <graphic>
                                     <Label text="/">
                                        <graphic>
-                                          <Label fx:id="modProgressAdditionNumerator" text="0">
+                                          <Label fx:id="modAdditionProgressNumerator" text="0">
                                              <graphic>
                                                 <Label text="Mods processed:" />
                                              </graphic>

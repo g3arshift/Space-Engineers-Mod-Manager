@@ -38,7 +38,6 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -270,12 +269,16 @@ public class ModlistManagerView {
 
 		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
 		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+
+		modAdditionProgressNumerator.textProperty().bind(UI_SERVICE.getModAdditionProgressNumeratorProperty().asString());
+		modAdditionProgressDenominator.textProperty().bind(UI_SERVICE.getModAdditionProgressDenominatorProperty().asString());
+		modAdditionProgressBar.progressProperty().bind(UI_SERVICE.getModAdditionProgressPercentageProperty());
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
 	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
 	private void setupModTable(int modTableCellSize) {
-//Format the appearance, styling, and menu`s of our table cells, rows, and columns
+	//Format the appearance, styling, and menu`s of our table cells, rows, and columns
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
@@ -693,7 +696,7 @@ public class ModlistManagerView {
 			//TODO: Set modAdditionProgressPanel visible, disable all the context bar dropdowns, as well as the buttons and dropdowns here.
 			//TODO: We need to bind the mod progress labels to a variable in UI service and increment them in the service call.
 			TASK.setOnRunning(workerStateEvent -> {
-
+				modAdditionProgressPanel.setVisible(true);
 			});
 
 			TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
@@ -733,6 +736,12 @@ public class ModlistManagerView {
 							failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
 					Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
 				}
+
+				//TODO: Disable buttons and dropdowns
+				//TODO: Fade transition
+				//TODO: The text binding didn't work.
+				//TODO: Smooth out the progress bar movement with timeline events
+				modAdditionProgressPanel.setVisible(false);
 			}));
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
