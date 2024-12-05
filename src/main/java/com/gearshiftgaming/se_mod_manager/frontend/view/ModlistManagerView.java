@@ -45,6 +45,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
@@ -257,6 +258,7 @@ public class ModlistManagerView {
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
 	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
 	private void setupModTable(int modTableCellSize) {
+//Format the appearance, styling, and menu`s of our table cells, rows, and columns
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
@@ -265,13 +267,17 @@ public class ModlistManagerView {
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
 		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
-		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
+		//Create a comparator for the date column so it sorts properly.
 		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
+		modLastUpdated.setComparator((date1, date2) -> LocalDateTime.parse(date1, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT))
+				.compareTo(LocalDateTime.parse(date2, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT))));
 
 		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
 		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
+
+		//Perform some stylistic formatting for the tags/category column
 		modCategory.setCellValueFactory(cellData -> {
 			StringBuilder sb = new StringBuilder();
 			List<String> categories = cellData.getValue().getCategories();
@@ -285,7 +291,11 @@ public class ModlistManagerView {
 			return new SimpleStringProperty(sb.toString());
 		});
 
+		//Add a listener so that we can have some custom behavior on sorting
 		modTable.getSortOrder().addListener(sortListener);
+
+		//Update the mod contents by wrapping the observable list with a filtered list and then that filtered list with a sorted list.
+		//This gives us both sorting and searching.
 		updateModTableContents();
 
 		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
