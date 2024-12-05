@@ -2,18 +2,15 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -38,7 +35,6 @@ import java.util.regex.Pattern;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ModlistService {
-	private final Properties PROPERTIES;
 
 	private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
@@ -58,8 +54,6 @@ public class ModlistService {
 
 	private final String MODIO_MOD_SCRAPING_SELECTOR;
 
-	private final String MOD_DATE_FORMAT;
-
 
 	@Setter
 	@Getter
@@ -70,7 +64,6 @@ public class ModlistService {
 
 	public ModlistService(ModlistRepository MODLIST_REPOSITORY, Properties PROPERTIES) {
 		this.MODLIST_REPOSITORY = MODLIST_REPOSITORY;
-		this.PROPERTIES = PROPERTIES;
 		this.STEAM_MOD_TYPE_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
 		this.STEAM_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
 		this.STEAM_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
@@ -78,8 +71,6 @@ public class ModlistService {
 		this.STEAM_MOD_NOT_FOUND_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.notFound.cssSelector");
 
 		this.MODIO_MOD_SCRAPING_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
-
-		this.MOD_DATE_FORMAT = PROPERTIES.getProperty("semm.mod.dateFormat");
 	}
 
 	public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
@@ -97,52 +88,18 @@ public class ModlistService {
 		return result;
 	}
 
-	public List<Result<Void>> generateModInformation(List<Mod> mods) {
-		List<Future<Result<String[]>>> futures = new ArrayList<>(mods.size());
-		List<Result<Void>> modGenerationResults = new ArrayList<>(mods.size());
+	public List<Future<Result<String[]>>> generateModInformation(List<Mod> modList) {
+		List<Future<Result<String[]>>> futures = new ArrayList<>(modList.size());
 
 		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-			for (Mod m : mods) {
+			for (Mod m : modList) {
 				futures.add(executorService.submit(scrapeModInformation(m.getId(), m.getModType())));
 			}
-
-			for (int i = 0; i < mods.size(); i++) {
-				Result<Void> currentModGenerationResult = new Result<>();
-				Future<Result<String[]>> currentFuture = futures.get(i);
-				Mod currentMod = mods.get(i);
-				if (currentFuture.get().isSuccess()) {
-					String[] modInfo = currentFuture.get().getPayload();
-
-					currentMod.setFriendlyName(modInfo[0]);
-
-					DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-							.parseCaseInsensitive()
-							.appendPattern(MOD_DATE_FORMAT)
-							.toFormatter();
-					//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
-//				ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
-//				ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
-//				mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
-					currentMod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
-
-					List<String> modTags = List.of(modInfo[2].split(","));
-					currentMod.setCategories(modTags);
-
-					currentMod.setDescription(modInfo[3]);
-
-					currentModGenerationResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
-				} else {
-					currentModGenerationResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
-				}
-				modGenerationResults.add(currentModGenerationResult);
-			}
-		} catch (IOException | ExecutionException | InterruptedException e) {
-			Result<Void> modGenerationResult = new Result<>();
-			modGenerationResult.addMessage(String.valueOf(e), ResultType.FAILED);
-			modGenerationResults.add(modGenerationResult);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 
-		return modGenerationResults;
+		return futures;
 	}
 
 	//Take in our list of mod ID's and fill out the rest of their fields.

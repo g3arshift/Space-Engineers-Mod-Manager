@@ -27,6 +27,7 @@ import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -37,6 +38,7 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -131,6 +133,21 @@ public class ModlistManagerView {
 
 	@FXML
 	private ListView<LogMessage> viewableLog;
+
+	@FXML
+	private StackPane modAdditionProgressPanel;
+
+	@FXML
+	private ProgressBar modAdditionProgressBar;
+
+	@FXML
+	private ProgressIndicator modAdditionProgressIndicator;
+
+	@FXML
+	private Label modAdditionProgressNumerator;
+
+	@FXML
+	private Label modAdditionProgressDenominator;
 
 	private final UiService UI_SERVICE;
 
@@ -668,10 +685,16 @@ public class ModlistManagerView {
 
 			TASK = new Task<>() {
 				@Override
-				protected List<Result<Void>> call() throws IOException, ExecutionException, InterruptedException {
+				protected List<Result<Void>> call() throws ExecutionException, InterruptedException {
 					return UI_SERVICE.fillOutModInformation(modList);
 				}
 			};
+
+			//TODO: Set modAdditionProgressPanel visible, disable all the context bar dropdowns, as well as the buttons and dropdowns here.
+			//TODO: We need to bind the mod progress labels to a variable in UI service and increment them in the service call.
+			TASK.setOnRunning(workerStateEvent -> {
+
+			});
 
 			TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
 				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
@@ -681,9 +704,7 @@ public class ModlistManagerView {
 				int successfulScrapes = 0;
 				int failedScrapes = 0;
 
-				for(int i = 0; i < modInfoFillOutResults.size(); i++) {
-					Result<Void> currentModInfoFillOutResult = modInfoFillOutResults.get(i);
-
+				for (Result<Void> currentModInfoFillOutResult : modInfoFillOutResults) {
 					if (currentModInfoFillOutResult.isSuccess()) {
 						successfulScrapes++;
 						modTable.sort();
@@ -692,16 +713,19 @@ public class ModlistManagerView {
 						modTable.getSelectionModel().select(modList.getFirst());
 						//TODO: Popup success message and clear the UI progress bar/whatever we use
 						// When we do the progress indicator stuff, we need to actually disable the dropdown comboboxes and reenable when done.
+						UI_SERVICE.logPrivate(currentModInfoFillOutResult);
 					} else {
 						failedScrapes++;
 						//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
 						// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
 						// Finally, select the very first of the added mods in the list
 						//TODO: Still need to populate rest of mod info fields
+						UI_SERVICE.log(currentModInfoFillOutResult);
 					}
-					UI_SERVICE.log(currentModInfoFillOutResult);
 				}
 
+				//TODO: At the very end use a timeline event to do a smooth fadeout of the panel. And hold it up for a few seconds.
+				// Look at the mod table stuff for inspiration.
 				if(modList.size() == 1) {
 					Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
 				} else {

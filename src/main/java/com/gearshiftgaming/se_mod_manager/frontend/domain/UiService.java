@@ -4,18 +4,12 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -25,9 +19,15 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -71,9 +71,22 @@ public class UiService {
 	@Getter
 	private final IntegerProperty activeModCount;
 
+	@Getter
+	private int modAdditionProgressNumerator;
+
+	@Getter
+	@Setter
+	private int modAdditionProgressDenominator;
+
+	@Getter
+	@Setter
+	private int modAdditionProgressPercentage;
+
+	private final String MOD_DATE_FORMAT;
+
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-					 BackendStorageController backendStorageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION) {
+					 BackendStorageController backendStorageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
 
 		this.LOGGER = LOGGER;
 		this.MOD_INFO_CONTROLLER = modInfoController;
@@ -82,6 +95,8 @@ public class UiService {
 		this.SAVE_PROFILES = SAVE_PROFILES;
 		this.BACKEND_STORAGE_CONTROLLER = backendStorageController;
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
+
+		this.MOD_DATE_FORMAT = properties.getProperty("semm.mod.dateFormat");
 
 		//Initialize our current mod and save profiles
 		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
@@ -103,6 +118,10 @@ public class UiService {
 		//currentModProfile.getModList()
 		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
 		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
+
+		modAdditionProgressNumerator = 0;
+		modAdditionProgressDenominator = 0;
+		modAdditionProgressPercentage = 0;
 	}
 
 	public void log(String message, MessageType messageType) {
@@ -130,6 +149,15 @@ public class UiService {
 			case WARN -> LOGGER.warn(message);
 			case ERROR -> LOGGER.error(message);
 			case UNKNOWN -> LOGGER.error("ERROR UNKNOWN - " + message);
+		}
+	}
+
+	public <T> void logPrivate(Result<T> result) {
+		switch (result.getType()) {
+			case SUCCESS, CANCELLED -> LOGGER.info(result.getCurrentMessage());
+			case INVALID -> LOGGER.warn(result.getCurrentMessage());
+			case FAILED -> LOGGER.error(result.getCurrentMessage());
+			case NOT_INITIALIZED -> LOGGER.error("ERROR UNKNOWN - " + result.getCurrentMessage());
 		}
 	}
 
@@ -182,22 +210,50 @@ public class UiService {
 		}
 	}
 
-	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws IOException, ExecutionException, InterruptedException {
-		List<Result<Void>> modInfoResults = MOD_INFO_CONTROLLER.fillOutModInformation(modList);
+	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
+		modAdditionProgressDenominator = modList.size();
+		List<Future<Result<String[]>>> modInfoScrapingResults;
+		List<Result<Void>> modInfoResults = new ArrayList<>(modList.size());
 
-		for(int i = 0; i < modList.size(); i++) {
+		modInfoScrapingResults = MOD_INFO_CONTROLLER.fillOutModInformation(modList);
+
+		for (int i = 0; i < modList.size(); i++) {
+			Result<Void> currentModInfoResult = new Result<>();
+			Future<Result<String[]>> currentFuture = modInfoScrapingResults.get(i);
 			Mod currentMod = modList.get(i);
-			Result<Void> currentModInfoResult = modInfoResults.get(i);
+			if (currentFuture.get().isSuccess()) {
+				String[] modInfo = currentFuture.get().getPayload();
 
-			if (currentModInfoResult.isSuccess()) {
+				currentMod.setFriendlyName(modInfo[0]);
+
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(MOD_DATE_FORMAT)
+						.toFormatter();
+				//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
+//				ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
+//				ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
+//				mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
+				currentMod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+
+				List<String> modTags = List.of(modInfo[2].split(","));
+				currentMod.setCategories(modTags);
+
+				currentMod.setDescription(modInfo[3]);
+
 				currentMod.setLoadPriority(currentModList.size() + 1);
 				currentModList.add(currentMod);
-				currentModProfile.setModList(currentModList);
-				saveUserData();
 
 				currentModInfoResult.addMessage("Mod \"" + currentMod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
+			} else {
+				currentModInfoResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
 			}
+			modInfoResults.add(currentModInfoResult);
+			modAdditionProgressNumerator++;
+			modAdditionProgressPercentage = modAdditionProgressNumerator / modAdditionProgressDenominator;
 		}
+
+		saveUserData();
 
 		return modInfoResults;
 	}

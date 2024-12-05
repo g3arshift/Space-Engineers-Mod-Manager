@@ -89,7 +89,7 @@ public class ViewController {
 
 		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendStorageController, modInfoController, userConfiguration);
+		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendStorageController, modInfoController, userConfiguration, PROPERTIES);
 		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);

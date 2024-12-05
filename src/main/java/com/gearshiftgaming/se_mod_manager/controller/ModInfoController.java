@@ -5,10 +5,9 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -28,7 +27,7 @@ public class ModInfoController {
 	}
 
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
-	public List<Result<Void>> fillOutModInformation(List<Mod> modList) {
+	public List<Future<Result<String[]>>> fillOutModInformation(List<Mod> modList) {
 		//TODO:
 		// When we are implementing this, here is how we want it to flow. Total rewrite of this class.
 		// future.get is a blocking call. It will pause code execution until it's done.
