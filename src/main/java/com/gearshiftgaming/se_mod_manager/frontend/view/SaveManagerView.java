@@ -17,6 +17,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
@@ -60,7 +61,7 @@ public class SaveManagerView {
 	private Pane operationInProgressDimmer;
 
 	@FXML
-	private RingProgressIndicator progressIndicator;
+	private ProgressIndicator progressIndicator;
 
 	private Stage stage;
 
