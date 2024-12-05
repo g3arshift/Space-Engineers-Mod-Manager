@@ -115,9 +115,9 @@ public class ModlistService {
 						.appendPattern(MOD_DATE_FORMAT)
 						.toFormatter();
 				//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
-//			ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
-//			ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
-//			mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
+//				ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
+//				ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
+//				mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
 				mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
 
 				List<String> modTags = List.of(modInfo[2].split(","));
@@ -167,19 +167,17 @@ public class ModlistService {
 //		}
 //	}
 
-	//TODO: This isn't even getting entered when we put in a very bad value
 	//Scrape the web pages of the mods we want the information from
 	private Callable<Result<String[]>> scrapeModInformation(String modId, ModType modType) throws IOException {
 		Result<String[]> modScrapeResult = new Result<>();
 		if (modType == ModType.STEAM) {
 			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
 
-			System.out.println(StringUtils.substringBetween(modPage.select(STEAM_MOD_NOT_FOUND_SELECTOR).toString(), "<h3>", "</h3>"));
-			//The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
 			String extractedMissingModName = StringUtils.substringBetween(modPage.select(STEAM_MOD_NOT_FOUND_SELECTOR).toString(), "<h3>", "</h3>");
-			if (extractedMissingModName.equals("That item does not exist. It may have been removed by the author.")) {
+			if (extractedMissingModName != null && extractedMissingModName.equals("That item does not exist. It may have been removed by the author.")) {
 				modScrapeResult.addMessage("Item with ID \"" + modId + "\" cannot be found. It may have been removed by the author.", ResultType.FAILED);
 			} else {
+				//The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
 				String[] modInfo = new String[4];
 				String modName = modPage.title().split("Workshop::")[1];
 				if (checkIfModIsMod(modId, modType, modPage)) {
@@ -188,7 +186,7 @@ public class ModlistService {
 					String lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
 							"<div class=\"detailsStatRight\">\n ",
 							"\n</div>");
-					//Append a year if we don't find one.
+					//Append a year if we don't find one. This regex looks for any four contiguous digits.
 					Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
 					if (!yearPattern.matcher(lastUpdated).find()) {
 						String[] lastUpdatedParts = lastUpdated.split(" @ ");

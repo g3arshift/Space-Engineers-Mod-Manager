@@ -192,7 +192,6 @@ public class UiService {
 
 			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 		}
-
 		return modInfoResult;
 	}
 

@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
@@ -38,7 +37,6 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -51,6 +49,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -188,6 +189,8 @@ public class ModlistManagerView {
 
 	private final String MOD_DATE_FORMAT;
 
+	private final Pattern STEAM_WORKSHOP_ID_REGEX_PATTERN;
+
 	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
 							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modAdditionInputView) {
 		this.UI_SERVICE = uiService;
@@ -198,6 +201,7 @@ public class ModlistManagerView {
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_ADDITION_INPUT = modAdditionInputView;
+		this.STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile("([0-9])\\d*");
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -329,21 +333,29 @@ public class ModlistManagerView {
 	}
 
 	private void addModFromSteamId() {
-		setModAddingInputViewText("Steam Workshop Mod ID",
-				"Enter the Steam Workshop Mod ID",
-				"Mod ID",
+		setModAddingInputViewText("Steam Workshop Mod ID/ URL",
+				"Enter the Steam Workshop Mod ID or URL",
+				"Mod ID/Workshop URL",
 				"Mod ID cannot be blank!");
-		String modId = getUserModLocationInput();
+		String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(getUserModLocationInput())
+				.results()
+				.map(MatchResult::group)
+				.collect(Collectors.joining(""));
 
-		Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
-				.filter(mod -> modId.equals(mod.getId()))
-				.findFirst();
-		if (duplicateMod.isPresent()) {
-			Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
-		} else {
-			Mod mod = new Mod(modId, ModType.STEAM);
-			Thread singleModThread = getSingleModAddThread(mod);
-			singleModThread.start();
+		if(!modId.isEmpty()) {
+			Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
+					.filter(mod -> modId.equals(mod.getId()))
+					.findFirst();
+			if (duplicateMod.isPresent()) {
+				Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+			} else {
+				Mod mod = new Mod(modId, ModType.STEAM);
+				//This is a bit hacky, but it makes a LOT less code we need to maintain.
+				final Mod[] modList = new Mod[1];
+				modList[0] = mod;
+				Thread singleModThread = getModAdditionThread(List.of(modList));
+				singleModThread.start();
+			}
 		}
 
 		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
@@ -643,31 +655,37 @@ public class ModlistManagerView {
 	}
 
 	//TODO: We need to debug when we give it bad input. It doesn't do anything.
-	private Thread getSingleModAddThread(Mod mod) {
-		final Task<Result<Void>> TASK = new Task<>() {
-			@Override
-			protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
-				return UI_SERVICE.fillOutModInformation(mod);
-			}
-		};
+	private Thread getModAdditionThread(List<Mod> mods) {
+		final Task<Result<Void>> TASK;
 
-		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-			//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
-			//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
-			Result<Void> modScrapeResult = TASK.getValue();
+		if(mods.size() == 1) {
+			TASK = new Task<>() {
+				@Override
+				protected Result<Void> call() throws IOException, ExecutionException, InterruptedException {
+					return UI_SERVICE.fillOutModInformation(mods.getFirst());
+				}
+			};
 
-			if (modScrapeResult.isSuccess()) {
-				modTable.sort();
-				//TODO: Popup success message and clear the UI progress bar/whatever we use
-			} else {
-				//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
-				// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
-				// Finally, select the very first of the added mods in the list
-				//TODO: Still need to populate rest of mod info fields
-			}
-			UI_SERVICE.log(modScrapeResult);
-			Popup.displaySimpleAlert(modScrapeResult, STAGE);
-		}));
+			TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
+				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
+				//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
+				Result<Void> modScrapeResult = TASK.getValue();
+
+				if (modScrapeResult.isSuccess()) {
+					modTable.sort();
+					//TODO: Popup success message and clear the UI progress bar/whatever we use
+				} else {
+					//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
+					// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
+					// Finally, select the very first of the added mods in the list
+					//TODO: Still need to populate rest of mod info fields
+				}
+				UI_SERVICE.log(modScrapeResult);
+				Popup.displaySimpleAlert(modScrapeResult, STAGE);
+			}));
+		} else {
+			return null;
+		}
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
