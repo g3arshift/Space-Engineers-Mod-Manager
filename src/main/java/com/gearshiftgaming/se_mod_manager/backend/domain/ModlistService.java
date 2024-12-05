@@ -91,6 +91,7 @@ public class ModlistService {
 	public List<Future<Result<String[]>>> generateModInformation(List<Mod> modList) {
 		List<Future<Result<String[]>>> futures = new ArrayList<>(modList.size());
 
+		//TODO: Not sure if this catch will properly feed back up for each failed try...
 		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 			for (Mod m : modList) {
 				futures.add(executorService.submit(scrapeModInformation(m.getId(), m.getModType())));

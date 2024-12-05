@@ -270,6 +270,7 @@ public class ModlistManagerView {
 		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
 		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
 
+		//TODO: These aren't updating properly.
 		modAdditionProgressNumerator.textProperty().bind(UI_SERVICE.getModAdditionProgressNumeratorProperty().asString());
 		modAdditionProgressDenominator.textProperty().bind(UI_SERVICE.getModAdditionProgressDenominatorProperty().asString());
 		modAdditionProgressBar.progressProperty().bind(UI_SERVICE.getModAdditionProgressPercentageProperty());
@@ -741,6 +742,7 @@ public class ModlistManagerView {
 				//TODO: Fade transition
 				//TODO: The text binding didn't work.
 				//TODO: Smooth out the progress bar movement with timeline events
+				//TODO: Progress bar stuff isn't updating properly. Binding's aren't working.
 				modAdditionProgressPanel.setVisible(false);
 			}));
 
