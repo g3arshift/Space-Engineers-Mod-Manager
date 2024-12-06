@@ -139,9 +139,8 @@ public class ModlistService {
 		if (modType == ModType.STEAM) {
 			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
 
-			String extractedMissingModName = StringUtils.substringBetween(modPage.select(STEAM_MOD_NOT_FOUND_SELECTOR).toString(), "<h3>", "</h3>");
-			if (extractedMissingModName != null && extractedMissingModName.equals("That item does not exist. It may have been removed by the author.")) {
-				modScrapeResult.addMessage("Item with ID \"" + modId + "\" cannot be found. It may have been removed by the author.", ResultType.FAILED);
+			if (modPage.title().equals("Steam Community :: Error")) {
+				modScrapeResult.addMessage("Item with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
 			} else {
 				//The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
 				String[] modInfo = new String[4];

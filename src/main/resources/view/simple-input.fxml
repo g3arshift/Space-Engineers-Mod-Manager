@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -21,8 +21,8 @@
                   <Region HBox.hgrow="ALWAYS" />
                   <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                     <buttons>
-                      <Button fx:id="accept" mnemonicParsing="false" onAction="#acceptInput" text="OK" />
-                        <Button fx:id="cancel" cancelButton="true" mnemonicParsing="false" onAction="#closeWindow" text="Cancel" />
+                      <Button fx:id="accept" mnemonicParsing="false" text="OK" />
+                        <Button fx:id="cancel" cancelButton="true" mnemonicParsing="false" text="Cancel" />
                     </buttons>
                   </ButtonBar>
                </children>

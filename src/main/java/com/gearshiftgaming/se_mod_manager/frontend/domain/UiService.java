@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -212,7 +213,8 @@ public class UiService {
 	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
 	// bars to work properly.
 	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
-		modAdditionProgressDenominator.set(modList.size());
+		Platform.runLater(() -> modAdditionProgressDenominator.setValue(modList.size()));
+
 		List<Future<Result<String[]>>> modInfoScrapingResults;
 		List<Result<Void>> modInfoResults = new ArrayList<>(modList.size());
 
@@ -250,8 +252,11 @@ public class UiService {
 				currentModInfoResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
 			}
 			modInfoResults.add(currentModInfoResult);
-			modAdditionProgressNumerator.set(modAdditionProgressNumerator.get() + 1);
-			modAdditionProgressPercentage.set((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
+
+			Platform.runLater(() -> {
+				modAdditionProgressNumerator.setValue(modAdditionProgressNumerator.get() + 1);
+				modAdditionProgressPercentage.setValue((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
+			});
 		}
 
 		currentModProfile.setModList(currentModList);
@@ -276,10 +281,10 @@ public class UiService {
 	}
 
 	public IntegerProperty getModAdditionProgressNumeratorProperty() {
-		if(modAdditionProgressNumerator == null) {
-			modAdditionProgressNumerator = new SimpleIntegerProperty(0);
+		if (this.modAdditionProgressNumerator == null) {
+			this.modAdditionProgressNumerator = new SimpleIntegerProperty(0);
 		}
-		return modAdditionProgressNumerator;
+		return this.modAdditionProgressNumerator;
 	}
 
 	public int getModAdditionProgressNumerator() {
@@ -287,10 +292,10 @@ public class UiService {
 	}
 
 	public IntegerProperty getModAdditionProgressDenominatorProperty() {
-		if(modAdditionProgressDenominator == null) {
-			modAdditionProgressDenominator = new SimpleIntegerProperty(0);
+		if (this.modAdditionProgressDenominator == null) {
+			this.modAdditionProgressDenominator = new SimpleIntegerProperty(0);
 		}
-		return modAdditionProgressDenominator;
+		return this.modAdditionProgressDenominator;
 	}
 
 	public int getModAdditionProgressDenominator() {
@@ -298,7 +303,7 @@ public class UiService {
 	}
 
 	public DoubleProperty getModAdditionProgressPercentageProperty() {
-		if(modAdditionProgressPercentage == null) {
+		if (modAdditionProgressPercentage == null) {
 			modAdditionProgressPercentage = new SimpleDoubleProperty(0d);
 		}
 		return modAdditionProgressPercentage;

@@ -58,7 +58,7 @@ public class MainWindowView {
 	private final UserConfiguration USER_CONFIGURATION;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
-	private final ModTableContextBarView MENU_BAR_VIEW;
+	private final ModTableContextBarView CONTEXT_BAR_VIEW;
 
 	//This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
 	private final ModlistManagerView MODLIST_MANAGER_VIEW;
@@ -72,7 +72,7 @@ public class MainWindowView {
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
 		this.UI_SERVICE = uiService;
-		this.MENU_BAR_VIEW = modTableContextBarView;
+		this.CONTEXT_BAR_VIEW = modTableContextBarView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
 	}
@@ -80,8 +80,9 @@ public class MainWindowView {
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
-		MENU_BAR_VIEW.initView();
-		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle(), Integer.parseInt(PROPERTIES.getProperty("semm.modTable.cellSize")));
+		CONTEXT_BAR_VIEW.initView();
+		MODLIST_MANAGER_VIEW.initView(CONTEXT_BAR_VIEW.getLogToggle(), CONTEXT_BAR_VIEW.getModDescriptionToggle(), Integer.parseInt(PROPERTIES.getProperty("semm.modTable.cellSize")),
+				CONTEXT_BAR_VIEW.getModProfileDropdown(), CONTEXT_BAR_VIEW.getSaveProfileDropdown(), CONTEXT_BAR_VIEW.getModTableSearchField());
 		STATUS_BAR_VIEW.initView();
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);

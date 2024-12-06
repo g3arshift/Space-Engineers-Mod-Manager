@@ -91,6 +91,7 @@ public class ModTableContextBarView {
 	private Label modConflicts;
 
 	@FXML
+	@Getter
 	private TextField modTableSearchField;
 
 	@FXML

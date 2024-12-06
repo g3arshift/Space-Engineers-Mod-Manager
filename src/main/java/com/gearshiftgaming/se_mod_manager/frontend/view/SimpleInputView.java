@@ -46,6 +46,9 @@ public class SimpleInputView {
     @Setter
     private String emptyTextMessage;
 
+    @Getter
+    private String lastPressedButtonId;
+
     public void initView(Parent root) {
         Scene scene = new Scene(root);
         emptyTextMessage = "Profile name cannot be empty!";
@@ -56,6 +59,18 @@ public class SimpleInputView {
         stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
         stage.setScene(scene);
+
+        accept.setOnAction(actionEvent -> {
+            Button btn = (Button) actionEvent.getSource();
+            lastPressedButtonId = btn.getId();
+            acceptInput();
+        });
+
+        cancel.setOnAction(actionEvent -> {
+            Button btn = (Button) actionEvent.getSource();
+            lastPressedButtonId = btn.getId();
+            closeWindow();
+        });
     }
 
     @FXML

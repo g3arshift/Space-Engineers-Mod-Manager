@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -28,6 +29,7 @@ import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -67,6 +69,12 @@ public class ModlistManagerView {
 	private ComboBox<String> modImportDropdown;
 
 	@FXML
+	private Button manageModProfiles;
+
+	@FXML
+	private Button manageSaveProfiles;
+
+	@FXML
 	private Button importModlist;
 
 	@FXML
@@ -76,7 +84,7 @@ public class ModlistManagerView {
 	private Button resetModlist;
 
 	@FXML
-	private Button injectModlist;
+	private Button applyModlist;
 
 	@FXML
 	private Button launchSpaceEngineers;
@@ -148,6 +156,9 @@ public class ModlistManagerView {
 	@FXML
 	private Label modAdditionProgressDenominator;
 
+	@FXML
+	private ProgressIndicator modAdditionProgressWheel;
+
 	private final UiService UI_SERVICE;
 
 	private final ObservableList<LogMessage> USER_LOG;
@@ -208,6 +219,12 @@ public class ModlistManagerView {
 
 	private final Pattern STEAM_WORKSHOP_ID_REGEX_PATTERN;
 
+	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
+	private ComboBox<ModProfile> modProfileDropdown;
+	private ComboBox<SaveProfile> saveProfileDropdown;
+	private TextField modTableSearchField;
+
+
 	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
 							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modAdditionInputView) {
 		this.UI_SERVICE = uiService;
@@ -231,9 +248,14 @@ public class ModlistManagerView {
 		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 	}
 
-	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize) {
+	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
+						 ComboBox<ModProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
 		this.logToggle = logToggle;
 		this.modDescriptionToggle = modDescriptionToggle;
+
+		this.modProfileDropdown = modProfileDropdown;
+		this.saveProfileDropdown = saveProfileDropdown;
+		this.modTableSearchField = modTableSearchField;
 
 		sortListener = change -> {
 			if (modTable.getSortOrder().isEmpty()) {
@@ -279,7 +301,7 @@ public class ModlistManagerView {
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
 	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
 	private void setupModTable(int modTableCellSize) {
-	//Format the appearance, styling, and menu`s of our table cells, rows, and columns
+		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
 
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
@@ -368,32 +390,46 @@ public class ModlistManagerView {
 				"Enter the Steam Workshop Mod ID or URL",
 				"Mod ID/Workshop URL",
 				"Mod ID cannot be blank!");
-		String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(getUserModLocationInput())
-				.results()
-				.map(MatchResult::group)
-				.collect(Collectors.joining(""));
 
-		//This condition handles us hitting cancel on the input view
-		if(!modId.isEmpty()) {
-			Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
-					.filter(mod -> modId.equals(mod.getId()))
-					.findFirst();
-			if (duplicateMod.isPresent()) {
-				Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+		boolean goodModId = false;
+
+		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
+		do {
+			String userInputModId = getUserModIdInput();
+			if (ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId().equals("accept")) {
+				if (!StringUtils.isAlpha(userInputModId)) {
+					String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(userInputModId)
+							.results()
+							.map(MatchResult::group)
+							.collect(Collectors.joining(""));
+
+					if (!modId.isEmpty()) {
+						Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
+								.filter(mod -> modId.equals(mod.getId()))
+								.findFirst();
+						if (duplicateMod.isPresent()) {
+							Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+						} else {
+							Mod mod = new Mod(modId, ModType.STEAM);
+							//This is a bit hacky, but it makes a LOT less code we need to maintain.
+							final Mod[] modList = new Mod[1];
+							modList[0] = mod;
+							Thread singleModThread = getModAdditionThread(List.of(modList));
+							singleModThread.start();
+							goodModId = true;
+						}
+					} else {
+						Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
+					}
+				} else {
+					Popup.displaySimpleAlert("Mod ID must contain a number!", MessageType.WARN);
+				}
 			} else {
-				Mod mod = new Mod(modId, ModType.STEAM);
-				//This is a bit hacky, but it makes a LOT less code we need to maintain.
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				Thread singleModThread = getModAdditionThread(List.of(modList));
-				singleModThread.start();
+				goodModId = true;
 			}
-		}
+		} while (!goodModId);
 
 		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
-		//TODO: Get the progress indicator pane stuff from SaveManagerView and apply it here.
-		// Or, better yet, do a real progress bar! https://stackoverflow.com/questions/33394428/javafx-version-of-executorservice
-		// Might only need that for the collections though.
 	}
 
 	private void addModsFromSteamCollection() {
@@ -652,7 +688,7 @@ public class ModlistManagerView {
 		modTable.setItems(sortedList);
 	}
 
-	private String getUserModLocationInput() {
+	private String getUserModIdInput() {
 		ID_AND_URL_MOD_ADDITION_INPUT.show();
 		return ID_AND_URL_MOD_ADDITION_INPUT.getInput().getText();
 	}
@@ -687,64 +723,95 @@ public class ModlistManagerView {
 	private Thread getModAdditionThread(List<Mod> modList) {
 		final Task<List<Result<Void>>> TASK;
 
-			TASK = new Task<>() {
-				@Override
-				protected List<Result<Void>> call() throws ExecutionException, InterruptedException {
-					return UI_SERVICE.fillOutModInformation(modList);
-				}
-			};
+		TASK = new Task<>() {
+			@Override
+			protected List<Result<Void>> call() throws ExecutionException, InterruptedException {
+				return UI_SERVICE.fillOutModInformation(modList);
+			}
+		};
 
-			//TODO: Set modAdditionProgressPanel visible, disable all the context bar dropdowns, as well as the buttons and dropdowns here.
-			//TODO: We need to bind the mod progress labels to a variable in UI service and increment them in the service call.
-			TASK.setOnRunning(workerStateEvent -> {
-				modAdditionProgressPanel.setVisible(true);
+		TASK.setOnRunning(workerStateEvent -> {
+
+			//We lockout the user input here, essentially, to prevent the s
+			modAdditionProgressPanel.setVisible(true);
+			modImportDropdown.setDisable(true);
+			manageModProfiles.setDisable(true);
+			manageSaveProfiles.setDisable(true);
+			importModlist.setDisable(true);
+			exportModlist.setDisable(true);
+			applyModlist.setDisable(true);
+			launchSpaceEngineers.setDisable(true);
+
+			modProfileDropdown.setDisable(true);
+			saveProfileDropdown.setDisable(true);
+			modTableSearchField.setDisable(true);
+		});
+
+		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
+			modAdditionProgressWheel.setVisible(false);
+			List<Result<Void>> modInfoFillOutResults = TASK.getValue();
+
+			int successfulScrapes = 0;
+			int failedScrapes = 0;
+
+			for (Result<Void> currentModInfoFillOutResult : modInfoFillOutResults) {
+				if (currentModInfoFillOutResult.isSuccess()) {
+					successfulScrapes++;
+					modTable.sort();
+					//TODO: This might be unwanted behavior from users. Requires actual experience testing.
+					modTable.getSelectionModel().clearSelection();
+					modTable.getSelectionModel().select(modList.getFirst());
+					UI_SERVICE.logPrivate(currentModInfoFillOutResult);
+				} else {
+					failedScrapes++;
+					UI_SERVICE.log(currentModInfoFillOutResult);
+				}
+			}
+
+			//TODO: At the very end use a timeline event to do a smooth fadeout of the panel. And hold it up for a few seconds.
+			// Look at the mod table stuff for inspiration.
+			if (modList.size() == 1) {
+				Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
+			} else {
+				String modFillOutResultMessage = successfulScrapes + " mods were successfully added. " +
+						failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
+				Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
+				UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
+			}
+
+			//TODO: Disable buttons and dropdowns
+			//TODO: Smooth out the progress bar movement with timeline events
+
+			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
+			//Reset our UI settings for the mod progress
+			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modAdditionProgressPanel);
+			fadeTransition.setFromValue(1d);
+			fadeTransition.setToValue(0d);
+
+			fadeTransition.setOnFinished(actionEvent -> {
+				modAdditionProgressPanel.setVisible(false);
+				modAdditionProgressPanel.setOpacity(1d);
+
+				modImportDropdown.setDisable(false);
+				manageModProfiles.setDisable(false);
+				manageSaveProfiles.setDisable(false);
+				importModlist.setDisable(false);
+				exportModlist.setDisable(false);
+				applyModlist.setDisable(false);
+				launchSpaceEngineers.setDisable(false);
+
+				modProfileDropdown.setDisable(false);
+				saveProfileDropdown.setDisable(false);
+				modTableSearchField.setDisable(false);
+
+				UI_SERVICE.getModAdditionProgressNumeratorProperty().setValue(0);
+				UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(0);
+				UI_SERVICE.getModAdditionProgressPercentageProperty().setValue(0d);
+				modAdditionProgressWheel.setVisible(true);
 			});
 
-			TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-				//TODO: Update some UI element here to indicate progress. pass or fail, update it as complete.
-				//TODO: The whole UI needs to get locked out with some half-opaque progress pane, or bar in the middle of a pane, because you can really fuck it up otherwise
-				List<Result<Void>> modInfoFillOutResults = TASK.getValue();
-
-				int successfulScrapes = 0;
-				int failedScrapes = 0;
-
-				for (Result<Void> currentModInfoFillOutResult : modInfoFillOutResults) {
-					if (currentModInfoFillOutResult.isSuccess()) {
-						successfulScrapes++;
-						modTable.sort();
-						//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-						modTable.getSelectionModel().clearSelection();
-						modTable.getSelectionModel().select(modList.getFirst());
-						//TODO: Popup success message and clear the UI progress bar/whatever we use
-						// When we do the progress indicator stuff, we need to actually disable the dropdown comboboxes and reenable when done.
-						UI_SERVICE.logPrivate(currentModInfoFillOutResult);
-					} else {
-						failedScrapes++;
-						//TODO: When mods fail, first display a popup with the successful number of mods added, then display a popup with the summarized failures.
-						// Then add the mod to our list, and save it. Might need a reference to sorted list, or maybe can just directly use observable list. Or filteredList.getSource().
-						// Finally, select the very first of the added mods in the list
-						//TODO: Still need to populate rest of mod info fields
-						UI_SERVICE.log(currentModInfoFillOutResult);
-					}
-				}
-
-				//TODO: At the very end use a timeline event to do a smooth fadeout of the panel. And hold it up for a few seconds.
-				// Look at the mod table stuff for inspiration.
-				if(modList.size() == 1) {
-					Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
-				} else {
-					String modFillOutResultMessage = successfulScrapes + " mods were successfully added. " +
-							failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
-					Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
-				}
-
-				//TODO: Disable buttons and dropdowns
-				//TODO: Fade transition
-				//TODO: The text binding didn't work.
-				//TODO: Smooth out the progress bar movement with timeline events
-				//TODO: Progress bar stuff isn't updating properly. Binding's aren't working.
-				modAdditionProgressPanel.setVisible(false);
-			}));
+			fadeTransition.play();
+		}));
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
