@@ -71,6 +71,8 @@ public class SimpleInputView {
             lastPressedButtonId = btn.getId();
             closeWindow();
         });
+
+        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
     }
 
     @FXML

@@ -73,6 +73,8 @@ public class SaveInputView {
         stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
         saveName.setText("No save selected");
+
+        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
     }
 
 

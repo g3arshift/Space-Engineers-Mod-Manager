@@ -394,9 +394,13 @@ public class ModlistManagerView {
 		boolean goodModId = false;
 
 		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
+		//It first checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
+		//It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
+		//Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
 		do {
 			String userInputModId = getUserModIdInput();
-			if (ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId().equals("accept")) {
+			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
+			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
 				if (!StringUtils.isAlpha(userInputModId)) {
 					String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(userInputModId)
 							.results()
@@ -732,7 +736,7 @@ public class ModlistManagerView {
 
 		TASK.setOnRunning(workerStateEvent -> {
 
-			//We lockout the user input here, essentially, to prevent the s
+			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
 			modAdditionProgressPanel.setVisible(true);
 			modImportDropdown.setDisable(true);
 			manageModProfiles.setDisable(true);
