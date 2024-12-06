@@ -103,36 +103,6 @@ public class ModlistService {
 		return futures;
 	}
 
-	//Take in our list of mod ID's and fill out the rest of their fields.
-//	private void generateModListInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
-//		List<Future<String[]>> futures = new ArrayList<>(modList.size());
-//
-//		//Create multiple virtual threads to efficiently scrape the page. We're using virtual ones here since this is IO intensive, not CPU
-//		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-//			for (Mod m : modList) {
-//				futures.add(executorService.submit(scrapeModInformation(m)));
-//			}
-//			//TODO: Remove this catch
-//		} catch (IOException e) {
-//			throw new RuntimeException(e);
-//		}
-//
-//		for (int i = 0; i < modList.size(); i++) {
-//			//TODO: Is this supposed to have a space?
-//			//String[] modInfo = futures.get(i).get().split(" Workshop::");
-//			//setModInformation(modList.get(i), modInfo);
-//		}
-//	}
-
-//	public void setModInformation(Mod mod, String[] modInfo) {
-//		if (modInfo[0].contains("_NOT_A_MOD")) {
-//			mod.setFriendlyName(modInfo[0]);
-//		} else {
-//			mod.setPublishedServiceName(modInfo[0]);
-//			mod.setFriendlyName(modInfo[1]);
-//		}
-//	}
-
 	//Scrape the web pages of the mods we want the information from
 	private Callable<Result<String[]>> scrapeModInformation(String modId, ModType modType) throws IOException {
 		Result<String[]> modScrapeResult = new Result<>();

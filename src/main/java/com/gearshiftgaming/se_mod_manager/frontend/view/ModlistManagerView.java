@@ -600,7 +600,7 @@ public class ModlistManagerView {
 				//We disable the transfer mode here since we know that if we're scrolling we're outside the valid drop zone
 				dragEvent.acceptTransferModes(TransferMode.NONE);
 				scrollTimeline = new Timeline(
-						new KeyFrame(Duration.millis(16), e -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
+						new KeyFrame(Duration.millis(16), actionEvent -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
 							double newValue = modTableVerticalScrollBar.getValue() + scrollAmount;
 							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
 							modTableVerticalScrollBar.setValue(newValue);
@@ -772,8 +772,6 @@ public class ModlistManagerView {
 				}
 			}
 
-			//TODO: At the very end use a timeline event to do a smooth fadeout of the panel. And hold it up for a few seconds.
-			// Look at the mod table stuff for inspiration.
 			if (modList.size() == 1) {
 				Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
 			} else {
@@ -782,9 +780,6 @@ public class ModlistManagerView {
 				Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
 				UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
 			}
-
-			//TODO: Disable buttons and dropdowns
-			//TODO: Smooth out the progress bar movement with timeline events
 
 			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
 			//Reset our UI settings for the mod progress
