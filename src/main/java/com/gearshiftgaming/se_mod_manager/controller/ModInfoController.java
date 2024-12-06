@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Future;
@@ -29,5 +30,9 @@ public class ModInfoController {
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
 	public List<Future<Result<String[]>>> fillOutModInformation(List<Mod> modList) {
 		return MODLIST_SERVICE.generateModInformation(modList);
+	}
+
+	public List<Result<String>> scrapeSteamModCollectionModList(URL collectionUrl) {
+		return null;
 	}
 }

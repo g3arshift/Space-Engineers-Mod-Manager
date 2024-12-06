@@ -235,7 +235,7 @@ public class ModlistManagerView {
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_ADDITION_INPUT = modAdditionInputView;
-		this.STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile("([0-9])\\d*");
+		this.STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile("(id=[0-9])\\d*");
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -385,61 +385,28 @@ public class ModlistManagerView {
 		}
 	}
 
+
 	private void addModFromSteamId() {
 		setModAddingInputViewText("Steam Workshop Mod ID/ URL",
 				"Enter the Steam Workshop Mod ID or URL",
 				"Mod ID/Workshop URL",
 				"Mod ID cannot be blank!");
 
-		boolean goodModId = false;
 
-		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
-		//It first checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
-		//It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
-		//Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
-		do {
-			String userInputModId = getUserModIdInput();
-			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
-			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
-				if (!StringUtils.isAlpha(userInputModId)) {
-					String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(userInputModId)
-							.results()
-							.map(MatchResult::group)
-							.collect(Collectors.joining(""));
+		Mod mod = new Mod(getModIdFromUser(), ModType.STEAM);
 
-					if (!modId.isEmpty()) {
-						Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
-								.filter(mod -> modId.equals(mod.getId()))
-								.findFirst();
-						if (duplicateMod.isPresent()) {
-							Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
-						} else {
-							Mod mod = new Mod(modId, ModType.STEAM);
-							//This is a bit hacky, but it makes a LOT less code we need to maintain.
-							final Mod[] modList = new Mod[1];
-							modList[0] = mod;
-							Thread singleModThread = getModAdditionThread(List.of(modList));
-							singleModThread.start();
-							goodModId = true;
-						}
-					} else {
-						Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
-					}
-				} else {
-					Popup.displaySimpleAlert("Mod ID must contain a number!", MessageType.WARN);
-				}
-			} else {
-				goodModId = true;
-			}
-		} while (!goodModId);
-
-		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
+		//This is a bit hacky, but it makes a LOT less code we need to maintain.
+		final Mod[] modList = new Mod[1];
+		modList[0] = mod;
+		Thread modAdditionThread = getModAdditionThread(List.of(modList));
+		modAdditionThread.start();
 	}
 
 	private void addModsFromSteamCollection() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		//TODO: The actual adding to the modlist should happen here
-		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromSteamWorkshopCollection();
+		getModIdFromUser();
+		//List<Result<String>> collectionIdScrapeResults = UI_SERVICE.scrapeSteamModCollectionModList();
 	}
 
 	private void addModFromModIoId() {
@@ -454,8 +421,58 @@ public class ModlistManagerView {
 		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
 	}
 
+	private String getModIdFromUser() {
+		boolean goodModId = false;
+		String chosenModId = "";
+
+		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
+		//It first checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
+		//It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
+		//Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
+		do {
+			String userInputModId = getUserModIdInput();
+			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
+			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
+				if (!StringUtils.isAlpha(userInputModId)) {
+					String modId;
+					if (StringUtils.isNumeric(userInputModId)) {
+						modId = userInputModId;
+					} else {
+						modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(userInputModId)
+								.results()
+								.map(MatchResult::group)
+								.collect(Collectors.joining(""))
+								.substring(3);
+					}
+
+					if (!modId.isEmpty()) {
+						Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
+								.filter(mod -> modId.equals(mod.getId()))
+								.findFirst();
+						if (duplicateMod.isPresent()) {
+							Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+						} else {
+							chosenModId = modId;
+							goodModId = true;
+						}
+					} else {
+						Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
+					}
+				} else {
+					Popup.displaySimpleAlert("Mod ID must contain a number!", MessageType.WARN);
+				}
+			} else {
+				goodModId = true;
+			}
+		} while (!goodModId);
+
+		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
+
+		return chosenModId;
+	}
+
 	@FXML
-	private void manageModProfiles() throws InterruptedException {
+	private void manageModProfiles() {
 		MOD_PROFILE_MANAGER_VIEW.show();
 	}
 

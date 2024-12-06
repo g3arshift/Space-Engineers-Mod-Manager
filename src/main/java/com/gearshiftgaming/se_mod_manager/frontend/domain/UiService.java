@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -212,6 +213,11 @@ public class UiService {
 
 	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
 	// bars to work properly.
+
+	public List<Result<String>> scrapeSteamModCollectionModList (URL collectionUrl) {
+		//MOD_INFO_CONTROLLER.
+		return null;
+	}
 	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
 		Platform.runLater(() -> modAdditionProgressDenominator.setValue(modList.size()));
 
