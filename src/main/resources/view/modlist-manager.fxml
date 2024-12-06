@@ -56,17 +56,18 @@
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </StackPane.margin>
                                  <graphic>
-                                    <Label text="/">
+                                    <Label fx:id="modAdditionProgressDivider" text="/">
                                        <graphic>
                                           <Label fx:id="modAdditionProgressNumerator" text="0">
                                              <graphic>
-                                                <Label text="Mods processed:" />
+                                                <Label fx:id="modAdditionProgressActionName" text="Mods processed:" />
                                              </graphic>
                                           </Label>
                                        </graphic>
                                     </Label>
                                  </graphic>
                               </Label>
+                              <Label fx:id="modAdditionSteamCollectionName" text="Processing Steam Collection..." />
                            </children>
                         </StackPane>
                         <ProgressIndicator fx:id="modAdditionProgressWheel" prefHeight="60.0" prefWidth="29.0" />

@@ -11,6 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -25,7 +27,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -46,14 +50,19 @@ public class ModlistService {
 
 	private final String STEAM_MOD_LAST_UPDATED_SELECTOR;
 
+	private final String STEAM_MOD_FIRST_POSTED_SELECTOR;
+
 	private final String STEAM_MOD_TAGS_SELECTOR;
 
 	private final String STEAM_MOD_DESCRIPTION_SELECTOR;
 
-	private final String STEAM_MOD_NOT_FOUND_SELECTOR;
+	private final String STEAM_COLLECTION_GAME_NAME_SELECTOR;
+
+	private final String STEAM_COLLECTION_MOD_ID_SELECTOR;
+
+	private final String STEAM_COLLECTION_VERIFICATION_SELECTOR;
 
 	private final String MODIO_MOD_SCRAPING_SELECTOR;
-
 
 	@Setter
 	@Getter
@@ -66,9 +75,12 @@ public class ModlistService {
 		this.MODLIST_REPOSITORY = MODLIST_REPOSITORY;
 		this.STEAM_MOD_TYPE_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
 		this.STEAM_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
+		this.STEAM_MOD_FIRST_POSTED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
 		this.STEAM_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
 		this.STEAM_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
-		this.STEAM_MOD_NOT_FOUND_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.notFound.cssSelector");
+		this.STEAM_COLLECTION_GAME_NAME_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
+		this.STEAM_COLLECTION_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
+		this.STEAM_COLLECTION_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
 		this.MODIO_MOD_SCRAPING_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
 	}
@@ -88,10 +100,51 @@ public class ModlistService {
 		return result;
 	}
 
-	public List<Future<Result<String[]>>> generateModInformation(List<Mod> modList) {
+	public List<Result<String>> scrapeSteamCollectionModIds(String collectionId) throws IOException {
+		Pattern steamCollectionModIdFromHtml = Pattern.compile("(id=[0-9])\\d*");
+		List<Result<String>> modIdScrapeResults = new ArrayList<>();
+
+		Document collectionPage = Jsoup.connect(STEAM_WORKSHOP_URL + collectionId).get();
+
+		String gameName = collectionPage.select(STEAM_COLLECTION_GAME_NAME_SELECTOR).getFirst().childNodes().getFirst().toString().trim();
+		String foundBreadcrumbName = collectionPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString();
+		if (!gameName.equals("Space Engineers")) {
+			Result<String> wrongGameResult = new Result<>();
+			wrongGameResult.addMessage("The collection must be a Space Engineers collection!", ResultType.FAILED);
+			modIdScrapeResults.add(wrongGameResult);
+		} else if (!foundBreadcrumbName.equals("Collections")) {
+			Result<String> notACollectionResult = new Result<>();
+			notACollectionResult.addMessage("You must provide a link or ID of a collection!", ResultType.FAILED);
+			modIdScrapeResults.add(notACollectionResult);
+		} else {
+			Elements elements = collectionPage.select(STEAM_COLLECTION_MOD_ID_SELECTOR);
+			List<Node> nodes = elements.getFirst().childNodes();
+
+			for (int i = 3; i < nodes.size(); i += 4) {
+				Result<String> modIdResult = new Result<>();
+
+				try {
+					String modId = steamCollectionModIdFromHtml.matcher(nodes.get(i).childNodes().get(1).toString())
+							.results()
+							.map(MatchResult::group)
+							.collect(Collectors.joining())
+							.substring(3);
+					modIdResult.addMessage("Successfully grabbed mod ID.", ResultType.SUCCESS);
+					modIdResult.setPayload(modId);
+				} catch (RuntimeException e) {
+					modIdResult.addMessage("Failed to grab mod ID.\n" + e, ResultType.FAILED);
+				}
+
+				modIdScrapeResults.add(modIdResult);
+			}
+		}
+
+		return modIdScrapeResults;
+	}
+
+	public List<Future<Result<String[]>>> generateModInformation(@NotNull List<Mod> modList) {
 		List<Future<Result<String[]>>> futures = new ArrayList<>(modList.size());
 
-		//TODO: Not sure if this catch will properly feed back up for each failed try...
 		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 			for (Mod m : modList) {
 				futures.add(executorService.submit(scrapeModInformation(m.getId(), m.getModType())));
@@ -118,9 +171,17 @@ public class ModlistService {
 				if (checkIfModIsMod(modId, modType, modPage)) {
 					modInfo[0] = modName;
 
-					String lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
-							"<div class=\"detailsStatRight\">\n ",
-							"\n</div>");
+					String lastUpdated;
+					if (modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).isEmpty()) {
+						lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_FIRST_POSTED_SELECTOR).toString(),
+								"<div class=\"detailsStatRight\">\n ",
+								"\n</div>");
+					} else {
+						lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
+								"<div class=\"detailsStatRight\">\n ",
+								"\n</div>");
+					}
+
 					//Append a year if we don't find one. This regex looks for any four contiguous digits.
 					Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
 					if (!yearPattern.matcher(lastUpdated).find()) {
@@ -130,18 +191,31 @@ public class ModlistService {
 					}
 					modInfo[1] = lastUpdated;
 
-					Element modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
-					List<String> modTags = new ArrayList<>();
-					for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
-						modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
+
+					Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
+					Element modTagElement;
+					if (!modTagElements.isEmpty()) {
+						modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
+					} else {
+						modTagElement = null;
 					}
+
+					List<String> modTags = new ArrayList<>();
 					StringBuilder concatenatedModTags = new StringBuilder();
-					for (int i = 0; i < modTags.size(); i++) {
-						if (i + 1 < modTags.size()) {
-							concatenatedModTags.append(modTags.get(i)).append(",");
-						} else {
-							concatenatedModTags.append(modTags.get(i));
+					if (modTagElement != null) {
+						for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
+							modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
 						}
+
+						for (int i = 0; i < modTags.size(); i++) {
+							if (i + 1 < modTags.size()) {
+								concatenatedModTags.append(modTags.get(i)).append(",");
+							} else {
+								concatenatedModTags.append(modTags.get(i));
+							}
+						}
+					} else {
+						concatenatedModTags.append("None");
 					}
 					modInfo[2] = concatenatedModTags.toString();
 
@@ -150,7 +224,7 @@ public class ModlistService {
 					modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
 					modScrapeResult.setPayload(modInfo);
 				} else {
-					modScrapeResult.addMessage(modId + " is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
+					modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
 				}
 			}
 		} else {
@@ -167,7 +241,11 @@ public class ModlistService {
 	//Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
 	private boolean checkIfModIsMod(String modId, ModType modType, Document modPage) throws IOException {
 		if (modType == ModType.STEAM) {
-			return (modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Mod"));
+			if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
+				return (modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Mod"));
+			} else {
+				return false;
+			}
 		} else {
 			//TODO: This all likely can be replaced with a document as well, same as above.
 			WebDriver driver = getWebDriver();

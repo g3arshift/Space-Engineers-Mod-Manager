@@ -81,9 +81,6 @@ public class ModlistManagerView {
 	private Button exportModlist;
 
 	@FXML
-	private Button resetModlist;
-
-	@FXML
 	private Button applyModlist;
 
 	@FXML
@@ -151,13 +148,22 @@ public class ModlistManagerView {
 	private ProgressIndicator modAdditionProgressIndicator;
 
 	@FXML
+	private Label modAdditionProgressActionName;
+
+	@FXML
 	private Label modAdditionProgressNumerator;
+
+	@FXML
+	private Label modAdditionProgressDivider;
 
 	@FXML
 	private Label modAdditionProgressDenominator;
 
 	@FXML
 	private ProgressIndicator modAdditionProgressWheel;
+
+	@FXML
+	private Label modAdditionSteamCollectionName;
 
 	private final UiService UI_SERVICE;
 
@@ -296,6 +302,8 @@ public class ModlistManagerView {
 		modAdditionProgressNumerator.textProperty().bind(UI_SERVICE.getModAdditionProgressNumeratorProperty().asString());
 		modAdditionProgressDenominator.textProperty().bind(UI_SERVICE.getModAdditionProgressDenominatorProperty().asString());
 		modAdditionProgressBar.progressProperty().bind(UI_SERVICE.getModAdditionProgressPercentageProperty());
+
+		modAdditionSteamCollectionName.setVisible(false);
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -385,6 +393,9 @@ public class ModlistManagerView {
 		}
 	}
 
+	//TODO: We need a cancel button for adding mods so if the user decides they want to stop, they can.
+	// In it, when they cancel, ask them "Do you want to add the already processed mods?", and if yes, add the ones we've already scraped.
+	// Probably need to clear the rest of the futures/kill their threads when that happens. Also need to pause those threads when we hit cancel.
 
 	private void addModFromSteamId() {
 		setModAddingInputViewText("Steam Workshop Mod ID/ URL",
@@ -393,20 +404,33 @@ public class ModlistManagerView {
 				"Mod ID cannot be blank!");
 
 
-		Mod mod = new Mod(getModIdFromUser(), ModType.STEAM);
+		String modId = getModLocationFromUser(false);
+		if (!modId.isBlank()) {
+			Mod mod = new Mod(modId, ModType.STEAM);
 
-		//This is a bit hacky, but it makes a LOT less code we need to maintain.
-		final Mod[] modList = new Mod[1];
-		modList[0] = mod;
-		Thread modAdditionThread = getModAdditionThread(List.of(modList));
-		modAdditionThread.start();
+			//This is a bit hacky, but it makes a LOT less code we need to maintain.
+			final Mod[] modList = new Mod[1];
+			modList[0] = mod;
+			getModAdditionThread(List.of(modList)).start();
+		}
 	}
 
 	private void addModsFromSteamCollection() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		//TODO: The actual adding to the modlist should happen here
-		getModIdFromUser();
-		//List<Result<String>> collectionIdScrapeResults = UI_SERVICE.scrapeSteamModCollectionModList();
+		setModAddingInputViewText("Steam Workshop Collection URL/ID",
+				"Enter the URL/ID for the Steam Workshop Collection",
+				"Collection URL or ID",
+				"URL/ID cannot be blank!");
+
+		String modUrl = getModLocationFromUser(true);
+		if (!modUrl.isBlank()) {
+			try {
+				getSteamModCollectionThread(modUrl).start();
+			} catch (RuntimeException e) {
+				UI_SERVICE.log(e);
+				Popup.displaySimpleAlert(String.valueOf(e), STAGE, MessageType.ERROR);
+			}
+		}
 	}
 
 	private void addModFromModIoId() {
@@ -421,7 +445,7 @@ public class ModlistManagerView {
 		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
 	}
 
-	private String getModIdFromUser() {
+	private String getModLocationFromUser(boolean steamCollection) {
 		boolean goodModId = false;
 		String chosenModId = "";
 
@@ -446,11 +470,14 @@ public class ModlistManagerView {
 					}
 
 					if (!modId.isEmpty()) {
-						Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
-								.filter(mod -> modId.equals(mod.getId()))
-								.findFirst();
-						if (duplicateMod.isPresent()) {
-							Popup.displaySimpleAlert("This mod is already in the modlist!", MessageType.WARN);
+						Optional<Mod> duplicateMod = null;
+						if (!steamCollection) {
+							duplicateMod = UI_SERVICE.getCurrentModList().stream()
+									.filter(mod -> modId.equals(mod.getId()))
+									.findFirst();
+						}
+						if (duplicateMod != null && duplicateMod.isPresent()) {
+							Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
 						} else {
 							chosenModId = modId;
 							goodModId = true;
@@ -741,6 +768,79 @@ public class ModlistManagerView {
 		}
 	}
 
+	private Thread getSteamModCollectionThread(String collectionId) {
+		final Task<List<Result<String>>> TASK;
+
+		TASK = new Task<>() {
+			@Override
+			protected List<Result<String>> call() throws IOException {
+				return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
+			}
+		};
+
+		TASK.setOnRunning(workerStateEvent -> {
+			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
+			disableUserInputElements(true);
+			modAdditionProgressPanel.setVisible(true);
+			disableModAdditionUiText(true);
+			modAdditionSteamCollectionName.setVisible(true);
+		});
+
+		TASK.setOnSucceeded(workerStateEvent -> {
+			int modIdsSuccessfullyFound = 0;
+			List<Mod> successfullyFoundMods = new ArrayList<>();
+
+			List<Result<String>> steamCollectionModIds = TASK.getValue();
+			//This should only be false if we get a collection for the wrong game
+			if (steamCollectionModIds.size() != 1 &&
+					!steamCollectionModIds.getFirst().getCurrentMessage().equals("The collection must be a Space Engineers collection!")) {
+				for (Result<String> steamCollectionModId : steamCollectionModIds) {
+					if (steamCollectionModId.isSuccess()) {
+						modIdsSuccessfullyFound++;
+						Mod mod = new Mod(steamCollectionModId.getPayload(), ModType.STEAM);
+						successfullyFoundMods.add(mod);
+					}
+				}
+
+
+				//TODO: Count the number that just weren't mods at all.
+				String postCollectionScrapeMessage = modIdsSuccessfullyFound +
+						" had their ID's successfully pulled. Do you want to add them to the current modlist?";
+
+				//TODO: This may not actually work. I have no idea how the app handles modals on separate threads.
+				int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
+
+				if (userChoice == 1) {
+					getModAdditionThread(successfullyFoundMods).start();
+				}
+
+				Platform.runLater(() -> {
+					modAdditionSteamCollectionName.setVisible(false);
+					disableModAdditionUiText(false);
+
+					if (userChoice != 1) {
+						disableUserInputElements(false);
+						resetModAdditionProgressUi();
+					}
+				});
+			} else {
+				Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), STAGE);
+				Platform.runLater(() -> {
+					modAdditionSteamCollectionName.setVisible(false);
+					disableModAdditionUiText(false);
+
+					disableUserInputElements(false);
+					resetModAdditionProgressUi();
+
+				});
+			}
+		});
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
+	}
+
 	private Thread getModAdditionThread(List<Mod> modList) {
 		final Task<List<Result<Void>>> TASK;
 
@@ -752,20 +852,9 @@ public class ModlistManagerView {
 		};
 
 		TASK.setOnRunning(workerStateEvent -> {
-
 			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
+			disableUserInputElements(true);
 			modAdditionProgressPanel.setVisible(true);
-			modImportDropdown.setDisable(true);
-			manageModProfiles.setDisable(true);
-			manageSaveProfiles.setDisable(true);
-			importModlist.setDisable(true);
-			exportModlist.setDisable(true);
-			applyModlist.setDisable(true);
-			launchSpaceEngineers.setDisable(true);
-
-			modProfileDropdown.setDisable(true);
-			saveProfileDropdown.setDisable(true);
-			modTableSearchField.setDisable(true);
 		});
 
 		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
@@ -805,25 +894,8 @@ public class ModlistManagerView {
 			fadeTransition.setToValue(0d);
 
 			fadeTransition.setOnFinished(actionEvent -> {
-				modAdditionProgressPanel.setVisible(false);
-				modAdditionProgressPanel.setOpacity(1d);
-
-				modImportDropdown.setDisable(false);
-				manageModProfiles.setDisable(false);
-				manageSaveProfiles.setDisable(false);
-				importModlist.setDisable(false);
-				exportModlist.setDisable(false);
-				applyModlist.setDisable(false);
-				launchSpaceEngineers.setDisable(false);
-
-				modProfileDropdown.setDisable(false);
-				saveProfileDropdown.setDisable(false);
-				modTableSearchField.setDisable(false);
-
-				UI_SERVICE.getModAdditionProgressNumeratorProperty().setValue(0);
-				UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(0);
-				UI_SERVICE.getModAdditionProgressPercentageProperty().setValue(0d);
-				modAdditionProgressWheel.setVisible(true);
+				disableUserInputElements(false);
+				resetModAdditionProgressUi();
 			});
 
 			fadeTransition.play();
@@ -832,5 +904,36 @@ public class ModlistManagerView {
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
 		return thread;
+	}
+
+	//These function names suck
+	private void disableUserInputElements(boolean shouldDisable) {
+		modImportDropdown.setDisable(shouldDisable);
+		manageModProfiles.setDisable(shouldDisable);
+		manageSaveProfiles.setDisable(shouldDisable);
+		importModlist.setDisable(shouldDisable);
+		exportModlist.setDisable(shouldDisable);
+		applyModlist.setDisable(shouldDisable);
+		launchSpaceEngineers.setDisable(shouldDisable);
+
+		modProfileDropdown.setDisable(shouldDisable);
+		saveProfileDropdown.setDisable(shouldDisable);
+		modTableSearchField.setDisable(shouldDisable);
+	}
+
+	private void disableModAdditionUiText(boolean shouldDisable) {
+		modAdditionProgressActionName.setVisible(!shouldDisable);
+		modAdditionProgressNumerator.setVisible(!shouldDisable);
+		modAdditionProgressDivider.setVisible(!shouldDisable);
+		modAdditionProgressDenominator.setVisible(!shouldDisable);
+	}
+
+	private void resetModAdditionProgressUi() {
+		modAdditionProgressPanel.setVisible(false);
+		modAdditionProgressPanel.setOpacity(1d);
+		UI_SERVICE.getModAdditionProgressNumeratorProperty().setValue(0);
+		UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(0);
+		UI_SERVICE.getModAdditionProgressPercentageProperty().setValue(0d);
+		modAdditionProgressWheel.setVisible(true);
 	}
 }

@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
@@ -32,7 +33,7 @@ public class ModInfoController {
 		return MODLIST_SERVICE.generateModInformation(modList);
 	}
 
-	public List<Result<String>> scrapeSteamModCollectionModList(URL collectionUrl) {
-		return null;
+	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
+		return MODLIST_SERVICE.scrapeSteamCollectionModIds(collectionId);
 	}
 }
