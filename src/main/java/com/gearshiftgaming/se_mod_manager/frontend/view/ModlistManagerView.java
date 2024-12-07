@@ -469,18 +469,19 @@ public class ModlistManagerView {
 						modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(userInputModId)
 								.results()
 								.map(MatchResult::group)
-								.collect(Collectors.joining(""))
-								.substring(3);
+								.collect(Collectors.joining(""));
 					}
 
 					if (!modId.isEmpty()) {
-						Optional<Mod> duplicateMod = null;
+						modId = modId.substring(3);
+						Optional<Mod> duplicateMod = Optional.empty();
 						if (!steamCollection) {
+							String finalModId = modId;
 							duplicateMod = UI_SERVICE.getCurrentModList().stream()
-									.filter(mod -> modId.equals(mod.getId()))
+									.filter(mod -> finalModId.equals(mod.getId()))
 									.findFirst();
 						}
-						if (duplicateMod != null && duplicateMod.isPresent()) {
+						if (duplicateMod.isPresent()) {
 							Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
 						} else {
 							chosenModId = modId;
@@ -926,7 +927,6 @@ public class ModlistManagerView {
 
 
 			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-
 			for(Result<Mod> modResult : modInfoFillOutResults) {
 				if(modResult.isSuccess()) {
 					modTable.getSelectionModel().clearSelection();
