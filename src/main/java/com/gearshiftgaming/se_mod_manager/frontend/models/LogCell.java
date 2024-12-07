@@ -54,12 +54,15 @@ public class LogCell extends ListCell<LogMessage> {
                     MESSAGE_ICON.setIconLiteral("ci-unknown");
                 }
             }
-            //TODO: Reuse for the mod table!!!
-            //Make every other row in the log a different color for visibility.
             MESSAGE.setText(item.getVIEWABLE_LOG_MESSAGE());
+            String style;
+
             if (getIndex() % 2 == 0) {
-                setStyle("-fx-background-color: -color-bg-subtle;");
+                style = "-fx-background-color: -color-cell-border, -color-cell-bg;";
+            } else {
+                style = "-fx-background-color: -color-cell-border, -color-cell-bg-odd;";
             }
+            setStyle(style);
             setGraphic(LAYOUT);
         }
     }

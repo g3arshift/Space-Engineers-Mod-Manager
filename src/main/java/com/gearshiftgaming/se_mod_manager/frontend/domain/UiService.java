@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.guieffect.qual.UI;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -219,7 +220,22 @@ public class UiService {
 	// bars to work properly.
 	//TODO: We need to throw in a duplicate mod check here.
 	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
-		return MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
+
+		List<Result<String>> steamCollectionModIds = MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
+
+		//Process the returned ID's and check for duplicates in our current mod list.
+		for(Result<String> modIdResult : steamCollectionModIds) {
+			if(modIdResult.isSuccess()) {
+				Optional<Mod> duplicateMod = currentModList.stream()
+						.filter(mod -> modIdResult.getPayload().equals(mod.getId()))
+						.findFirst();
+				if(duplicateMod.isPresent()) {
+					modIdResult.addMessage("Mod already exists in modlist.", ResultType.INVALID);
+				}
+			}
+		}
+
+		return steamCollectionModIds;
 	}
 
 	public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
@@ -242,8 +258,6 @@ public class UiService {
 			mod.setCategories(modTags);
 
 			mod.setDescription(modInfo[3]);
-
-			mod.setLoadPriority(currentModList.size() + 1);
 
 			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 			modInfoResult.setPayload(mod);

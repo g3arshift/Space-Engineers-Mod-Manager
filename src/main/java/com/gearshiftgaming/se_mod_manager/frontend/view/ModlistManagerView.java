@@ -307,6 +307,7 @@ public class ModlistManagerView {
 		modAdditionProgressBar.progressProperty().bind(UI_SERVICE.getModAdditionProgressPercentageProperty());
 
 		modAdditionSteamCollectionName.setVisible(false);
+		viewableLog.setFixedCellSize(35);
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
@@ -612,7 +613,9 @@ public class ModlistManagerView {
 
 	protected void handleModTableDragOver(DragEvent dragEvent) {
 		//Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
-		final double SCROLL_SPEED = 0.03;
+		final double TOTAL_ROW_HEIGHT = UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight();
+		final double SCROLL_SPEED = 0.035 / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
+
 
 		double y = dragEvent.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
@@ -634,9 +637,9 @@ public class ModlistManagerView {
 
 
 		//Scroll up
-		if (y < modTableTop && currentScrollValue > minScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) {
+		if (y < modTableTop && currentScrollValue > minScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) {
 			scrollAmount = -SCROLL_SPEED;
-		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
+		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) { //Scroll down
 			scrollAmount = SCROLL_SPEED;
 		} else {
 			scrollAmount = 0;
@@ -791,6 +794,7 @@ public class ModlistManagerView {
 
 		TASK.setOnSucceeded(workerStateEvent -> {
 			int modIdsSuccessfullyFound = 0;
+			int duplicateModIds = 0;
 			List<Mod> successfullyFoundMods = new ArrayList<>();
 
 			List<Result<String>> steamCollectionModIds = TASK.getValue();
@@ -802,30 +806,38 @@ public class ModlistManagerView {
 						modIdsSuccessfullyFound++;
 						Mod mod = new Mod(steamCollectionModId.getPayload(), ModType.STEAM);
 						successfullyFoundMods.add(mod);
+					} else {
+						if (steamCollectionModId.getType() == ResultType.INVALID) {
+							duplicateModIds++;
+						}
 					}
 				}
 
 
-				//TODO: Count the number that just weren't mods at all.
-				String postCollectionScrapeMessage = modIdsSuccessfullyFound +
-						" had their ID's successfully pulled. Do you want to add them to the current modlist?";
+				if (duplicateModIds == steamCollectionModIds.size()) {
+					Popup.displayYesNoDialog("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
+				} else {
+					int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
+					String postCollectionScrapeMessage = totalNumberOfMods +
+							" mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
+							(totalNumberOfMods - duplicateModIds) + "?";
 
-				//TODO: This may not actually work. I have no idea how the app handles modals on separate threads.
-				int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
+					int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
-				if (userChoice == 1) {
-					getModAdditionThread(successfullyFoundMods).start();
-				}
-
-				Platform.runLater(() -> {
-					modAdditionSteamCollectionName.setVisible(false);
-					disableModAdditionUiText(false);
-
-					if (userChoice != 1) {
-						disableUserInputElements(false);
-						resetModAdditionProgressUi();
+					if (userChoice == 1) {
+						getModAdditionThread(successfullyFoundMods).start();
 					}
-				});
+
+					Platform.runLater(() -> {
+						modAdditionSteamCollectionName.setVisible(false);
+						disableModAdditionUiText(false);
+
+						if (userChoice != 1) {
+							disableUserInputElements(false);
+							resetModAdditionProgressUi();
+						}
+					});
+				}
 			} else {
 				Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), STAGE);
 				Platform.runLater(() -> {
@@ -838,6 +850,7 @@ public class ModlistManagerView {
 				});
 			}
 		});
+
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
@@ -855,14 +868,17 @@ public class ModlistManagerView {
 				Platform.runLater(() -> UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(modList.size()));
 
 				List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
-				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()){
+				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 					for (Mod m : modList) {
+
 						// Submit the task without waiting for it to finish
 						Future<Result<Mod>> future = executorService.submit(() -> {
 							try {
 								return UI_SERVICE.fillOutModInformation(m);
 							} catch (IOException e) {
-								throw new RuntimeException(e);
+								Result<Mod> failedResult = new Result<>();
+								failedResult.addMessage(e.toString(), ResultType.FAILED);
+								return failedResult;
 							}
 						});
 						// Store the Future if you need to track the task later
@@ -872,16 +888,12 @@ public class ModlistManagerView {
 						for (Future<Result<Mod>> f : futures) {
 							modInfoFillOutResults.add(f.get());
 						}
-					}
-					catch (RuntimeException e) {
-						System.out.println();
+					} catch (RuntimeException e) {
+						Result<Mod> failedResult = new Result<>();
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+						modInfoFillOutResults.add(failedResult);
 					}
 				}
-//
-//				Platform.runLater(() -> {
-//					UI_SERVICE.getModAdditionProgressNumeratorProperty().setValue(UI_SERVICE.getModAdditionProgressNumerator() + 1);
-//					UI_SERVICE.getModAdditionProgressPercentageProperty().setValue((double) UI_SERVICE.getModAdditionProgressNumerator() / (double) UI_SERVICE.getModAdditionProgressDenominator());
-//				});
 				return modInfoFillOutResults;
 			}
 		};
@@ -901,16 +913,26 @@ public class ModlistManagerView {
 
 			for (Result<Mod> currentModInfoFillOutResult : modInfoFillOutResults) {
 				if (currentModInfoFillOutResult.isSuccess()) {
+					currentModInfoFillOutResult.getPayload().setLoadPriority(UI_SERVICE.getCurrentModList().size() + 1);
 					UI_SERVICE.getCurrentModList().add(currentModInfoFillOutResult.getPayload());
 					successfulScrapes++;
 					modTable.sort();
-					//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-					modTable.getSelectionModel().clearSelection();
-					modTable.getSelectionModel().select(modList.getFirst());
 					UI_SERVICE.logPrivate(currentModInfoFillOutResult);
 				} else {
 					failedScrapes++;
 					UI_SERVICE.log(currentModInfoFillOutResult);
+				}
+			}
+
+
+			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
+
+			for(Result<Mod> modResult : modInfoFillOutResults) {
+				if(modResult.isSuccess()) {
+					modTable.getSelectionModel().clearSelection();
+					modTable.getSelectionModel().select(modResult.getPayload());
+					modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
+					break;
 				}
 			}
 
