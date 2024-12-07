@@ -26,6 +26,7 @@ public class ModlistFileRepository implements ModlistRepository {
         STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile("([0-9])\\d*");
     }
 
+    //TODO: Add modio functionality
     @Override
     public List<Mod> getSteamModList(File modListFile) throws IOException {
         //We use a set to prevent duplicate lines from being added

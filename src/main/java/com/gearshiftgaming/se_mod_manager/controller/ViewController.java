@@ -7,8 +7,8 @@ import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import jakarta.xml.bind.JAXBException;
@@ -18,7 +18,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
-import lombok.Getter;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
@@ -61,21 +60,21 @@ public class ViewController {
 			throw (e);
 		}
 
-		BackendController backendController = new BackendFileController(new SandboxConfigFileRepository(),
-				new ModlistFileRepository(),
+		BackendStorageController backendStorageController = new BackendFileStorageController(new SandboxConfigFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
 				PROPERTIES,
 				new File(PROPERTIES.getProperty("semm.userData.default.location")));
 
-		Result<UserConfiguration> userConfigurationResult = backendController.getUserData();
+
+		Result<UserConfiguration> userConfigurationResult = backendStorageController.getUserData();
 		UserConfiguration userConfiguration;
 
 		if (userConfigurationResult.isSuccess()) {
 			userConfiguration = userConfigurationResult.getPayload();
 		} else {
 			userConfiguration = new UserConfiguration();
-			backendController.saveUserData(userConfiguration);
+			backendStorageController.saveUserData(userConfiguration);
 		}
 
 		ObservableList<ModProfile> modProfiles = FXCollections.observableList(userConfiguration.getModProfiles());
@@ -88,7 +87,9 @@ public class ViewController {
 						logMessage.MESSAGE_TYPEProperty()
 				});
 
-		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendController, userConfiguration);
+		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
+
+		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendStorageController, modInfoController, userConfiguration, PROPERTIES);
 		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);
@@ -114,15 +115,15 @@ public class ViewController {
 		SAVE_INPUT_VIEW.initView(SAVE_LIST_INPUT_ROOT);
 
 		//View for text input when creating a new save profile.
-		final FXMLLoader SAVE_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
-		final ProfileInputView SAVE_PROFILE_INPUT_VIEW = new ProfileInputView();
+		final FXMLLoader SAVE_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+		final SimpleInputView SAVE_PROFILE_INPUT_VIEW = new SimpleInputView();
 		SAVE_PROFILE_MANAGER_LOADER.setController(SAVE_PROFILE_INPUT_VIEW);
 		final Parent SAVE_PROFILE_MANAGER_ROOT = SAVE_PROFILE_MANAGER_LOADER.load();
 		SAVE_PROFILE_INPUT_VIEW.initView(SAVE_PROFILE_MANAGER_ROOT);
 
 		//View for text input when adding a new Mod Profile
-		final FXMLLoader MOD_PROFILE_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/profile-input.fxml"));
-		final ProfileInputView MOD_PROFILE_INPUT_VIEW = new ProfileInputView();
+		final FXMLLoader MOD_PROFILE_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+		final SimpleInputView MOD_PROFILE_INPUT_VIEW = new SimpleInputView();
 		MOD_PROFILE_INPUT_LOADER.setController(MOD_PROFILE_INPUT_VIEW);
 		final Parent MOD_PROFILE_INPUT_ROOT = MOD_PROFILE_INPUT_LOADER.load();
 		MOD_PROFILE_INPUT_VIEW.initView(MOD_PROFILE_INPUT_ROOT);
@@ -145,9 +146,16 @@ public class ViewController {
 		STATUS_BAR_LOADER.setController(STATUS_BAR_VIEW);
 		final Parent STATUS_BAR_ROOT = STATUS_BAR_LOADER.load();
 
+		//View for text input when adding a new Mod either by ID or URL, but not for files.
+		final FXMLLoader ID_AND_URL_MOD_ADDITION_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+		final SimpleInputView ID_AND_URL_MOD_ADDITION_INPUT_VIEW = new SimpleInputView();
+		ID_AND_URL_MOD_ADDITION_INPUT_LOADER.setController(ID_AND_URL_MOD_ADDITION_INPUT_VIEW);
+		final Parent ID_AND_URL_MOD_ADDITION_INPUT_ROOT = ID_AND_URL_MOD_ADDITION_INPUT_LOADER.load();
+		ID_AND_URL_MOD_ADDITION_INPUT_VIEW.initView(ID_AND_URL_MOD_ADDITION_INPUT_ROOT);
+
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_ADDITION_INPUT_VIEW);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 
@@ -169,7 +177,6 @@ public class ViewController {
 		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
 		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);
 
-		//Save our changes that were made to the user config, such as removing missing profiles, to disk
-		UI_SERVICE.saveUserData();
+		//UI_SERVICE.saveUserData();
 	}
 }

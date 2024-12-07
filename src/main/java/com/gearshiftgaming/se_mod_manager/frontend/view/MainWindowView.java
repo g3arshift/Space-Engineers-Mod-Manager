@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.collections.ObservableList;
@@ -58,7 +58,7 @@ public class MainWindowView {
 	private final UserConfiguration USER_CONFIGURATION;
 
 	//This is the reference to the controller for the bar located in the top section of the main borderpane
-	private final ModTableContextBarView MENU_BAR_VIEW;
+	private final ModTableContextBarView CONTEXT_BAR_VIEW;
 
 	//This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
 	private final ModlistManagerView MODLIST_MANAGER_VIEW;
@@ -67,12 +67,12 @@ public class MainWindowView {
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) throws IOException {
+	public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
 		this.UI_SERVICE = uiService;
-		this.MENU_BAR_VIEW = modTableContextBarView;
+		this.CONTEXT_BAR_VIEW = modTableContextBarView;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STATUS_BAR_VIEW = statusBarView;
 	}
@@ -80,8 +80,9 @@ public class MainWindowView {
 	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
-		MENU_BAR_VIEW.initView();
-		MODLIST_MANAGER_VIEW.initView(MENU_BAR_VIEW.getLogToggle(), MENU_BAR_VIEW.getModDescriptionToggle());
+		CONTEXT_BAR_VIEW.initView();
+		MODLIST_MANAGER_VIEW.initView(CONTEXT_BAR_VIEW.getLogToggle(), CONTEXT_BAR_VIEW.getModDescriptionToggle(), Integer.parseInt(PROPERTIES.getProperty("semm.modTable.cellSize")),
+				CONTEXT_BAR_VIEW.getModProfileDropdown(), CONTEXT_BAR_VIEW.getSaveProfileDropdown(), CONTEXT_BAR_VIEW.getModTableSearchField());
 		STATUS_BAR_VIEW.initView();
 		mainWindowLayout.setTop(menuBarRoot);
 		mainWindowLayout.setCenter(modlistManagerRoot);
@@ -111,7 +112,9 @@ public class MainWindowView {
 					SAVE_PROFILES.get(i).setSaveExists(true);
 				}
 			}
+			UI_SERVICE.saveUserData();
 		}
+
 		mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
 	}
 

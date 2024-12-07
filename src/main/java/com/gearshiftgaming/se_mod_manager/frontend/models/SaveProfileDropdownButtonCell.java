@@ -11,7 +11,7 @@ import javafx.scene.control.Tooltip;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class SaveProfileDropdownButtonCell extends SaveProfileCell{
+public class SaveProfileDropdownButtonCell extends SaveProfileCell {
 
 
 	public SaveProfileDropdownButtonCell() {
@@ -27,12 +27,13 @@ public class SaveProfileDropdownButtonCell extends SaveProfileCell{
 		} else {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
-			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 165));
+			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), this.getWidth()));
 
 			if(!item.isSaveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
 				getPROFILE_NAME().setStrikethrough(true);
 			}
+
 			Tooltip.install(getREGION(), getSAVE_NAME());
 			setStyle(getCellStyle());
 			setGraphic(getLAYOUT());

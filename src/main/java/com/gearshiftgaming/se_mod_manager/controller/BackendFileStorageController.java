@@ -1,17 +1,15 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
@@ -20,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -29,11 +26,9 @@ import java.util.stream.Collectors;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class BackendFileController implements BackendController {
+public class BackendFileStorageController implements BackendStorageController {
 
 	private final SandboxService SANDBOX_SERVICE;
-
-	private final ModlistService MODLIST_SERVICE;
 
 	private final UserDataService USER_DATA_SERVICE;
 
@@ -41,9 +36,8 @@ public class BackendFileController implements BackendController {
 
 	private final File USER_CONFIGURATION_FILE;
 
-	public BackendFileController(SandboxConfigRepository sandboxConfigRepository, ModlistRepository modlistRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
+	public BackendFileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
 		this.SANDBOX_SERVICE = new SandboxService(sandboxConfigRepository);
-		this.MODLIST_SERVICE = new ModlistService(modlistRepository, properties);
 		this.USER_DATA_SERVICE = new UserDataService(userDataRepository);
 		this.USER_CONFIGURATION_FILE = USER_CONFIGURATION_FILE;
 		this.SAVE_SERVICE = new SaveService(saveRepository, SANDBOX_SERVICE);

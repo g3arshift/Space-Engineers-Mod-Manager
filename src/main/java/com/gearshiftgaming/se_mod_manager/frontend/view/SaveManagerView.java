@@ -2,11 +2,10 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.controls.RingProgressIndicator;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
@@ -17,13 +16,12 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import lombok.Getter;
 
 import java.util.Objects;
 import java.util.Properties;
@@ -63,7 +61,7 @@ public class SaveManagerView {
 	private Pane operationInProgressDimmer;
 
 	@FXML
-	private RingProgressIndicator progressIndicator;
+	private ProgressIndicator progressIndicator;
 
 	private Stage stage;
 
@@ -73,15 +71,15 @@ public class SaveManagerView {
 
 	private final SaveInputView SAVE_INPUT_VIEW;
 
-	private final ProfileInputView PROFILE_INPUT_VIEW;
+	private final SimpleInputView PROFILE_INPUT_VIEW;
 
 	private ModTableContextBarView modTableContextBarView;
 
-	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, ProfileInputView profileInputView) {
+	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, SimpleInputView simpleInputView) {
 		this.UI_SERVICE = UI_SERVICE;
 		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
 		this.SAVE_INPUT_VIEW = saveInputViewFirstStepView;
-		this.PROFILE_INPUT_VIEW = profileInputView;
+		this.PROFILE_INPUT_VIEW = simpleInputView;
 	}
 
 	public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
@@ -103,6 +101,9 @@ public class SaveManagerView {
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
 		stage.setScene(scene);
+
+		stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+
 		UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
 	}
 
@@ -124,15 +125,15 @@ public class SaveManagerView {
 					//Remove the default save profile that isn't actually a profile if it's all that we have in the list.
 					boolean duplicateProfileName;
 					do {
-						PROFILE_INPUT_VIEW.getProfileNameInput().clear();
-						PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+						PROFILE_INPUT_VIEW.getInput().clear();
+						PROFILE_INPUT_VIEW.getInput().requestFocus();
 						PROFILE_INPUT_VIEW.show();
-						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getInput().getText());
 
 						if (duplicateProfileName) {
 							Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-						} else if (!PROFILE_INPUT_VIEW.getProfileNameInput().getText().isBlank()) {
-							saveProfile.setProfileName(PROFILE_INPUT_VIEW.getProfileNameInput().getText());
+						} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
+							saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
 							if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
 								saveProfile.setSaveExists(true);
 								SAVE_PROFILES.set(0, saveProfile);
@@ -144,7 +145,7 @@ public class SaveManagerView {
 								result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
 								UI_SERVICE.log(result);
 
-								PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+								PROFILE_INPUT_VIEW.getInput().clear();
 							}
 							UI_SERVICE.saveUserData();
 						}
@@ -156,7 +157,7 @@ public class SaveManagerView {
 		//Cleanup our UI actions.
 		SAVE_INPUT_VIEW.getSaveName().setText("No save selected.");
 		SAVE_INPUT_VIEW.setSelectedSave(null);
-		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
+		PROFILE_INPUT_VIEW.getInput().clear();
 	}
 
 	@FXML
@@ -168,7 +169,7 @@ public class SaveManagerView {
 				progressIndicator.setVisible(true);
 				saveList.setMouseTransparent(true);
 				Thread copyThread = getCopyThread();
-				Platform.runLater(copyThread);
+				copyThread.start();
 			} else {
 				Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
 			}
@@ -186,7 +187,7 @@ public class SaveManagerView {
 			}
 		};
 
-		TASK.setOnSucceeded(event -> {
+		TASK.setOnSucceeded(event -> Platform.runLater(() -> {
 			Result<SaveProfile> profileCopyResult = TASK.getValue();
 
 			if (profileCopyResult.isSuccess()) {
@@ -200,9 +201,9 @@ public class SaveManagerView {
 			progressIndicator.setVisible(false);
 			saveList.setMouseTransparent(false);
 			UI_SERVICE.saveUserData();
-		});
+		}));
 
-		Thread thread = new Thread(TASK);
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
 		thread.setDaemon(true);
 		return thread;
 	}
@@ -228,14 +229,14 @@ public class SaveManagerView {
 
 	@FXML
 	private void renameProfile() {
-		PROFILE_INPUT_VIEW.getProfileNameInput().clear();
-		PROFILE_INPUT_VIEW.getProfileNameInput().requestFocus();
+		PROFILE_INPUT_VIEW.getInput().clear();
+		PROFILE_INPUT_VIEW.getInput().requestFocus();
 		if (saveList.getSelectionModel().getSelectedItem() != null) {
 
 
 			PROFILE_INPUT_VIEW.show();
 
-			String newProfileName = PROFILE_INPUT_VIEW.getProfileNameInput().getText();
+			String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
 			if (profileNameAlreadyExists(newProfileName)) {
 				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
 			} else if (!newProfileName.isBlank()) {

@@ -2,11 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import javafx.scene.Node;
 import javafx.scene.control.TableRow;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Polygon;
-import javafx.scene.text.Text;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -32,6 +28,7 @@ public class ModTableRow extends TableRow<Mod> {
 			setGraphic(null);
 			setStyle(null);
 		} else {
+
 			if(this.isSelected()) {
 				setStyle("-color-cell-fg-selected: -color-fg-default;" +
 						"-color-cell-fg-selected-focused: -color-fg-default;" +
@@ -51,7 +48,6 @@ public class ModTableRow extends TableRow<Mod> {
 		}
 	}
 
-	//TODO: Maybe make them a brighter color? Like, for light themes make it blue. Not sure for darks. Red? Some better color contrast would look a lot better. Look at what Dracula does.
 	//This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation, but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet, then add onto it.
 	private String getSelectedCellColor(String themeName) {
 		return switch (themeName) {

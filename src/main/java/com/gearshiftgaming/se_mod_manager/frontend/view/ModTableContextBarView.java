@@ -3,8 +3,8 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.utility.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
@@ -34,7 +34,6 @@ import java.util.List;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class ModTableContextBarView {
 
@@ -55,6 +54,9 @@ public class ModTableContextBarView {
 
 	@FXML
 	private MenuItem close;
+
+	@FXML
+	private MenuItem updateMods;
 
 	@FXML
 	private MenuItem about;
@@ -88,7 +90,11 @@ public class ModTableContextBarView {
 	private Label modConflicts;
 
 	@FXML
+	@Getter
 	private TextField modTableSearchField;
+
+	@FXML
+	private Label modTableSearchFieldPromptText;
 
 	@FXML
 	private Button clearSearchBox;
@@ -194,7 +200,14 @@ public class ModTableContextBarView {
 		activeModCountBox.setStroke(getThemeBoxColor());
 		modConflictBox.setStroke(getThemeBoxColor());
 
-		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
+		modTableSearchField.setOnMouseClicked(mouseEvent -> modTableSearchFieldPromptText.setVisible(false));
+		modTableSearchField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+			if (!newValue && modTableSearchField.getText().isBlank()) {
+				modTableSearchFieldPromptText.setVisible(true);
+			}
+		});
+
+		UI_SERVICE.logPrivate("Successfully initialized context bar.", MessageType.INFO);
 	}
 
 	@FXML
@@ -255,6 +268,9 @@ public class ModTableContextBarView {
 				activeModCountBox.setStroke(getThemeBoxColor());
 				modConflictBox.setStroke(getThemeBoxColor());
 
+				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+
 				TitleBarUtility.SetTitleBar(STAGE);
 			}
 		}
@@ -276,8 +292,6 @@ public class ModTableContextBarView {
 		clearSearchBox();
 
 		UI_SERVICE.setCurrentModProfile(modProfile);
-//		MODLIST_MANAGER_VIEW.setFilteredModList(new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true));
-//		MODLIST_MANAGER_VIEW.getModTable().setItems(MODLIST_MANAGER_VIEW.getFilteredModList());
 		MODLIST_MANAGER_VIEW.updateModTableContents();
 	}
 
@@ -289,6 +303,7 @@ public class ModTableContextBarView {
 	@FXML
 	private void clearSearchBox() {
 		modTableSearchField.clear();
+		modTableSearchFieldPromptText.setVisible(true);
 	}
 
 	@FXML
@@ -296,8 +311,12 @@ public class ModTableContextBarView {
 		Platform.exit();
 	}
 
+	@FXML
+	private void updateModInformation() {
+	}
+
 	private Color getThemeBoxColor() {
-		return switch(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
 			case "PrimerLight", "NordLight", "CupertinoLight":
 				yield Color.web("#000000");
 			case "PrimerDark", "CupertinoDark":
