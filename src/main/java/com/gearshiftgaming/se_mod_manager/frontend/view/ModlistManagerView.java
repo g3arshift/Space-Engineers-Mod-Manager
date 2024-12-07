@@ -399,10 +399,10 @@ public class ModlistManagerView {
 	// Probably need to clear the rest of the futures/kill their threads when that happens. Also need to pause those threads when we hit cancel.
 
 	private void addModFromSteamId() {
-		setModAddingInputViewText("Steam Workshop Mod ID/ URL",
-				"Enter the Steam Workshop Mod ID or URL",
-				"Mod ID/Workshop URL",
-				"Mod ID cannot be blank!");
+		setModAddingInputViewText("Steam Workshop Mod URL/ID",
+				"Enter the Steam Workshop URL/ID",
+				"Workshop URL/Mod ID",
+				"URL/ID cannot be blank!");
 
 
 		String modId = getModLocationFromUser(false);
@@ -420,13 +420,13 @@ public class ModlistManagerView {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		setModAddingInputViewText("Steam Workshop Collection URL/ID",
 				"Enter the URL/ID for the Steam Workshop Collection",
-				"Collection URL or ID",
+				"Collection URL/ID",
 				"URL/ID cannot be blank!");
 
-		String modUrl = getModLocationFromUser(true);
-		if (!modUrl.isBlank()) {
+		String modId = getModLocationFromUser(true);
+		if (!modId.isBlank()) {
 			try {
-				getSteamModCollectionThread(modUrl).start();
+				getSteamModCollectionThread(modId).start();
 			} catch (RuntimeException e) {
 				UI_SERVICE.log(e);
 				Popup.displaySimpleAlert(String.valueOf(e), STAGE, MessageType.ERROR);
@@ -437,7 +437,20 @@ public class ModlistManagerView {
 	private void addModFromModIoId() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		//TODO: The actual adding to the modlist should happen here
-		//Result<Mod> modImportResult = UI_SERVICE.addModFromModIoId();
+		setModAddingInputViewText("Mod.io Mod URL/ID",
+				"Enter the Mod.io URL or ID",
+				"Mod.io URL/ID",
+				"URL/ID cannot be blank!");
+
+		String modId = getModLocationFromUser(false);
+		if (!modId.isBlank()) {
+			Mod mod = new Mod(modId, ModType.MOD_IO);
+
+			//This is a bit hacky, but it makes a LOT less code we need to maintain.
+			final Mod[] modList = new Mod[1];
+			modList[0] = mod;
+			getModAdditionThread(List.of(modList)).start();
+		}
 	}
 
 	private void addModsFromFile() {
@@ -451,12 +464,10 @@ public class ModlistManagerView {
 		String chosenModId = "";
 
 		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
-		//It first checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
-		//It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
-		//Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
 		do {
 			String userInputModId = getUserModIdInput();
 			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
+			//Checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
 			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
 				if (!StringUtils.isAlpha(userInputModId)) {
 					String modId;
@@ -474,14 +485,17 @@ public class ModlistManagerView {
 						}
 					}
 
+					//It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
 					if (!modId.isEmpty()) {
 						Optional<Mod> duplicateMod = Optional.empty();
+						//We have this check so we don't try and compare single mod ID's to a collection URL.
 						if (!steamCollection) {
 							String finalModId = modId;
 							duplicateMod = UI_SERVICE.getCurrentModList().stream()
 									.filter(mod -> finalModId.equals(mod.getId()))
 									.findFirst();
 						}
+						//Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
 						if (duplicateMod.isPresent()) {
 							Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
 						} else {
@@ -875,7 +889,6 @@ public class ModlistManagerView {
 		final Task<List<Result<Mod>>> TASK;
 		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
 
-		//TODO: This works, but it's slow. Likely due to the blocking calls.
 		TASK = new Task<>() {
 			@Override
 			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
