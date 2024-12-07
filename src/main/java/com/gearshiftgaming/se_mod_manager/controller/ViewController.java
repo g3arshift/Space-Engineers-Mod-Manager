@@ -177,7 +177,6 @@ public class ViewController {
 		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
 		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);
 
-		//Save our changes that were made to the user config, such as removing missing profiles, to disk
-		UI_SERVICE.saveUserData();
+		//UI_SERVICE.saveUserData();
 	}
 }

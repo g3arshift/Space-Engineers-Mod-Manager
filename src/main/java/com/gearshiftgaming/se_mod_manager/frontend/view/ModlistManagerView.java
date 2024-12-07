@@ -175,12 +175,6 @@ public class ModlistManagerView {
 	@Getter
 	private boolean mainViewSplitDividerVisible = true;
 
-	//This is just a wrapper for the userConfiguration modProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private final ObservableList<ModProfile> MOD_PROFILES;
-
-	//This is just a wrapper for the userConfiguration saveProfiles list. Any changes made to this will propagate back to it, but not the other way around.
-	private final ObservableList<SaveProfile> SAVE_PROFILES;
-
 	private final DataFormat SERIALIZED_MIME_TYPE;
 
 	private ListChangeListener<TableColumn<Mod, ?>> sortListener;
@@ -238,8 +232,6 @@ public class ModlistManagerView {
 							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modAdditionInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
-		this.MOD_PROFILES = uiService.getMOD_PROFILES();
-		this.SAVE_PROFILES = uiService.getSAVE_PROFILES();
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
@@ -310,7 +302,8 @@ public class ModlistManagerView {
 		viewableLog.setFixedCellSize(35);
 
 		//This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
-		modDescription.setOnDragOver(dragEvent -> {});
+		modDescription.setOnDragOver(dragEvent -> {
+		});
 
 		UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
 	}
@@ -476,7 +469,7 @@ public class ModlistManagerView {
 								.collect(Collectors.joining(""));
 
 						//Certain strings will sometimes return empty strings after the regex.
-						if(!modId.isBlank()) {
+						if (!modId.isBlank()) {
 							modId = modId.substring(3);
 						}
 					}
@@ -620,12 +613,14 @@ public class ModlistManagerView {
 		}
 	}
 
-	//TODO: Pretty sure that the webview is swallowing the drag events.
+	/**
+	 * Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll.
+	 */
 	protected void handleModTableDragOver(DragEvent dragEvent) {
-		//Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
+		//This normalizes our scroll speed so small and large tables all scroll at the same speed.
 		final double TOTAL_ROW_HEIGHT = UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight();
-		final double SCROLL_SPEED = 0.035 / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
-
+		final double SCROLL_SPEED_CONSTANT = 0.035;
+		final double SCROLL_SPEED = SCROLL_SPEED_CONSTANT / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
 
 		double y = dragEvent.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
@@ -644,7 +639,6 @@ public class ModlistManagerView {
 		double minScrollValue = modTableVerticalScrollBar.getMin();
 		double maxScrollValue = modTableVerticalScrollBar.getMax();
 		double scrollAmount;
-
 
 		//Scroll up
 		if (y < modTableTop && currentScrollValue > minScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) {
@@ -809,20 +803,16 @@ public class ModlistManagerView {
 
 			List<Result<String>> steamCollectionModIds = TASK.getValue();
 			//This should only be false if we get a collection for the wrong game
-			if (steamCollectionModIds.size() != 1 &&
-					!steamCollectionModIds.getFirst().getCurrentMessage().equals("The collection must be a Space Engineers collection!")) {
+			if (steamCollectionModIds.size() != 1 && !steamCollectionModIds.getFirst().getCurrentMessage().equals("The collection must be a Space Engineers collection!")) {
 				for (Result<String> steamCollectionModId : steamCollectionModIds) {
 					if (steamCollectionModId.isSuccess()) {
 						modIdsSuccessfullyFound++;
 						Mod mod = new Mod(steamCollectionModId.getPayload(), ModType.STEAM);
 						successfullyFoundMods.add(mod);
 					} else {
-						if (steamCollectionModId.getType() == ResultType.INVALID) {
-							duplicateModIds++;
-						}
+						if (steamCollectionModId.getType() == ResultType.INVALID) duplicateModIds++;
 					}
 				}
-
 
 				if (duplicateModIds == steamCollectionModIds.size()) {
 					Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
@@ -950,8 +940,8 @@ public class ModlistManagerView {
 
 
 			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-			for(Result<Mod> modResult : modInfoFillOutResults) {
-				if(modResult.isSuccess()) {
+			for (Result<Mod> modResult : modInfoFillOutResults) {
+				if (modResult.isSuccess()) {
 					modTable.getSelectionModel().clearSelection();
 					modTable.getSelectionModel().select(modResult.getPayload());
 					modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());

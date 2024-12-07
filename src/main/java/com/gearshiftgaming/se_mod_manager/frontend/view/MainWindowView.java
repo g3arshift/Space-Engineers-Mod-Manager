@@ -67,7 +67,7 @@ public class MainWindowView {
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	//Initializes our controller while maintaining the empty constructor JavaFX expects
-	public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) throws IOException {
+	public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) {
 		this.STAGE = stage;
 		this.PROPERTIES = properties;
 		this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
@@ -112,7 +112,9 @@ public class MainWindowView {
 					SAVE_PROFILES.get(i).setSaveExists(true);
 				}
 			}
+			UI_SERVICE.saveUserData();
 		}
+
 		mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
 	}
 
