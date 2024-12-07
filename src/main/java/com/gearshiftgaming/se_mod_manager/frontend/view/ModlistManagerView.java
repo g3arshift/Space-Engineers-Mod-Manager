@@ -314,7 +314,6 @@ public class ModlistManagerView {
 	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
 	private void setupModTable(int modTableCellSize) {
 		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
-
 		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
 
@@ -612,6 +611,7 @@ public class ModlistManagerView {
 		}
 	}
 
+	//TODO: Pretty sure that the webview is swallowing the drag events.
 	protected void handleModTableDragOver(DragEvent dragEvent) {
 		//Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
 		final double TOTAL_ROW_HEIGHT = UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight();

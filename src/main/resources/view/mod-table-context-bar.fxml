@@ -16,7 +16,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox fx:id="menuBarRoot" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="menuBarRoot" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
      <children>
          <MenuBar prefWidth="1000.0">
              <menus>
@@ -57,7 +57,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                          <Label minWidth="-Infinity" text="Mod List" />
-                         <ComboBox fx:id="modProfileDropdown" maxWidth="175.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="modProfileDropdown" maxWidth="175.0" minWidth="165.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />
@@ -66,7 +66,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                          <Label minWidth="-Infinity" text="SE Save" HBox.hgrow="ALWAYS" />
-                         <ComboBox fx:id="saveProfileDropdown" maxWidth="175.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="saveProfileDropdown" maxWidth="175.0" minWidth="165.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />
