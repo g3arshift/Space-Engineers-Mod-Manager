@@ -34,7 +34,6 @@ import java.util.List;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class ModTableContextBarView {
 
@@ -93,6 +92,9 @@ public class ModTableContextBarView {
 	@FXML
 	@Getter
 	private TextField modTableSearchField;
+
+	@FXML
+	private Label modTableSearchFieldPromptText;
 
 	@FXML
 	private Button clearSearchBox;
@@ -198,6 +200,13 @@ public class ModTableContextBarView {
 		activeModCountBox.setStroke(getThemeBoxColor());
 		modConflictBox.setStroke(getThemeBoxColor());
 
+		modTableSearchField.setOnMouseClicked(mouseEvent -> modTableSearchFieldPromptText.setVisible(false));
+		modTableSearchField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+			if (!newValue && modTableSearchField.getText().isBlank()) {
+				modTableSearchFieldPromptText.setVisible(true);
+			}
+		});
+
 		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
 	}
 
@@ -296,6 +305,7 @@ public class ModTableContextBarView {
 	@FXML
 	private void clearSearchBox() {
 		modTableSearchField.clear();
+		modTableSearchFieldPromptText.setVisible(true);
 	}
 
 	@FXML
@@ -308,7 +318,7 @@ public class ModTableContextBarView {
 	}
 
 	private Color getThemeBoxColor() {
-		return switch(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
 			case "PrimerLight", "NordLight", "CupertinoLight":
 				yield Color.web("#000000");
 			case "PrimerDark", "CupertinoDark":

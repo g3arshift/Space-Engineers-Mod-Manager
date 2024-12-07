@@ -27,7 +27,6 @@ public class SaveProfileDropdownButtonCell extends SaveProfileCell {
 		} else {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
-			System.out.println(this.getWidth());
 			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), this.getWidth()));
 
 			if(!item.isSaveExists()) {
