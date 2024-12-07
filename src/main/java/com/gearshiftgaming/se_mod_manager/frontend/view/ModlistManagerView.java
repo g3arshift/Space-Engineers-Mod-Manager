@@ -825,7 +825,21 @@ public class ModlistManagerView {
 
 
 				if (duplicateModIds == steamCollectionModIds.size()) {
-					Popup.displayYesNoDialog("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
+					Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
+					Platform.runLater(() -> {
+						FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modAdditionProgressPanel);
+						fadeTransition.setFromValue(1d);
+						fadeTransition.setToValue(0d);
+
+						fadeTransition.setOnFinished(actionEvent -> {
+							modAdditionSteamCollectionName.setVisible(false);
+							disableModAdditionUiText(false);
+							disableUserInputElements(false);
+							resetModAdditionProgressUi();
+						});
+
+						fadeTransition.play();
+					});
 				} else {
 					int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
 					String postCollectionScrapeMessage = totalNumberOfMods +
