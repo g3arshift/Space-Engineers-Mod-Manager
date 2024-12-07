@@ -309,6 +309,9 @@ public class ModlistManagerView {
 		modAdditionSteamCollectionName.setVisible(false);
 		viewableLog.setFixedCellSize(35);
 
+		//This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
+		modDescription.setOnDragOver(dragEvent -> {});
+
 		UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
 	}
 
