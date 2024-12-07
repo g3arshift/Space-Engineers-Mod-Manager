@@ -2,7 +2,6 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
@@ -23,10 +22,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.io.File;
 import java.io.IOException;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,6 +52,8 @@ public class ModlistService {
 
 	private final String STEAM_MOD_DESCRIPTION_SELECTOR;
 
+	private final String STEAM_MOD_VERIFICATION_SELECTOR;
+
 	private final String STEAM_COLLECTION_GAME_NAME_SELECTOR;
 
 	private final String STEAM_COLLECTION_MOD_ID_SELECTOR;
@@ -78,6 +76,8 @@ public class ModlistService {
 		this.STEAM_MOD_FIRST_POSTED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
 		this.STEAM_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
 		this.STEAM_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
+		this.STEAM_MOD_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
+
 		this.STEAM_COLLECTION_GAME_NAME_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
 		this.STEAM_COLLECTION_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
 		this.STEAM_COLLECTION_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
@@ -146,7 +146,6 @@ public class ModlistService {
 	// It will call a single mod info scrape function from the UI, submitting a mod to it. The UI layer will have the code to increment the variable. The call in the view layer will have code that gets the future results.
 	// This is much simpler than the crazy BS we were doing before
 	public Result<String[]> generateModInformation(@NotNull Mod mod) throws IOException {
-
 		return scrapeModInformation(mod.getId(), mod.getModType());
 	}
 
@@ -155,10 +154,13 @@ public class ModlistService {
 		Result<String[]> modScrapeResult = new Result<>();
 		if (modType == ModType.STEAM) {
 			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
-
+			String workshopItemType = modPage.select(STEAM_MOD_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString();
 			if (modPage.title().equals("Steam Community :: Error")) {
-				modScrapeResult.addMessage("Item with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
-			} else {
+				modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
+			} else if (!workshopItemType.equals("Workshop")) {
+				modScrapeResult.addMessage("Item with ID \"" + modId + "\" is not a mod.", ResultType.FAILED);
+			}
+			else {
 				//The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
 				String[] modInfo = new String[4];
 				String modName = modPage.title().split("Workshop::")[1];

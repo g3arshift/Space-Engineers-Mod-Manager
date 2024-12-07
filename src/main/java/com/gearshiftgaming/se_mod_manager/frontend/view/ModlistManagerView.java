@@ -474,10 +474,14 @@ public class ModlistManagerView {
 								.results()
 								.map(MatchResult::group)
 								.collect(Collectors.joining(""));
+
+						//Certain strings will sometimes return empty strings after the regex.
+						if(!modId.isBlank()) {
+							modId = modId.substring(3);
+						}
 					}
 
 					if (!modId.isEmpty()) {
-						modId = modId.substring(3);
 						Optional<Mod> duplicateMod = Optional.empty();
 						if (!steamCollection) {
 							String finalModId = modId;
