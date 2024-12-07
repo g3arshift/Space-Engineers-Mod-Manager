@@ -207,7 +207,7 @@ public class ModTableContextBarView {
 			}
 		});
 
-		UI_SERVICE.logPrivate("Successfully initialized menu bar.", MessageType.INFO);
+		UI_SERVICE.logPrivate("Successfully initialized context bar.", MessageType.INFO);
 	}
 
 	@FXML
@@ -292,8 +292,6 @@ public class ModTableContextBarView {
 		clearSearchBox();
 
 		UI_SERVICE.setCurrentModProfile(modProfile);
-//		MODLIST_MANAGER_VIEW.setFilteredModList(new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true));
-//		MODLIST_MANAGER_VIEW.getModTable().setItems(MODLIST_MANAGER_VIEW.getFilteredModList());
 		MODLIST_MANAGER_VIEW.updateModTableContents();
 	}
 

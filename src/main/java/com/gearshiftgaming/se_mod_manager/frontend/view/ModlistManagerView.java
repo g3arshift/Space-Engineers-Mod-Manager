@@ -308,6 +308,8 @@ public class ModlistManagerView {
 
 		modAdditionSteamCollectionName.setVisible(false);
 		viewableLog.setFixedCellSize(35);
+
+		UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
 	}
 
 	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.

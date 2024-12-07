@@ -120,7 +120,7 @@
             <StackPane alignment="CENTER_LEFT">
                <children>
                          <TextField fx:id="modTableSearchField" />
-                  <Label fx:id="modTableSearchFieldPromptText" focusTraversable="false" mouseTransparent="true" opacity="0.7" style="-fx-text-fill: -color-fg-default;" text="Search Mod Name">
+                  <Label fx:id="modTableSearchFieldPromptText" focusTraversable="false" mouseTransparent="true" opacity="0.6" style="-fx-text-fill: -color-fg-default;" text="Search Mod Name">
                      <padding>
                         <Insets left="10.0" right="20.0" />
                      </padding>
