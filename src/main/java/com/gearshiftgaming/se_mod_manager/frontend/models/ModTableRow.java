@@ -2,11 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import javafx.scene.Node;
 import javafx.scene.control.TableRow;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Polygon;
-import javafx.scene.text.Text;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved

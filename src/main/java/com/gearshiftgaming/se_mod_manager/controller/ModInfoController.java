@@ -29,8 +29,8 @@ public class ModInfoController {
 	}
 
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
-	public List<Future<Result<String[]>>> fillOutModInformation(List<Mod> modList) {
-		return MODLIST_SERVICE.generateModInformation(modList);
+	public Result<String[]> fillOutModInformation(Mod mod) throws IOException {
+		return MODLIST_SERVICE.generateModInformation(mod);
 	}
 
 	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {

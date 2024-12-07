@@ -53,6 +53,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -609,7 +612,7 @@ public class ModlistManagerView {
 
 	protected void handleModTableDragOver(DragEvent dragEvent) {
 		//Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll
-		final double SCROLL_SPEED = 0.3;
+		final double SCROLL_SPEED = 0.03;
 
 		double y = dragEvent.getY();
 		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
@@ -632,9 +635,9 @@ public class ModlistManagerView {
 
 		//Scroll up
 		if (y < modTableTop && currentScrollValue > minScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) {
-			scrollAmount = -SCROLL_SPEED * 0.1;
+			scrollAmount = -SCROLL_SPEED;
 		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight() > modTable.getHeight()) { //Scroll down
-			scrollAmount = SCROLL_SPEED * 0.1;
+			scrollAmount = SCROLL_SPEED;
 		} else {
 			scrollAmount = 0;
 		}
@@ -842,12 +845,44 @@ public class ModlistManagerView {
 	}
 
 	private Thread getModAdditionThread(List<Mod> modList) {
-		final Task<List<Result<Void>>> TASK;
+		final Task<List<Result<Mod>>> TASK;
+		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
 
+		//TODO: This works, but it's slow. Likely due to the blocking calls.
 		TASK = new Task<>() {
 			@Override
-			protected List<Result<Void>> call() throws ExecutionException, InterruptedException {
-				return UI_SERVICE.fillOutModInformation(modList);
+			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
+				Platform.runLater(() -> UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(modList.size()));
+
+				List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
+				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()){
+					for (Mod m : modList) {
+						// Submit the task without waiting for it to finish
+						Future<Result<Mod>> future = executorService.submit(() -> {
+							try {
+								return UI_SERVICE.fillOutModInformation(m);
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						});
+						// Store the Future if you need to track the task later
+						futures.add(future);
+					}
+					try {
+						for (Future<Result<Mod>> f : futures) {
+							modInfoFillOutResults.add(f.get());
+						}
+					}
+					catch (RuntimeException e) {
+						System.out.println();
+					}
+				}
+//
+//				Platform.runLater(() -> {
+//					UI_SERVICE.getModAdditionProgressNumeratorProperty().setValue(UI_SERVICE.getModAdditionProgressNumerator() + 1);
+//					UI_SERVICE.getModAdditionProgressPercentageProperty().setValue((double) UI_SERVICE.getModAdditionProgressNumerator() / (double) UI_SERVICE.getModAdditionProgressDenominator());
+//				});
+				return modInfoFillOutResults;
 			}
 		};
 
@@ -859,13 +894,14 @@ public class ModlistManagerView {
 
 		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
 			modAdditionProgressWheel.setVisible(false);
-			List<Result<Void>> modInfoFillOutResults = TASK.getValue();
+
 
 			int successfulScrapes = 0;
 			int failedScrapes = 0;
 
-			for (Result<Void> currentModInfoFillOutResult : modInfoFillOutResults) {
+			for (Result<Mod> currentModInfoFillOutResult : modInfoFillOutResults) {
 				if (currentModInfoFillOutResult.isSuccess()) {
+					UI_SERVICE.getCurrentModList().add(currentModInfoFillOutResult.getPayload());
 					successfulScrapes++;
 					modTable.sort();
 					//TODO: This might be unwanted behavior from users. Requires actual experience testing.
@@ -886,6 +922,9 @@ public class ModlistManagerView {
 				Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
 				UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
 			}
+
+			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.saveUserData();
 
 			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
 			//Reset our UI settings for the mod progress

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -210,63 +211,52 @@ public class UiService {
 		}
 	}
 
+	public void modifyActiveModCount(int numMods) {
+		activeModCount.set(activeModCount.get() + numMods);
+	}
+
 	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
 	// bars to work properly.
-
-	public List<Result<String>> scrapeSteamModCollectionModList (String collectionId) throws IOException {
+	//TODO: We need to throw in a duplicate mod check here.
+	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
 		return MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
 	}
-	public List<Result<Void>> fillOutModInformation(List<Mod> modList) throws ExecutionException, InterruptedException {
-		Platform.runLater(() -> modAdditionProgressDenominator.setValue(modList.size()));
 
-		List<Future<Result<String[]>>> modInfoScrapingResults;
-		List<Result<Void>> modInfoResults = new ArrayList<>(modList.size());
+	public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
+		Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
+		Result<Mod> modInfoResult = new Result<>();
 
-		modInfoScrapingResults = MOD_INFO_CONTROLLER.fillOutModInformation(modList);
+		if (modScrapeResult.isSuccess()) {
+			String[] modInfo = modScrapeResult.getPayload();
 
-		for (int i = 0; i < modList.size(); i++) {
-			Result<Void> currentModInfoResult = new Result<>();
-			Future<Result<String[]>> currentFuture = modInfoScrapingResults.get(i);
-			Mod currentMod = modList.get(i);
-			if (currentFuture.get().isSuccess()) {
-				String[] modInfo = currentFuture.get().getPayload();
+			mod.setFriendlyName(modInfo[0]);
 
-				currentMod.setFriendlyName(modInfo[0]);
+			DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+					.parseCaseInsensitive()
+					.appendPattern(MOD_DATE_FORMAT)
+					.toFormatter();
 
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-						.parseCaseInsensitive()
-						.appendPattern(MOD_DATE_FORMAT)
-						.toFormatter();
-				//TODO: we're getting a weird time mismatch... Might be a local machine issue. Or the steam server might be 3hrs behind our location.
-//				ZonedDateTime modUpdatedGmtTime = ZonedDateTime.of(LocalDateTime.parse(modInfo[1], formatter), ZoneId.of("GMT"));
-//				ZonedDateTime modUpdatedCurrentTimeZone = modUpdatedGmtTime.withZoneSameInstant(ZoneId.systemDefault());
-//				mod.setLastUpdated(modUpdatedCurrentTimeZone.toLocalDateTime());
-				currentMod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+			mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
 
-				List<String> modTags = List.of(modInfo[2].split(","));
-				currentMod.setCategories(modTags);
+			List<String> modTags = List.of(modInfo[2].split(","));
+			mod.setCategories(modTags);
 
-				currentMod.setDescription(modInfo[3]);
+			mod.setDescription(modInfo[3]);
 
-				currentMod.setLoadPriority(currentModList.size() + 1);
-				currentModList.add(currentMod);
+			mod.setLoadPriority(currentModList.size() + 1);
 
-				currentModInfoResult.addMessage("Mod \"" + currentMod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
-			} else {
-				currentModInfoResult.addMessage(currentFuture.get().getCurrentMessage(), currentFuture.get().getType());
-			}
-			modInfoResults.add(currentModInfoResult);
-
-			Platform.runLater(() -> {
-				modAdditionProgressNumerator.setValue(modAdditionProgressNumerator.get() + 1);
-				modAdditionProgressPercentage.setValue((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
-			});
+			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
+			modInfoResult.setPayload(mod);
+		} else {
+			modInfoResult.addMessage(modScrapeResult.getCurrentMessage(), modScrapeResult.getType());
 		}
 
-		currentModProfile.setModList(currentModList);
-		saveUserData();
+		Platform.runLater(() -> {
+			modAdditionProgressNumerator.setValue(modAdditionProgressNumerator.get() + 1);
+			modAdditionProgressPercentage.setValue((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
+		});
 
-		return modInfoResults;
+		return modInfoResult;
 	}
 
 	public Result<List<Mod>> addModsFromSteamCollection() {

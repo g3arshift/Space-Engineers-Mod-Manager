@@ -142,22 +142,16 @@ public class ModlistService {
 		return modIdScrapeResults;
 	}
 
-	public List<Future<Result<String[]>>> generateModInformation(@NotNull List<Mod> modList) {
-		List<Future<Result<String[]>>> futures = new ArrayList<>(modList.size());
+	//TODO: The executor needs to happen all the way up in the view layer.
+	// It will call a single mod info scrape function from the UI, submitting a mod to it. The UI layer will have the code to increment the variable. The call in the view layer will have code that gets the future results.
+	// This is much simpler than the crazy BS we were doing before
+	public Result<String[]> generateModInformation(@NotNull Mod mod) throws IOException {
 
-		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-			for (Mod m : modList) {
-				futures.add(executorService.submit(scrapeModInformation(m.getId(), m.getModType())));
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		return futures;
+		return scrapeModInformation(mod.getId(), mod.getModType());
 	}
 
 	//Scrape the web pages of the mods we want the information from
-	private Callable<Result<String[]>> scrapeModInformation(String modId, ModType modType) throws IOException {
+	private Result<String[]> scrapeModInformation(String modId, ModType modType) throws IOException {
 		Result<String[]> modScrapeResult = new Result<>();
 		if (modType == ModType.STEAM) {
 			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
@@ -234,7 +228,7 @@ public class ModlistService {
 			System.out.println("Hold here");
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
 		}
-		return () -> modScrapeResult;
+		return modScrapeResult;
 	}
 
 	//Check if the mod we're scraping is actually a workshop mod.

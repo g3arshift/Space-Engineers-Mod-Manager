@@ -74,9 +74,9 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		final ModTableRow row = new ModTableRow(UI_SERVICE);
 
 		//Setup our context menu
-		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");
 		final ContextMenu TABLE_CONTEXT_MENU = new ContextMenu();
 
+		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");
 		WEB_BROWSE_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 			for (Mod m : selectedMods) {
@@ -101,6 +101,12 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
 			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
 
+			int previouslyActiveModCount = 0;
+
+			for(Mod m : selectedMods) {
+				if (m.isActive()) previouslyActiveModCount++;
+			}
+
 			//Update the priority of our columns
 
 			UI_SERVICE.getCurrentModList().sort(Comparator.comparing(Mod::getLoadPriority));
@@ -115,6 +121,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				modTable.refresh();
 				sortedColumn.setSortType(sortedColumnSortType);
 			}
+
+			UI_SERVICE.modifyActiveModCount(-previouslyActiveModCount);
 			UI_SERVICE.saveUserData();
 		});
 
