@@ -263,8 +263,11 @@ public class ModlistService {
 		} else {
 			//TODO: Implement modIO stuff.
 			//TODO: Look down in checkIfModIsMod for how to do modIO. It requires selenium.
+			System.out.println("ModIO");
 			//Document doc = Jsoup.connect(MODIO_URL + modId).get();
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
+			//TODO: Remove. Here just to prevent a null exception.
+			modScrapeResult.addMessage("Mod IO Test", ResultType.FAILED);
 		}
 		return modScrapeResult;
 	}

@@ -68,6 +68,7 @@
                                  </graphic>
                               </Label>
                               <Label fx:id="modImportSteamCollectionName" text="Processing Steam Collection..." />
+                              <Label fx:id="modIoUrlToIdName" text="Converting Mod.io URL to ID..." />
                            </children>
                         </StackPane>
                         <ProgressIndicator fx:id="modImportProgressWheel" prefHeight="60.0" prefWidth="29.0" />

@@ -171,7 +171,7 @@ public class ModlistManagerView {
 	private Label modImportSteamCollectionName;
 
 	@FXML
-	private Label modImportOnlineCheckText;
+	private Label modIoUrlToIdName;
 
 	private final UiService UI_SERVICE;
 
@@ -319,6 +319,9 @@ public class ModlistManagerView {
 		modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
 
 		modImportSteamCollectionName.setVisible(false);
+
+		modIoUrlToIdName.setVisible(false);
+
 		viewableLog.setFixedCellSize(35);
 
 		//This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
@@ -439,35 +442,6 @@ public class ModlistManagerView {
 
 	}
 
-//	private Thread getSteamOnlineCheckThread() {
-//		final Task<Boolean> TASK;
-//		Platform.runLater(() -> showOnlineCheckPanel(true));
-//		TASK = new Task<>() {
-//			@Override
-//			protected Boolean call() throws Exception {
-//
-//			}
-//		}
-//
-//
-//
-//
-//
-//
-//
-//		boolean isOnline;
-//		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-//			Future<Boolean> future = executorService.submit(UI_SERVICE::isSteamOnline);
-//			isOnline = future.get();
-//		} catch (ExecutionException | InterruptedException e) {
-//			UI_SERVICE.log(e);
-//			Popup.displaySimpleAlert(e.toString(), MessageType.ERROR);
-//			isOnline = false;
-//		}
-//		Platform.runLater(() -> showOnlineCheckPanel(false));
-//		return  isOnline;
-//	}
-
 	private void addModsFromSteamCollection() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		setModAddingInputViewText("Steam Workshop Collection URL/ID",
@@ -511,30 +485,84 @@ public class ModlistManagerView {
 
 		if (!modId.isBlank()) {
 			if (!StringUtils.isNumeric(modId)) {
-				try {
-					Result<String> modIdResult = UI_SERVICE.getModIoModIdFromUrlName(modId);
+				getModIoUrlToIdThread(modId).start();
+			} else {
+				Mod mod = new Mod(modId, ModType.MOD_IO);
 
-					if (modIdResult.isSuccess()) {
-						modId = modIdResult.getPayload();
-					} else {
-						UI_SERVICE.log(modIdResult);
-						Popup.displaySimpleAlert(modIdResult, STAGE);
-						return;
-					}
+				//This is a bit hacky, but it makes a LOT less code we need to maintain.
+				final Mod[] modList = new Mod[1];
+				modList[0] = mod;
+				getModImportThread(List.of(modList)).start();
+			}
+		}
+	}
+
+	private Thread getModIoUrlToIdThread(String modUrl) {
+		final Task<Result<String>> TASK;
+
+		TASK = new Task<>() {
+			@Override
+			protected Result<String> call() {
+				try {
+					return UI_SERVICE.getModIoModIdFromUrlName(modUrl);
 				} catch (IOException e) {
-					UI_SERVICE.log(e);
-					Popup.displaySimpleAlert(e.toString(), STAGE, MessageType.ERROR);
-					return;
+					Result<String> failedResult = new Result<>();
+					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+					} else {
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+					}
+					return failedResult;
 				}
 			}
+		};
 
-			Mod mod = new Mod(modId, ModType.MOD_IO);
+		TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
+			modIoUrlToIdName.setVisible(true);
+			disableUserInputElements(true);
+			modImportProgressDenominator.setVisible(false);
+			modImportProgressPanel.setVisible(true);
+		}));
 
-			//This is a bit hacky, but it makes a LOT less code we need to maintain.
-			final Mod[] modList = new Mod[1];
-			modList[0] = mod;
-			getModImportThread(List.of(modList)).start();
-		}
+		TASK.setOnSucceeded(workerStateEvent -> {
+			Platform.runLater(() -> {
+				modIoUrlToIdName.setVisible(false);
+				modImportProgressDenominator.setVisible(true);
+			});
+
+			Result<String> modIdResult = TASK.getValue();
+			if (modIdResult.isSuccess()) {
+				Mod mod = new Mod(modIdResult.getPayload(), ModType.MOD_IO);
+				final Mod[] modList = new Mod[1];
+				modList[0] = mod;
+				getModImportThread(List.of(modList)).start();
+			} else {
+				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
+				Platform.runLater(() -> {
+					modImportProgressWheel.setVisible(false);
+					UI_SERVICE.getModImportProgressDenominatorProperty().setValue(1);
+				});
+				UI_SERVICE.log(modIdResult);
+				Popup.displaySimpleAlert(modIdResult, STAGE);
+
+				Platform.runLater(() -> {
+					//Fadeout the UI if it doesn't succeed.
+					FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+					fadeTransition.setFromValue(1d);
+					fadeTransition.setToValue(0d);
+
+					fadeTransition.setOnFinished(actionEvent -> {
+						disableUserInputElements(false);
+						resetModImportProgressUi();
+					});
+					fadeTransition.play();
+				});
+			}
+		});
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
 	}
 
 	private void addModsFromFile() {
@@ -916,7 +944,26 @@ public class ModlistManagerView {
 	}
 
 	private Thread getSteamModCollectionThread(String collectionId) {
-		final Task<List<Result<String>>> TASK = getListTask(collectionId);
+		final Task<List<Result<String>>> TASK;
+
+		TASK = new Task<>() {
+			@Override
+			protected List<Result<String>> call() {
+				try {
+					return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
+				} catch (IOException e) {
+					List<Result<String>> failedResults = new ArrayList<>();
+					Result<String> failedResult = new Result<>();
+					if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+						failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+					} else {
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+					}
+					failedResults.add(failedResult);
+					return failedResults;
+				}
+			}
+		};
 
 		TASK.setOnRunning(workerStateEvent -> {
 			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
@@ -1001,31 +1048,6 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	@NotNull
-	private Task<List<Result<String>>> getListTask(String collectionId) {
-		final Task<List<Result<String>>> TASK;
-
-		TASK = new Task<>() {
-			@Override
-			protected List<Result<String>> call() {
-				try {
-					return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
-				} catch (IOException e) {
-					List<Result<String>> failedResults = new ArrayList<>();
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-						failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					failedResults.add(failedResult);
-					return failedResults;
-				}
-			}
-		};
-		return TASK;
-	}
-
 	private Thread getModImportThread(List<Mod> modList) {
 		final Task<List<Result<Mod>>> TASK;
 		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
@@ -1042,7 +1064,7 @@ public class ModlistManagerView {
 								return UI_SERVICE.fillOutModInformation(m);
 							} catch (IOException e) {
 								Result<Mod> failedResult = new Result<>();
-								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com") || e.toString().equals("java.net.UnknownHostException: mod.io")) {
 									failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
 								} else {
 									failedResult.addMessage(e.toString(), ResultType.FAILED);
@@ -1075,7 +1097,6 @@ public class ModlistManagerView {
 
 		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
 			modImportProgressWheel.setVisible(false);
-
 
 			int successfulScrapes = 0;
 			int failedScrapes = 0;
