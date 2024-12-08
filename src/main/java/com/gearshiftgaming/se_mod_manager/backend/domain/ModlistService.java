@@ -62,6 +62,8 @@ public class ModlistService {
 
 	private final String MODIO_MOD_SCRAPING_SELECTOR;
 
+	private final String MODIO_MOD_JSOUP_MODID_SELECTOR;
+
 	@Setter
 	@Getter
 	//TODO: Move this to backend controller, and decide and log there.
@@ -83,6 +85,7 @@ public class ModlistService {
 		this.STEAM_COLLECTION_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
 		this.MODIO_MOD_SCRAPING_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
+		this.MODIO_MOD_JSOUP_MODID_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
 	}
 
 	public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
@@ -142,6 +145,30 @@ public class ModlistService {
 		return modIdScrapeResults;
 	}
 
+	public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
+		Result<String> modIdResult = new Result<>();
+		final String MOD_IO_NAME_URL = "https://mod.io/g/spaceengineers/m/";
+		final Pattern MOD_ID_FROM_IMAGE_URL = Pattern.compile("(?<=/)\\d+(?=/)");
+
+		Document doc = Jsoup.connect(MOD_IO_NAME_URL + modName).get();
+
+		try {
+			String modId = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MODIO_MOD_JSOUP_MODID_SELECTOR).toString())
+					.results()
+					.map(MatchResult::group)
+					.collect(Collectors.joining());
+
+			if(!modId.isBlank()) {
+				modIdResult.setPayload(modId);
+				modIdResult.addMessage("Successfully scraped Mod.io Mod ID from URL.", ResultType.SUCCESS);
+			}
+		} catch (NoSuchElementException e) {
+			modIdResult.addMessage("Invalid Mod.io URL entered!", ResultType.INVALID);
+		}
+
+		return modIdResult;
+	}
+
 	//TODO: The executor needs to happen all the way up in the view layer.
 	// It will call a single mod info scrape function from the UI, submitting a mod to it. The UI layer will have the code to increment the variable. The call in the view layer will have code that gets the future results.
 	// This is much simpler than the crazy BS we were doing before
@@ -159,8 +186,7 @@ public class ModlistService {
 				modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
 			} else if (!workshopItemType.equals("Workshop")) {
 				modScrapeResult.addMessage("Item with ID \"" + modId + "\" is not a mod.", ResultType.FAILED);
-			}
-			else {
+			} else {
 				//The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
 				String[] modInfo = new String[4];
 				String modName = modPage.title().split("Workshop::")[1];
@@ -232,7 +258,6 @@ public class ModlistService {
 			//TODO: Implement modIO stuff.
 			//TODO: REmove this, here for testing and figuring out how to get the mod info I need
 			Document doc = Jsoup.connect(MODIO_URL + modId).get();
-			System.out.println("Hold here");
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
 		}
 		return modScrapeResult;
@@ -240,7 +265,7 @@ public class ModlistService {
 
 	//Check if the mod we're scraping is actually a workshop mod.
 	//Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-	private boolean checkIfModIsMod(String modId, ModType modType, Document modPage) throws IOException {
+	private boolean checkIfModIsMod(String modId, ModType modType, Document modPage) {
 		if (modType == ModType.STEAM) {
 			if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
 				return (modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Mod"));

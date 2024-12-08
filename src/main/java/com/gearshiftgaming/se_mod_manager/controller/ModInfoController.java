@@ -36,4 +36,8 @@ public class ModInfoController {
 	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
 		return MODLIST_SERVICE.scrapeSteamCollectionModIds(collectionId);
 	}
+
+	public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
+		return MODLIST_SERVICE.getModIoIdFromUrlName(modName);
+	}
 }

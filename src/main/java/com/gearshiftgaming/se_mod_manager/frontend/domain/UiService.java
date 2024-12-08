@@ -233,6 +233,13 @@ public class UiService {
 		return steamCollectionModIds;
 	}
 
+	//TODO: We need todo a workshop active check for all this shit in each of these functions.
+
+	public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
+		//TODO: Check for duplicates both on ID after we get the name back.
+		return MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
+	}
+
 	public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
 		Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
 		Result<Mod> modInfoResult = new Result<>();

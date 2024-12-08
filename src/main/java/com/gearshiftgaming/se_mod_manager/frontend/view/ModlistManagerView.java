@@ -220,8 +220,6 @@ public class ModlistManagerView {
 
 	private final String MOD_DATE_FORMAT;
 
-	private final Pattern STEAM_WORKSHOP_ID_REGEX_PATTERN;
-
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
 	private ComboBox<ModProfile> modProfileDropdown;
 	private ComboBox<SaveProfile> saveProfileDropdown;
@@ -236,7 +234,6 @@ public class ModlistManagerView {
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_ADDITION_INPUT = modAdditionInputView;
-		this.STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile("(id=[0-9])\\d*");
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -401,11 +398,11 @@ public class ModlistManagerView {
 	private void addModFromSteamId() {
 		setModAddingInputViewText("Steam Workshop Mod URL/ID",
 				"Enter the Steam Workshop URL/ID",
-				"Workshop URL/Mod ID",
-				"URL/ID cannot be blank!");
+				"Workshop URL/Mod ID"
+		);
 
 
-		String modId = getModLocationFromUser(false);
+		String modId = getSteamModLocationFromUser(false);
 		if (!modId.isBlank()) {
 			Mod mod = new Mod(modId, ModType.STEAM);
 
@@ -420,10 +417,10 @@ public class ModlistManagerView {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
 		setModAddingInputViewText("Steam Workshop Collection URL/ID",
 				"Enter the URL/ID for the Steam Workshop Collection",
-				"Collection URL/ID",
-				"URL/ID cannot be blank!");
+				"Collection URL/ID"
+		);
 
-		String modId = getModLocationFromUser(true);
+		String modId = getSteamModLocationFromUser(true);
 		if (!modId.isBlank()) {
 			try {
 				getSteamModCollectionThread(modId).start();
@@ -434,16 +431,47 @@ public class ModlistManagerView {
 		}
 	}
 
+
+	//TODO: v1 of how to do this
+	// Given user input, check if it's a mod ID (Just numbers) or an url (alphanumeric)
+	// Once we have our input, pass that to the normal modscrape calls.
+	// In the modlist service, we need to check it's for the right game. If it's an URL, we can actually check further up if the url source is from space engineers,
+	//    and if it's an ID, we do a lookup with jsoup, check the response, and can do the same check above for if it's a space engineers game.
+	//    We also need to see if we pass a bad ID to the right game if it'll give us a space engineers root, maybe, but no mod.
+	//    We also could possible use the title. The title is "mod name " + "For space engineers"
+	// Once we've confirmed our page is a legitimate mod for the right game, we start scraping.
+	//    Title contains mod name.
+	//    Unlike steam, we need to also scrape the real mod ID from an url if we are passed an url. We can tell if it's an url if it's not explicitly numeric.
+	//    We will need to check for duplicates based on friendly name for non-mod.io mods. Vice versa as well, we need to add checking for duplicates based on friendly name
+	//        for non-steam mods as well when checking steam dupes.
+
 	private void addModFromModIoId() {
-		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		//TODO: The actual adding to the modlist should happen here
 		setModAddingInputViewText("Mod.io Mod URL/ID",
 				"Enter the Mod.io URL or ID",
-				"Mod.io URL/ID",
-				"URL/ID cannot be blank!");
+				"Mod.io URL/ID"
+		);
 
-		String modId = getModLocationFromUser(false);
+		String modId = getModIoModLocationFromUser();
+
 		if (!modId.isBlank()) {
+			if(!StringUtils.isNumeric(modId)) {
+				try {
+					Result<String> modIdResult = UI_SERVICE.getModIoModIdFromUrlName(modId);
+
+					if(modIdResult.isSuccess()) {
+						modId = modIdResult.getPayload();
+					} else {
+						UI_SERVICE.log(modIdResult);
+						Popup.displaySimpleAlert(modIdResult, STAGE);
+						return;
+					}
+				} catch(IOException e ){
+					UI_SERVICE.log(e);
+					Popup.displaySimpleAlert(e.toString(), STAGE, MessageType.ERROR);
+					return;
+				}
+			}
+
 			Mod mod = new Mod(modId, ModType.MOD_IO);
 
 			//This is a bit hacky, but it makes a LOT less code we need to maintain.
@@ -459,9 +487,10 @@ public class ModlistManagerView {
 		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
 	}
 
-	private String getModLocationFromUser(boolean steamCollection) {
+	private String getSteamModLocationFromUser(boolean steamCollection) {
 		boolean goodModId = false;
 		String chosenModId = "";
+		final Pattern STEAM_WORKSHOP_MOD_ID = Pattern.compile("(id=[0-9])\\d*");
 
 		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
 		do {
@@ -474,7 +503,7 @@ public class ModlistManagerView {
 					if (StringUtils.isNumeric(userInputModId)) {
 						modId = userInputModId;
 					} else {
-						modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(userInputModId)
+						modId = STEAM_WORKSHOP_MOD_ID.matcher(userInputModId)
 								.results()
 								.map(MatchResult::group)
 								.collect(Collectors.joining(""));
@@ -515,6 +544,44 @@ public class ModlistManagerView {
 
 		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
 
+		return chosenModId;
+	}
+
+	private String getModIoModLocationFromUser() {
+		boolean goodModId = false;
+		String chosenModId = "";
+		final Pattern MOD_IO_URL = Pattern.compile("(?<=/g/spaceengineers/m/).*");
+
+		do {
+			String userInputModId = getUserModIdInput();
+			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
+			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
+				String modUrlName;
+
+				if (StringUtils.isNumeric(userInputModId)) {
+					modUrlName = userInputModId;
+				} else {
+					modUrlName = MOD_IO_URL.matcher(userInputModId)
+							.results()
+							.map(MatchResult::group)
+							.collect(Collectors.joining());
+				}
+
+				if (!modUrlName.isEmpty()) {
+					//Unlike the steam check, the duplicate check has to happen down in the scraping layer since we don't know the mod ID yet.
+					chosenModId = modUrlName;
+					goodModId = true;
+				} else {
+					Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
+				}
+			} else {
+				goodModId = true;
+			}
+		} while (!goodModId);
+
+		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
+
+		//This will return either the name of a mod as it appears in the url, or the actual mod ID. We can have the controller handle parsing these out.
 		return chosenModId;
 	}
 
@@ -765,11 +832,11 @@ public class ModlistManagerView {
 		return ID_AND_URL_MOD_ADDITION_INPUT.getInput().getText();
 	}
 
-	private void setModAddingInputViewText(String title, String instructions, String promptText, String emptyTextMessage) {
+	private void setModAddingInputViewText(String title, String instructions, String promptText) {
 		ID_AND_URL_MOD_ADDITION_INPUT.setTitle(title);
 		ID_AND_URL_MOD_ADDITION_INPUT.setInputInstructions(instructions);
 		ID_AND_URL_MOD_ADDITION_INPUT.setPromptText(promptText);
-		ID_AND_URL_MOD_ADDITION_INPUT.setEmptyTextMessage(emptyTextMessage);
+		ID_AND_URL_MOD_ADDITION_INPUT.setEmptyTextMessage("URL/ID cannot be blank!");
 	}
 
 	private void redirectHyperlinks() {
