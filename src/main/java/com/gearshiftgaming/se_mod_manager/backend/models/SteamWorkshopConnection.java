@@ -23,18 +23,7 @@ public class SteamWorkshopConnection {
 
     private boolean steamWorkshopConnectionActive = false;
 
-    public SteamWorkshopConnection(Logger logger) throws IOException {
-        Properties properties = new Properties();
-        try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM.properties")) {
-            properties.load(input);
-        } catch (IOException e) {
-            logger.error("Could not load SEMM.properties.");
-        }
-        this.CONNECTION_CHECK_URL = properties.getProperty("semm.connectionCheck.steam.url");
-        this.CONNECTION_CHECK_TITLE = properties.getProperty("semm.connectionCheck.steam.title");
-    }
-
-    public SteamWorkshopConnection(Logger logger, String connectionCheckUrl, String connectionCheckTitle){
+    public SteamWorkshopConnection(String connectionCheckUrl, String connectionCheckTitle) {
         this.CONNECTION_CHECK_URL = connectionCheckUrl;
         this.CONNECTION_CHECK_TITLE = connectionCheckTitle;
     }

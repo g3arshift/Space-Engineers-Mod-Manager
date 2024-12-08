@@ -261,8 +261,8 @@ public class ModlistService {
 			}
 		} else {
 			//TODO: Implement modIO stuff.
-			//TODO: REmove this, here for testing and figuring out how to get the mod info I need
-			Document doc = Jsoup.connect(MODIO_URL + modId).get();
+			//TODO: Look down in checkIfModIsMod for how to do modIO. It requires selenium.
+			//Document doc = Jsoup.connect(MODIO_URL + modId).get();
 			//return () -> Jsoup.connect(MOD_IO_URL + mod.getId()).get().title() + (checkIfModIsMod(mod.getId()) ? "" : "_NOT_A_MOD");
 		}
 		return modScrapeResult;

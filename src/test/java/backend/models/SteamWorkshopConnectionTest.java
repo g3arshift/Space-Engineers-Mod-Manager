@@ -13,7 +13,8 @@ public class SteamWorkshopConnectionTest {
 
     @Test
     void shouldGetWorkshopConnection() throws IOException {
-        SteamWorkshopConnection steamWorkshopConnection = new SteamWorkshopConnection(mock(Logger.class));
+
+        SteamWorkshopConnection steamWorkshopConnection = new SteamWorkshopConnection("https://steamcommunity.com/sharedfiles/filedetails/?id=2135416557", "Steam Workshop::Halo Mod - Weapons");
         steamWorkshopConnection.checkWorkshopConnectivity();
         assertTrue(steamWorkshopConnection.isSteamWorkshopConnectionActive());
     }
@@ -23,7 +24,7 @@ public class SteamWorkshopConnectionTest {
         String badConnectionCheckUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=2135416552227";
         String connectionCheckTitle = "Steam Workshop::Halo Mod - Weapons";
 
-        SteamWorkshopConnection steamWorkshopConnection = new SteamWorkshopConnection(mock(Logger.class), badConnectionCheckUrl, connectionCheckTitle);
+        SteamWorkshopConnection steamWorkshopConnection = new SteamWorkshopConnection(badConnectionCheckUrl, connectionCheckTitle);
         steamWorkshopConnection.checkWorkshopConnectivity();
         assertFalse(steamWorkshopConnection.isSteamWorkshopConnectionActive());
     }

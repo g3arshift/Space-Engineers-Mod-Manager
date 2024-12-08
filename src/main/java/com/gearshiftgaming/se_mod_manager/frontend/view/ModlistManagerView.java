@@ -36,6 +36,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
@@ -290,7 +291,25 @@ public class ModlistManagerView {
 		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
 		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
 
-		//TODO: These aren't updating properly.
+		//This is here to make it so we can prevent users from clicking on the purely display option "Add mods from...", while also making it clear it's not a valid option.
+		modImportDropdown.setCellFactory(param -> new ListCell<>() {
+			@Override
+			protected void updateItem(String item, boolean empty) {
+				super.updateItem(item, empty);
+
+				if (empty || item == null) {
+					setGraphic(null);
+					setStyle(null);
+				} else {
+					this.setText(item);
+					if (item.equals("Add mods from...")) {
+						this.setOpacity(0.6);
+						this.setDisable(true);
+					}
+				}
+			}
+		});
+
 		modAdditionProgressNumerator.textProperty().bind(UI_SERVICE.getModAdditionProgressNumeratorProperty().asString());
 		modAdditionProgressDenominator.textProperty().bind(UI_SERVICE.getModAdditionProgressDenominatorProperty().asString());
 		modAdditionProgressBar.progressProperty().bind(UI_SERVICE.getModAdditionProgressPercentageProperty());
@@ -375,19 +394,25 @@ public class ModlistManagerView {
 	//TODO: Hookup all the buttons to everything
 	@FXML
 	private void addMod() {
-		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
-		modImportDropdown.getSelectionModel().selectFirst();
-		modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
+		//TODO: Add a modIO check. Store two booleans for both workshop and modio connections. Check both. If one is up but not the other, remove the menu options for them.
+		// When we pass the check, remove all menu options from the menu and add them all back. Just a simple and fast way to make sure we don't have invalid or missing options since we can't call .disable.
+		if (UI_SERVICE.isSteamOnline()) {
+			ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
+			modImportDropdown.getSelectionModel().selectFirst();
+			modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
 
-		//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
+			//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
 
-		if (selectedImportOption != null) {
-			switch (selectedImportOption) {
-				case STEAM_ID -> addModFromSteamId();
-				case STEAM_COLLECTION -> addModsFromSteamCollection();
-				case MOD_IO -> addModFromModIoId();
-				case FILE -> addModsFromFile();
+			if (selectedImportOption != null) {
+				switch (selectedImportOption) {
+					case STEAM_ID -> addModFromSteamId();
+					case STEAM_COLLECTION -> addModsFromSteamCollection();
+					case MOD_IO -> addModFromModIoId();
+					case FILE -> addModsFromFile();
+				}
 			}
+		} else {
+			Popup.displaySimpleAlert("Cannot reach the Steam Workshop! Check that you are online and that Steam is not having any issues.", MessageType.ERROR);
 		}
 	}
 
@@ -454,18 +479,18 @@ public class ModlistManagerView {
 		String modId = getModIoModLocationFromUser();
 
 		if (!modId.isBlank()) {
-			if(!StringUtils.isNumeric(modId)) {
+			if (!StringUtils.isNumeric(modId)) {
 				try {
 					Result<String> modIdResult = UI_SERVICE.getModIoModIdFromUrlName(modId);
 
-					if(modIdResult.isSuccess()) {
+					if (modIdResult.isSuccess()) {
 						modId = modIdResult.getPayload();
 					} else {
 						UI_SERVICE.log(modIdResult);
 						Popup.displaySimpleAlert(modIdResult, STAGE);
 						return;
 					}
-				} catch(IOException e ){
+				} catch (IOException e) {
 					UI_SERVICE.log(e);
 					Popup.displaySimpleAlert(e.toString(), STAGE, MessageType.ERROR);
 					return;

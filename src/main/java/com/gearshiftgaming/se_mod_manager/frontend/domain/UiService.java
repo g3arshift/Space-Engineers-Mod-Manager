@@ -4,6 +4,7 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -85,6 +86,8 @@ public class UiService {
 
 	private final String MOD_DATE_FORMAT;
 
+	private final SteamWorkshopConnection STEAM_WORKSHOP_IS_ONLINE;
+
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
 					 BackendStorageController backendStorageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
@@ -98,6 +101,8 @@ public class UiService {
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
 
 		this.MOD_DATE_FORMAT = properties.getProperty("semm.mod.dateFormat");
+		;
+		this.STEAM_WORKSHOP_IS_ONLINE = new SteamWorkshopConnection(properties.getProperty("semm.connectionCheck.steam.url"), properties.getProperty("semm.connectionCheck.steam.title"));
 
 		//Initialize our current mod and save profiles
 		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
@@ -178,6 +183,18 @@ public class UiService {
 		//TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
 	}
 
+	public boolean isSteamOnline() {
+		try {
+			STEAM_WORKSHOP_IS_ONLINE.checkWorkshopConnectivity();
+		} catch (IOException e) {
+			log(e);
+			Popup.displaySimpleAlert(e.toString(), MessageType.ERROR);
+			return false;
+		}
+
+		return STEAM_WORKSHOP_IS_ONLINE.isSteamWorkshopConnectionActive();
+	}
+
 	//Sets the theme for our application based on the users preferred theme using reflection.
 	//It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar. Not the *best* way to do this, but it works.
 	public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -232,8 +249,6 @@ public class UiService {
 
 		return steamCollectionModIds;
 	}
-
-	//TODO: We need todo a workshop active check for all this shit in each of these functions.
 
 	public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
 		//TODO: Check for duplicates both on ID after we get the name back.
