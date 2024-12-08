@@ -145,6 +145,11 @@ public class ModlistService {
 		return modIdScrapeResults;
 	}
 
+	/*
+	Give a mod IO url, we get the actual ID of the mod. This is done by grabbing the resource ID contained within the URL of the mod primary image.
+	Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
+		scraping process which opens a full headless, embedded web browser.
+	 */
 	public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
 		Result<String> modIdResult = new Result<>();
 		final String MOD_IO_NAME_URL = "https://mod.io/g/spaceengineers/m/";
