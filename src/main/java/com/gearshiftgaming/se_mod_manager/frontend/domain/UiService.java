@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.Future;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -74,15 +75,15 @@ public class UiService {
 
 
 	@Setter
-	private IntegerProperty modAdditionProgressNumerator;
+	private IntegerProperty modImportProgressNumerator;
 
 
 	@Setter
-	private IntegerProperty modAdditionProgressDenominator;
+	private IntegerProperty modImportProgressDenominator;
 
 
 	@Setter
-	private DoubleProperty modAdditionProgressPercentage;
+	private DoubleProperty modImportProgressPercentage;
 
 	private final String MOD_DATE_FORMAT;
 
@@ -283,8 +284,8 @@ public class UiService {
 		}
 
 		Platform.runLater(() -> {
-			modAdditionProgressNumerator.setValue(modAdditionProgressNumerator.get() + 1);
-			modAdditionProgressPercentage.setValue((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
+			modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
+			modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
 		});
 
 		return modInfoResult;
@@ -305,36 +306,36 @@ public class UiService {
 		return null;
 	}
 
-	public IntegerProperty getModAdditionProgressNumeratorProperty() {
-		if (this.modAdditionProgressNumerator == null) {
-			this.modAdditionProgressNumerator = new SimpleIntegerProperty(0);
+	public IntegerProperty getModImportProgressNumeratorProperty() {
+		if (this.modImportProgressNumerator == null) {
+			this.modImportProgressNumerator = new SimpleIntegerProperty(0);
 		}
-		return this.modAdditionProgressNumerator;
+		return this.modImportProgressNumerator;
 	}
 
-	public int getModAdditionProgressNumerator() {
-		return modAdditionProgressNumerator.get();
+	public int getModImportProgressNumerator() {
+		return modImportProgressNumerator.get();
 	}
 
-	public IntegerProperty getModAdditionProgressDenominatorProperty() {
-		if (this.modAdditionProgressDenominator == null) {
-			this.modAdditionProgressDenominator = new SimpleIntegerProperty(0);
+	public IntegerProperty getModImportProgressDenominatorProperty() {
+		if (this.modImportProgressDenominator == null) {
+			this.modImportProgressDenominator = new SimpleIntegerProperty(0);
 		}
-		return this.modAdditionProgressDenominator;
+		return this.modImportProgressDenominator;
 	}
 
-	public int getModAdditionProgressDenominator() {
-		return modAdditionProgressDenominator.get();
+	public int getModImportProgressDenominator() {
+		return modImportProgressDenominator.get();
 	}
 
-	public DoubleProperty getModAdditionProgressPercentageProperty() {
-		if (modAdditionProgressPercentage == null) {
-			modAdditionProgressPercentage = new SimpleDoubleProperty(0d);
+	public DoubleProperty getModImportProgressPercentageProperty() {
+		if (modImportProgressPercentage == null) {
+			modImportProgressPercentage = new SimpleDoubleProperty(0d);
 		}
-		return modAdditionProgressPercentage;
+		return modImportProgressPercentage;
 	}
 
-	public double getModAdditionProgressPercentage() {
-		return modAdditionProgressPercentage.get();
+	public double getModImportProgressPercentage() {
+		return modImportProgressPercentage.get();
 	}
 }

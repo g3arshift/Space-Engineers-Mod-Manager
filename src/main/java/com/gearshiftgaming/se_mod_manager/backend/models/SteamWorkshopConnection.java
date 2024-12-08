@@ -16,6 +16,7 @@ import java.util.Properties;
 
  */
 @Getter
+@Deprecated
 public class SteamWorkshopConnection {
 
     private final String CONNECTION_CHECK_URL;

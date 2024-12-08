@@ -36,11 +36,12 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.openqa.selenium.devtools.v85.io.IO;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -143,31 +144,34 @@ public class ModlistManagerView {
 	private ListView<LogMessage> viewableLog;
 
 	@FXML
-	private StackPane modAdditionProgressPanel;
+	private StackPane modImportProgressPanel;
 
 	@FXML
-	private ProgressBar modAdditionProgressBar;
+	private ProgressBar modImportProgressBar;
 
 	@FXML
-	private ProgressIndicator modAdditionProgressIndicator;
+	private ProgressIndicator modImportProgressIndicator;
 
 	@FXML
-	private Label modAdditionProgressActionName;
+	private Label modImportProgressActionName;
 
 	@FXML
-	private Label modAdditionProgressNumerator;
+	private Label modImportProgressNumerator;
 
 	@FXML
-	private Label modAdditionProgressDivider;
+	private Label modImportProgressDivider;
 
 	@FXML
-	private Label modAdditionProgressDenominator;
+	private Label modImportProgressDenominator;
 
 	@FXML
-	private ProgressIndicator modAdditionProgressWheel;
+	private ProgressIndicator modImportProgressWheel;
 
 	@FXML
-	private Label modAdditionSteamCollectionName;
+	private Label modImportSteamCollectionName;
+
+	@FXML
+	private Label modImportOnlineCheckText;
 
 	private final UiService UI_SERVICE;
 
@@ -217,7 +221,7 @@ public class ModlistManagerView {
 
 	private final Stage STAGE;
 
-	private final SimpleInputView ID_AND_URL_MOD_ADDITION_INPUT;
+	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
 	private final String MOD_DATE_FORMAT;
 
@@ -228,13 +232,13 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modAdditionInputView) {
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
-		this.ID_AND_URL_MOD_ADDITION_INPUT = modAdditionInputView;
+		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -310,11 +314,11 @@ public class ModlistManagerView {
 			}
 		});
 
-		modAdditionProgressNumerator.textProperty().bind(UI_SERVICE.getModAdditionProgressNumeratorProperty().asString());
-		modAdditionProgressDenominator.textProperty().bind(UI_SERVICE.getModAdditionProgressDenominatorProperty().asString());
-		modAdditionProgressBar.progressProperty().bind(UI_SERVICE.getModAdditionProgressPercentageProperty());
+		modImportProgressNumerator.textProperty().bind(UI_SERVICE.getModImportProgressNumeratorProperty().asString());
+		modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
+		modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
 
-		modAdditionSteamCollectionName.setVisible(false);
+		modImportSteamCollectionName.setVisible(false);
 		viewableLog.setFixedCellSize(35);
 
 		//This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
@@ -396,23 +400,19 @@ public class ModlistManagerView {
 	private void addMod() {
 		//TODO: Add a modIO check. Store two booleans for both workshop and modio connections. Check both. If one is up but not the other, remove the menu options for them.
 		// When we pass the check, remove all menu options from the menu and add them all back. Just a simple and fast way to make sure we don't have invalid or missing options since we can't call .disable.
-		if (UI_SERVICE.isSteamOnline()) {
-			ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
-			modImportDropdown.getSelectionModel().selectFirst();
-			modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
+		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
+		modImportDropdown.getSelectionModel().selectFirst();
+		modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
 
-			//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
+		//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
 
-			if (selectedImportOption != null) {
-				switch (selectedImportOption) {
-					case STEAM_ID -> addModFromSteamId();
-					case STEAM_COLLECTION -> addModsFromSteamCollection();
-					case MOD_IO -> addModFromModIoId();
-					case FILE -> addModsFromFile();
-				}
+		if (selectedImportOption != null) {
+			switch (selectedImportOption) {
+				case STEAM_ID -> addModFromSteamId();
+				case STEAM_COLLECTION -> addModsFromSteamCollection();
+				case MOD_IO -> addModFromModIoId();
+				case FILE -> addModsFromFile();
 			}
-		} else {
-			Popup.displaySimpleAlert("Cannot reach the Steam Workshop! Check that you are online and that Steam is not having any issues.", MessageType.ERROR);
 		}
 	}
 
@@ -434,9 +434,39 @@ public class ModlistManagerView {
 			//This is a bit hacky, but it makes a LOT less code we need to maintain.
 			final Mod[] modList = new Mod[1];
 			modList[0] = mod;
-			getModAdditionThread(List.of(modList)).start();
+			getModImportThread(List.of(modList)).start();
 		}
+
 	}
+
+//	private Thread getSteamOnlineCheckThread() {
+//		final Task<Boolean> TASK;
+//		Platform.runLater(() -> showOnlineCheckPanel(true));
+//		TASK = new Task<>() {
+//			@Override
+//			protected Boolean call() throws Exception {
+//
+//			}
+//		}
+//
+//
+//
+//
+//
+//
+//
+//		boolean isOnline;
+//		try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+//			Future<Boolean> future = executorService.submit(UI_SERVICE::isSteamOnline);
+//			isOnline = future.get();
+//		} catch (ExecutionException | InterruptedException e) {
+//			UI_SERVICE.log(e);
+//			Popup.displaySimpleAlert(e.toString(), MessageType.ERROR);
+//			isOnline = false;
+//		}
+//		Platform.runLater(() -> showOnlineCheckPanel(false));
+//		return  isOnline;
+//	}
 
 	private void addModsFromSteamCollection() {
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
@@ -471,6 +501,7 @@ public class ModlistManagerView {
 	//        for non-steam mods as well when checking steam dupes.
 
 	private void addModFromModIoId() {
+		//TODO: Online check
 		setModAddingInputViewText("Mod.io Mod URL/ID",
 				"Enter the Mod.io URL or ID",
 				"Mod.io URL/ID"
@@ -502,7 +533,7 @@ public class ModlistManagerView {
 			//This is a bit hacky, but it makes a LOT less code we need to maintain.
 			final Mod[] modList = new Mod[1];
 			modList[0] = mod;
-			getModAdditionThread(List.of(modList)).start();
+			getModImportThread(List.of(modList)).start();
 		}
 	}
 
@@ -520,7 +551,7 @@ public class ModlistManagerView {
 		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
 		do {
 			String userInputModId = getUserModIdInput();
-			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
+			String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
 			//Checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
 			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
 				if (!StringUtils.isAlpha(userInputModId)) {
@@ -567,7 +598,7 @@ public class ModlistManagerView {
 			}
 		} while (!goodModId);
 
-		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
+		ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
 
 		return chosenModId;
 	}
@@ -579,7 +610,7 @@ public class ModlistManagerView {
 
 		do {
 			String userInputModId = getUserModIdInput();
-			String lastPressedButtonId = ID_AND_URL_MOD_ADDITION_INPUT.getLastPressedButtonId();
+			String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
 			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
 				String modUrlName;
 
@@ -604,7 +635,7 @@ public class ModlistManagerView {
 			}
 		} while (!goodModId);
 
-		ID_AND_URL_MOD_ADDITION_INPUT.getInput().clear();
+		ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
 
 		//This will return either the name of a mod as it appears in the url, or the actual mod ID. We can have the controller handle parsing these out.
 		return chosenModId;
@@ -853,15 +884,15 @@ public class ModlistManagerView {
 	}
 
 	private String getUserModIdInput() {
-		ID_AND_URL_MOD_ADDITION_INPUT.show();
-		return ID_AND_URL_MOD_ADDITION_INPUT.getInput().getText();
+		ID_AND_URL_MOD_IMPORT_INPUT.show();
+		return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText();
 	}
 
 	private void setModAddingInputViewText(String title, String instructions, String promptText) {
-		ID_AND_URL_MOD_ADDITION_INPUT.setTitle(title);
-		ID_AND_URL_MOD_ADDITION_INPUT.setInputInstructions(instructions);
-		ID_AND_URL_MOD_ADDITION_INPUT.setPromptText(promptText);
-		ID_AND_URL_MOD_ADDITION_INPUT.setEmptyTextMessage("URL/ID cannot be blank!");
+		ID_AND_URL_MOD_IMPORT_INPUT.setTitle(title);
+		ID_AND_URL_MOD_IMPORT_INPUT.setInputInstructions(instructions);
+		ID_AND_URL_MOD_IMPORT_INPUT.setPromptText(promptText);
+		ID_AND_URL_MOD_IMPORT_INPUT.setEmptyTextMessage("URL/ID cannot be blank!");
 	}
 
 	private void redirectHyperlinks() {
@@ -885,21 +916,14 @@ public class ModlistManagerView {
 	}
 
 	private Thread getSteamModCollectionThread(String collectionId) {
-		final Task<List<Result<String>>> TASK;
-
-		TASK = new Task<>() {
-			@Override
-			protected List<Result<String>> call() throws IOException {
-				return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
-			}
-		};
+		final Task<List<Result<String>>> TASK = getListTask(collectionId);
 
 		TASK.setOnRunning(workerStateEvent -> {
 			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
 			disableUserInputElements(true);
-			modAdditionProgressPanel.setVisible(true);
-			disableModAdditionUiText(true);
-			modAdditionSteamCollectionName.setVisible(true);
+			modImportProgressPanel.setVisible(true);
+			disableModImportUiText(true);
+			modImportSteamCollectionName.setVisible(true);
 		});
 
 		TASK.setOnSucceeded(workerStateEvent -> {
@@ -923,15 +947,15 @@ public class ModlistManagerView {
 				if (duplicateModIds == steamCollectionModIds.size()) {
 					Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
 					Platform.runLater(() -> {
-						FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modAdditionProgressPanel);
+						FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
 						fadeTransition.setFromValue(1d);
 						fadeTransition.setToValue(0d);
 
 						fadeTransition.setOnFinished(actionEvent -> {
-							modAdditionSteamCollectionName.setVisible(false);
-							disableModAdditionUiText(false);
+							modImportSteamCollectionName.setVisible(false);
+							disableModImportUiText(false);
 							disableUserInputElements(false);
-							resetModAdditionProgressUi();
+							resetModImportProgressUi();
 						});
 
 						fadeTransition.play();
@@ -945,27 +969,27 @@ public class ModlistManagerView {
 					int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
 					if (userChoice == 1) {
-						getModAdditionThread(successfullyFoundMods).start();
+						getModImportThread(successfullyFoundMods).start();
 					}
 
 					Platform.runLater(() -> {
-						modAdditionSteamCollectionName.setVisible(false);
-						disableModAdditionUiText(false);
+						modImportSteamCollectionName.setVisible(false);
+						disableModImportUiText(false);
 
 						if (userChoice != 1) {
 							disableUserInputElements(false);
-							resetModAdditionProgressUi();
+							resetModImportProgressUi();
 						}
 					});
 				}
 			} else {
 				Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), STAGE);
 				Platform.runLater(() -> {
-					modAdditionSteamCollectionName.setVisible(false);
-					disableModAdditionUiText(false);
+					modImportSteamCollectionName.setVisible(false);
+					disableModImportUiText(false);
 
 					disableUserInputElements(false);
-					resetModAdditionProgressUi();
+					resetModImportProgressUi();
 
 				});
 			}
@@ -977,26 +1001,52 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	private Thread getModAdditionThread(List<Mod> modList) {
-		final Task<List<Result<Mod>>> TASK;
-		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+	@NotNull
+	private Task<List<Result<String>>> getListTask(String collectionId) {
+		final Task<List<Result<String>>> TASK;
 
 		TASK = new Task<>() {
 			@Override
-			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
-				Platform.runLater(() -> UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(modList.size()));
+			protected List<Result<String>> call() {
+				try {
+					return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
+				} catch (IOException e) {
+					List<Result<String>> failedResults = new ArrayList<>();
+					Result<String> failedResult = new Result<>();
+					if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+						failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+					} else {
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+					}
+					failedResults.add(failedResult);
+					return failedResults;
+				}
+			}
+		};
+		return TASK;
+	}
 
+	private Thread getModImportThread(List<Mod> modList) {
+		final Task<List<Result<Mod>>> TASK;
+		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+		TASK = new Task<>() {
+			@Override
+			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
+				Platform.runLater(() -> UI_SERVICE.getModImportProgressDenominatorProperty().setValue(modList.size()));
 				List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
 				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 					for (Mod m : modList) {
-
 						// Submit the task without waiting for it to finish
 						Future<Result<Mod>> future = executorService.submit(() -> {
 							try {
 								return UI_SERVICE.fillOutModInformation(m);
 							} catch (IOException e) {
 								Result<Mod> failedResult = new Result<>();
-								failedResult.addMessage(e.toString(), ResultType.FAILED);
+								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+									failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+								} else {
+									failedResult.addMessage(e.toString(), ResultType.FAILED);
+								}
 								return failedResult;
 							}
 						});
@@ -1020,11 +1070,11 @@ public class ModlistManagerView {
 		TASK.setOnRunning(workerStateEvent -> {
 			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
 			disableUserInputElements(true);
-			modAdditionProgressPanel.setVisible(true);
+			modImportProgressPanel.setVisible(true);
 		});
 
 		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-			modAdditionProgressWheel.setVisible(false);
+			modImportProgressWheel.setVisible(false);
 
 
 			int successfulScrapes = 0;
@@ -1068,13 +1118,13 @@ public class ModlistManagerView {
 
 			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
 			//Reset our UI settings for the mod progress
-			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modAdditionProgressPanel);
+			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
 			fadeTransition.setFromValue(1d);
 			fadeTransition.setToValue(0d);
 
 			fadeTransition.setOnFinished(actionEvent -> {
 				disableUserInputElements(false);
-				resetModAdditionProgressUi();
+				resetModImportProgressUi();
 			});
 
 			fadeTransition.play();
@@ -1085,7 +1135,7 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	//These function names suck
+	//TODO: These function names suck. Make them something like "show{name of what the UI is. Like "steam collection check panel.}.
 	private void disableUserInputElements(boolean shouldDisable) {
 		modImportDropdown.setDisable(shouldDisable);
 		manageModProfiles.setDisable(shouldDisable);
@@ -1100,19 +1150,19 @@ public class ModlistManagerView {
 		modTableSearchField.setDisable(shouldDisable);
 	}
 
-	private void disableModAdditionUiText(boolean shouldDisable) {
-		modAdditionProgressActionName.setVisible(!shouldDisable);
-		modAdditionProgressNumerator.setVisible(!shouldDisable);
-		modAdditionProgressDivider.setVisible(!shouldDisable);
-		modAdditionProgressDenominator.setVisible(!shouldDisable);
+	private void disableModImportUiText(boolean shouldDisable) {
+		modImportProgressActionName.setVisible(!shouldDisable);
+		modImportProgressNumerator.setVisible(!shouldDisable);
+		modImportProgressDivider.setVisible(!shouldDisable);
+		modImportProgressDenominator.setVisible(!shouldDisable);
 	}
 
-	private void resetModAdditionProgressUi() {
-		modAdditionProgressPanel.setVisible(false);
-		modAdditionProgressPanel.setOpacity(1d);
-		UI_SERVICE.getModAdditionProgressNumeratorProperty().setValue(0);
-		UI_SERVICE.getModAdditionProgressDenominatorProperty().setValue(0);
-		UI_SERVICE.getModAdditionProgressPercentageProperty().setValue(0d);
-		modAdditionProgressWheel.setVisible(true);
+	private void resetModImportProgressUi() {
+		modImportProgressPanel.setVisible(false);
+		modImportProgressPanel.setOpacity(1d);
+		UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);
+		UI_SERVICE.getModImportProgressDenominatorProperty().setValue(0);
+		UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
+		modImportProgressWheel.setVisible(true);
 	}
 }
