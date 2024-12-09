@@ -40,8 +40,6 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.openqa.selenium.devtools.v85.io.IO;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -243,7 +241,7 @@ public class ModlistManagerView {
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
 
-		this.MOD_DATE_FORMAT = properties.getProperty("semm.mod.dateFormat");
+		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
 		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 		SELECTIONS = new ArrayList<>();
@@ -343,10 +341,29 @@ public class ModlistManagerView {
 		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
 		//Create a comparator for the date column so it sorts properly.
-		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
-				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
-		modLastUpdated.setComparator((date1, date2) -> LocalDateTime.parse(date1, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT))
-				.compareTo(LocalDateTime.parse(date2, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT))));
+//		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
+//				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
+		modLastUpdated.setCellValueFactory(cellData -> {
+			if (cellData.getValue().getLastUpdated() != null) {
+				if (cellData.getValue().getModType() == ModType.STEAM) {
+					return new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
+				} else {
+					return switch (cellData.getValue().getLastUpdated().toString().length()) {
+						case 4:
+							yield new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
+						case 12:
+							yield new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
+						default:
+							yield new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
+					};
+				}
+			} else {
+				return new SimpleStringProperty("Unknown");
+			}
+		});
+
+		//This is a horrible, horrible hack, but there's not a clean way to figure out the date formats otherwise.
+		modLastUpdated.setComparator((date1, date2) -> getModLastUpdatedFormat(date1).compareTo(getModLastUpdatedFormat(date2)));
 
 		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
@@ -379,6 +396,19 @@ public class ModlistManagerView {
 		modTable.setFixedCellSize(modTableCellSize);
 	}
 
+	private LocalDateTime getModLastUpdatedFormat(String dateString) {
+		return switch(dateString.length()) {
+			case 15: //Mod IO hour format
+				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
+			case 12: //Mod IO day format
+				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
+			case 4: //Mod IO year format
+				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy"));
+			default: //Steam format
+				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT));
+		};
+	}
+
 
 	//TODO: Make it so that when we change the modlist but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
 	public void setupMainViewItems() {
@@ -392,6 +422,7 @@ public class ModlistManagerView {
 				ModImportType.STEAM_ID.getName(),
 				ModImportType.STEAM_COLLECTION.getName(),
 				ModImportType.MOD_IO.getName(),
+				ModImportType.EXISTING_SAVE.getName(),
 				ModImportType.FILE.getName());
 
 
@@ -414,6 +445,7 @@ public class ModlistManagerView {
 				case STEAM_ID -> addModFromSteamId();
 				case STEAM_COLLECTION -> addModsFromSteamCollection();
 				case MOD_IO -> addModFromModIoId();
+				case EXISTING_SAVE -> addModsFromExistingSave();
 				case FILE -> addModsFromFile();
 			}
 		}
@@ -475,7 +507,6 @@ public class ModlistManagerView {
 	//        for non-steam mods as well when checking steam dupes.
 
 	private void addModFromModIoId() {
-		//TODO: Online check
 		setModAddingInputViewText("Mod.io Mod URL/ID",
 				"Enter the Mod.io URL or ID",
 				"Mod.io URL/ID"
@@ -495,74 +526,11 @@ public class ModlistManagerView {
 				getModImportThread(List.of(modList)).start();
 			}
 		}
+
 	}
 
-	private Thread getModIoUrlToIdThread(String modUrl) {
-		final Task<Result<String>> TASK;
-
-		TASK = new Task<>() {
-			@Override
-			protected Result<String> call() {
-				try {
-					return UI_SERVICE.getModIoModIdFromUrlName(modUrl);
-				} catch (IOException e) {
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					return failedResult;
-				}
-			}
-		};
-
-		TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
-			modIoUrlToIdName.setVisible(true);
-			disableUserInputElements(true);
-			modImportProgressDenominator.setVisible(false);
-			modImportProgressPanel.setVisible(true);
-		}));
-
-		TASK.setOnSucceeded(workerStateEvent -> {
-			Platform.runLater(() -> {
-				modIoUrlToIdName.setVisible(false);
-				modImportProgressDenominator.setVisible(true);
-			});
-
-			Result<String> modIdResult = TASK.getValue();
-			if (modIdResult.isSuccess()) {
-				Mod mod = new Mod(modIdResult.getPayload(), ModType.MOD_IO);
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				getModImportThread(List.of(modList)).start();
-			} else {
-				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
-				Platform.runLater(() -> {
-					modImportProgressWheel.setVisible(false);
-					UI_SERVICE.getModImportProgressDenominatorProperty().setValue(1);
-				});
-				UI_SERVICE.log(modIdResult);
-				Popup.displaySimpleAlert(modIdResult, STAGE);
-
-				Platform.runLater(() -> {
-					//Fadeout the UI if it doesn't succeed.
-					FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
-					fadeTransition.setFromValue(1d);
-					fadeTransition.setToValue(0d);
-
-					fadeTransition.setOnFinished(actionEvent -> {
-						disableUserInputElements(false);
-						resetModImportProgressUi();
-					});
-					fadeTransition.play();
-				});
-			}
-		});
-
-		Thread thread = Thread.ofVirtual().unstarted(TASK);
-		thread.setDaemon(true);
-		return thread;
+	private void addModsFromExistingSave() {
+		//TODO: Implement
 	}
 
 	private void addModsFromFile() {
@@ -1048,6 +1016,74 @@ public class ModlistManagerView {
 		return thread;
 	}
 
+	private Thread getModIoUrlToIdThread(String modUrl) {
+		final Task<Result<String>> TASK;
+
+		TASK = new Task<>() {
+			@Override
+			protected Result<String> call() {
+				try {
+					return UI_SERVICE.getModIoModIdFromUrlName(modUrl);
+				} catch (IOException e) {
+					Result<String> failedResult = new Result<>();
+					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+					} else {
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+					}
+					return failedResult;
+				}
+			}
+		};
+
+		TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
+			modIoUrlToIdName.setVisible(true);
+			disableUserInputElements(true);
+			modImportProgressDenominator.setVisible(false);
+			modImportProgressPanel.setVisible(true);
+		}));
+
+		TASK.setOnSucceeded(workerStateEvent -> {
+			Platform.runLater(() -> {
+				modIoUrlToIdName.setVisible(false);
+				modImportProgressDenominator.setVisible(true);
+			});
+
+			Result<String> modIdResult = TASK.getValue();
+			if (modIdResult.isSuccess()) {
+				Mod mod = new Mod(modIdResult.getPayload(), ModType.MOD_IO);
+				final Mod[] modList = new Mod[1];
+				modList[0] = mod;
+				getModImportThread(List.of(modList)).start();
+			} else {
+				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
+				Platform.runLater(() -> {
+					modImportProgressWheel.setVisible(false);
+					UI_SERVICE.getModImportProgressDenominatorProperty().setValue(1);
+				});
+				UI_SERVICE.log(modIdResult);
+				Popup.displaySimpleAlert(modIdResult, STAGE);
+
+				Platform.runLater(() -> {
+					//Fadeout the UI if it doesn't succeed.
+					FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+					fadeTransition.setFromValue(1d);
+					fadeTransition.setToValue(0d);
+
+					fadeTransition.setOnFinished(actionEvent -> {
+						disableUserInputElements(false);
+						resetModImportProgressUi();
+					});
+					fadeTransition.play();
+				});
+			}
+		});
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
+	}
+
 	private Thread getModImportThread(List<Mod> modList) {
 		final Task<List<Result<Mod>>> TASK;
 		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
@@ -1064,8 +1100,10 @@ public class ModlistManagerView {
 								return UI_SERVICE.fillOutModInformation(m);
 							} catch (IOException e) {
 								Result<Mod> failedResult = new Result<>();
-								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com") || e.toString().equals("java.net.UnknownHostException: mod.io")) {
+								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
 									failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+								} else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+									failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
 								} else {
 									failedResult.addMessage(e.toString(), ResultType.FAILED);
 								}

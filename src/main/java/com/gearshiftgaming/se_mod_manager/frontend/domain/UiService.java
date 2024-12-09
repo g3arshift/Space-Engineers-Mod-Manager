@@ -4,7 +4,6 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -29,7 +28,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.Future;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -99,7 +97,7 @@ public class UiService {
 		this.BACKEND_STORAGE_CONTROLLER = backendStorageController;
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
 
-		this.MOD_DATE_FORMAT = properties.getProperty("semm.mod.dateFormat");
+		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
 		//Initialize our current mod and save profiles
 		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
@@ -249,12 +247,31 @@ public class UiService {
 
 			mod.setFriendlyName(modInfo[0]);
 
-			DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-					.parseCaseInsensitive()
-					.appendPattern(MOD_DATE_FORMAT)
-					.toFormatter();
+			DateTimeFormatter formatter;
+			if (mod.getModType() == ModType.STEAM) {
+				formatter = new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(MOD_DATE_FORMAT)
+						.toFormatter();
+			} else {
+				String dateFormat = switch (modInfo[1].length()) {
+					case 4: yield "yyyy";
+					case 12: yield "MMM d',' yyyy";
+					default: yield "MMM d',' yyyy '@' h";
+				};
 
-			mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+				formatter = new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(dateFormat)
+						.toFormatter();
+			}
+
+			//TODO: We're trying to parse a LocalDate as a local date time. This has implications for the ModlistManagerView for lastUpdated comparator and string setting.
+			try {
+				mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+			} catch (RuntimeException e) {
+				System.out.println(e);
+			}
 
 			List<String> modTags = List.of(modInfo[2].split(","));
 			mod.setCategories(modTags);
