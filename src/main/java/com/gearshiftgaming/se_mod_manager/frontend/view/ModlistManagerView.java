@@ -344,17 +344,18 @@ public class ModlistManagerView {
 //		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 //				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
 		modLastUpdated.setCellValueFactory(cellData -> {
-			if (cellData.getValue().getLastUpdated() != null) {
-				if (cellData.getValue().getModType() == ModType.STEAM) {
-					return new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
+			if (((SteamMod) cellData.getValue()).getLastUpdated() != null || ((ModIoMod) cellData.getValue()).getLastUpdated() != null) {
+				if (cellData.getValue() instanceof SteamMod mod) {
+					return new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
 				} else {
-					return switch (cellData.getValue().getLastUpdated().toString().length()) {
+					ModIoMod mod = (ModIoMod) cellData.getValue();
+					return switch (mod.getLastUpdated().toString().length()) {
 						case 4:
-							yield new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
+							yield new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
 						case 12:
-							yield new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
+							yield new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
 						default:
-							yield new SimpleStringProperty(cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
+							yield new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
 					};
 				}
 			} else {
@@ -367,7 +368,7 @@ public class ModlistManagerView {
 
 		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
-		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue().getModType().equals(ModType.STEAM) ? "Steam" : "Mod.io")));
+		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue() instanceof SteamMod ? "Steam" : "Mod.io")));
 
 		//Perform some stylistic formatting for the tags/category column
 		modCategory.setCellValueFactory(cellData -> {
@@ -464,7 +465,7 @@ public class ModlistManagerView {
 
 		String modId = getSteamModLocationFromUser(false);
 		if (!modId.isBlank()) {
-			Mod mod = new Mod(modId, ModType.STEAM);
+			SteamMod mod = new SteamMod(modId);
 
 			//This is a bit hacky, but it makes a LOT less code we need to maintain.
 			final Mod[] modList = new Mod[1];
@@ -518,7 +519,7 @@ public class ModlistManagerView {
 			if (!StringUtils.isNumeric(modId)) {
 				getModIoUrlToIdThread(modId).start();
 			} else {
-				Mod mod = new Mod(modId, ModType.MOD_IO);
+				ModIoMod mod = new ModIoMod(modId);
 
 				//This is a bit hacky, but it makes a LOT less code we need to maintain.
 				final Mod[] modList = new Mod[1];
@@ -952,7 +953,7 @@ public class ModlistManagerView {
 				for (Result<String> steamCollectionModId : steamCollectionModIds) {
 					if (steamCollectionModId.isSuccess()) {
 						modIdsSuccessfullyFound++;
-						Mod mod = new Mod(steamCollectionModId.getPayload(), ModType.STEAM);
+						SteamMod mod = new SteamMod(steamCollectionModId.getPayload());
 						successfullyFoundMods.add(mod);
 					} else {
 						if (steamCollectionModId.getType() == ResultType.INVALID) duplicateModIds++;
@@ -1051,7 +1052,7 @@ public class ModlistManagerView {
 
 			Result<String> modIdResult = TASK.getValue();
 			if (modIdResult.isSuccess()) {
-				Mod mod = new Mod(modIdResult.getPayload(), ModType.MOD_IO);
+				ModIoMod mod = new ModIoMod(modIdResult.getPayload());
 				final Mod[] modList = new Mod[1];
 				modList[0] = mod;
 				getModImportThread(List.of(modList)).start();

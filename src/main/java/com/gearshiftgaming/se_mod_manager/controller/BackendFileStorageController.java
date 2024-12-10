@@ -111,7 +111,7 @@ public class BackendFileStorageController implements BackendStorageController {
 		testSaveProfile.setSaveName("Test save");
 		ModProfile testModProfile = new ModProfile("Test Profile");
 
-		Mod testMod = new Mod("123456789", ModType.STEAM);
+		SteamMod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();
 		testCategories.add("Test Category");
 		testCategories.add("Three Category test");
@@ -119,7 +119,7 @@ public class BackendFileStorageController implements BackendStorageController {
 		testMod.setCategories(testCategories);
 		testModProfile.getModList().add(testMod);
 
-		Mod secondTestMod = new Mod("0987654321", ModType.MOD_IO);
+		SteamMod secondTestMod = new SteamMod("0987654321");
 		secondTestMod.setFriendlyName("Second test mod");
 		secondTestMod.setCategories(testCategories);
 		testModProfile.getModList().add(secondTestMod);

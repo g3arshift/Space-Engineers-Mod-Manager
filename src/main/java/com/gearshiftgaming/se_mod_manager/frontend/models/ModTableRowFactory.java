@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.ModlistManagerView;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
@@ -81,7 +81,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 			for (Mod m : selectedMods) {
 				try {
-					if (m.getModType() == ModType.STEAM) {
+					if (m instanceof SteamMod) {
 						Desktop.getDesktop().browse(new URI("https://steamcommunity.com/workshop/filedetails/?id=" + m.getId()));
 					} else {
 						Desktop.getDesktop().browse(new URI("https://mod.io/search/mods/" + m.getId()));

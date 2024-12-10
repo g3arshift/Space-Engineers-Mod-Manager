@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -213,7 +214,6 @@ public class UiService {
 
 	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
 	// bars to work properly.
-	//TODO: We need to throw in a duplicate mod check here.
 	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
 
 		List<Result<String>> steamCollectionModIds = MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
@@ -248,11 +248,13 @@ public class UiService {
 			mod.setFriendlyName(modInfo[0]);
 
 			DateTimeFormatter formatter;
-			if (mod.getModType() == ModType.STEAM) {
+			if (mod instanceof SteamMod) {
 				formatter = new DateTimeFormatterBuilder()
 						.parseCaseInsensitive()
 						.appendPattern(MOD_DATE_FORMAT)
 						.toFormatter();
+
+				((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
 			} else {
 				String dateFormat = switch (modInfo[1].length()) {
 					case 4: yield "yyyy";
@@ -264,13 +266,8 @@ public class UiService {
 						.parseCaseInsensitive()
 						.appendPattern(dateFormat)
 						.toFormatter();
-			}
 
-			//TODO: We're trying to parse a LocalDate as a local date time. This has implications for the ModlistManagerView for lastUpdated comparator and string setting.
-			try {
-				mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
-			} catch (RuntimeException e) {
-				System.out.println(e);
+				((ModIoMod) mod).setLastUpdated(LocalDate.parse(modInfo[1], formatter));
 			}
 
 			List<String> modTags = List.of(modInfo[2].split(","));
