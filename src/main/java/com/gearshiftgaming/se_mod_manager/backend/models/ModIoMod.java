@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 @Getter
+@NoArgsConstructor
 public class ModIoMod extends Mod {
 
     private LocalDate lastUpdated;

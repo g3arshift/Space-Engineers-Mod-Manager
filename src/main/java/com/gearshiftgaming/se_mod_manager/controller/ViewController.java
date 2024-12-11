@@ -60,21 +60,21 @@ public class ViewController {
 			throw (e);
 		}
 
-		BackendStorageController backendStorageController = new BackendFileStorageController(new SandboxConfigFileRepository(),
+		StorageController storageController = new FileStorageController(new SandboxConfigFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
 				PROPERTIES,
 				new File(PROPERTIES.getProperty("semm.userData.default.location")));
 
 
-		Result<UserConfiguration> userConfigurationResult = backendStorageController.getUserData();
+		Result<UserConfiguration> userConfigurationResult = storageController.getUserData();
 		UserConfiguration userConfiguration;
 
 		if (userConfigurationResult.isSuccess()) {
 			userConfiguration = userConfigurationResult.getPayload();
 		} else {
 			userConfiguration = new UserConfiguration();
-			backendStorageController.saveUserData(userConfiguration);
+			storageController.saveUserData(userConfiguration);
 		}
 
 		ObservableList<ModProfile> modProfiles = FXCollections.observableList(userConfiguration.getModProfiles());
@@ -89,7 +89,7 @@ public class ViewController {
 
 		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendStorageController, modInfoController, userConfiguration, PROPERTIES);
+		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
 		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);

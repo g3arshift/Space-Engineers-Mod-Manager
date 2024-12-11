@@ -1,8 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
+import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
+import com.gearshiftgaming.se_mod_manager.controller.StorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -43,7 +44,7 @@ import java.util.Properties;
 public class UiService {
 	private final Logger LOGGER;
 
-	private final BackendStorageController BACKEND_STORAGE_CONTROLLER;
+	private final StorageController STORAGE_CONTROLLER;
 
 	private final ModInfoController MOD_INFO_CONTROLLER;
 
@@ -88,14 +89,14 @@ public class UiService {
 
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-					 BackendStorageController backendStorageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
+					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
 
 		this.LOGGER = LOGGER;
 		this.MOD_INFO_CONTROLLER = modInfoController;
 		this.USER_LOG = USER_LOG;
 		this.MOD_PROFILES = MOD_PROFILES;
 		this.SAVE_PROFILES = SAVE_PROFILES;
-		this.BACKEND_STORAGE_CONTROLLER = backendStorageController;
+		this.STORAGE_CONTROLLER = storageController;
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
 
 		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
@@ -160,19 +161,19 @@ public class UiService {
 	}
 
 	public Result<Void> saveUserData() {
-		return BACKEND_STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
+		return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		return BACKEND_STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
+		return STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
 	}
 
 	public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-		return BACKEND_STORAGE_CONTROLLER.copySaveProfile(saveProfile);
+		return STORAGE_CONTROLLER.copySaveProfile(saveProfile);
 	}
 
 	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-		return BACKEND_STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
+		return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
 	}
 
 	public void firstTimeSetup() {

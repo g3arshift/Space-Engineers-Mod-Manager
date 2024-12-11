@@ -344,18 +344,17 @@ public class ModlistManagerView {
 //		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 //				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
 		modLastUpdated.setCellValueFactory(cellData -> {
-			if (((SteamMod) cellData.getValue()).getLastUpdated() != null || ((ModIoMod) cellData.getValue()).getLastUpdated() != null) {
-				if (cellData.getValue() instanceof SteamMod mod) {
-					return new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
-				} else {
-					ModIoMod mod = (ModIoMod) cellData.getValue();
-					return switch (mod.getLastUpdated().toString().length()) {
+			if (cellData.getValue() instanceof SteamMod steamMod) {
+				if (steamMod.getLastUpdated() != null) {
+					return new SimpleStringProperty(steamMod.getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
+				} else if (cellData.getValue() instanceof ModIoMod modIoMod) {
+					return switch (modIoMod.getLastUpdated().toString().length()) {
 						case 4:
-							yield new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
+							yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
 						case 12:
-							yield new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
+							yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
 						default:
-							yield new SimpleStringProperty(mod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
+							yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
 					};
 				}
 			} else {
