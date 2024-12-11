@@ -68,602 +68,608 @@ import java.util.stream.Collectors;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ModlistManagerView {
-	@FXML
-	private ComboBox<String> modImportDropdown;
+    @FXML
+    private ComboBox<String> modImportDropdown;
 
-	@FXML
-	private Button manageModProfiles;
+    @FXML
+    private Button manageModProfiles;
 
-	@FXML
-	private Button manageSaveProfiles;
+    @FXML
+    private Button manageSaveProfiles;
 
-	@FXML
-	private Button importModlist;
+    @FXML
+    private Button importModlist;
 
-	@FXML
-	private Button exportModlist;
+    @FXML
+    private Button exportModlist;
 
-	@FXML
-	private Button applyModlist;
+    @FXML
+    private Button applyModlist;
 
-	@FXML
-	private Button launchSpaceEngineers;
+    @FXML
+    private Button launchSpaceEngineers;
 
-	@FXML
-	@Getter
-	private SplitPane mainViewSplit;
+    @FXML
+    @Getter
+    private SplitPane mainViewSplit;
 
-	@FXML
-	@Getter
-	private TableView<Mod> modTable;
+    @FXML
+    @Getter
+    private TableView<Mod> modTable;
 
-	@FXML
-	private TableColumn<Mod, Mod> modName;
+    @FXML
+    private TableColumn<Mod, Mod> modName;
 
-	@FXML
-	private TableColumn<Mod, String> modType;
+    @FXML
+    private TableColumn<Mod, String> modType;
 
 
-	@FXML
-	private TableColumn<Mod, String> modLastUpdated;
+    @FXML
+    private TableColumn<Mod, String> modLastUpdated;
 
-	@FXML
-	private TableColumn<Mod, Integer> loadPriority;
+    @FXML
+    private TableColumn<Mod, Integer> loadPriority;
 
-	@FXML
-	private TableColumn<Mod, String> modSource;
+    @FXML
+    private TableColumn<Mod, String> modSource;
 
-	@FXML
-	private TableColumn<Mod, String> modCategory;
+    @FXML
+    private TableColumn<Mod, String> modCategory;
 
-	@FXML
-	private HBox actions;
+    @FXML
+    private HBox actions;
 
-	@FXML
-	@Getter
-	private TabPane informationPane;
+    @FXML
+    @Getter
+    private TabPane informationPane;
 
-	@FXML
-	@Getter
-	private Tab logTab;
+    @FXML
+    @Getter
+    private Tab logTab;
 
-	@FXML
-	@Getter
-	private Tab modDescriptionTab;
+    @FXML
+    @Getter
+    private Tab modDescriptionTab;
 
-	@FXML
-	private StackPane modDescriptionBackground;
+    @FXML
+    private StackPane modDescriptionBackground;
 
-	@FXML
-	@Getter
-	private WebView modDescription;
+    @FXML
+    @Getter
+    private WebView modDescription;
 
-	@FXML
-	private ListView<LogMessage> viewableLog;
+    @FXML
+    private ListView<LogMessage> viewableLog;
 
-	@FXML
-	private StackPane modImportProgressPanel;
+    @FXML
+    private StackPane modImportProgressPanel;
 
-	@FXML
-	private ProgressBar modImportProgressBar;
+    @FXML
+    private ProgressBar modImportProgressBar;
 
-	@FXML
-	private ProgressIndicator modImportProgressIndicator;
+    @FXML
+    private ProgressIndicator modImportProgressIndicator;
 
-	@FXML
-	private Label modImportProgressActionName;
+    @FXML
+    private Label modImportProgressActionName;
 
-	@FXML
-	private Label modImportProgressNumerator;
+    @FXML
+    private Label modImportProgressNumerator;
 
-	@FXML
-	private Label modImportProgressDivider;
+    @FXML
+    private Label modImportProgressDivider;
 
-	@FXML
-	private Label modImportProgressDenominator;
+    @FXML
+    private Label modImportProgressDenominator;
 
-	@FXML
-	private ProgressIndicator modImportProgressWheel;
+    @FXML
+    private ProgressIndicator modImportProgressWheel;
 
-	@FXML
-	private Label modImportSteamCollectionName;
+    @FXML
+    private Label modImportSteamCollectionName;
 
-	@FXML
-	private Label modIoUrlToIdName;
+    @FXML
+    private Label modIoUrlToIdName;
 
-	private final UiService UI_SERVICE;
+    private final UiService UI_SERVICE;
 
-	private final ObservableList<LogMessage> USER_LOG;
+    private final ObservableList<LogMessage> USER_LOG;
 
-	@Getter
-	private boolean mainViewSplitDividerVisible = true;
+    @Getter
+    private boolean mainViewSplitDividerVisible = true;
 
-	private final DataFormat SERIALIZED_MIME_TYPE;
+    private final DataFormat SERIALIZED_MIME_TYPE;
 
-	private ListChangeListener<TableColumn<Mod, ?>> sortListener;
+    private ListChangeListener<TableColumn<Mod, ?>> sortListener;
 
-	@Getter
-	private Timeline scrollTimeline;
+    @Getter
+    private Timeline scrollTimeline;
 
-	private final List<Mod> SELECTIONS;
+    private final List<Mod> SELECTIONS;
 
-	@Getter
-	@Setter
-	//This is a really dumb hack that we have to use to actually get a row as it is styled in the application.
-	private TableRow<Mod> singleTableRow;
+    @Getter
+    @Setter
+    //This is a really dumb hack that we have to use to actually get a row as it is styled in the application.
+    private TableRow<Mod> singleTableRow;
 
-	@Getter
-	@Setter
-	private TableRow<Mod> previousRow;
-	private CheckMenuItem logToggle;
+    @Getter
+    @Setter
+    private TableRow<Mod> previousRow;
+    private CheckMenuItem logToggle;
 
-	private CheckMenuItem modDescriptionToggle;
+    private CheckMenuItem modDescriptionToggle;
 
-	//This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
-	//TODO: Hook this up
-	private final StatusBarView STATUS_BAR_VIEW;
+    //This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
+    //TODO: Hook this up
+    private final StatusBarView STATUS_BAR_VIEW;
 
-	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
+    private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
 
-	@Getter
-	private ScrollBar modTableVerticalScrollBar;
+    @Getter
+    private ScrollBar modTableVerticalScrollBar;
 
-	private TableHeaderRow headerRow;
+    private TableHeaderRow headerRow;
 
-	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
+    private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
 
-	private final SaveManagerView SAVE_MANAGER_VIEW;
+    private final SaveManagerView SAVE_MANAGER_VIEW;
 
-	@Getter
-	private FilteredList<Mod> filteredModList;
+    @Getter
+    private FilteredList<Mod> filteredModList;
 
-	private final Stage STAGE;
+    private final Stage STAGE;
 
-	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
+    private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
-	private final String MOD_DATE_FORMAT;
+    private final String MOD_DATE_FORMAT;
 
-	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
-	private ComboBox<ModProfile> modProfileDropdown;
-	private ComboBox<SaveProfile> saveProfileDropdown;
-	private TextField modTableSearchField;
+    //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
+    private ComboBox<ModProfile> modProfileDropdown;
+    private ComboBox<SaveProfile> saveProfileDropdown;
+    private TextField modTableSearchField;
 
 
-	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView) {
-		this.UI_SERVICE = uiService;
-		this.STAGE = stage;
-		this.USER_LOG = uiService.getUSER_LOG();
-		this.STATUS_BAR_VIEW = statusBarView;
-		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
-		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
+    public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
+                              ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView) {
+        this.UI_SERVICE = uiService;
+        this.STAGE = stage;
+        this.USER_LOG = uiService.getUSER_LOG();
+        this.STATUS_BAR_VIEW = statusBarView;
+        this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
+        this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
 
-		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
-		this.SAVE_MANAGER_VIEW = saveManagerView;
+        this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
+        this.SAVE_MANAGER_VIEW = saveManagerView;
 
-		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
+        this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
-		SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
-		SELECTIONS = new ArrayList<>();
+        SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+        SELECTIONS = new ArrayList<>();
 
-		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
-	}
+        filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
+    }
 
-	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-						 ComboBox<ModProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
-		this.logToggle = logToggle;
-		this.modDescriptionToggle = modDescriptionToggle;
+    public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
+                         ComboBox<ModProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+        this.logToggle = logToggle;
+        this.modDescriptionToggle = modDescriptionToggle;
 
-		this.modProfileDropdown = modProfileDropdown;
-		this.saveProfileDropdown = saveProfileDropdown;
-		this.modTableSearchField = modTableSearchField;
+        this.modProfileDropdown = modProfileDropdown;
+        this.saveProfileDropdown = saveProfileDropdown;
+        this.modTableSearchField = modTableSearchField;
 
-		sortListener = change -> {
-			if (modTable.getSortOrder().isEmpty()) {
-				applyDefaultSort();
-			}
-		};
+        sortListener = change -> {
+            if (modTable.getSortOrder().isEmpty()) {
+                applyDefaultSort();
+            }
+        };
 
-		setupMainViewItems();
-		setupModTable(modTableCellSize);
-		actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
-		actions.setOnDragOver(this::handleTableActionsOnDragOver);
-		actions.setOnDragExited(this::handleTableActionsOnDragExit);
+        setupMainViewItems();
+        setupModTable(modTableCellSize);
+        actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
+        actions.setOnDragOver(this::handleTableActionsOnDragOver);
+        actions.setOnDragExited(this::handleTableActionsOnDragExit);
 
-		//Setup the mod description handlers
-		modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
-			Mod selectedMod = modTable.getSelectionModel().getSelectedItem();
-			if (selectedMod != null) {
-				modDescription.getEngine().loadContent(selectedMod.getDescription());
-			} else {
-				modDescription.getEngine().loadContent("");
-			}
-		});
+        //Setup the mod description handlers
+        modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
+            Mod selectedMod = modTable.getSelectionModel().getSelectedItem();
+            if (selectedMod != null) {
+                modDescription.getEngine().loadContent(selectedMod.getDescription());
+            } else {
+                modDescription.getEngine().loadContent("");
+            }
+        });
 
-		modDescription.getEngine().getLoadWorker().stateProperty().addListener((observableValue, oldState, newState) -> {
-			if (newState == Worker.State.SUCCEEDED) {
-				redirectHyperlinks();
-			}
-		});
+        modDescription.getEngine().getLoadWorker().stateProperty().addListener((observableValue, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                redirectHyperlinks();
+            }
+        });
 
-		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_primer-light.css");
-		modDescriptionBackground.setStyle("-fx-border-color: -color-border-default; -fx-border-width:1px");
-		modDescription.setContextMenuEnabled(false);
+        modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_primer-light.css");
+        modDescriptionBackground.setStyle("-fx-border-color: -color-border-default; -fx-border-width:1px");
+        modDescription.setContextMenuEnabled(false);
 
-		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+        String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+        modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
 
-		//This is here to make it so we can prevent users from clicking on the purely display option "Add mods from...", while also making it clear it's not a valid option.
-		modImportDropdown.setCellFactory(param -> new ListCell<>() {
-			@Override
-			protected void updateItem(String item, boolean empty) {
-				super.updateItem(item, empty);
+        //This is here to make it so we can prevent users from clicking on the purely display option "Add mods from...", while also making it clear it's not a valid option.
+        modImportDropdown.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
 
-				if (empty || item == null) {
-					setGraphic(null);
-					setStyle(null);
-				} else {
-					this.setText(item);
-					if (item.equals("Add mods from...")) {
-						this.setOpacity(0.6);
-						this.setDisable(true);
-					}
-				}
-			}
-		});
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setStyle(null);
+                } else {
+                    this.setText(item);
+                    if (item.equals("Add mods from...")) {
+                        this.setOpacity(0.6);
+                        this.setDisable(true);
+                    }
+                }
+            }
+        });
 
-		modImportProgressNumerator.textProperty().bind(UI_SERVICE.getModImportProgressNumeratorProperty().asString());
-		modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
-		modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
+        modImportProgressNumerator.textProperty().bind(UI_SERVICE.getModImportProgressNumeratorProperty().asString());
+        modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
+        modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
 
-		modImportSteamCollectionName.setVisible(false);
+        modImportSteamCollectionName.setVisible(false);
 
-		modIoUrlToIdName.setVisible(false);
+        modIoUrlToIdName.setVisible(false);
 
-		viewableLog.setFixedCellSize(35);
+        viewableLog.setFixedCellSize(35);
 
-		//This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
-		modDescription.setOnDragOver(dragEvent -> {
-		});
+        //This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
+        modDescription.setOnDragOver(dragEvent -> {
+        });
 
-		UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
-	}
+        UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
+    }
 
-	//TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
-	//TODO: Allow for adding/removing columns. Add a context menu to the column header.
-	private void setupModTable(int modTableCellSize) {
-		//Format the appearance, styling, and menu`s of our table cells, rows, and columns
-		modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
+    //TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
+    //TODO: Allow for adding/removing columns. Add a context menu to the column header.
+    private void setupModTable(int modTableCellSize) {
+        //Format the appearance, styling, and menu`s of our table cells, rows, and columns
+        modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
 
-		modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
-		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
-		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
+        modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
+        modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
+        modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
-		//Create a comparator for the date column so it sorts properly.
+        //Create a comparator for the date column so it sorts properly.
 //		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 //				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
-		modLastUpdated.setCellValueFactory(cellData -> {
-			if (cellData.getValue() instanceof SteamMod steamMod) {
-				if (steamMod.getLastUpdated() != null) {
-					return new SimpleStringProperty(steamMod.getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
-				} else if (cellData.getValue() instanceof ModIoMod modIoMod) {
-					return switch (modIoMod.getLastUpdated().toString().length()) {
-						case 4:
-							yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
-						case 12:
-							yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
-						default:
-							yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
-					};
-				}
-			} else {
-				return new SimpleStringProperty("Unknown");
-			}
-		});
+        modLastUpdated.setCellValueFactory(cellData -> {
+            if (cellData.getValue() instanceof SteamMod steamMod) {
+                if (steamMod.getLastUpdated() != null) {
+                    return new SimpleStringProperty(steamMod.getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
+                } else {
+                    return new SimpleStringProperty("Unknown");
+                }
+            } else if (cellData.getValue() instanceof ModIoMod modIoMod) {
+                if(modIoMod.getLastUpdated() != null) {
+                    return switch (modIoMod.getLastUpdated().toString().length()) {
+                        case 4:
+                            yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
+                        case 12:
+                            yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
+                        default:
+                            yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
+                    };
+                } else {
+                    return new SimpleStringProperty("Unknown");
+                }
+            } else {
+                return new SimpleStringProperty("Unknown");
+            }
+        });
 
-		//This is a horrible, horrible hack, but there's not a clean way to figure out the date formats otherwise.
-		modLastUpdated.setComparator((date1, date2) -> getModLastUpdatedFormat(date1).compareTo(getModLastUpdatedFormat(date2)));
+        //This is a horrible, horrible hack, but there's not a clean way to figure out the date formats otherwise.
+        modLastUpdated.setComparator((date1, date2) -> getModLastUpdatedFormat(date1).compareTo(getModLastUpdatedFormat(date2)));
 
-		loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
+        loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
-		modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue() instanceof SteamMod ? "Steam" : "Mod.io")));
+        modType.setCellValueFactory(cellData -> new SimpleStringProperty((cellData.getValue() instanceof SteamMod ? "Steam" : "Mod.io")));
 
-		//Perform some stylistic formatting for the tags/category column
-		modCategory.setCellValueFactory(cellData -> {
-			StringBuilder sb = new StringBuilder();
-			List<String> categories = cellData.getValue().getCategories();
-			for (int i = 0; i < cellData.getValue().getCategories().size(); i++) {
-				if (i + 1 < cellData.getValue().getCategories().size()) {
-					sb.append(categories.get(i)).append(", ");
-				} else {
-					sb.append(categories.get(i));
-				}
-			}
-			return new SimpleStringProperty(sb.toString());
-		});
+        //Perform some stylistic formatting for the tags/category column
+        modCategory.setCellValueFactory(cellData -> {
+            StringBuilder sb = new StringBuilder();
+            List<String> categories = cellData.getValue().getCategories();
+            for (int i = 0; i < cellData.getValue().getCategories().size(); i++) {
+                if (i + 1 < cellData.getValue().getCategories().size()) {
+                    sb.append(categories.get(i)).append(", ");
+                } else {
+                    sb.append(categories.get(i));
+                }
+            }
+            return new SimpleStringProperty(sb.toString());
+        });
 
-		//Add a listener so that we can have some custom behavior on sorting
-		modTable.getSortOrder().addListener(sortListener);
+        //Add a listener so that we can have some custom behavior on sorting
+        modTable.getSortOrder().addListener(sortListener);
 
-		//Update the mod contents by wrapping the observable list with a filtered list and then that filtered list with a sorted list.
-		//This gives us both sorting and searching.
-		updateModTableContents();
+        //Update the mod contents by wrapping the observable list with a filtered list and then that filtered list with a sorted list.
+        //This gives us both sorting and searching.
+        updateModTableContents();
 
-		modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-		headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
+        modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+        headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 
-		modTable.setFixedCellSize(modTableCellSize);
-	}
+        modTable.setFixedCellSize(modTableCellSize);
+    }
 
-	private LocalDateTime getModLastUpdatedFormat(String dateString) {
-		return switch(dateString.length()) {
-			case 15: //Mod IO hour format
-				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
-			case 12: //Mod IO day format
-				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
-			case 4: //Mod IO year format
-				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy"));
-			default: //Steam format
-				yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT));
-		};
-	}
-
-
-	//TODO: Make it so that when we change the modlist but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
-	public void setupMainViewItems() {
-		viewableLog.setItems(USER_LOG);
-		viewableLog.setCellFactory(param -> new LogCell());
-		//Disable selecting rows in the log.
-		viewableLog.setSelectionModel(null);
-
-		// Just do this by manually setting the selected item after we select an item. To actually call code, call one function on selection/action in the dropdown, that determines which function to call and do stuff in the rest of the code, then reset the selected item.
-		modImportDropdown.getItems().addAll("Add mods from...",
-				ModImportType.STEAM_ID.getName(),
-				ModImportType.STEAM_COLLECTION.getName(),
-				ModImportType.MOD_IO.getName(),
-				ModImportType.EXISTING_SAVE.getName(),
-				ModImportType.FILE.getName());
+    private LocalDateTime getModLastUpdatedFormat(String dateString) {
+        return switch (dateString.length()) {
+            case 15: //Mod IO hour format
+                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
+            case 12: //Mod IO day format
+                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
+            case 4: //Mod IO year format
+                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy"));
+            default: //Steam format
+                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT));
+        };
+    }
 
 
-		//TODO: Setup a function in ModList service to track conflicts.
-	}
+    //TODO: Make it so that when we change the modlist but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
+    public void setupMainViewItems() {
+        viewableLog.setItems(USER_LOG);
+        viewableLog.setCellFactory(param -> new LogCell());
+        //Disable selecting rows in the log.
+        viewableLog.setSelectionModel(null);
 
-	//TODO: Hookup all the buttons to everything
-	@FXML
-	private void addMod() {
-		//TODO: Add a modIO check. Store two booleans for both workshop and modio connections. Check both. If one is up but not the other, remove the menu options for them.
-		// When we pass the check, remove all menu options from the menu and add them all back. Just a simple and fast way to make sure we don't have invalid or missing options since we can't call .disable.
-		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
-		modImportDropdown.getSelectionModel().selectFirst();
-		modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
-
-		//TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
-
-		if (selectedImportOption != null) {
-			switch (selectedImportOption) {
-				case STEAM_ID -> addModFromSteamId();
-				case STEAM_COLLECTION -> addModsFromSteamCollection();
-				case MOD_IO -> addModFromModIoId();
-				case EXISTING_SAVE -> addModsFromExistingSave();
-				case FILE -> addModsFromFile();
-			}
-		}
-	}
-
-	//TODO: We need a cancel button for adding mods so if the user decides they want to stop, they can.
-	// In it, when they cancel, ask them "Do you want to add the already processed mods?", and if yes, add the ones we've already scraped.
-	// Probably need to clear the rest of the futures/kill their threads when that happens. Also need to pause those threads when we hit cancel.
-
-	private void addModFromSteamId() {
-		setModAddingInputViewText("Steam Workshop Mod URL/ID",
-				"Enter the Steam Workshop URL/ID",
-				"Workshop URL/Mod ID"
-		);
+        // Just do this by manually setting the selected item after we select an item. To actually call code, call one function on selection/action in the dropdown, that determines which function to call and do stuff in the rest of the code, then reset the selected item.
+        modImportDropdown.getItems().addAll("Add mods from...",
+                ModImportType.STEAM_ID.getName(),
+                ModImportType.STEAM_COLLECTION.getName(),
+                ModImportType.MOD_IO.getName(),
+                ModImportType.EXISTING_SAVE.getName(),
+                ModImportType.FILE.getName());
 
 
-		String modId = getSteamModLocationFromUser(false);
-		if (!modId.isBlank()) {
-			SteamMod mod = new SteamMod(modId);
+        //TODO: Setup a function in ModList service to track conflicts.
+    }
 
-			//This is a bit hacky, but it makes a LOT less code we need to maintain.
-			final Mod[] modList = new Mod[1];
-			modList[0] = mod;
-			getModImportThread(List.of(modList)).start();
-		}
+    //TODO: Hookup all the buttons to everything
+    @FXML
+    private void addMod() {
+        //TODO: Add a modIO check. Store two booleans for both workshop and modio connections. Check both. If one is up but not the other, remove the menu options for them.
+        // When we pass the check, remove all menu options from the menu and add them all back. Just a simple and fast way to make sure we don't have invalid or missing options since we can't call .disable.
+        ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
+        modImportDropdown.getSelectionModel().selectFirst();
+        modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
 
-	}
+        //TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
 
-	private void addModsFromSteamCollection() {
-		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		setModAddingInputViewText("Steam Workshop Collection URL/ID",
-				"Enter the URL/ID for the Steam Workshop Collection",
-				"Collection URL/ID"
-		);
+        if (selectedImportOption != null) {
+            switch (selectedImportOption) {
+                case STEAM_ID -> addModFromSteamId();
+                case STEAM_COLLECTION -> addModsFromSteamCollection();
+                case MOD_IO -> addModFromModIoId();
+                case EXISTING_SAVE -> addModsFromExistingSave();
+                case FILE -> addModsFromFile();
+            }
+        }
+    }
 
-		String modId = getSteamModLocationFromUser(true);
-		if (!modId.isBlank()) {
-			try {
-				getSteamModCollectionThread(modId).start();
-			} catch (RuntimeException e) {
-				UI_SERVICE.log(e);
-				Popup.displaySimpleAlert(String.valueOf(e), STAGE, MessageType.ERROR);
-			}
-		}
-	}
+    //TODO: We need a cancel button for adding mods so if the user decides they want to stop, they can.
+    // In it, when they cancel, ask them "Do you want to add the already processed mods?", and if yes, add the ones we've already scraped.
+    // Probably need to clear the rest of the futures/kill their threads when that happens. Also need to pause those threads when we hit cancel.
 
-
-	//TODO: v1 of how to do this
-	// Given user input, check if it's a mod ID (Just numbers) or an url (alphanumeric)
-	// Once we have our input, pass that to the normal modscrape calls.
-	// In the modlist service, we need to check it's for the right game. If it's an URL, we can actually check further up if the url source is from space engineers,
-	//    and if it's an ID, we do a lookup with jsoup, check the response, and can do the same check above for if it's a space engineers game.
-	//    We also need to see if we pass a bad ID to the right game if it'll give us a space engineers root, maybe, but no mod.
-	//    We also could possible use the title. The title is "mod name " + "For space engineers"
-	// Once we've confirmed our page is a legitimate mod for the right game, we start scraping.
-	//    Title contains mod name.
-	//    Unlike steam, we need to also scrape the real mod ID from an url if we are passed an url. We can tell if it's an url if it's not explicitly numeric.
-	//    We will need to check for duplicates based on friendly name for non-mod.io mods. Vice versa as well, we need to add checking for duplicates based on friendly name
-	//        for non-steam mods as well when checking steam dupes.
-
-	private void addModFromModIoId() {
-		setModAddingInputViewText("Mod.io Mod URL/ID",
-				"Enter the Mod.io URL or ID",
-				"Mod.io URL/ID"
-		);
-
-		String modId = getModIoModLocationFromUser();
-
-		if (!modId.isBlank()) {
-			if (!StringUtils.isNumeric(modId)) {
-				getModIoUrlToIdThread(modId).start();
-			} else {
-				ModIoMod mod = new ModIoMod(modId);
-
-				//This is a bit hacky, but it makes a LOT less code we need to maintain.
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				getModImportThread(List.of(modList)).start();
-			}
-		}
-
-	}
-
-	private void addModsFromExistingSave() {
-		//TODO: Implement
-	}
-
-	private void addModsFromFile() {
-		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		//TODO: The actual adding to the modlist should happen here
-		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
-	}
-
-	private String getSteamModLocationFromUser(boolean steamCollection) {
-		boolean goodModId = false;
-		String chosenModId = "";
-		final Pattern STEAM_WORKSHOP_MOD_ID = Pattern.compile("(id=[0-9])\\d*");
-
-		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
-		do {
-			String userInputModId = getUserModIdInput();
-			String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
-			//Checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
-			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
-				if (!StringUtils.isAlpha(userInputModId)) {
-					String modId;
-					if (StringUtils.isNumeric(userInputModId)) {
-						modId = userInputModId;
-					} else {
-						modId = STEAM_WORKSHOP_MOD_ID.matcher(userInputModId)
-								.results()
-								.map(MatchResult::group)
-								.collect(Collectors.joining(""));
-
-						//Certain strings will sometimes return empty strings after the regex.
-						if (!modId.isBlank()) {
-							modId = modId.substring(3);
-						}
-					}
-
-					//It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
-					if (!modId.isEmpty()) {
-						Optional<Mod> duplicateMod = Optional.empty();
-						//We have this check so we don't try and compare single mod ID's to a collection URL.
-						if (!steamCollection) {
-							String finalModId = modId;
-							duplicateMod = UI_SERVICE.getCurrentModList().stream()
-									.filter(mod -> finalModId.equals(mod.getId()))
-									.findFirst();
-						}
-						//Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
-						if (duplicateMod.isPresent()) {
-							Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
-						} else {
-							chosenModId = modId;
-							goodModId = true;
-						}
-					} else {
-						Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
-					}
-				} else {
-					Popup.displaySimpleAlert("Mod ID must contain a number!", MessageType.WARN);
-				}
-			} else {
-				goodModId = true;
-			}
-		} while (!goodModId);
-
-		ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
-
-		return chosenModId;
-	}
-
-	private String getModIoModLocationFromUser() {
-		boolean goodModId = false;
-		String chosenModId = "";
-		final Pattern MOD_IO_URL = Pattern.compile("(?<=/g/spaceengineers/m/).*");
-
-		do {
-			String userInputModId = getUserModIdInput();
-			String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
-			if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
-				String modUrlName;
-
-				if (StringUtils.isNumeric(userInputModId)) {
-					modUrlName = userInputModId;
-				} else {
-					modUrlName = MOD_IO_URL.matcher(userInputModId)
-							.results()
-							.map(MatchResult::group)
-							.collect(Collectors.joining());
-				}
-
-				if (!modUrlName.isEmpty()) {
-					//Unlike the steam check, the duplicate check has to happen down in the scraping layer since we don't know the mod ID yet.
-					chosenModId = modUrlName;
-					goodModId = true;
-				} else {
-					Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
-				}
-			} else {
-				goodModId = true;
-			}
-		} while (!goodModId);
-
-		ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
-
-		//This will return either the name of a mod as it appears in the url, or the actual mod ID. We can have the controller handle parsing these out.
-		return chosenModId;
-	}
-
-	@FXML
-	private void manageModProfiles() {
-		MOD_PROFILE_MANAGER_VIEW.show();
-	}
-
-	@FXML
-	private void manageSaveProfiles() {
-		SAVE_MANAGER_VIEW.show();
-	}
-
-	@FXML
-	private void importModlist() {
-		//TODO: Implement. Allow importing modlists from either sandbox file or exported list.
-		// For our own applications lists, aka exported ones, create a custom file extension. Like, .SEMM. Then just marshall the modlist only.
-	}
+    private void addModFromSteamId() {
+        setModAddingInputViewText("Steam Workshop Mod URL/ID",
+                "Enter the Steam Workshop URL/ID",
+                "Workshop URL/Mod ID"
+        );
 
 
-	@FXML
-	private void exportModlist() {
-		//TODO: Implement. Export in our own format (use XML). Make our file end in .SEMM
-	}
+        String modId = getSteamModLocationFromUser(false);
+        if (!modId.isBlank()) {
+            SteamMod mod = new SteamMod(modId);
 
-	//Apply the modlist the user is currently using to the save profile they're currently using.
-	//TODO: This whole thing likely need rewritten
-	@FXML
-	private void applyModlist() throws IOException {
-		//TODO: Disable this button when our save profile save is not found
+            //This is a bit hacky, but it makes a LOT less code we need to maintain.
+            final Mod[] modList = new Mod[1];
+            modList[0] = mod;
+            getModImportThread(List.of(modList)).start();
+        }
+
+    }
+
+    private void addModsFromSteamCollection() {
+        //TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+        setModAddingInputViewText("Steam Workshop Collection URL/ID",
+                "Enter the URL/ID for the Steam Workshop Collection",
+                "Collection URL/ID"
+        );
+
+        String modId = getSteamModLocationFromUser(true);
+        if (!modId.isBlank()) {
+            try {
+                getSteamModCollectionThread(modId).start();
+            } catch (RuntimeException e) {
+                UI_SERVICE.log(e);
+                Popup.displaySimpleAlert(String.valueOf(e), STAGE, MessageType.ERROR);
+            }
+        }
+    }
+
+
+    //TODO: v1 of how to do this
+    // Given user input, check if it's a mod ID (Just numbers) or an url (alphanumeric)
+    // Once we have our input, pass that to the normal modscrape calls.
+    // In the modlist service, we need to check it's for the right game. If it's an URL, we can actually check further up if the url source is from space engineers,
+    //    and if it's an ID, we do a lookup with jsoup, check the response, and can do the same check above for if it's a space engineers game.
+    //    We also need to see if we pass a bad ID to the right game if it'll give us a space engineers root, maybe, but no mod.
+    //    We also could possible use the title. The title is "mod name " + "For space engineers"
+    // Once we've confirmed our page is a legitimate mod for the right game, we start scraping.
+    //    Title contains mod name.
+    //    Unlike steam, we need to also scrape the real mod ID from an url if we are passed an url. We can tell if it's an url if it's not explicitly numeric.
+    //    We will need to check for duplicates based on friendly name for non-mod.io mods. Vice versa as well, we need to add checking for duplicates based on friendly name
+    //        for non-steam mods as well when checking steam dupes.
+
+    private void addModFromModIoId() {
+        setModAddingInputViewText("Mod.io Mod URL/ID",
+                "Enter the Mod.io URL or ID",
+                "Mod.io URL/ID"
+        );
+
+        String modId = getModIoModLocationFromUser();
+
+        if (!modId.isBlank()) {
+            if (!StringUtils.isNumeric(modId)) {
+                getModIoUrlToIdThread(modId).start();
+            } else {
+                ModIoMod mod = new ModIoMod(modId);
+
+                //This is a bit hacky, but it makes a LOT less code we need to maintain.
+                final Mod[] modList = new Mod[1];
+                modList[0] = mod;
+                getModImportThread(List.of(modList)).start();
+            }
+        }
+
+    }
+
+    private void addModsFromExistingSave() {
+        //TODO: Implement
+    }
+
+    private void addModsFromFile() {
+        //TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
+        //TODO: The actual adding to the modlist should happen here
+        //Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
+    }
+
+    private String getSteamModLocationFromUser(boolean steamCollection) {
+        boolean goodModId = false;
+        String chosenModId = "";
+        final Pattern STEAM_WORKSHOP_MOD_ID = Pattern.compile("(id=[0-9])\\d*");
+
+        //This starts a loop that will continuously get user input until they choose any option that isn't accept.
+        do {
+            String userInputModId = getUserModIdInput();
+            String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
+            //Checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
+            if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
+                if (!StringUtils.isAlpha(userInputModId)) {
+                    String modId;
+                    if (StringUtils.isNumeric(userInputModId)) {
+                        modId = userInputModId;
+                    } else {
+                        modId = STEAM_WORKSHOP_MOD_ID.matcher(userInputModId)
+                                .results()
+                                .map(MatchResult::group)
+                                .collect(Collectors.joining(""));
+
+                        //Certain strings will sometimes return empty strings after the regex.
+                        if (!modId.isBlank()) {
+                            modId = modId.substring(3);
+                        }
+                    }
+
+                    //It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
+                    if (!modId.isEmpty()) {
+                        Optional<Mod> duplicateMod = Optional.empty();
+                        //We have this check so we don't try and compare single mod ID's to a collection URL.
+                        if (!steamCollection) {
+                            String finalModId = modId;
+                            duplicateMod = UI_SERVICE.getCurrentModList().stream()
+                                    .filter(mod -> finalModId.equals(mod.getId()))
+                                    .findFirst();
+                        }
+                        //Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
+                        if (duplicateMod.isPresent()) {
+                            Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
+                        } else {
+                            chosenModId = modId;
+                            goodModId = true;
+                        }
+                    } else {
+                        Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
+                    }
+                } else {
+                    Popup.displaySimpleAlert("Mod ID must contain a number!", MessageType.WARN);
+                }
+            } else {
+                goodModId = true;
+            }
+        } while (!goodModId);
+
+        ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
+
+        return chosenModId;
+    }
+
+    private String getModIoModLocationFromUser() {
+        boolean goodModId = false;
+        String chosenModId = "";
+        final Pattern MOD_IO_URL = Pattern.compile("(?<=/g/spaceengineers/m/).*");
+
+        do {
+            String userInputModId = getUserModIdInput();
+            String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
+            if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
+                String modUrlName;
+
+                if (StringUtils.isNumeric(userInputModId)) {
+                    modUrlName = userInputModId;
+                } else {
+                    modUrlName = MOD_IO_URL.matcher(userInputModId)
+                            .results()
+                            .map(MatchResult::group)
+                            .collect(Collectors.joining());
+                }
+
+                if (!modUrlName.isEmpty()) {
+                    //Unlike the steam check, the duplicate check has to happen down in the scraping layer since we don't know the mod ID yet.
+                    chosenModId = modUrlName;
+                    goodModId = true;
+                } else {
+                    Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", MessageType.WARN);
+                }
+            } else {
+                goodModId = true;
+            }
+        } while (!goodModId);
+
+        ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
+
+        //This will return either the name of a mod as it appears in the url, or the actual mod ID. We can have the controller handle parsing these out.
+        return chosenModId;
+    }
+
+    @FXML
+    private void manageModProfiles() {
+        MOD_PROFILE_MANAGER_VIEW.show();
+    }
+
+    @FXML
+    private void manageSaveProfiles() {
+        SAVE_MANAGER_VIEW.show();
+    }
+
+    @FXML
+    private void importModlist() {
+        //TODO: Implement. Allow importing modlists from either sandbox file or exported list.
+        // For our own applications lists, aka exported ones, create a custom file extension. Like, .SEMM. Then just marshall the modlist only.
+    }
+
+
+    @FXML
+    private void exportModlist() {
+        //TODO: Implement. Export in our own format (use XML). Make our file end in .SEMM
+    }
+
+    //Apply the modlist the user is currently using to the save profile they're currently using.
+    //TODO: This whole thing likely need rewritten
+    @FXML
+    private void applyModlist() throws IOException {
+        //TODO: Disable this button when our save profile save is not found
 //		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
 //		ModProfile currentModProfile = uiService.getCurrentModProfile();
 //		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
@@ -693,535 +699,535 @@ public class ModlistManagerView {
 //			uiService.log(errorMessage, MessageType.ERROR);
 //			Popup.displaySimpleAlert(errorMessage, stage, MessageType.ERROR);
 //		}
-	}
+    }
 
-	@FXML
-	private void launchSpaceEngineers() throws URISyntaxException, IOException {
-		//TODO: Check this works on systems with no previous steam url association
-		Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
-	}
+    @FXML
+    private void launchSpaceEngineers() throws URISyntaxException, IOException {
+        //TODO: Check this works on systems with no previous steam url association
+        Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
+    }
 
-	@FXML
-	private void closeLogTab() {
-		logToggle.setSelected(false);
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		}
-	}
+    @FXML
+    private void closeLogTab() {
+        logToggle.setSelected(false);
+        if (informationPane.getTabs().isEmpty()) {
+            disableSplitPaneDivider();
+        }
+    }
 
-	@FXML
-	private void closeModDescriptionTab() {
-		modDescriptionToggle.setSelected(false);
-		if (informationPane.getTabs().isEmpty()) {
-			disableSplitPaneDivider();
-		}
-	}
+    @FXML
+    private void closeModDescriptionTab() {
+        modDescriptionToggle.setSelected(false);
+        if (informationPane.getTabs().isEmpty()) {
+            disableSplitPaneDivider();
+        }
+    }
 
-	protected void disableSplitPaneDivider() {
-		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
-			node.setVisible(false);
-			mainViewSplitDividerVisible = false;
-		}
-		mainViewSplit.setDividerPosition(0, 1);
-	}
+    protected void disableSplitPaneDivider() {
+        for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
+            node.setVisible(false);
+            mainViewSplitDividerVisible = false;
+        }
+        mainViewSplit.setDividerPosition(0, 1);
+    }
 
-	protected void enableSplitPaneDivider() {
-		for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
-			node.setVisible(true);
-			mainViewSplitDividerVisible = true;
-		}
-		mainViewSplit.setDividerPosition(0, 0.7);
-	}
+    protected void enableSplitPaneDivider() {
+        for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
+            node.setVisible(true);
+            mainViewSplitDividerVisible = true;
+        }
+        mainViewSplit.setDividerPosition(0, 0.7);
+    }
 
-	private void applyDefaultSort() {
-		if (loadPriority != null) {
-			modTable.getSortOrder().removeListener(sortListener);
+    private void applyDefaultSort() {
+        if (loadPriority != null) {
+            modTable.getSortOrder().removeListener(sortListener);
 
-			loadPriority.setSortType(TableColumn.SortType.ASCENDING);
-			modTable.getSortOrder().add(loadPriority);
-			modTable.sort();
-			modTable.getSortOrder().clear();
+            loadPriority.setSortType(TableColumn.SortType.ASCENDING);
+            modTable.getSortOrder().add(loadPriority);
+            modTable.sort();
+            modTable.getSortOrder().clear();
 
-			modTable.getSortOrder().addListener(sortListener);
-		}
-	}
+            modTable.getSortOrder().addListener(sortListener);
+        }
+    }
 
-	/**
-	 * Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll.
-	 */
-	protected void handleModTableDragOver(DragEvent dragEvent) {
-		//This normalizes our scroll speed so small and large tables all scroll at the same speed.
-		final double TOTAL_ROW_HEIGHT = UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight();
-		final double SCROLL_SPEED_CONSTANT = 0.035;
-		final double SCROLL_SPEED = SCROLL_SPEED_CONSTANT / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
+    /**
+     * Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll.
+     */
+    protected void handleModTableDragOver(DragEvent dragEvent) {
+        //This normalizes our scroll speed so small and large tables all scroll at the same speed.
+        final double TOTAL_ROW_HEIGHT = UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight();
+        final double SCROLL_SPEED_CONSTANT = 0.035;
+        final double SCROLL_SPEED = SCROLL_SPEED_CONSTANT / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
 
-		double y = dragEvent.getY();
-		double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
-		double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
+        double y = dragEvent.getY();
+        double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
+        double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
 
-		//These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
-		if (modTableVerticalScrollBar == null) {
-			modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-		}
+        //These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
+        if (modTableVerticalScrollBar == null) {
+            modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+        }
 
-		if (headerRow == null) {
-			headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
-		}
+        if (headerRow == null) {
+            headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
+        }
 
-		double currentScrollValue = modTableVerticalScrollBar.getValue();
-		double minScrollValue = modTableVerticalScrollBar.getMin();
-		double maxScrollValue = modTableVerticalScrollBar.getMax();
-		double scrollAmount;
+        double currentScrollValue = modTableVerticalScrollBar.getValue();
+        double minScrollValue = modTableVerticalScrollBar.getMin();
+        double maxScrollValue = modTableVerticalScrollBar.getMax();
+        double scrollAmount;
 
-		//Scroll up
-		if (y < modTableTop && currentScrollValue > minScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) {
-			scrollAmount = -SCROLL_SPEED;
-		} else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) { //Scroll down
-			scrollAmount = SCROLL_SPEED;
-		} else {
-			scrollAmount = 0;
-		}
+        //Scroll up
+        if (y < modTableTop && currentScrollValue > minScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) {
+            scrollAmount = -SCROLL_SPEED;
+        } else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) { //Scroll down
+            scrollAmount = SCROLL_SPEED;
+        } else {
+            scrollAmount = 0;
+        }
 
-		if (scrollAmount != 0) {
-			if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
-				//We disable the transfer mode here since we know that if we're scrolling we're outside the valid drop zone
-				dragEvent.acceptTransferModes(TransferMode.NONE);
-				scrollTimeline = new Timeline(
-						new KeyFrame(Duration.millis(16), actionEvent -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
-							double newValue = modTableVerticalScrollBar.getValue() + scrollAmount;
-							newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
-							modTableVerticalScrollBar.setValue(newValue);
-						})
-				);
-				scrollTimeline.setCycleCount(60); //One second of animation is 60 cycles, so set this to 60 so we don't end up with infinite animations.
-				scrollTimeline.play(); // Start the scrolling animation
-			}
-		} else {
-			if (scrollTimeline != null) {
-				scrollTimeline.stop();
-			}
-		}
+        if (scrollAmount != 0) {
+            if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
+                //We disable the transfer mode here since we know that if we're scrolling we're outside the valid drop zone
+                dragEvent.acceptTransferModes(TransferMode.NONE);
+                scrollTimeline = new Timeline(
+                        new KeyFrame(Duration.millis(16), actionEvent -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
+                            double newValue = modTableVerticalScrollBar.getValue() + scrollAmount;
+                            newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
+                            modTableVerticalScrollBar.setValue(newValue);
+                        })
+                );
+                scrollTimeline.setCycleCount(60); //One second of animation is 60 cycles, so set this to 60 so we don't end up with infinite animations.
+                scrollTimeline.play(); // Start the scrolling animation
+            }
+        } else {
+            if (scrollTimeline != null) {
+                scrollTimeline.stop();
+            }
+        }
 
-		if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + actions.getHeight()) {
-			dragEvent.acceptTransferModes(TransferMode.MOVE);
-		}
+        if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + actions.getHeight()) {
+            dragEvent.acceptTransferModes(TransferMode.MOVE);
+        }
 
-		dragEvent.consume();
-	}
+        dragEvent.consume();
+    }
 
-	//This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
-	private void handleTableActionsOnDragDrop(DragEvent dragEvent) {
-		Dragboard dragboard = dragEvent.getDragboard();
+    //This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
+    private void handleTableActionsOnDragDrop(DragEvent dragEvent) {
+        Dragboard dragboard = dragEvent.getDragboard();
 
-		actions.setBorder(null);
+        actions.setBorder(null);
 
-		if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
-			//I'd love to get a class level reference of this, but we need to progressively get it as the view changes
+        if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+            //I'd love to get a class level reference of this, but we need to progressively get it as the view changes
 
-			if (modTableVerticalScrollBar == null) {
-				modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-			}
+            if (modTableVerticalScrollBar == null) {
+                modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+            }
 
-			if (modTableVerticalScrollBar.getValue() == modTableVerticalScrollBar.getMax()) {
-				for (Mod m : SELECTIONS) {
-					UI_SERVICE.getCurrentModList().remove(m);
-				}
+            if (modTableVerticalScrollBar.getValue() == modTableVerticalScrollBar.getMax()) {
+                for (Mod m : SELECTIONS) {
+                    UI_SERVICE.getCurrentModList().remove(m);
+                }
 
-				modTable.getSelectionModel().clearSelection();
+                modTable.getSelectionModel().clearSelection();
 
-				for (Mod m : SELECTIONS) {
-					UI_SERVICE.getCurrentModList().add(m);
-					modTable.getSelectionModel().select(UI_SERVICE.getCurrentModList().size() - 1);
-				}
+                for (Mod m : SELECTIONS) {
+                    UI_SERVICE.getCurrentModList().add(m);
+                    modTable.getSelectionModel().select(UI_SERVICE.getCurrentModList().size() - 1);
+                }
 
-				MODLIST_MANAGER_HELPER.setCurrentModListLoadPriority(modTable, UI_SERVICE);
+                MODLIST_MANAGER_HELPER.setCurrentModListLoadPriority(modTable, UI_SERVICE);
 
-				//Redo our sort since our row order has changed
-				modTable.sort();
+                //Redo our sort since our row order has changed
+                modTable.sort();
 
 			/*
 				We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
 				but for whatever reason the changes aren't propagating without this.
 			*/
-				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
-				UI_SERVICE.saveUserData();
-			}
+                //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
+                UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+                UI_SERVICE.saveUserData();
+            }
 
-			dragEvent.consume();
-		}
-	}
+            dragEvent.consume();
+        }
+    }
 
-	private void handleTableActionsOnDragOver(DragEvent dragEvent) {
-		ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+    private void handleTableActionsOnDragOver(DragEvent dragEvent) {
+        ScrollBar verticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
 
-		if (verticalScrollBar.isVisible() && verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
-			Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
-			Border dropIndicator;
-			dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
-					BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
-					CornerRadii.EMPTY, new BorderWidths(2, 0, 0, 0), new Insets(-2, verticalScrollBar.getWidth(), 0, 0)));
-			actions.setBorder(dropIndicator);
-		}
-	}
+        if (verticalScrollBar.isVisible() && verticalScrollBar.getValue() == verticalScrollBar.getMax()) {
+            Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
+            Border dropIndicator;
+            dropIndicator = new Border(new BorderStroke(indicatorColor, indicatorColor, indicatorColor, indicatorColor,
+                    BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE, BorderStrokeStyle.NONE,
+                    CornerRadii.EMPTY, new BorderWidths(2, 0, 0, 0), new Insets(-2, verticalScrollBar.getWidth(), 0, 0)));
+            actions.setBorder(dropIndicator);
+        }
+    }
 
-	private void handleTableActionsOnDragExit(DragEvent dragEvent) {
-		actions.setBorder(null);
-	}
+    private void handleTableActionsOnDragExit(DragEvent dragEvent) {
+        actions.setBorder(null);
+    }
 
-	//This is where we update the actual contents of the mod table when we want to set it, such as if we switch mod profiles.
-	//This wraps our filtered list in a sorted list so that we can properly use the column sorts in the UI, while also maintaining searchability
-	//We leave the filteredList as an attribute as we need to access it in the ModTableContextBarView to set a listener on it
-	public void updateModTableContents() {
-		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
-		SortedList<Mod> sortedList = new SortedList<>(filteredModList);
-		sortedList.comparatorProperty().bind(modTable.comparatorProperty());
-		modTable.setItems(sortedList);
-	}
+    //This is where we update the actual contents of the mod table when we want to set it, such as if we switch mod profiles.
+    //This wraps our filtered list in a sorted list so that we can properly use the column sorts in the UI, while also maintaining searchability
+    //We leave the filteredList as an attribute as we need to access it in the ModTableContextBarView to set a listener on it
+    public void updateModTableContents() {
+        filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
+        SortedList<Mod> sortedList = new SortedList<>(filteredModList);
+        sortedList.comparatorProperty().bind(modTable.comparatorProperty());
+        modTable.setItems(sortedList);
+    }
 
-	private String getUserModIdInput() {
-		ID_AND_URL_MOD_IMPORT_INPUT.show();
-		return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText();
-	}
+    private String getUserModIdInput() {
+        ID_AND_URL_MOD_IMPORT_INPUT.show();
+        return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText();
+    }
 
-	private void setModAddingInputViewText(String title, String instructions, String promptText) {
-		ID_AND_URL_MOD_IMPORT_INPUT.setTitle(title);
-		ID_AND_URL_MOD_IMPORT_INPUT.setInputInstructions(instructions);
-		ID_AND_URL_MOD_IMPORT_INPUT.setPromptText(promptText);
-		ID_AND_URL_MOD_IMPORT_INPUT.setEmptyTextMessage("URL/ID cannot be blank!");
-	}
+    private void setModAddingInputViewText(String title, String instructions, String promptText) {
+        ID_AND_URL_MOD_IMPORT_INPUT.setTitle(title);
+        ID_AND_URL_MOD_IMPORT_INPUT.setInputInstructions(instructions);
+        ID_AND_URL_MOD_IMPORT_INPUT.setPromptText(promptText);
+        ID_AND_URL_MOD_IMPORT_INPUT.setEmptyTextMessage("URL/ID cannot be blank!");
+    }
 
-	private void redirectHyperlinks() {
-		NodeList nodeList = modDescription.getEngine().getDocument().getElementsByTagName("a");
+    private void redirectHyperlinks() {
+        NodeList nodeList = modDescription.getEngine().getDocument().getElementsByTagName("a");
 
-		for (int i = 0; i < nodeList.getLength(); i++) {
-			org.w3c.dom.Node node = nodeList.item(i);
-			EventTarget eventTarget = (EventTarget) node;
-			eventTarget.addEventListener("click", evt -> {
-				EventTarget target = evt.getCurrentTarget();
-				HTMLAnchorElement anchorElement = (HTMLAnchorElement) target;
-				String href = anchorElement.getHref();
-				try {
-					Desktop.getDesktop().browse(new URI(href));
-				} catch (IOException | URISyntaxException e) {
-					UI_SERVICE.log(e);
-				}
-				evt.preventDefault();
-			}, false);
-		}
-	}
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            org.w3c.dom.Node node = nodeList.item(i);
+            EventTarget eventTarget = (EventTarget) node;
+            eventTarget.addEventListener("click", evt -> {
+                EventTarget target = evt.getCurrentTarget();
+                HTMLAnchorElement anchorElement = (HTMLAnchorElement) target;
+                String href = anchorElement.getHref();
+                try {
+                    Desktop.getDesktop().browse(new URI(href));
+                } catch (IOException | URISyntaxException e) {
+                    UI_SERVICE.log(e);
+                }
+                evt.preventDefault();
+            }, false);
+        }
+    }
 
-	private Thread getSteamModCollectionThread(String collectionId) {
-		final Task<List<Result<String>>> TASK;
+    private Thread getSteamModCollectionThread(String collectionId) {
+        final Task<List<Result<String>>> TASK;
 
-		TASK = new Task<>() {
-			@Override
-			protected List<Result<String>> call() {
-				try {
-					return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
-				} catch (IOException e) {
-					List<Result<String>> failedResults = new ArrayList<>();
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-						failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					failedResults.add(failedResult);
-					return failedResults;
-				}
-			}
-		};
+        TASK = new Task<>() {
+            @Override
+            protected List<Result<String>> call() {
+                try {
+                    return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
+                } catch (IOException e) {
+                    List<Result<String>> failedResults = new ArrayList<>();
+                    Result<String> failedResult = new Result<>();
+                    if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+                        failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+                    } else {
+                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                    }
+                    failedResults.add(failedResult);
+                    return failedResults;
+                }
+            }
+        };
 
-		TASK.setOnRunning(workerStateEvent -> {
-			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
-			disableUserInputElements(true);
-			modImportProgressPanel.setVisible(true);
-			disableModImportUiText(true);
-			modImportSteamCollectionName.setVisible(true);
-		});
+        TASK.setOnRunning(workerStateEvent -> {
+            //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
+            disableUserInputElements(true);
+            modImportProgressPanel.setVisible(true);
+            disableModImportUiText(true);
+            modImportSteamCollectionName.setVisible(true);
+        });
 
-		TASK.setOnSucceeded(workerStateEvent -> {
-			int modIdsSuccessfullyFound = 0;
-			int duplicateModIds = 0;
-			List<Mod> successfullyFoundMods = new ArrayList<>();
+        TASK.setOnSucceeded(workerStateEvent -> {
+            int modIdsSuccessfullyFound = 0;
+            int duplicateModIds = 0;
+            List<Mod> successfullyFoundMods = new ArrayList<>();
 
-			List<Result<String>> steamCollectionModIds = TASK.getValue();
-			//This should only be false if we get a collection for the wrong game
-			if (steamCollectionModIds.size() != 1 && !steamCollectionModIds.getFirst().getCurrentMessage().equals("The collection must be a Space Engineers collection!")) {
-				for (Result<String> steamCollectionModId : steamCollectionModIds) {
-					if (steamCollectionModId.isSuccess()) {
-						modIdsSuccessfullyFound++;
-						SteamMod mod = new SteamMod(steamCollectionModId.getPayload());
-						successfullyFoundMods.add(mod);
-					} else {
-						if (steamCollectionModId.getType() == ResultType.INVALID) duplicateModIds++;
-					}
-				}
+            List<Result<String>> steamCollectionModIds = TASK.getValue();
+            //This should only be false if we get a collection for the wrong game
+            if (steamCollectionModIds.size() != 1 && !steamCollectionModIds.getFirst().getCurrentMessage().equals("The collection must be a Space Engineers collection!")) {
+                for (Result<String> steamCollectionModId : steamCollectionModIds) {
+                    if (steamCollectionModId.isSuccess()) {
+                        modIdsSuccessfullyFound++;
+                        SteamMod mod = new SteamMod(steamCollectionModId.getPayload());
+                        successfullyFoundMods.add(mod);
+                    } else {
+                        if (steamCollectionModId.getType() == ResultType.INVALID) duplicateModIds++;
+                    }
+                }
 
-				if (duplicateModIds == steamCollectionModIds.size()) {
-					Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
-					Platform.runLater(() -> {
-						FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
-						fadeTransition.setFromValue(1d);
-						fadeTransition.setToValue(0d);
+                if (duplicateModIds == steamCollectionModIds.size()) {
+                    Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
+                    Platform.runLater(() -> {
+                        FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+                        fadeTransition.setFromValue(1d);
+                        fadeTransition.setToValue(0d);
 
-						fadeTransition.setOnFinished(actionEvent -> {
-							modImportSteamCollectionName.setVisible(false);
-							disableModImportUiText(false);
-							disableUserInputElements(false);
-							resetModImportProgressUi();
-						});
+                        fadeTransition.setOnFinished(actionEvent -> {
+                            modImportSteamCollectionName.setVisible(false);
+                            disableModImportUiText(false);
+                            disableUserInputElements(false);
+                            resetModImportProgressUi();
+                        });
 
-						fadeTransition.play();
-					});
-				} else {
-					int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
-					String postCollectionScrapeMessage = totalNumberOfMods +
-							" mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
-							(totalNumberOfMods - duplicateModIds) + "?";
+                        fadeTransition.play();
+                    });
+                } else {
+                    int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
+                    String postCollectionScrapeMessage = totalNumberOfMods +
+                            " mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
+                            (totalNumberOfMods - duplicateModIds) + "?";
 
-					int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
+                    int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
-					if (userChoice == 1) {
-						getModImportThread(successfullyFoundMods).start();
-					}
+                    if (userChoice == 1) {
+                        getModImportThread(successfullyFoundMods).start();
+                    }
 
-					Platform.runLater(() -> {
-						modImportSteamCollectionName.setVisible(false);
-						disableModImportUiText(false);
+                    Platform.runLater(() -> {
+                        modImportSteamCollectionName.setVisible(false);
+                        disableModImportUiText(false);
 
-						if (userChoice != 1) {
-							disableUserInputElements(false);
-							resetModImportProgressUi();
-						}
-					});
-				}
-			} else {
-				Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), STAGE);
-				Platform.runLater(() -> {
-					modImportSteamCollectionName.setVisible(false);
-					disableModImportUiText(false);
+                        if (userChoice != 1) {
+                            disableUserInputElements(false);
+                            resetModImportProgressUi();
+                        }
+                    });
+                }
+            } else {
+                Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), STAGE);
+                Platform.runLater(() -> {
+                    modImportSteamCollectionName.setVisible(false);
+                    disableModImportUiText(false);
 
-					disableUserInputElements(false);
-					resetModImportProgressUi();
+                    disableUserInputElements(false);
+                    resetModImportProgressUi();
 
-				});
-			}
-		});
-
-
-		Thread thread = Thread.ofVirtual().unstarted(TASK);
-		thread.setDaemon(true);
-		return thread;
-	}
-
-	private Thread getModIoUrlToIdThread(String modUrl) {
-		final Task<Result<String>> TASK;
-
-		TASK = new Task<>() {
-			@Override
-			protected Result<String> call() {
-				try {
-					return UI_SERVICE.getModIoModIdFromUrlName(modUrl);
-				} catch (IOException e) {
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					return failedResult;
-				}
-			}
-		};
-
-		TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
-			modIoUrlToIdName.setVisible(true);
-			disableUserInputElements(true);
-			modImportProgressDenominator.setVisible(false);
-			modImportProgressPanel.setVisible(true);
-		}));
-
-		TASK.setOnSucceeded(workerStateEvent -> {
-			Platform.runLater(() -> {
-				modIoUrlToIdName.setVisible(false);
-				modImportProgressDenominator.setVisible(true);
-			});
-
-			Result<String> modIdResult = TASK.getValue();
-			if (modIdResult.isSuccess()) {
-				ModIoMod mod = new ModIoMod(modIdResult.getPayload());
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				getModImportThread(List.of(modList)).start();
-			} else {
-				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
-				Platform.runLater(() -> {
-					modImportProgressWheel.setVisible(false);
-					UI_SERVICE.getModImportProgressDenominatorProperty().setValue(1);
-				});
-				UI_SERVICE.log(modIdResult);
-				Popup.displaySimpleAlert(modIdResult, STAGE);
-
-				Platform.runLater(() -> {
-					//Fadeout the UI if it doesn't succeed.
-					FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
-					fadeTransition.setFromValue(1d);
-					fadeTransition.setToValue(0d);
-
-					fadeTransition.setOnFinished(actionEvent -> {
-						disableUserInputElements(false);
-						resetModImportProgressUi();
-					});
-					fadeTransition.play();
-				});
-			}
-		});
-
-		Thread thread = Thread.ofVirtual().unstarted(TASK);
-		thread.setDaemon(true);
-		return thread;
-	}
-
-	private Thread getModImportThread(List<Mod> modList) {
-		final Task<List<Result<Mod>>> TASK;
-		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
-		TASK = new Task<>() {
-			@Override
-			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
-				Platform.runLater(() -> UI_SERVICE.getModImportProgressDenominatorProperty().setValue(modList.size()));
-				List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
-				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-					for (Mod m : modList) {
-						// Submit the task without waiting for it to finish
-						Future<Result<Mod>> future = executorService.submit(() -> {
-							try {
-								return UI_SERVICE.fillOutModInformation(m);
-							} catch (IOException e) {
-								Result<Mod> failedResult = new Result<>();
-								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-									failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-								} else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-									failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-								} else {
-									failedResult.addMessage(e.toString(), ResultType.FAILED);
-								}
-								return failedResult;
-							}
-						});
-						// Store the Future if you need to track the task later
-						futures.add(future);
-					}
-					try {
-						for (Future<Result<Mod>> f : futures) {
-							modInfoFillOutResults.add(f.get());
-						}
-					} catch (RuntimeException e) {
-						Result<Mod> failedResult = new Result<>();
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-						modInfoFillOutResults.add(failedResult);
-					}
-				}
-				return modInfoFillOutResults;
-			}
-		};
-
-		TASK.setOnRunning(workerStateEvent -> {
-			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
-			disableUserInputElements(true);
-			modImportProgressPanel.setVisible(true);
-		});
-
-		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-			modImportProgressWheel.setVisible(false);
-
-			int successfulScrapes = 0;
-			int failedScrapes = 0;
-
-			for (Result<Mod> currentModInfoFillOutResult : modInfoFillOutResults) {
-				if (currentModInfoFillOutResult.isSuccess()) {
-					currentModInfoFillOutResult.getPayload().setLoadPriority(UI_SERVICE.getCurrentModList().size() + 1);
-					UI_SERVICE.getCurrentModList().add(currentModInfoFillOutResult.getPayload());
-					successfulScrapes++;
-					modTable.sort();
-					UI_SERVICE.logPrivate(currentModInfoFillOutResult);
-				} else {
-					failedScrapes++;
-					UI_SERVICE.log(currentModInfoFillOutResult);
-				}
-			}
+                });
+            }
+        });
 
 
-			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-			for (Result<Mod> modResult : modInfoFillOutResults) {
-				if (modResult.isSuccess()) {
-					modTable.getSelectionModel().clearSelection();
-					modTable.getSelectionModel().select(modResult.getPayload());
-					modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
-					break;
-				}
-			}
+        Thread thread = Thread.ofVirtual().unstarted(TASK);
+        thread.setDaemon(true);
+        return thread;
+    }
 
-			if (modList.size() == 1) {
-				Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
-			} else {
-				String modFillOutResultMessage = successfulScrapes + " mods were successfully added. " +
-						failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
-				Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
-				UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
-			}
+    private Thread getModIoUrlToIdThread(String modUrl) {
+        final Task<Result<String>> TASK;
 
-			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
-			UI_SERVICE.saveUserData();
+        TASK = new Task<>() {
+            @Override
+            protected Result<String> call() {
+                try {
+                    return UI_SERVICE.getModIoModIdFromUrlName(modUrl);
+                } catch (IOException e) {
+                    Result<String> failedResult = new Result<>();
+                    if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+                        failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+                    } else {
+                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                    }
+                    return failedResult;
+                }
+            }
+        };
 
-			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
-			//Reset our UI settings for the mod progress
-			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
-			fadeTransition.setFromValue(1d);
-			fadeTransition.setToValue(0d);
+        TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
+            modIoUrlToIdName.setVisible(true);
+            disableUserInputElements(true);
+            modImportProgressDenominator.setVisible(false);
+            modImportProgressPanel.setVisible(true);
+        }));
 
-			fadeTransition.setOnFinished(actionEvent -> {
-				disableUserInputElements(false);
-				resetModImportProgressUi();
-			});
+        TASK.setOnSucceeded(workerStateEvent -> {
+            Platform.runLater(() -> {
+                modIoUrlToIdName.setVisible(false);
+                modImportProgressDenominator.setVisible(true);
+            });
 
-			fadeTransition.play();
-		}));
+            Result<String> modIdResult = TASK.getValue();
+            if (modIdResult.isSuccess()) {
+                ModIoMod mod = new ModIoMod(modIdResult.getPayload());
+                final Mod[] modList = new Mod[1];
+                modList[0] = mod;
+                getModImportThread(List.of(modList)).start();
+            } else {
+                //This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
+                Platform.runLater(() -> {
+                    modImportProgressWheel.setVisible(false);
+                    UI_SERVICE.getModImportProgressDenominatorProperty().setValue(1);
+                });
+                UI_SERVICE.log(modIdResult);
+                Popup.displaySimpleAlert(modIdResult, STAGE);
 
-		Thread thread = Thread.ofVirtual().unstarted(TASK);
-		thread.setDaemon(true);
-		return thread;
-	}
+                Platform.runLater(() -> {
+                    //Fadeout the UI if it doesn't succeed.
+                    FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+                    fadeTransition.setFromValue(1d);
+                    fadeTransition.setToValue(0d);
 
-	//TODO: These function names suck. Make them something like "show{name of what the UI is. Like "steam collection check panel.}.
-	private void disableUserInputElements(boolean shouldDisable) {
-		modImportDropdown.setDisable(shouldDisable);
-		manageModProfiles.setDisable(shouldDisable);
-		manageSaveProfiles.setDisable(shouldDisable);
-		importModlist.setDisable(shouldDisable);
-		exportModlist.setDisable(shouldDisable);
-		applyModlist.setDisable(shouldDisable);
-		launchSpaceEngineers.setDisable(shouldDisable);
+                    fadeTransition.setOnFinished(actionEvent -> {
+                        disableUserInputElements(false);
+                        resetModImportProgressUi();
+                    });
+                    fadeTransition.play();
+                });
+            }
+        });
 
-		modProfileDropdown.setDisable(shouldDisable);
-		saveProfileDropdown.setDisable(shouldDisable);
-		modTableSearchField.setDisable(shouldDisable);
-	}
+        Thread thread = Thread.ofVirtual().unstarted(TASK);
+        thread.setDaemon(true);
+        return thread;
+    }
 
-	private void disableModImportUiText(boolean shouldDisable) {
-		modImportProgressActionName.setVisible(!shouldDisable);
-		modImportProgressNumerator.setVisible(!shouldDisable);
-		modImportProgressDivider.setVisible(!shouldDisable);
-		modImportProgressDenominator.setVisible(!shouldDisable);
-	}
+    private Thread getModImportThread(List<Mod> modList) {
+        final Task<List<Result<Mod>>> TASK;
+        List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+        TASK = new Task<>() {
+            @Override
+            protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
+                Platform.runLater(() -> UI_SERVICE.getModImportProgressDenominatorProperty().setValue(modList.size()));
+                List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
+                try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+                    for (Mod m : modList) {
+                        // Submit the task without waiting for it to finish
+                        Future<Result<Mod>> future = executorService.submit(() -> {
+                            try {
+                                return UI_SERVICE.fillOutModInformation(m);
+                            } catch (IOException e) {
+                                Result<Mod> failedResult = new Result<>();
+                                if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+                                    failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+                                } else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+                                    failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+                                } else {
+                                    failedResult.addMessage(e.toString(), ResultType.FAILED);
+                                }
+                                return failedResult;
+                            }
+                        });
+                        // Store the Future if you need to track the task later
+                        futures.add(future);
+                    }
+                    try {
+                        for (Future<Result<Mod>> f : futures) {
+                            modInfoFillOutResults.add(f.get());
+                        }
+                    } catch (RuntimeException e) {
+                        Result<Mod> failedResult = new Result<>();
+                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        modInfoFillOutResults.add(failedResult);
+                    }
+                }
+                return modInfoFillOutResults;
+            }
+        };
 
-	private void resetModImportProgressUi() {
-		modImportProgressPanel.setVisible(false);
-		modImportProgressPanel.setOpacity(1d);
-		UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);
-		UI_SERVICE.getModImportProgressDenominatorProperty().setValue(0);
-		UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
-		modImportProgressWheel.setVisible(true);
-	}
+        TASK.setOnRunning(workerStateEvent -> {
+            //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
+            disableUserInputElements(true);
+            modImportProgressPanel.setVisible(true);
+        });
+
+        TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
+            modImportProgressWheel.setVisible(false);
+
+            int successfulScrapes = 0;
+            int failedScrapes = 0;
+
+            for (Result<Mod> currentModInfoFillOutResult : modInfoFillOutResults) {
+                if (currentModInfoFillOutResult.isSuccess()) {
+                    currentModInfoFillOutResult.getPayload().setLoadPriority(UI_SERVICE.getCurrentModList().size() + 1);
+                    UI_SERVICE.getCurrentModList().add(currentModInfoFillOutResult.getPayload());
+                    successfulScrapes++;
+                    modTable.sort();
+                    UI_SERVICE.logPrivate(currentModInfoFillOutResult);
+                } else {
+                    failedScrapes++;
+                    UI_SERVICE.log(currentModInfoFillOutResult);
+                }
+            }
+
+
+            //TODO: This might be unwanted behavior from users. Requires actual experience testing.
+            for (Result<Mod> modResult : modInfoFillOutResults) {
+                if (modResult.isSuccess()) {
+                    modTable.getSelectionModel().clearSelection();
+                    modTable.getSelectionModel().select(modResult.getPayload());
+                    modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
+                    break;
+                }
+            }
+
+            if (modList.size() == 1) {
+                Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
+            } else {
+                String modFillOutResultMessage = successfulScrapes + " mods were successfully added. " +
+                        failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
+                Popup.displaySimpleAlert(modFillOutResultMessage, STAGE, MessageType.INFO);
+                UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
+            }
+
+            UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+            UI_SERVICE.saveUserData();
+
+            //TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
+            //Reset our UI settings for the mod progress
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+            fadeTransition.setFromValue(1d);
+            fadeTransition.setToValue(0d);
+
+            fadeTransition.setOnFinished(actionEvent -> {
+                disableUserInputElements(false);
+                resetModImportProgressUi();
+            });
+
+            fadeTransition.play();
+        }));
+
+        Thread thread = Thread.ofVirtual().unstarted(TASK);
+        thread.setDaemon(true);
+        return thread;
+    }
+
+    //TODO: These function names suck. Make them something like "show{name of what the UI is. Like "steam collection check panel.}.
+    private void disableUserInputElements(boolean shouldDisable) {
+        modImportDropdown.setDisable(shouldDisable);
+        manageModProfiles.setDisable(shouldDisable);
+        manageSaveProfiles.setDisable(shouldDisable);
+        importModlist.setDisable(shouldDisable);
+        exportModlist.setDisable(shouldDisable);
+        applyModlist.setDisable(shouldDisable);
+        launchSpaceEngineers.setDisable(shouldDisable);
+
+        modProfileDropdown.setDisable(shouldDisable);
+        saveProfileDropdown.setDisable(shouldDisable);
+        modTableSearchField.setDisable(shouldDisable);
+    }
+
+    private void disableModImportUiText(boolean shouldDisable) {
+        modImportProgressActionName.setVisible(!shouldDisable);
+        modImportProgressNumerator.setVisible(!shouldDisable);
+        modImportProgressDivider.setVisible(!shouldDisable);
+        modImportProgressDenominator.setVisible(!shouldDisable);
+    }
+
+    private void resetModImportProgressUi() {
+        modImportProgressPanel.setVisible(false);
+        modImportProgressPanel.setOpacity(1d);
+        UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);
+        UI_SERVICE.getModImportProgressDenominatorProperty().setValue(0);
+        UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
+        modImportProgressWheel.setVisible(true);
+    }
 }
