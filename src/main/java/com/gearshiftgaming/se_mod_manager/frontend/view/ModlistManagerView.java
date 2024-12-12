@@ -366,10 +366,10 @@ public class ModlistManagerView {
 //                            default: throw new IllegalStateException("Unexpected value: " + modIoMod.getLastUpdated());
 //                        };
 //                    }
+//                } else {
+//                    return new SimpleStringProperty("Unknown");
+//                }
                 return null;
-                } else {
-                    return new SimpleStringProperty("Unknown");
-                }
             } else {
                 return new SimpleStringProperty("Unknown");
             }
