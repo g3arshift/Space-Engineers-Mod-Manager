@@ -20,7 +20,7 @@ public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
         return switch (s.length()) {
             case 15://Mod.io hour format
                 yield LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
-            case 12://Mod.io day format
+            case 11, 12://Mod.io day format
                 yield LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
             default: //Mod.io year format
                 yield LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy"));

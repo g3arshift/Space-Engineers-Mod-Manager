@@ -259,7 +259,7 @@ public class UiService {
 			} else {
 				String dateFormat = switch (modInfo[1].length()) {
 					case 4: yield "yyyy";
-					case 12: yield "MMM d',' yyyy";
+					case 11, 12: yield "MMM d',' yyyy";
 					default: yield "MMM d',' yyyy '@' h";
 				};
 

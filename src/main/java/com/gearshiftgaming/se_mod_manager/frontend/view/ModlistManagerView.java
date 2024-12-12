@@ -355,7 +355,7 @@ public class ModlistManagerView {
                     return switch (modIoMod.getLastUpdated().toString().length()) {
                         case 4:
                             yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
-                        case 12:
+                        case 11, 12:
                             yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
                         default:
                             yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
@@ -406,7 +406,7 @@ public class ModlistManagerView {
         return switch (dateString.length()) {
             case 15: //Mod IO hour format
                 yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
-            case 12: //Mod IO day format
+            case 11, 12: //Mod IO day format
                 yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
             case 4: //Mod IO year format
                 yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy"));
