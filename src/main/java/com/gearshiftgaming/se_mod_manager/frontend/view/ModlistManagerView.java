@@ -343,6 +343,8 @@ public class ModlistManagerView {
         //Create a comparator for the date column so it sorts properly.
 //		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
 //				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
+
+        //TODO: This is returning unknown when we are loading the saved data from file for modio dates.
         modLastUpdated.setCellValueFactory(cellData -> {
             if (cellData.getValue() instanceof SteamMod steamMod) {
                 if (steamMod.getLastUpdated() != null) {
@@ -351,15 +353,20 @@ public class ModlistManagerView {
                     return new SimpleStringProperty("Unknown");
                 }
             } else if (cellData.getValue() instanceof ModIoMod modIoMod) {
-                if(modIoMod.getLastUpdated() != null) {
-                    return switch (modIoMod.getLastUpdated().toString().length()) {
-                        case 4:
-                            yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
-                        case 11, 12:
-                            yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
-                        default:
-                            yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h")));
-                    };
+//                if (modIoMod.getLastUpdated() != null) {
+//                    if(modIoMod.getLastUpdatedHour() != null) {
+//                        String dateTime = modIoMod.getLastUpdated() + "T" + modIoMod.getLastUpdatedHour();
+//                        return new SimpleStringProperty(LocalDateTime.parse(dateTime).format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
+//                    } else {
+//                        return switch (modIoMod.getLastUpdated().toString().length()) {
+//                            case 4:
+//                                yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
+//                            case 10:
+//                                yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
+//                            default: throw new IllegalStateException("Unexpected value: " + modIoMod.getLastUpdated());
+//                        };
+//                    }
+                return null;
                 } else {
                     return new SimpleStringProperty("Unknown");
                 }
@@ -369,7 +376,13 @@ public class ModlistManagerView {
         });
 
         //This is a horrible, horrible hack, but there's not a clean way to figure out the date formats otherwise.
-        modLastUpdated.setComparator((date1, date2) -> getModLastUpdatedFormat(date1).compareTo(getModLastUpdatedFormat(date2)));
+        modLastUpdated.setComparator((date1, date2) -> {
+//            if(date1.length() >= ) {
+//
+//            }
+            //getModLastUpdatedFormat(date1).compareTo(getModLastUpdatedFormat(date2)));
+            return 0;
+        });
 
         loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
 
@@ -403,9 +416,10 @@ public class ModlistManagerView {
     }
 
     private LocalDateTime getModLastUpdatedFormat(String dateString) {
+        //TODO: Switch to time + hour concat for hour format
         return switch (dateString.length()) {
-            case 15: //Mod IO hour format
-                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
+            case 17: //Mod IO hour format
+                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' ha"));
             case 11, 12: //Mod IO day format
                 yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
             case 4: //Mod IO year format
@@ -438,13 +452,9 @@ public class ModlistManagerView {
     //TODO: Hookup all the buttons to everything
     @FXML
     private void addMod() {
-        //TODO: Add a modIO check. Store two booleans for both workshop and modio connections. Check both. If one is up but not the other, remove the menu options for them.
-        // When we pass the check, remove all menu options from the menu and add them all back. Just a simple and fast way to make sure we don't have invalid or missing options since we can't call .disable.
         ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
         modImportDropdown.getSelectionModel().selectFirst();
         modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
-
-        //TODO: Popup based on result if bad. If good, no popup. For a collection import, only ONE POPUP with all the details of the error, with some window size limits and a scrollpane.
 
         if (selectedImportOption != null) {
             switch (selectedImportOption) {
@@ -481,7 +491,6 @@ public class ModlistManagerView {
     }
 
     private void addModsFromSteamCollection() {
-        //TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
         setModAddingInputViewText("Steam Workshop Collection URL/ID",
                 "Enter the URL/ID for the Steam Workshop Collection",
                 "Collection URL/ID"
@@ -497,20 +506,6 @@ public class ModlistManagerView {
             }
         }
     }
-
-
-    //TODO: v1 of how to do this
-    // Given user input, check if it's a mod ID (Just numbers) or an url (alphanumeric)
-    // Once we have our input, pass that to the normal modscrape calls.
-    // In the modlist service, we need to check it's for the right game. If it's an URL, we can actually check further up if the url source is from space engineers,
-    //    and if it's an ID, we do a lookup with jsoup, check the response, and can do the same check above for if it's a space engineers game.
-    //    We also need to see if we pass a bad ID to the right game if it'll give us a space engineers root, maybe, but no mod.
-    //    We also could possible use the title. The title is "mod name " + "For space engineers"
-    // Once we've confirmed our page is a legitimate mod for the right game, we start scraping.
-    //    Title contains mod name.
-    //    Unlike steam, we need to also scrape the real mod ID from an url if we are passed an url. We can tell if it's an url if it's not explicitly numeric.
-    //    We will need to check for duplicates based on friendly name for non-mod.io mods. Vice versa as well, we need to add checking for duplicates based on friendly name
-    //        for non-steam mods as well when checking steam dupes.
 
     private void addModFromModIoId() {
         setModAddingInputViewText("Mod.io Mod URL/ID",

@@ -295,8 +295,14 @@ public class ModlistService {
 
             String pageSource = driver.getPageSource();
             if (pageSource != null) {
-                //The first item is mod name, the second is last updated, the third is a combined string of the tags, and the fourth is the raw HTML of the description.
-                String[] modInfo = new String[4];
+                //modInfo:
+                // 0. Name
+                // 1. Year
+                // 2. Month + Day
+                // 3. Hour
+                // 4. Tags
+                // 5. Description
+                String[] modInfo = new String[6];
                 Document modPage = Jsoup.parse(pageSource);
 
                 if (checkIfModIsMod(ModType.MOD_IO, modPage)) {
@@ -306,18 +312,24 @@ public class ModlistService {
                     String lastUpdatedRaw = modPage.select(MODIO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
                     String lastUpdatedQuantifier = lastUpdatedRaw.substring(lastUpdatedRaw.length() - 1);
                     int duration = Integer.parseInt(lastUpdatedRaw.substring(0, lastUpdatedRaw.length() - 1));
-                    modInfo[1] = switch (lastUpdatedQuantifier) {
-                        case "h":
-                            yield LocalDateTime.now().minusHours(duration).format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
-                            // TODO: Check how long this is. It's 12 in some places, but when I count it it's 11...
-                        case "d":
-                            yield LocalDate.now().minusDays(duration).format(DateTimeFormatter.ofPattern("MMM d',' yyyy"));
-                        case "y":
-                            yield LocalDateTime.now().minusYears(duration).format(DateTimeFormatter.ofPattern("yyyy"));
-                        default:
-                            throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
-                    };
 
+                    switch (lastUpdatedQuantifier) {
+                        case "h" -> {//Mod IO year + month + day + hour
+                            modInfo[1] = Year.now().toString();
+                            modInfo[2] = MonthDay.now().toString();
+                            modInfo[3] = LocalTime.now().minusHours(duration).toString();
+                        }
+                        case "d" -> {//Mod IO year + month + day
+                            modInfo[1] = Year.now().toString();
+                            modInfo[2] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
+                        }
+                        case "y" -> {//Mod IO year only
+                            modInfo[1] = Year.now().minusYears(duration).toString();
+                        }
+                        default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
+                    }
+
+                    //TODO: We need to adjust the rest of the array items being set now
                     List<Node> tagNodes = modPage.select(MODIO_MOD_TAGS_SELECTOR).getLast().childNodes();
                     StringBuilder concatenatedModTags = new StringBuilder();
                     for (int i = 1; i < tagNodes.size(); i++) {
@@ -328,9 +340,9 @@ public class ModlistService {
                             concatenatedModTags.append(tag);
                         }
                     }
-                    modInfo[2] = concatenatedModTags.toString();
+                    modInfo[4] = concatenatedModTags.toString();
 
-                    modInfo[3] = modPage.select(MODIO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
+                    modInfo[5] = modPage.select(MODIO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
                     modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
                     modScrapeResult.setPayload(modInfo);
                 } else {

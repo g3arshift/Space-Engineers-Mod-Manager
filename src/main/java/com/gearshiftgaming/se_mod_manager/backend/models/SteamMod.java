@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.adapters.LocalDateTimeAdapter;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

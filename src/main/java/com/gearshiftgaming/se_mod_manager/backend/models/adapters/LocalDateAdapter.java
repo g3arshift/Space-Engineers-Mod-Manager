@@ -1,9 +1,8 @@
-package com.gearshiftgaming.se_mod_manager.backend.models;
+package com.gearshiftgaming.se_mod_manager.backend.models.adapters;
 
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -15,16 +14,18 @@ import java.time.format.DateTimeFormatter;
  */
 public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
     //Load
+    //TODO: This isn't loading right
     @Override
     public LocalDate unmarshal(String s) throws Exception {
-        return switch (s.length()) {
-            case 15://Mod.io hour format
-                yield LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h"));
-            case 11, 12://Mod.io day format
-                yield LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
-            default: //Mod.io year format
-                yield LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy"));
-        };
+
+        return s.length() == 10 ? LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy")) :
+                LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy"));
+//        return switch (s.length()) {
+//            case 10://Mod.io day format
+//                yield LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
+//            default: //Mod.io year format
+//                yield LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy"));
+//        };
     }
 
     //Save

@@ -23,8 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
@@ -42,299 +41,285 @@ import java.util.Properties;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class UiService {
-	private final Logger LOGGER;
+    private final Logger LOGGER;
 
-	private final StorageController STORAGE_CONTROLLER;
+    private final StorageController STORAGE_CONTROLLER;
 
-	private final ModInfoController MOD_INFO_CONTROLLER;
+    private final ModInfoController MOD_INFO_CONTROLLER;
 
-	@Getter
-	private final ObservableList<LogMessage> USER_LOG;
+    @Getter
+    private final ObservableList<LogMessage> USER_LOG;
 
-	@Getter
-	private final ObservableList<ModProfile> MOD_PROFILES;
+    @Getter
+    private final ObservableList<ModProfile> MOD_PROFILES;
 
-	@Getter
-	private final ObservableList<SaveProfile> SAVE_PROFILES;
+    @Getter
+    private final ObservableList<SaveProfile> SAVE_PROFILES;
 
-	@Getter
-	private final UserConfiguration USER_CONFIGURATION;
+    @Getter
+    private final UserConfiguration USER_CONFIGURATION;
 
-	@Getter
-	@Setter
-	private SaveProfile currentSaveProfile;
+    @Getter
+    @Setter
+    private SaveProfile currentSaveProfile;
 
-	@Getter
-	private ModProfile currentModProfile;
+    @Getter
+    private ModProfile currentModProfile;
 
-	@Getter
-	private ObservableList<Mod> currentModList;
+    @Getter
+    private ObservableList<Mod> currentModList;
 
-	@Getter
-	private final IntegerProperty activeModCount;
-
-
-	@Setter
-	private IntegerProperty modImportProgressNumerator;
+    @Getter
+    private final IntegerProperty activeModCount;
 
 
-	@Setter
-	private IntegerProperty modImportProgressDenominator;
+    @Setter
+    private IntegerProperty modImportProgressNumerator;
 
 
-	@Setter
-	private DoubleProperty modImportProgressPercentage;
+    @Setter
+    private IntegerProperty modImportProgressDenominator;
 
-	private final String MOD_DATE_FORMAT;
 
-	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
+    @Setter
+    private DoubleProperty modImportProgressPercentage;
 
-		this.LOGGER = LOGGER;
-		this.MOD_INFO_CONTROLLER = modInfoController;
-		this.USER_LOG = USER_LOG;
-		this.MOD_PROFILES = MOD_PROFILES;
-		this.SAVE_PROFILES = SAVE_PROFILES;
-		this.STORAGE_CONTROLLER = storageController;
-		this.USER_CONFIGURATION = USER_CONFIGURATION;
+    private final String MOD_DATE_FORMAT;
 
-		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
+    public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
+                     @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+                     StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
 
-		//Initialize our current mod and save profiles
-		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
-				.filter(saveProfile -> saveProfile.getID().equals(USER_CONFIGURATION.getLastUsedSaveProfileId()))
-				.findFirst();
-		if (lastUsedSaveProfile.isPresent()) {
-			currentSaveProfile = lastUsedSaveProfile.get();
-			Optional<ModProfile> lastUsedModProfile = MOD_PROFILES.stream()
-					.filter(modProfile -> modProfile.getID().equals(currentSaveProfile.getLastUsedModProfile()))
-					.findFirst();
-			currentModProfile = lastUsedModProfile.orElseGet(MOD_PROFILES::getFirst);
-		} else {
-			log("No previously applied save profile detected.", MessageType.INFO);
-			currentSaveProfile = SAVE_PROFILES.getFirst();
-			currentModProfile = MOD_PROFILES.getFirst();
-		}
+        this.LOGGER = LOGGER;
+        this.MOD_INFO_CONTROLLER = modInfoController;
+        this.USER_LOG = USER_LOG;
+        this.MOD_PROFILES = MOD_PROFILES;
+        this.SAVE_PROFILES = SAVE_PROFILES;
+        this.STORAGE_CONTROLLER = storageController;
+        this.USER_CONFIGURATION = USER_CONFIGURATION;
 
-		//A little bit of duplication, but the order of construction is a big different than setCurrentModProfile
-		//currentModProfile.getModList()
-		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
-		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
-	}
+        this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
-	public void log(String message, MessageType messageType) {
-		LogMessage logMessage = new LogMessage(message, messageType, LOGGER);
-		USER_LOG.add(logMessage);
-	}
+        //Initialize our current mod and save profiles
+        Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
+                .filter(saveProfile -> saveProfile.getID().equals(USER_CONFIGURATION.getLastUsedSaveProfileId()))
+                .findFirst();
+        if (lastUsedSaveProfile.isPresent()) {
+            currentSaveProfile = lastUsedSaveProfile.get();
+            Optional<ModProfile> lastUsedModProfile = MOD_PROFILES.stream()
+                    .filter(modProfile -> modProfile.getID().equals(currentSaveProfile.getLastUsedModProfile()))
+                    .findFirst();
+            currentModProfile = lastUsedModProfile.orElseGet(MOD_PROFILES::getFirst);
+        } else {
+            log("No previously applied save profile detected.", MessageType.INFO);
+            currentSaveProfile = SAVE_PROFILES.getFirst();
+            currentModProfile = MOD_PROFILES.getFirst();
+        }
 
-	public <T> void log(Result<T> result) {
-		MessageType messageType;
-		switch (result.getType()) {
-			case INVALID -> messageType = MessageType.WARN;
-			case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
-			default -> messageType = MessageType.INFO;
-		}
-		log(result.getCurrentMessage(), messageType);
-	}
+        //A little bit of duplication, but the order of construction is a big different than setCurrentModProfile
+        //currentModProfile.getModList()
+        currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
+        activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
+    }
 
-	public void log(Exception e) {
-		log(String.valueOf(e), MessageType.ERROR);
-	}
+    public void log(String message, MessageType messageType) {
+        LogMessage logMessage = new LogMessage(message, messageType, LOGGER);
+        USER_LOG.add(logMessage);
+    }
 
-	public void logPrivate(String message, MessageType messageType) {
-		switch (messageType) {
-			case INFO -> LOGGER.info(message);
-			case WARN -> LOGGER.warn(message);
-			case ERROR -> LOGGER.error(message);
-			case UNKNOWN -> LOGGER.error("ERROR UNKNOWN - " + message);
-		}
-	}
+    public <T> void log(Result<T> result) {
+        MessageType messageType;
+        switch (result.getType()) {
+            case INVALID -> messageType = MessageType.WARN;
+            case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
+            default -> messageType = MessageType.INFO;
+        }
+        log(result.getCurrentMessage(), messageType);
+    }
 
-	public <T> void logPrivate(Result<T> result) {
-		switch (result.getType()) {
-			case SUCCESS, CANCELLED -> LOGGER.info(result.getCurrentMessage());
-			case INVALID -> LOGGER.warn(result.getCurrentMessage());
-			case FAILED -> LOGGER.error(result.getCurrentMessage());
-			case NOT_INITIALIZED -> LOGGER.error("ERROR UNKNOWN - " + result.getCurrentMessage());
-		}
-	}
+    public void log(Exception e) {
+        log(String.valueOf(e), MessageType.ERROR);
+    }
 
-	public Result<Void> saveUserData() {
-		return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
-	}
+    public void logPrivate(String message, MessageType messageType) {
+        switch (messageType) {
+            case INFO -> LOGGER.info(message);
+            case WARN -> LOGGER.warn(message);
+            case ERROR -> LOGGER.error(message);
+            case UNKNOWN -> LOGGER.error("ERROR UNKNOWN - " + message);
+        }
+    }
 
-	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		return STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
-	}
+    public <T> void logPrivate(Result<T> result) {
+        switch (result.getType()) {
+            case SUCCESS, CANCELLED -> LOGGER.info(result.getCurrentMessage());
+            case INVALID -> LOGGER.warn(result.getCurrentMessage());
+            case FAILED -> LOGGER.error(result.getCurrentMessage());
+            case NOT_INITIALIZED -> LOGGER.error("ERROR UNKNOWN - " + result.getCurrentMessage());
+        }
+    }
 
-	public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-		return STORAGE_CONTROLLER.copySaveProfile(saveProfile);
-	}
+    public Result<Void> saveUserData() {
+        return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
+    }
 
-	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-		return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
-	}
+    public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
+        return STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
+    }
 
-	public void firstTimeSetup() {
-		//TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
-	}
+    public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
+        return STORAGE_CONTROLLER.copySaveProfile(saveProfile);
+    }
 
-	//Sets the theme for our application based on the users preferred theme using reflection.
-	//It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar. Not the *best* way to do this, but it works.
-	public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-		for (CheckMenuItem c : themeList) {
-			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
-			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
-			if (themeName.equals(StringUtils.deleteWhitespace(USER_CONFIGURATION.getUserTheme()))) {
-				c.setSelected(true);
-				Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(USER_CONFIGURATION.getUserTheme()));
-				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
-				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-			}
-		}
-	}
+    public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
+        return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
+    }
 
-	public void setCurrentModProfile(ModProfile modProfile) {
-		currentModProfile = modProfile;
-		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
-		activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-	}
+    public void firstTimeSetup() {
+        //TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
+    }
 
-	public void modifyActiveModCount(Mod mod) {
-		if (mod.isActive()) {
-			activeModCount.set(activeModCount.get() + 1);
-		} else {
-			activeModCount.set(activeModCount.get() - 1);
-		}
-	}
+    //Sets the theme for our application based on the users preferred theme using reflection.
+    //It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar. Not the *best* way to do this, but it works.
+    public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        for (CheckMenuItem c : themeList) {
+            String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
+            String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
+            if (themeName.equals(StringUtils.deleteWhitespace(USER_CONFIGURATION.getUserTheme()))) {
+                c.setSelected(true);
+                Class<?> cls = Class.forName("atlantafx.base.theme." + StringUtils.deleteWhitespace(USER_CONFIGURATION.getUserTheme()));
+                Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
+                Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
+            }
+        }
+    }
 
-	public void modifyActiveModCount(int numMods) {
-		activeModCount.set(activeModCount.get() + numMods);
-	}
+    public void setCurrentModProfile(ModProfile modProfile) {
+        currentModProfile = modProfile;
+        currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
+        activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
+    }
 
-	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
-	// bars to work properly.
-	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
+    public void modifyActiveModCount(Mod mod) {
+        if (mod.isActive()) {
+            activeModCount.set(activeModCount.get() + 1);
+        } else {
+            activeModCount.set(activeModCount.get() - 1);
+        }
+    }
 
-		List<Result<String>> steamCollectionModIds = MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
+    public void modifyActiveModCount(int numMods) {
+        activeModCount.set(activeModCount.get() + numMods);
+    }
 
-		//Process the returned ID's and check for duplicates in our current mod list.
-		for (Result<String> modIdResult : steamCollectionModIds) {
-			if (modIdResult.isSuccess()) {
-				Optional<Mod> duplicateMod = currentModList.stream()
-						.filter(mod -> modIdResult.getPayload().equals(mod.getId()))
-						.findFirst();
-				if (duplicateMod.isPresent()) {
-					modIdResult.addMessage("Mod already exists in modlist.", ResultType.INVALID);
+    //This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
+    // bars to work properly.
+    public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
+
+        List<Result<String>> steamCollectionModIds = MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
+
+        //Process the returned ID's and check for duplicates in our current mod list.
+        for (Result<String> modIdResult : steamCollectionModIds) {
+            if (modIdResult.isSuccess()) {
+                Optional<Mod> duplicateMod = currentModList.stream()
+                        .filter(mod -> modIdResult.getPayload().equals(mod.getId()))
+                        .findFirst();
+                if (duplicateMod.isPresent()) {
+                    modIdResult.addMessage("Mod already exists in modlist.", ResultType.INVALID);
+                }
+            }
+        }
+
+        return steamCollectionModIds;
+    }
+
+    public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
+        //TODO: Check for duplicates both on ID and friendly name after we get the name back.
+        // Maybe have it be a "soft" check? If ID is duplicate, don't add. But we can use levenshtein distance to check similarity to other names.
+        // And, if similar enough, show the user both names and as if they want to add it since it might be a duplicate, or might not be duplicate.
+        return MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
+    }
+
+    public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
+        Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
+        Result<Mod> modInfoResult = new Result<>();
+
+        if (modScrapeResult.isSuccess()) {
+            String[] modInfo = modScrapeResult.getPayload();
+
+            mod.setFriendlyName(modInfo[0]);
+            DateTimeFormatter formatter;
+            if (mod instanceof SteamMod) {
+                formatter = new DateTimeFormatterBuilder()
+                        .parseCaseInsensitive()
+                        .appendPattern(MOD_DATE_FORMAT)
+                        .toFormatter();
+                ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
+            } else {
+				((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[1]));
+
+				if(modInfo[2] != null) {
+					((ModIoMod) mod).setLastUpdatedMonthDay(MonthDay.parse(modInfo[2]));
 				}
-			}
-		}
 
-		return steamCollectionModIds;
-	}
+				if(modInfo[3] != null) {
+					((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[3]));
+				}
+            }
 
-	public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
-		//TODO: Check for duplicates both on ID after we get the name back.
-		return MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
-	}
-
-	public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
-		Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
-		Result<Mod> modInfoResult = new Result<>();
-
-		if (modScrapeResult.isSuccess()) {
-			String[] modInfo = modScrapeResult.getPayload();
-
-			mod.setFriendlyName(modInfo[0]);
-
-			DateTimeFormatter formatter;
-			if (mod instanceof SteamMod) {
-				formatter = new DateTimeFormatterBuilder()
-						.parseCaseInsensitive()
-						.appendPattern(MOD_DATE_FORMAT)
-						.toFormatter();
-
-				((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
-			} else {
-				String dateFormat = switch (modInfo[1].length()) {
-					case 4: yield "yyyy";
-					case 11, 12: yield "MMM d',' yyyy";
-					default: yield "MMM d',' yyyy '@' h";
-				};
-
-				formatter = new DateTimeFormatterBuilder()
-						.parseCaseInsensitive()
-						.appendPattern(dateFormat)
-						.toFormatter();
-
-				((ModIoMod) mod).setLastUpdated(LocalDate.parse(modInfo[1], formatter));
-			}
-
-			List<String> modTags = List.of(modInfo[2].split(","));
+			List<String> modTags = List.of(modInfo[4].split(","));
 			mod.setCategories(modTags);
 
 			mod.setDescription(modInfo[3]);
 
 			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 			modInfoResult.setPayload(mod);
-		} else {
-			modInfoResult.addMessage(modScrapeResult.getCurrentMessage(), modScrapeResult.getType());
-		}
+        } else {
+            modInfoResult.addMessage(modScrapeResult.getCurrentMessage(), modScrapeResult.getType());
+        }
 
-		Platform.runLater(() -> {
-			modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
-			modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
-		});
+        Platform.runLater(() -> {
+            modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
+            modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
+        });
+        return modInfoResult;
+    }
 
-		return modInfoResult;
-	}
+    public Result<List<Mod>> addModsFromFile() {
+        //TODO: Implement
+        return null;
+    }
 
-	public Result<List<Mod>> addModsFromSteamCollection() {
-		//TODO: Implement
-		return null;
-	}
+    public IntegerProperty getModImportProgressNumeratorProperty() {
+        if (this.modImportProgressNumerator == null) {
+            this.modImportProgressNumerator = new SimpleIntegerProperty(0);
+        }
+        return this.modImportProgressNumerator;
+    }
 
-	public Result<Mod> addModFromModIoId() {
-		//TODO: Implement
-		return null;
-	}
+    public int getModImportProgressNumerator() {
+        return modImportProgressNumerator.get();
+    }
 
-	public Result<List<Mod>> addModsFromFile() {
-		//TODO: Implement
-		return null;
-	}
+    public IntegerProperty getModImportProgressDenominatorProperty() {
+        if (this.modImportProgressDenominator == null) {
+            this.modImportProgressDenominator = new SimpleIntegerProperty(0);
+        }
+        return this.modImportProgressDenominator;
+    }
 
-	public IntegerProperty getModImportProgressNumeratorProperty() {
-		if (this.modImportProgressNumerator == null) {
-			this.modImportProgressNumerator = new SimpleIntegerProperty(0);
-		}
-		return this.modImportProgressNumerator;
-	}
+    public int getModImportProgressDenominator() {
+        return modImportProgressDenominator.get();
+    }
 
-	public int getModImportProgressNumerator() {
-		return modImportProgressNumerator.get();
-	}
+    public DoubleProperty getModImportProgressPercentageProperty() {
+        if (modImportProgressPercentage == null) {
+            modImportProgressPercentage = new SimpleDoubleProperty(0d);
+        }
+        return modImportProgressPercentage;
+    }
 
-	public IntegerProperty getModImportProgressDenominatorProperty() {
-		if (this.modImportProgressDenominator == null) {
-			this.modImportProgressDenominator = new SimpleIntegerProperty(0);
-		}
-		return this.modImportProgressDenominator;
-	}
-
-	public int getModImportProgressDenominator() {
-		return modImportProgressDenominator.get();
-	}
-
-	public DoubleProperty getModImportProgressPercentageProperty() {
-		if (modImportProgressPercentage == null) {
-			modImportProgressPercentage = new SimpleDoubleProperty(0d);
-		}
-		return modImportProgressPercentage;
-	}
-
-	public double getModImportProgressPercentage() {
-		return modImportProgressPercentage.get();
-	}
+    public double getModImportProgressPercentage() {
+        return modImportProgressPercentage.get();
+    }
 }

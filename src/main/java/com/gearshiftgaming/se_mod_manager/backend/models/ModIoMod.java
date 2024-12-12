@@ -1,10 +1,13 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.adapters.LocalTimeAdapter;
+import com.gearshiftgaming.se_mod_manager.backend.models.adapters.MonthDayAdapter;
+import com.gearshiftgaming.se_mod_manager.backend.models.adapters.YearAdapter;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.*;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -17,7 +20,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class ModIoMod extends Mod {
 
-    private LocalDate lastUpdated;
+    private Year lastUpdatedYear;
+
+    private MonthDay lastUpdatedMonthDay;
+
+    private LocalTime lastUpdatedHour;
 
     public ModIoMod(String id) {
         super(id);
@@ -25,9 +32,18 @@ public class ModIoMod extends Mod {
         setPublishedServiceName("Mod.io");
     }
 
-    @XmlJavaTypeAdapter(value = LocalDateAdapter.class)
-    public void setLastUpdated(LocalDate lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    @XmlJavaTypeAdapter(value = YearAdapter.class)
+    public void setLastUpdatedYear(Year lastUpdatedYear) {
+        this.lastUpdatedYear = lastUpdatedYear;
     }
 
+    @XmlJavaTypeAdapter(value = MonthDayAdapter.class)
+    public void setLastUpdatedMonthDay(MonthDay lastUpdatedMonthDay) {
+        this.lastUpdatedMonthDay = lastUpdatedMonthDay;
+    }
+
+    @XmlJavaTypeAdapter(value = LocalTimeAdapter.class)
+    public void setLastUpdatedHour(LocalTime lastUpdatedHour) {
+        this.lastUpdatedHour = lastUpdatedHour;
+    }
 }
