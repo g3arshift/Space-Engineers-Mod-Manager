@@ -11,35 +11,35 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
+ * This is the class containing all the logic responsible for retrieving mod information for mods and a modlist.
+ * In particular, this class scrapes information when adding or updating mods.
+ * <p>
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ModlistService {
+public class ModInfoService {
 
     private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
-    private final String MODIO_URL = "https://mod.io/search/mods/";
+    private final String MOD_IO_URL = "https://mod.io/search/mods/";
 
     private final ModlistRepository MODLIST_REPOSITORY;
 
@@ -63,19 +63,19 @@ public class ModlistService {
 
     private final String MOD_IO_MOD_TYPE_SELECTOR;
 
-    private final String MODIO_MOD_JSOUP_MOD_ID_SELECTOR;
+    private final String MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR;
 
-    private final String MODIO_MOD_LAST_UPDATED_SELECTOR;
+    private final String MOD_IO_MOD_LAST_UPDATED_SELECTOR;
 
-    private final String MODIO_MOD_TAGS_SELECTOR;
+    private final String MOD_IO_MOD_TAGS_SELECTOR;
 
-    private final String MODIO_MOD_DESCRIPTION_SELECTOR;
+    private final String MOD_IO_MOD_DESCRIPTION_SELECTOR;
 
-    private final int MODIO_SCRAPING_TIMEOUT;
+    private final int MOD_IO_SCRAPING_TIMEOUT;
 
-    private final String MODIO_SCRAPING_WAIT_CONDITION_SELECTOR;
+    private final String MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR;
 
-    public ModlistService(ModlistRepository MODLIST_REPOSITORY, Properties PROPERTIES) {
+    public ModInfoService(ModlistRepository MODLIST_REPOSITORY, Properties PROPERTIES) {
         this.MODLIST_REPOSITORY = MODLIST_REPOSITORY;
 
         this.STEAM_MOD_TYPE_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
@@ -90,12 +90,12 @@ public class ModlistService {
         this.STEAM_COLLECTION_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
         this.MOD_IO_MOD_TYPE_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.type.cssSelector");
-        this.MODIO_MOD_JSOUP_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
-        this.MODIO_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.lastUpdated.cssSelector");
-        this.MODIO_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
-        this.MODIO_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.description.cssSelector");
-        this.MODIO_SCRAPING_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
-        this.MODIO_SCRAPING_WAIT_CONDITION_SELECTOR = PROPERTIES.getProperty("semm.modIo.modScraper.waitCondition.cssSelector");
+        this.MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
+        this.MOD_IO_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.lastUpdated.cssSelector");
+        this.MOD_IO_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
+        this.MOD_IO_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.description.cssSelector");
+        this.MOD_IO_SCRAPING_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
+        this.MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR = PROPERTIES.getProperty("semm.modIo.modScraper.waitCondition.cssSelector");
     }
 
     public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
@@ -168,7 +168,7 @@ public class ModlistService {
         Document doc = Jsoup.connect(MOD_IO_NAME_URL + modName).get();
 
         try {
-            String modId = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MODIO_MOD_JSOUP_MOD_ID_SELECTOR).toString())
+            String modId = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR).toString())
                     .results()
                     .map(MatchResult::group)
                     .collect(Collectors.joining());
@@ -281,17 +281,13 @@ public class ModlistService {
 
     private Result<String[]> scrapeModIoMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
-        //TODO: Implement modIO stuff.
-        //TODO: Look down in checkIfModIsMod for how to do modIO. It requires selenium.
         //By this point we should have a valid ModIO ID to lookup the mods by for the correct game. Need to verify tags and that it is a mod, however.
-
-
         WebDriver driver = getWebDriver();
 
         try {
-            driver.get(MODIO_URL + modId);
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(MODIO_SCRAPING_TIMEOUT));
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(MODIO_SCRAPING_WAIT_CONDITION_SELECTOR)));
+            driver.get(MOD_IO_URL + modId);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(MOD_IO_SCRAPING_TIMEOUT));
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR)));
 
             String pageSource = driver.getPageSource();
             if (pageSource != null) {
@@ -309,7 +305,7 @@ public class ModlistService {
                     String modName = modPage.title().split(" for Space Engineers - mod.io")[0];
                     modInfo[0] = modName;
 
-                    String lastUpdatedRaw = modPage.select(MODIO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
+                    String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
                     String lastUpdatedQuantifier = lastUpdatedRaw.substring(lastUpdatedRaw.length() - 1);
                     int duration = Integer.parseInt(lastUpdatedRaw.substring(0, lastUpdatedRaw.length() - 1));
 
@@ -329,8 +325,7 @@ public class ModlistService {
                         default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
                     }
 
-                    //TODO: We need to adjust the rest of the array items being set now
-                    List<Node> tagNodes = modPage.select(MODIO_MOD_TAGS_SELECTOR).getLast().childNodes();
+                    List<Node> tagNodes = modPage.select(MOD_IO_MOD_TAGS_SELECTOR).getLast().childNodes();
                     StringBuilder concatenatedModTags = new StringBuilder();
                     for (int i = 1; i < tagNodes.size(); i++) {
                         String tag = StringUtils.substringBetween(tagNodes.get(i).toString(), "<a href=\"/g/spaceengineers?tags-in=", "\"");
@@ -342,7 +337,7 @@ public class ModlistService {
                     }
                     modInfo[4] = concatenatedModTags.toString();
 
-                    modInfo[5] = modPage.select(MODIO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
+                    modInfo[5] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
                     modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
                     modScrapeResult.setPayload(modInfo);
                 } else {
