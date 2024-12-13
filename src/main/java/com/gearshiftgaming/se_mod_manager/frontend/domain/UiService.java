@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -237,7 +238,20 @@ public class UiService {
         //TODO: Check for duplicates both on ID and friendly name after we get the name back.
         // Maybe have it be a "soft" check? If ID is duplicate, don't add. But we can use levenshtein distance to check similarity to other names.
         // And, if similar enough, show the user both names and as if they want to add it since it might be a duplicate, or might not be duplicate.
-        return MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
+        Result<String> idFromUrlResult = MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
+
+        if(idFromUrlResult.isSuccess()) {
+            for (Mod m : currentModList) {
+                if (m instanceof ModIoMod) {
+                    if (m.getId().equals(idFromUrlResult.getPayload())) {
+                        idFromUrlResult.addMessage("Mod with ID " + idFromUrlResult.getPayload() + " is already in the modlist!", ResultType.FAILED);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return idFromUrlResult;
     }
 
     public Result<Mod> fillOutModInformation(Mod mod) throws IOException {

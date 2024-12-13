@@ -21,7 +21,7 @@
                   <Region HBox.hgrow="ALWAYS" />
                   <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
                     <buttons>
-                      <Button fx:id="accept" mnemonicParsing="false" text="OK" />
+                      <Button fx:id="accept" defaultButton="true" mnemonicParsing="false" text="OK" />
                         <Button fx:id="cancel" cancelButton="true" mnemonicParsing="false" text="Cancel" />
                     </buttons>
                   </ButtonBar>
