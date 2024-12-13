@@ -538,10 +538,23 @@ public class ModlistManagerView {
             } else {
                 ModIoMod mod = new ModIoMod(modId);
 
-                //This is a bit hacky, but it makes a LOT less code we need to maintain.
-                final Mod[] modList = new Mod[1];
-                modList[0] = mod;
-                getModImportThread(List.of(modList)).start();
+                boolean duplicateModExists = false;
+                for(Mod m : UI_SERVICE.getCurrentModList()) {
+                    if (m instanceof ModIoMod) {
+                        if (m.getId().equals(mod.getId())) {
+                            duplicateModExists = true;
+                            break;
+                        }
+                    }
+                }
+                if(!duplicateModExists) {
+                    //This is a bit hacky, but it makes a LOT less code we need to maintain.
+                    final Mod[] modList = new Mod[1];
+                    modList[0] = mod;
+                    getModImportThread(List.of(modList)).start();
+                } else {
+                    Popup.displaySimpleAlert("Mod with ID \"" + mod.getId() + "\" is already in the modlist!", STAGE, MessageType.ERROR);
+                }
             }
         }
 
@@ -549,6 +562,7 @@ public class ModlistManagerView {
 
     private void addModsFromExistingSave() {
         //TODO: Implement
+        // Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
     }
 
     private void addModsFromFile() {

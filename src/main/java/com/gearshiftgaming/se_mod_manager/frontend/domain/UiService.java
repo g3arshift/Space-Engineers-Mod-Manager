@@ -235,23 +235,7 @@ public class UiService {
     }
 
     public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
-        //TODO: Check for duplicates both on ID and friendly name after we get the name back.
-        // Maybe have it be a "soft" check? If ID is duplicate, don't add. But we can use levenshtein distance to check similarity to other names.
-        // And, if similar enough, show the user both names and as if they want to add it since it might be a duplicate, or might not be duplicate.
-        Result<String> idFromUrlResult = MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
-
-        if(idFromUrlResult.isSuccess()) {
-            for (Mod m : currentModList) {
-                if (m instanceof ModIoMod) {
-                    if (m.getId().equals(idFromUrlResult.getPayload())) {
-                        idFromUrlResult.addMessage("Mod with ID " + idFromUrlResult.getPayload() + " is already in the modlist!", ResultType.FAILED);
-                        break;
-                    }
-                }
-            }
-        }
-
-        return idFromUrlResult;
+        return MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
     }
 
     public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
@@ -262,6 +246,12 @@ public class UiService {
             String[] modInfo = modScrapeResult.getPayload();
 
             mod.setFriendlyName(modInfo[0]);
+
+            //TODO: Check for duplicates on friendly name for Steam.
+            // Maybe have it be a "soft" check? If ID is duplicate, don't add. But we can use levenshtein distance to check similarity to other names.
+            // And, if similar enough, show the user both names and as if they want to add it since it might be a duplicate, or might not be duplicate.
+            // We want to do this before we start parsing too many fields to be more efficient.
+
             DateTimeFormatter formatter;
             if (mod instanceof SteamMod) {
                 formatter = new DateTimeFormatterBuilder()
