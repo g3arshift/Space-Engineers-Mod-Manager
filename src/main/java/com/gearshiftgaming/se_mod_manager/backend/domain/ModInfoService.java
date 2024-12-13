@@ -348,7 +348,7 @@ public class ModInfoService {
             }
         } catch (Exception e) {
             //This really isn't how I want to do the flow control, but Selenium immediately throws this as an exception if it times out so there's not a lot I can do.
-            if (e.toString().startsWith("Expected condition failed: waiting for presence of element")) {
+            if (e.getMessage().startsWith("Expected condition failed: waiting for presence of element")) {
                 modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
             } else {
                 modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
