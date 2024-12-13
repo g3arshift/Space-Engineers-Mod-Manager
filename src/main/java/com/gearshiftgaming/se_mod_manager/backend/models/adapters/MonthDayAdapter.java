@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models.adapters;
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 import java.time.MonthDay;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -14,11 +15,11 @@ import java.time.MonthDay;
 public class MonthDayAdapter extends XmlAdapter<String, MonthDay> {
     @Override
     public MonthDay unmarshal(String s) throws Exception {
-        return null;
+        return MonthDay.parse(s);
     }
 
     @Override
     public String marshal(MonthDay monthDay) throws Exception {
-        return "";
+        return monthDay.toString();
     }
 }
