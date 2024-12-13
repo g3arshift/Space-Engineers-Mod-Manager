@@ -14,10 +14,11 @@ import java.time.format.DateTimeFormatter;
  */
 public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
     //Load
-    //TODO: This isn't loading right
+    //TODO: This isn't loading right. Needs totally reworked.
     @Override
     public LocalDate unmarshal(String s) throws Exception {
 
+        //TODO: Totally fucked
         return s.length() == 10 ? LocalDate.parse(s, DateTimeFormatter.ofPattern("MMM d',' yyyy")) :
                 LocalDate.parse(s, DateTimeFormatter.ofPattern("yyyy"));
 //        return switch (s.length()) {

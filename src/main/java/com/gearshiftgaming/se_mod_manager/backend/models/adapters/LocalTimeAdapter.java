@@ -11,8 +11,8 @@ import java.time.LocalTime;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
+//TODO: Implement
 public class LocalTimeAdapter extends XmlAdapter<String, LocalTime> {
-
 
     @Override
     public LocalTime unmarshal(String s) throws Exception {

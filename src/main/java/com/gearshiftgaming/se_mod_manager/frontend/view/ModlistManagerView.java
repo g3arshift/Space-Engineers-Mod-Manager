@@ -50,6 +50,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -221,7 +223,7 @@ public class ModlistManagerView {
 
     private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
-    private final String MOD_DATE_FORMAT;
+    private final String STEAM_MOD_DATE_FORMAT;
 
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
     private ComboBox<ModProfile> modProfileDropdown;
@@ -241,7 +243,7 @@ public class ModlistManagerView {
         this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
         this.SAVE_MANAGER_VIEW = saveManagerView;
 
-        this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
+        this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
         SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
         SELECTIONS = new ArrayList<>();
@@ -348,40 +350,45 @@ public class ModlistManagerView {
         modLastUpdated.setCellValueFactory(cellData -> {
             if (cellData.getValue() instanceof SteamMod steamMod) {
                 if (steamMod.getLastUpdated() != null) {
-                    return new SimpleStringProperty(steamMod.getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
+                    return new SimpleStringProperty(steamMod.getLastUpdated().format(DateTimeFormatter.ofPattern(STEAM_MOD_DATE_FORMAT)));
                 } else {
                     return new SimpleStringProperty("Unknown");
                 }
             } else if (cellData.getValue() instanceof ModIoMod modIoMod) {
-//                if (modIoMod.getLastUpdated() != null) {
-//                    if(modIoMod.getLastUpdatedHour() != null) {
-//                        String dateTime = modIoMod.getLastUpdated() + "T" + modIoMod.getLastUpdatedHour();
-//                        return new SimpleStringProperty(LocalDateTime.parse(dateTime).format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)));
-//                    } else {
-//                        return switch (modIoMod.getLastUpdated().toString().length()) {
-//                            case 4:
-//                                yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("yyyy")));
-//                            case 10:
-//                                yield new SimpleStringProperty(modIoMod.getLastUpdated().format(DateTimeFormatter.ofPattern("MMM d',' yyyy")));
-//                            default: throw new IllegalStateException("Unexpected value: " + modIoMod.getLastUpdated());
-//                        };
-//                    }
-//                } else {
-//                    return new SimpleStringProperty("Unknown");
-//                }
-                return null;
+                StringBuilder lastUpdated = new StringBuilder();
+                if (modIoMod.getLastUpdatedMonthDay() != null) {
+                    lastUpdated.append(modIoMod.getLastUpdatedMonthDay().format(DateTimeFormatter.ofPattern("MMM d"))).append(", ");
+                }
+
+                lastUpdated.append(modIoMod.getLastUpdatedYear());
+
+                if (modIoMod.getLastUpdatedHour() != null) {
+                    lastUpdated.append(" @ ").append(modIoMod.getLastUpdatedHour().format(DateTimeFormatter.ofPattern("ha")));
+                }
+                return new SimpleStringProperty(lastUpdated.toString());
             } else {
                 return new SimpleStringProperty("Unknown");
             }
         });
 
         //This is a horrible, horrible hack, but there's not a clean way to figure out the date formats otherwise.
+        //TODO: Reimplement this. Check length of both dates and do comparison that way. Simplest way? Init everything missing with default jan 1st, 00:00 AM.
         modLastUpdated.setComparator((date1, date2) -> {
-//            if(date1.length() >= ) {
-//
-//            }
-            //getModLastUpdatedFormat(date1).compareTo(getModLastUpdatedFormat(date2)));
-            return 0;
+            LocalDateTime firstDateNormalized;
+            if(date1.length() <= 19) { //Only steam mods will be greater than 19.
+                firstDateNormalized = getModIoLastUpdatedComparatorDate(date1);
+            } else {
+                firstDateNormalized = LocalDateTime.parse(date1, DateTimeFormatter.ofPattern(STEAM_MOD_DATE_FORMAT));
+            }
+
+            LocalDateTime secondDateNormalized;
+            if(date2.length() <= 19) {
+                secondDateNormalized = getModIoLastUpdatedComparatorDate(date2);
+            } else {
+                secondDateNormalized = LocalDateTime.parse(date2, DateTimeFormatter.ofPattern(STEAM_MOD_DATE_FORMAT));
+            }
+
+            return firstDateNormalized.compareTo(secondDateNormalized);
         });
 
         loadPriority.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getLoadPriority()).asObject());
@@ -415,17 +422,27 @@ public class ModlistManagerView {
         modTable.setFixedCellSize(modTableCellSize);
     }
 
-    private LocalDateTime getModLastUpdatedFormat(String dateString) {
-        //TODO: Switch to time + hour concat for hour format
+    private LocalDateTime getModIoLastUpdatedComparatorDate(String dateString) {
+        DateTimeFormatter formatter;
         return switch (dateString.length()) {
-            case 17: //Mod IO hour format
+            case 18, 19: //Mod IO hour format
                 yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy '@' ha"));
             case 11, 12: //Mod IO day format
-                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("MMM d',' yyyy"));
-            case 4: //Mod IO year format
-                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy"));
-            default: //Steam format
-                yield LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(MOD_DATE_FORMAT));
+                formatter = new DateTimeFormatterBuilder()
+                        .appendPattern("MMM d',' yyyy")
+                        .parseDefaulting(ChronoField.CLOCK_HOUR_OF_AMPM, 0)
+                        .parseDefaulting(ChronoField.AMPM_OF_DAY, 0) //AM
+                        .toFormatter();
+                yield LocalDateTime.parse(dateString, formatter); //TODO: Append default hours
+            default: //Mod IO year format
+                formatter = new DateTimeFormatterBuilder()
+                        .appendPattern("yyyy")
+                        .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+                        .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+                        .parseDefaulting(ChronoField.CLOCK_HOUR_OF_AMPM, 0)
+                        .parseDefaulting(ChronoField.AMPM_OF_DAY, 0) //AM
+                        .toFormatter();
+                yield LocalDateTime.parse(dateString, formatter); //TODO:Append default month, day, and hours
         };
     }
 

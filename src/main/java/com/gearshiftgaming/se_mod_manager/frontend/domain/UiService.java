@@ -270,7 +270,7 @@ public class UiService {
 			List<String> modTags = List.of(modInfo[4].split(","));
 			mod.setCategories(modTags);
 
-			mod.setDescription(modInfo[3]);
+			mod.setDescription(modInfo[5]);
 
 			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 			modInfoResult.setPayload(mod);
