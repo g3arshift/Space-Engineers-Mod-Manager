@@ -109,7 +109,7 @@ public class ViewController {
 
 		//View for adding a new Save Profile
 		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
-		final SaveProfileInputView SAVE_INPUT_VIEW = new SaveProfileInputView(UI_SERVICE);
+		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(UI_SERVICE);
 		SAVE_LIST_INPUT_LOADER.setController(SAVE_INPUT_VIEW);
 		final Parent SAVE_LIST_INPUT_ROOT = SAVE_LIST_INPUT_LOADER.load();
 		SAVE_INPUT_VIEW.initView(SAVE_LIST_INPUT_ROOT);

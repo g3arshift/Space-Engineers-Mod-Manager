@@ -72,6 +72,7 @@ public class SimpleInputView {
             closeWindow();
         });
 
+        stage.setResizable(false);
         stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
     }
 

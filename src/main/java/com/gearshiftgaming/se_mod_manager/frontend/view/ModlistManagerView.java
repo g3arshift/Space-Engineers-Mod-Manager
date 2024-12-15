@@ -45,6 +45,7 @@ import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -223,7 +224,7 @@ public class ModlistManagerView {
 
 	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
-	private final SaveProfileInputView EXISTING_SAVE_MOD_IMPORT_INPUT;
+	private final SaveInputView EXISTING_SAVE_MOD_IMPORT_INPUT;
 
 	private final String STEAM_MOD_DATE_FORMAT;
 
@@ -234,14 +235,14 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveProfileInputView saveProfileInputView) {
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
-		this.EXISTING_SAVE_MOD_IMPORT_INPUT = saveProfileInputView;
+		this.EXISTING_SAVE_MOD_IMPORT_INPUT = saveInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -549,8 +550,13 @@ public class ModlistManagerView {
 
 	private void addModsFromExistingSave() {
 		// Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
+		EXISTING_SAVE_MOD_IMPORT_INPUT.setSaveProfileInputTitle("Import mods from save");
+		EXISTING_SAVE_MOD_IMPORT_INPUT.setAddSaveButtonText("Import Mods");
 		EXISTING_SAVE_MOD_IMPORT_INPUT.show();
+		File selectedSave = EXISTING_SAVE_MOD_IMPORT_INPUT.getSelectedSave();
+		if(selectedSave != null && EXISTING_SAVE_MOD_IMPORT_INPUT.getLastPressedButtonId().equals("addSave")) {
 
+		}
 	}
 
 	private void addModsFromFile() {

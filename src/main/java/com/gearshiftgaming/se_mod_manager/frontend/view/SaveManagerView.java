@@ -70,16 +70,16 @@ public class SaveManagerView {
 
 	private final UiService UI_SERVICE;
 
-	private final SaveProfileInputView SAVE_INPUT_VIEW;
+	private final SaveInputView SAVE_INPUT_VIEW;
 
 	private final SimpleInputView PROFILE_INPUT_VIEW;
 
 	private ModTableContextBarView modTableContextBarView;
 
-	public SaveManagerView(UiService UI_SERVICE, SaveProfileInputView saveProfileInputView, SimpleInputView simpleInputView) {
+	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputView, SimpleInputView simpleInputView) {
 		this.UI_SERVICE = UI_SERVICE;
 		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
-		this.SAVE_INPUT_VIEW = saveProfileInputView;
+		this.SAVE_INPUT_VIEW = saveInputView;
 		this.PROFILE_INPUT_VIEW = simpleInputView;
 	}
 
@@ -114,6 +114,8 @@ public class SaveManagerView {
 		Result<SaveProfile> saveProfileResult = new Result<>();
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
+			SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
+			SAVE_INPUT_VIEW.setAddSaveButtonText("Next");
 			SAVE_INPUT_VIEW.show();
 			File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
 			if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
