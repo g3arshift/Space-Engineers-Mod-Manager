@@ -10,6 +10,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 public enum ResultType {
     SUCCESS,
     INVALID,
+    REQUIRES_ADJUDICATION,
     CANCELLED,
     FAILED,
     NOT_INITIALIZED
