@@ -18,7 +18,7 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public interface BackendStorageController {
+public interface StorageController {
     Result<UserConfiguration> getUserData() throws JAXBException;
 
     Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException;

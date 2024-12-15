@@ -220,6 +220,8 @@ public class Popup {
 		yesButton.setMinHeight(36d);
 		yesButton.setMaxHeight(36d);
 
+		noButton.setCancelButton(true);
+
 		HBox buttonBar = new HBox(yesButton, noButton);
 
 		buttonBar.setPadding(new Insets(5, 5, 5, 5));
@@ -241,6 +243,9 @@ public class Popup {
 		quitButton.setMinWidth(80d);
 		quitButton.setMinHeight(36d);
 		quitButton.setMaxHeight(36d);
+
+		quitButton.setCancelButton(true);
+		quitButton.setDefaultButton(true);
 
 		HBox buttonBar = new HBox(quitButton);
 		buttonBar.setPadding(new Insets(5, 5, 5, 5));

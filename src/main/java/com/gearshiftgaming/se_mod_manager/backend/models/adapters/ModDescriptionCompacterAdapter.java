@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.backend.models;
+package com.gearshiftgaming.se_mod_manager.backend.models.adapters;
 
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 

@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -36,8 +37,7 @@ public class ModlistFileRepository implements ModlistRepository {
             String modUrl;
             while ((modUrl = br.readLine()) != null) {
                 //Grab just the ID from the full URLs
-                Mod mod = new Mod(STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining("")), ModType.STEAM);
-                mod.setModType(ModType.STEAM);
+                SteamMod mod = new SteamMod(STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining("")));
 
                 //Don't add blank lines
                 if (!mod.getId().isBlank()) {

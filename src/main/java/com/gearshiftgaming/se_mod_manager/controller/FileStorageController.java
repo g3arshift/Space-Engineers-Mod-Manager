@@ -26,7 +26,7 @@ import java.util.Properties;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class BackendFileStorageController implements BackendStorageController {
+public class FileStorageController implements StorageController {
 
 	private final SandboxService SANDBOX_SERVICE;
 
@@ -36,7 +36,7 @@ public class BackendFileStorageController implements BackendStorageController {
 
 	private final File USER_CONFIGURATION_FILE;
 
-	public BackendFileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
+	public FileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
 		this.SANDBOX_SERVICE = new SandboxService(sandboxConfigRepository);
 		this.USER_DATA_SERVICE = new UserDataService(userDataRepository);
 		this.USER_CONFIGURATION_FILE = USER_CONFIGURATION_FILE;
@@ -111,7 +111,7 @@ public class BackendFileStorageController implements BackendStorageController {
 		testSaveProfile.setSaveName("Test save");
 		ModProfile testModProfile = new ModProfile("Test Profile");
 
-		Mod testMod = new Mod("123456789", ModType.STEAM);
+		SteamMod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();
 		testCategories.add("Test Category");
 		testCategories.add("Three Category test");
@@ -119,10 +119,15 @@ public class BackendFileStorageController implements BackendStorageController {
 		testMod.setCategories(testCategories);
 		testModProfile.getModList().add(testMod);
 
-		Mod secondTestMod = new Mod("0987654321", ModType.MOD_IO);
+		SteamMod secondTestMod = new SteamMod("0987654321");
 		secondTestMod.setFriendlyName("Second test mod");
 		secondTestMod.setCategories(testCategories);
 		testModProfile.getModList().add(secondTestMod);
+
+		ModIoMod thirdTestMod = new ModIoMod("122122");
+		thirdTestMod.setFriendlyName("Third test mod");
+		thirdTestMod.setCategories(testCategories);
+		testModProfile.getModList().add(thirdTestMod);
 
 		testSaveProfile.setLastUsedModProfile(testModProfile.getID());
 
@@ -132,6 +137,7 @@ public class BackendFileStorageController implements BackendStorageController {
 		userConfiguration.getModProfiles().add(testModProfile);
 		userConfiguration.setUserTheme(theme.getName());
 
+		System.out.println("Created test user data.");
 		return USER_DATA_SERVICE.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
 	}
 

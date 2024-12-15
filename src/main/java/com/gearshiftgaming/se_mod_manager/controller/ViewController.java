@@ -60,21 +60,21 @@ public class ViewController {
 			throw (e);
 		}
 
-		BackendStorageController backendStorageController = new BackendFileStorageController(new SandboxConfigFileRepository(),
+		StorageController storageController = new FileStorageController(new SandboxConfigFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
 				PROPERTIES,
 				new File(PROPERTIES.getProperty("semm.userData.default.location")));
 
 
-		Result<UserConfiguration> userConfigurationResult = backendStorageController.getUserData();
+		Result<UserConfiguration> userConfigurationResult = storageController.getUserData();
 		UserConfiguration userConfiguration;
 
 		if (userConfigurationResult.isSuccess()) {
 			userConfiguration = userConfigurationResult.getPayload();
 		} else {
 			userConfiguration = new UserConfiguration();
-			backendStorageController.saveUserData(userConfiguration);
+			storageController.saveUserData(userConfiguration);
 		}
 
 		ObservableList<ModProfile> modProfiles = FXCollections.observableList(userConfiguration.getModProfiles());
@@ -89,7 +89,7 @@ public class ViewController {
 
 		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, backendStorageController, modInfoController, userConfiguration, PROPERTIES);
+		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
 		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);
@@ -147,15 +147,15 @@ public class ViewController {
 		final Parent STATUS_BAR_ROOT = STATUS_BAR_LOADER.load();
 
 		//View for text input when adding a new Mod either by ID or URL, but not for files.
-		final FXMLLoader ID_AND_URL_MOD_ADDITION_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
-		final SimpleInputView ID_AND_URL_MOD_ADDITION_INPUT_VIEW = new SimpleInputView();
-		ID_AND_URL_MOD_ADDITION_INPUT_LOADER.setController(ID_AND_URL_MOD_ADDITION_INPUT_VIEW);
-		final Parent ID_AND_URL_MOD_ADDITION_INPUT_ROOT = ID_AND_URL_MOD_ADDITION_INPUT_LOADER.load();
-		ID_AND_URL_MOD_ADDITION_INPUT_VIEW.initView(ID_AND_URL_MOD_ADDITION_INPUT_ROOT);
+		final FXMLLoader ID_AND_URL_MOD_IMPORT_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+		final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT_VIEW = new SimpleInputView();
+		ID_AND_URL_MOD_IMPORT_INPUT_LOADER.setController(ID_AND_URL_MOD_IMPORT_INPUT_VIEW);
+		final Parent ID_AND_URL_MOD_IMPORT_INPUT_ROOT = ID_AND_URL_MOD_IMPORT_INPUT_LOADER.load();
+		ID_AND_URL_MOD_IMPORT_INPUT_VIEW.initView(ID_AND_URL_MOD_IMPORT_INPUT_ROOT);
 
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_ADDITION_INPUT_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 

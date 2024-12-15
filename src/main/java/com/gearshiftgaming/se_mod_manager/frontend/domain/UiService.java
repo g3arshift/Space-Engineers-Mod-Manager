@@ -1,8 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
+import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.controller.BackendStorageController;
+import com.gearshiftgaming.se_mod_manager.controller.StorageController;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -22,12 +23,13 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -42,7 +44,7 @@ import java.util.Properties;
 public class UiService {
 	private final Logger LOGGER;
 
-	private final BackendStorageController BACKEND_STORAGE_CONTROLLER;
+	private final StorageController STORAGE_CONTROLLER;
 
 	private final ModInfoController MOD_INFO_CONTROLLER;
 
@@ -73,31 +75,31 @@ public class UiService {
 
 
 	@Setter
-	private IntegerProperty modAdditionProgressNumerator;
+	private IntegerProperty modImportProgressNumerator;
 
 
 	@Setter
-	private IntegerProperty modAdditionProgressDenominator;
+	private IntegerProperty modImportProgressDenominator;
 
 
 	@Setter
-	private DoubleProperty modAdditionProgressPercentage;
+	private DoubleProperty modImportProgressPercentage;
 
 	private final String MOD_DATE_FORMAT;
 
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-					 BackendStorageController backendStorageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
+					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
 
 		this.LOGGER = LOGGER;
 		this.MOD_INFO_CONTROLLER = modInfoController;
 		this.USER_LOG = USER_LOG;
 		this.MOD_PROFILES = MOD_PROFILES;
 		this.SAVE_PROFILES = SAVE_PROFILES;
-		this.BACKEND_STORAGE_CONTROLLER = backendStorageController;
+		this.STORAGE_CONTROLLER = storageController;
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
 
-		this.MOD_DATE_FORMAT = properties.getProperty("semm.mod.dateFormat");
+		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
 		//Initialize our current mod and save profiles
 		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
@@ -159,19 +161,19 @@ public class UiService {
 	}
 
 	public Result<Void> saveUserData() {
-		return BACKEND_STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
+		return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		return BACKEND_STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
+		return STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
 	}
 
 	public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-		return BACKEND_STORAGE_CONTROLLER.copySaveProfile(saveProfile);
+		return STORAGE_CONTROLLER.copySaveProfile(saveProfile);
 	}
 
 	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-		return BACKEND_STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
+		return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
 	}
 
 	public void firstTimeSetup() {
@@ -213,24 +215,34 @@ public class UiService {
 
 	//This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
 	// bars to work properly.
-	//TODO: We need to throw in a duplicate mod check here.
 	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
 
 		List<Result<String>> steamCollectionModIds = MOD_INFO_CONTROLLER.scrapeSteamModCollectionModList(collectionId);
 
 		//Process the returned ID's and check for duplicates in our current mod list.
-		for(Result<String> modIdResult : steamCollectionModIds) {
-			if(modIdResult.isSuccess()) {
+		for (Result<String> modIdResult : steamCollectionModIds) {
+			if (modIdResult.isSuccess()) {
 				Optional<Mod> duplicateMod = currentModList.stream()
 						.filter(mod -> modIdResult.getPayload().equals(mod.getId()))
 						.findFirst();
-				if(duplicateMod.isPresent()) {
-					modIdResult.addMessage("Mod already exists in modlist.", ResultType.INVALID);
-				}
+				duplicateMod.ifPresent(mod -> modIdResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in modlist.", ResultType.INVALID));
 			}
 		}
 
 		return steamCollectionModIds;
+	}
+
+	public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
+		Result<String> idFromUrlResult = MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
+		if (idFromUrlResult.isSuccess()) {
+			for (Mod mod : currentModList) {
+				if (mod.getId().equals(idFromUrlResult.getPayload())) {
+					idFromUrlResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in the modlist!", ResultType.INVALID);
+					break;
+				}
+			}
+		}
+		return idFromUrlResult;
 	}
 
 	public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
@@ -242,40 +254,69 @@ public class UiService {
 
 			mod.setFriendlyName(modInfo[0]);
 
-			DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-					.parseCaseInsensitive()
-					.appendPattern(MOD_DATE_FORMAT)
-					.toFormatter();
-
-			mod.setLastUpdated(LocalDateTime.parse(modInfo[1], formatter));
-
-			List<String> modTags = List.of(modInfo[2].split(","));
+			List<String> modTags = List.of(modInfo[1].split(","));
 			mod.setCategories(modTags);
 
-			mod.setDescription(modInfo[3]);
+			mod.setDescription(modInfo[2]);
 
-			modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
 			modInfoResult.setPayload(mod);
+
+			boolean duplicateModFound = false;
+			String duplicateModName = "";
+			for (Mod m : currentModList) {
+				//We only want to do this comparison when we are comparing different mod types, as we can otherwise assume the ID check has handled duplicates.
+				if (!m.getClass().equals(mod.getClass())) {
+					String shorterModName;
+					String longerModName;
+					if (m.getFriendlyName().length() < mod.getFriendlyName().length()) {
+						shorterModName = m.getFriendlyName();
+						longerModName = mod.getFriendlyName();
+					} else {
+						shorterModName = mod.getFriendlyName();
+						longerModName = m.getFriendlyName();
+					}
+
+					if (longerModName.contains(shorterModName)) {
+						duplicateModFound = true;
+						duplicateModName = m.getFriendlyName();
+						break;
+					}
+				}
+			}
+
+			DateTimeFormatter formatter;
+			if (mod instanceof SteamMod) {
+				formatter = new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(MOD_DATE_FORMAT)
+						.toFormatter();
+				((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
+			} else {
+				((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
+
+				if (modInfo[4] != null) {
+					((ModIoMod) mod).setLastUpdatedMonthDay(MonthDay.parse(modInfo[4]));
+				}
+
+				if (modInfo[5] != null) {
+					((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
+				}
+			}
+
+			if (duplicateModFound) {
+				modInfoResult.addMessage(String.format("Mod \"%s\" may be the same as \"%s\". Do you still want to add it?", mod.getFriendlyName(), duplicateModName), ResultType.REQUIRES_ADJUDICATION);
+			} else {
+				modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
+			}
 		} else {
 			modInfoResult.addMessage(modScrapeResult.getCurrentMessage(), modScrapeResult.getType());
 		}
 
 		Platform.runLater(() -> {
-			modAdditionProgressNumerator.setValue(modAdditionProgressNumerator.get() + 1);
-			modAdditionProgressPercentage.setValue((double) modAdditionProgressNumerator.get() / (double) modAdditionProgressDenominator.get());
+			modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
+			modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
 		});
-
 		return modInfoResult;
-	}
-
-	public Result<List<Mod>> addModsFromSteamCollection() {
-		//TODO: Implement
-		return null;
-	}
-
-	public Result<Mod> addModFromModIoId() {
-		//TODO: Implement
-		return null;
 	}
 
 	public Result<List<Mod>> addModsFromFile() {
@@ -283,36 +324,36 @@ public class UiService {
 		return null;
 	}
 
-	public IntegerProperty getModAdditionProgressNumeratorProperty() {
-		if (this.modAdditionProgressNumerator == null) {
-			this.modAdditionProgressNumerator = new SimpleIntegerProperty(0);
+	public IntegerProperty getModImportProgressNumeratorProperty() {
+		if (this.modImportProgressNumerator == null) {
+			this.modImportProgressNumerator = new SimpleIntegerProperty(0);
 		}
-		return this.modAdditionProgressNumerator;
+		return this.modImportProgressNumerator;
 	}
 
-	public int getModAdditionProgressNumerator() {
-		return modAdditionProgressNumerator.get();
+	public int getModImportProgressNumerator() {
+		return modImportProgressNumerator.get();
 	}
 
-	public IntegerProperty getModAdditionProgressDenominatorProperty() {
-		if (this.modAdditionProgressDenominator == null) {
-			this.modAdditionProgressDenominator = new SimpleIntegerProperty(0);
+	public IntegerProperty getModImportProgressDenominatorProperty() {
+		if (this.modImportProgressDenominator == null) {
+			this.modImportProgressDenominator = new SimpleIntegerProperty(0);
 		}
-		return this.modAdditionProgressDenominator;
+		return this.modImportProgressDenominator;
 	}
 
-	public int getModAdditionProgressDenominator() {
-		return modAdditionProgressDenominator.get();
+	public int getModImportProgressDenominator() {
+		return modImportProgressDenominator.get();
 	}
 
-	public DoubleProperty getModAdditionProgressPercentageProperty() {
-		if (modAdditionProgressPercentage == null) {
-			modAdditionProgressPercentage = new SimpleDoubleProperty(0d);
+	public DoubleProperty getModImportProgressPercentageProperty() {
+		if (modImportProgressPercentage == null) {
+			modImportProgressPercentage = new SimpleDoubleProperty(0d);
 		}
-		return modAdditionProgressPercentage;
+		return modImportProgressPercentage;
 	}
 
-	public double getModAdditionProgressPercentage() {
-		return modAdditionProgressPercentage.get();
+	public double getModImportProgressPercentage() {
+		return modImportProgressPercentage.get();
 	}
 }

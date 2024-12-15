@@ -2,7 +2,7 @@ package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModlistService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.ModInfoService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
@@ -22,10 +22,10 @@ import java.util.concurrent.ExecutionException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ModlistServiceTest {
+public class ModInfoServiceTest {
 
     ModlistRepository modlistRepository;
-    ModlistService service;
+    ModInfoService service;
     List<Mod> modList;
 
     String testPath;
@@ -43,7 +43,7 @@ public class ModlistServiceTest {
         }
 
         modlistRepository = mock(ModlistFileRepository.class);
-        service = new ModlistService(modlistRepository, properties);
+        service = new ModInfoService(modlistRepository, properties);
         service.setWorkshopConnectionActive(true);
         modList = new ArrayList<>();
         modList.add(new Mod("2777644246", ModType.STEAM)); //Binoculars

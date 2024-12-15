@@ -1,15 +1,12 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElementWrapper;
-import jakarta.xml.bind.annotation.XmlTransient;
+import com.gearshiftgaming.se_mod_manager.backend.models.adapters.ModDescriptionCompacterAdapter;
+import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +22,11 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Mod {
+@XmlSeeAlso({SteamMod.class, ModIoMod.class})
+public abstract class Mod {
+
+    //TODO: Refactor this into an abstract and remove the ModType field.
+    // Steam mods will have a LocalDateTime, Mod.io mods will have a LocalDate.
 
     //These are the fields required for the sandbox_config.sbc file
     //For mod.io mods we have to use an actual API here. https://docs.mod.io/support/search-by-id/
@@ -35,31 +36,21 @@ public class Mod {
     private String friendlyName;
     private String publishedServiceName;
 
-    //These are the fields for the UI
-    private LocalDateTime lastUpdated;
 
     private int loadPriority;
     //private ModImportSourceType source;
 
     private List<String> categories;
     private boolean active;
-    private ModType modType;
 
     private String description;
 
-    public Mod(String id, ModType modType) {
+    public Mod(String id) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
         //this.source = source;
         categories = new ArrayList<>();
-        this.modType = modType;
-
-        if(modType == ModType.STEAM) {
-            publishedServiceName = "Steam";
-        } else {
-            publishedServiceName = "Mod.io";
-        }
     }
 
     @Override
@@ -88,11 +79,6 @@ public class Mod {
     @XmlTransient
     public void setLoadPriority(int loadPriority) {
         this.loadPriority = loadPriority;
-    }
-
-    @XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
     }
 
     @XmlJavaTypeAdapter(value = ModDescriptionCompacterAdapter.class)
