@@ -56,7 +56,7 @@ public class ViewController {
 		try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM.properties")) {
 			PROPERTIES.load(input);
 		} catch (IOException | NullPointerException e) {
-			logger.error("Could not load SEMM.properties. " + e.getMessage());
+			logger.error("Could not load SEMM.properties. {}", e.getMessage());
 			throw (e);
 		}
 
@@ -109,7 +109,7 @@ public class ViewController {
 
 		//View for adding a new Save Profile
 		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
-		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(UI_SERVICE);
+		final SaveProfileInputView SAVE_INPUT_VIEW = new SaveProfileInputView(UI_SERVICE);
 		SAVE_LIST_INPUT_LOADER.setController(SAVE_INPUT_VIEW);
 		final Parent SAVE_LIST_INPUT_ROOT = SAVE_LIST_INPUT_LOADER.load();
 		SAVE_INPUT_VIEW.initView(SAVE_LIST_INPUT_ROOT);
@@ -155,7 +155,7 @@ public class ViewController {
 
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 

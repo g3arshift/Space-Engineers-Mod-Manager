@@ -223,6 +223,8 @@ public class ModlistManagerView {
 
 	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
+	private final SaveProfileInputView EXISTING_SAVE_MOD_IMPORT_INPUT;
+
 	private final String STEAM_MOD_DATE_FORMAT;
 
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
@@ -232,13 +234,14 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView) {
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveProfileInputView saveProfileInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
+		this.EXISTING_SAVE_MOD_IMPORT_INPUT = saveProfileInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -545,8 +548,9 @@ public class ModlistManagerView {
 	}
 
 	private void addModsFromExistingSave() {
-		//TODO: Implement
 		// Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
+		EXISTING_SAVE_MOD_IMPORT_INPUT.show();
+
 	}
 
 	private void addModsFromFile() {

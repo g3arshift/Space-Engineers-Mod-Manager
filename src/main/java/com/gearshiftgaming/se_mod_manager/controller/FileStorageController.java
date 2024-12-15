@@ -96,6 +96,15 @@ public class FileStorageController implements StorageController {
 	}
 
 	@Override
+	public Result<String> getSaveName(File sandboxConfigFile) throws IOException {
+		Result<String> sandboxfileResult = SANDBOX_SERVICE.getSandboxFromFile(sandboxConfigFile);
+		if(sandboxfileResult.isSuccess()) {
+			sandboxfileResult.setPayload(SAVE_SERVICE.getSessionName(sandboxfileResult.getPayload(), sandboxConfigFile.getPath()));
+		}
+		return sandboxfileResult;
+	}
+
+	@Override
 	public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
 		Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile);
 		if (copyResult.isSuccess()) {

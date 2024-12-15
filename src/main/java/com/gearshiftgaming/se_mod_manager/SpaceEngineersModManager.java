@@ -50,7 +50,7 @@ public class SpaceEngineersModManager extends Application {
 	private static void logError(Thread t, Throwable e) throws Throwable {
 		//Second condition is a dirty hack to prevent it from double displaying errors when we close the platform
 		if (Platform.isFxApplicationThread()) {
-			LOGGER.error("Uncaught exception in thread: " + t.getName(), e);
+			LOGGER.error("Uncaught exception in thread: {}", t.getName(), e);
 			Popup.displaySimpleAlert("An unexpected error was encountered and the application will now exit. " +
 					"Please submit a bug report along with your SEMM.log file located in the logs folder to the below link.", "https://spaceengineersmodmanager.com/bugreport", MessageType.ERROR);
 			throw e;
