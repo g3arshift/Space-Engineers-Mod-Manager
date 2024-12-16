@@ -462,11 +462,9 @@ public class ModlistManagerView {
 				ModImportType.EXISTING_SAVE.getName(),
 				ModImportType.FILE.getName());
 
-
 		//TODO: Setup a function in ModList service to track conflicts.
 	}
 
-	//TODO: Hookup all the buttons to everything
 	@FXML
 	private void addMod() {
 		ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
@@ -483,10 +481,6 @@ public class ModlistManagerView {
 			}
 		}
 	}
-
-	//TODO: We need a cancel button for adding mods so if the user decides they want to stop, they can.
-	// In it, when they cancel, ask them "Do you want to add the already processed mods?", and if yes, add the ones we've already scraped.
-	// Probably need to clear the rest of the futures/kill their threads when that happens. Also need to pause those threads when we hit cancel.
 
 	private void addModFromSteamId() {
 		setModAddingInputViewText("Steam Workshop Mod URL/ID",

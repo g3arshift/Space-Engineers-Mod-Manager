@@ -76,7 +76,7 @@ public class SandboxService {
 			} else if (StringUtils.contains(sandboxFileContent, "<Mods />")) {
 				modListResult.addMessage("There are no mods in this save!", ResultType.INVALID);
 			} else {
-				modListResult.addMessage("No valid mod section found for " + sandboxConfigFile.getName() + ".", ResultType.FAILED);
+				modListResult.addMessage("No valid mod section found.", ResultType.FAILED);
 			}
 		}
 
