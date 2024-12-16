@@ -45,6 +45,7 @@ import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -223,6 +224,8 @@ public class ModlistManagerView {
 
 	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
+	private final SaveInputView EXISTING_SAVE_MOD_IMPORT_INPUT;
+
 	private final String STEAM_MOD_DATE_FORMAT;
 
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
@@ -232,13 +235,14 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView) {
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
+		this.EXISTING_SAVE_MOD_IMPORT_INPUT = saveInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -449,8 +453,6 @@ public class ModlistManagerView {
 	public void setupMainViewItems() {
 		viewableLog.setItems(USER_LOG);
 		viewableLog.setCellFactory(param -> new LogCell());
-		//Disable selecting rows in the log.
-		viewableLog.setSelectionModel(null);
 
 		// Just do this by manually setting the selected item after we select an item. To actually call code, call one function on selection/action in the dropdown, that determines which function to call and do stuff in the rest of the code, then reset the selected item.
 		modImportDropdown.getItems().addAll("Add mods from...",
@@ -545,8 +547,25 @@ public class ModlistManagerView {
 	}
 
 	private void addModsFromExistingSave() {
-		//TODO: Implement
 		// Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
+		EXISTING_SAVE_MOD_IMPORT_INPUT.setSaveProfileInputTitle("Import mods from save");
+		EXISTING_SAVE_MOD_IMPORT_INPUT.setAddSaveButtonText("Import Mods");
+		EXISTING_SAVE_MOD_IMPORT_INPUT.show();
+		File selectedSave = EXISTING_SAVE_MOD_IMPORT_INPUT.getSelectedSave();
+		if (selectedSave != null && EXISTING_SAVE_MOD_IMPORT_INPUT.getLastPressedButtonId().equals("addSave")) {
+			Result<List<Mod>> existingModlistResult = new Result<>();
+			try {
+				existingModlistResult = UI_SERVICE.getModlistFromSave(selectedSave);
+			} catch (IOException e) {
+				existingModlistResult.addMessage(e.toString(), ResultType.FAILED);
+			}
+
+			Popup.displaySimpleAlert(existingModlistResult, STAGE);
+
+			if (existingModlistResult.isSuccess()) {
+				getModImportThread(existingModlistResult.getPayload()).start();
+			}
+		}
 	}
 
 	private void addModsFromFile() {
@@ -979,7 +998,7 @@ public class ModlistManagerView {
 				if (duplicateModIds == steamCollectionModIds.size()) {
 					Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
 					Platform.runLater(() -> {
-						FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+						FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
 						fadeTransition.setFromValue(1d);
 						fadeTransition.setToValue(0d);
 
@@ -1207,7 +1226,7 @@ public class ModlistManagerView {
 
 			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
 			//Reset our UI settings for the mod progress
-			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
+			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
 			fadeTransition.setFromValue(1d);
 			fadeTransition.setToValue(0d);
 

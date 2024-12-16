@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
@@ -17,116 +16,155 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
-import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class SaveInputView {
 
-    @FXML
-    @Getter
-    private Label saveName;
+	@FXML
+	@Getter
+	private Label saveName;
 
-    @Getter
-    @FXML
-    private Button chooseSave;
+	@Getter
+	@FXML
+	private Button chooseSave;
 
-    @FXML
-    private Button addSave;
+	@FXML
+	private Button addSave;
 
-    @FXML
-    private Button cancelAddSave;
+	@FXML
+	private Button cancelAddSave;
 
-    private Stage stage;
+	private Stage stage;
 
-    private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
+	private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-    @Getter
-    private Result<SaveProfile> saveProfileResult = new Result<>();
+	String noSaveSelectedMessage = "No save selected";
 
-    @Setter
-    private File selectedSave;
+	@Getter
+	private File selectedSave;
 
-    private final UiService UI_SERVICE;
+	@Getter
+	private String lastPressedButtonId;
 
-    public SaveInputView( UiService UI_SERVICE) {
-        this.UI_SERVICE = UI_SERVICE;
-    }
+	private final UiService UI_SERVICE;
 
-    public void initView(Parent root) {
-        Scene scene = new Scene(root);
-        stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
+	public SaveInputView(UiService UI_SERVICE) {
+		this.UI_SERVICE = UI_SERVICE;
+	}
 
-        stage.setScene(scene);
+	public void initView(Parent root) {
+		Scene scene = new Scene(root);
+		stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
 
-        stage.setTitle("Add new SE save");
-        stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+		stage.setScene(scene);
 
-        saveName.setText("No save selected");
+		//Just a default. Usually gets overriden.
+		stage.setTitle("Add new SE save");
 
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
-    }
+		stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+
+		saveName.setText(noSaveSelectedMessage);
+
+		addSave.setOnAction(actionEvent -> {
+			Button btn = (Button) actionEvent.getSource();
+			lastPressedButtonId = btn.getId();
+			addSave();
+		});
+
+		cancelAddSave.setOnAction(actionEvent -> {
+			Button btn = (Button) actionEvent.getSource();
+			lastPressedButtonId = btn.getId();
+			cancelAddSave();
+		});
+
+		stage.setOnCloseRequest(windowEvent -> {
+			Platform.exitNestedEventLoop(stage, null);
+			saveName.setText(noSaveSelectedMessage);
+			selectedSave = null;
+		});
+
+		stage.setResizable(false);
+	}
 
 
-    @FXML
-    private void chooseSave() throws IOException {
-        FileChooser fileChooser = getFileChooser();
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sandbox_config Files", "*_config.sbc"));
-        selectedSave = fileChooser.showOpenDialog(stage);
+	@FXML
+	private void chooseSave() {
+		FileChooser fileChooser = getFileChooser();
+		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sandbox_config Files", "*_config.sbc"));
+		selectedSave = fileChooser.showOpenDialog(stage);
+		if(selectedSave != null) {
+			try {
+				Result<String> sandboxNameResult = UI_SERVICE.getSaveName(selectedSave);
+				if (sandboxNameResult.isSuccess()) {
+					saveName.setText(sandboxNameResult.getPayload());
+				} else {
+					UI_SERVICE.log(sandboxNameResult);
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			saveName.setText(noSaveSelectedMessage);
+		}
+	}
 
-        if (selectedSave != null) {
-            saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
-            if (saveProfileResult.isSuccess()) {
-                saveName.setText(saveProfileResult.getPayload().getSaveName());
-            }
-        }
-    }
+	private @NotNull FileChooser getFileChooser() {
+		String[] directoryContents = new File(APP_DATA_PATH).list();
+		FileChooser fileChooser = new FileChooser();
 
-    private FileChooser getFileChooser() {
-        String[] directoryContents = new File(APP_DATA_PATH).list();
-        FileChooser fileChooser = new FileChooser();
+		//If there's only one save folder in our save directory, which there should be, set the path to that folder.
+		if (directoryContents != null && directoryContents.length == 1) {
+			fileChooser.setInitialDirectory(new File(APP_DATA_PATH + "/" + directoryContents[0]));
+		} else {
+			fileChooser.setInitialDirectory(new File(APP_DATA_PATH));
+		}
 
-        //If there's only one save folder in our save directory, which there should be, set the path to that folder.
-        if (directoryContents != null && directoryContents.length == 1) {
-            fileChooser.setInitialDirectory(new File(APP_DATA_PATH + "/" + directoryContents[0]));
-        } else {
-            fileChooser.setInitialDirectory(new File(APP_DATA_PATH));
-        }
+		fileChooser.setTitle("Select SE Save");
+		return fileChooser;
+	}
 
-        fileChooser.setTitle("Select SE Save");
-        return fileChooser;
-    }
+	@FXML
+	private void addSave() {
+		if (selectedSave == null) {
+			Popup.displaySimpleAlert("You must select a save!", stage, MessageType.ERROR);
+		} else {
+			stage.close();
+			saveName.setText(noSaveSelectedMessage);
+			Platform.exitNestedEventLoop(stage, null);
+		}
+	}
 
-    @FXML
-    private void addSave() {
-        if (selectedSave == null) {
-            Popup.displaySimpleAlert("You must select a save!", stage, MessageType.ERROR);
-        } else {
-            stage.close();
-            Platform.exitNestedEventLoop(stage, null);
-        }
-    }
+	@FXML
+	private void cancelAddSave() {
+		stage.close();
+		saveName.setText(noSaveSelectedMessage);
+		selectedSave = null;
+		Platform.exitNestedEventLoop(stage, null);
+	}
 
-    @FXML
-    private void cancelAddSave() {
-        saveProfileResult = new Result<>();
-        stage.close();
-        Platform.exitNestedEventLoop(stage, null);
-    }
+	public void show() {
+		stage.show();
+		TitleBarUtility.SetTitleBar(stage);
+		Platform.enterNestedEventLoop(stage);
+	}
 
-    public void show() {
-        stage.show();
-        TitleBarUtility.SetTitleBar(stage);
-        Platform.enterNestedEventLoop(stage);
-    }
+	public void setSaveProfileInputTitle(String title) {
+		this.stage.setTitle(title);
+	}
+
+	public void setAddSaveButtonText(String text) {
+		this.addSave.setText(text);
+	}
 }

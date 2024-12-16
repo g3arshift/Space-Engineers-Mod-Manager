@@ -29,5 +29,9 @@ public interface StorageController {
 
     Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException;
 
+    Result<String> getSaveName(File sandboxFile) throws IOException;
+
+    Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) throws IOException;
+
     public Result<Void> createTestUserData(Theme theme);
 }

@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
-import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
@@ -13,6 +12,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.CheckMenuItem;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,9 +26,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -89,7 +88,7 @@ public class UiService {
 
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
 					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, Properties properties) {
+					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
 		this.LOGGER = LOGGER;
 		this.MOD_INFO_CONTROLLER = modInfoController;
@@ -117,7 +116,7 @@ public class UiService {
 			currentModProfile = MOD_PROFILES.getFirst();
 		}
 
-		//A little bit of duplication, but the order of construction is a big different than setCurrentModProfile
+		//A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
 		//currentModProfile.getModList()
 		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
 		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
@@ -128,7 +127,7 @@ public class UiService {
 		USER_LOG.add(logMessage);
 	}
 
-	public <T> void log(Result<T> result) {
+	public <T> void log(@NotNull Result<T> result) {
 		MessageType messageType;
 		switch (result.getType()) {
 			case INVALID -> messageType = MessageType.WARN;
@@ -142,21 +141,22 @@ public class UiService {
 		log(String.valueOf(e), MessageType.ERROR);
 	}
 
-	public void logPrivate(String message, MessageType messageType) {
+	public void logPrivate(String message, @NotNull MessageType messageType) {
 		switch (messageType) {
 			case INFO -> LOGGER.info(message);
 			case WARN -> LOGGER.warn(message);
 			case ERROR -> LOGGER.error(message);
-			case UNKNOWN -> LOGGER.error("ERROR UNKNOWN - " + message);
+			case DEBUG -> LOGGER.debug(message);
+			case UNKNOWN -> LOGGER.error("ERROR UNKNOWN - {}", message);
 		}
 	}
 
-	public <T> void logPrivate(Result<T> result) {
+	public <T> void logPrivate(@NotNull Result<T> result) {
 		switch (result.getType()) {
 			case SUCCESS, CANCELLED -> LOGGER.info(result.getCurrentMessage());
 			case INVALID -> LOGGER.warn(result.getCurrentMessage());
 			case FAILED -> LOGGER.error(result.getCurrentMessage());
-			case NOT_INITIALIZED -> LOGGER.error("ERROR UNKNOWN - " + result.getCurrentMessage());
+			default -> LOGGER.error("ERROR UNKNOWN - {}", result.getCurrentMessage());
 		}
 	}
 
@@ -176,13 +176,17 @@ public class UiService {
 		return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
 	}
 
+	public Result<String> getSaveName(File sandboxConfigFile) throws IOException {
+		return STORAGE_CONTROLLER.getSaveName(sandboxConfigFile);
+	}
+
 	public void firstTimeSetup() {
 		//TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
 	}
 
 	//Sets the theme for our application based on the users preferred theme using reflection.
 	//It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar. Not the *best* way to do this, but it works.
-	public void setUserSavedApplicationTheme(List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+	public void setUserSavedApplicationTheme(@NotNull List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 		for (CheckMenuItem c : themeList) {
 			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
 			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
@@ -201,7 +205,7 @@ public class UiService {
 		activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
 	}
 
-	public void modifyActiveModCount(Mod mod) {
+	public void modifyActiveModCount(@NotNull Mod mod) {
 		if (mod.isActive()) {
 			activeModCount.set(activeModCount.get() + 1);
 		} else {
@@ -243,6 +247,29 @@ public class UiService {
 			}
 		}
 		return idFromUrlResult;
+	}
+
+	public Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) throws IOException {
+		Result<List<Mod>> modListResult = STORAGE_CONTROLLER.getModlistFromSave(sandboxConfigFile);
+
+		if (modListResult.isSuccess()) {
+			int initialModlistSize = modListResult.getPayload().size();
+			HashMap<String, Mod> modMap = new HashMap<>();
+			for(Mod mod : currentModList) {
+				modMap.put(mod.getId(), mod);
+			}
+			modListResult.getPayload().removeIf(m -> modMap.containsKey(m.getId()));
+
+			if (modListResult.getPayload().size() != initialModlistSize) {
+				modListResult.addMessage(String.format("%d mods were found. %d are already in the modlist.", initialModlistSize, (initialModlistSize - modListResult.getPayload().size())), ResultType.SUCCESS);
+			}
+
+			if(modListResult.getPayload().isEmpty()) {
+				modListResult.addMessage("Every mod in the save is already in the modlist!", ResultType.INVALID);
+			}
+		}
+
+		return modListResult;
 	}
 
 	public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
@@ -317,11 +344,6 @@ public class UiService {
 			modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
 		});
 		return modInfoResult;
-	}
-
-	public Result<List<Mod>> addModsFromFile() {
-		//TODO: Implement
-		return null;
 	}
 
 	public IntegerProperty getModImportProgressNumeratorProperty() {

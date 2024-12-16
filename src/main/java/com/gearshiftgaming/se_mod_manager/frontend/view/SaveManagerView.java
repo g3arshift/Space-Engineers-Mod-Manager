@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import atlantafx.base.controls.RingProgressIndicator;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
@@ -23,6 +22,8 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -75,10 +76,10 @@ public class SaveManagerView {
 
 	private ModTableContextBarView modTableContextBarView;
 
-	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputViewFirstStepView, SimpleInputView simpleInputView) {
+	public SaveManagerView(UiService UI_SERVICE, SaveInputView saveInputView, SimpleInputView simpleInputView) {
 		this.UI_SERVICE = UI_SERVICE;
 		SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
-		this.SAVE_INPUT_VIEW = saveInputViewFirstStepView;
+		this.SAVE_INPUT_VIEW = saveInputView;
 		this.PROFILE_INPUT_VIEW = simpleInputView;
 	}
 
@@ -108,15 +109,20 @@ public class SaveManagerView {
 	}
 
 	@FXML
-	private void addSave() {
+	private void addSave() throws IOException {
 		boolean duplicateSavePath = false;
-		Result<SaveProfile> result;
+		Result<SaveProfile> saveProfileResult = new Result<>();
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
+			SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
+			SAVE_INPUT_VIEW.setAddSaveButtonText("Next");
 			SAVE_INPUT_VIEW.show();
-			result = SAVE_INPUT_VIEW.getSaveProfileResult();
-			if (result.isSuccess()) {
-				SaveProfile saveProfile = result.getPayload();
+			File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
+			if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
+				saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
+			}
+			if (saveProfileResult.isSuccess()) {
+				SaveProfile saveProfile = saveProfileResult.getPayload();
 				duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
 
 				if (duplicateSavePath) {
@@ -142,8 +148,8 @@ public class SaveManagerView {
 								saveList.refresh();
 							} else {
 								SAVE_PROFILES.add(saveProfile);
-								result.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
-								UI_SERVICE.log(result);
+								saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
+								UI_SERVICE.log(saveProfileResult);
 
 								PROFILE_INPUT_VIEW.getInput().clear();
 							}
@@ -152,11 +158,9 @@ public class SaveManagerView {
 					} while (duplicateProfileName);
 				}
 			}
-		} while (result.isSuccess() && duplicateSavePath);
+		} while (saveProfileResult.isSuccess() && duplicateSavePath);
 
 		//Cleanup our UI actions.
-		SAVE_INPUT_VIEW.getSaveName().setText("No save selected.");
-		SAVE_INPUT_VIEW.setSelectedSave(null);
 		PROFILE_INPUT_VIEW.getInput().clear();
 	}
 

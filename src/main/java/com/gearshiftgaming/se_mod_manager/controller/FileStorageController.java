@@ -11,6 +11,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import jakarta.xml.bind.JAXBException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,12 +97,26 @@ public class FileStorageController implements StorageController {
 	}
 
 	@Override
+	public Result<String> getSaveName(File sandboxConfigFile) throws IOException {
+		Result<String> sandboxfileResult = SANDBOX_SERVICE.getSandboxFromFile(sandboxConfigFile);
+		if(sandboxfileResult.isSuccess()) {
+			sandboxfileResult.setPayload(SAVE_SERVICE.getSessionName(sandboxfileResult.getPayload(), sandboxConfigFile.getPath()));
+		}
+		return sandboxfileResult;
+	}
+
+	@Override
 	public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
 		Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile);
 		if (copyResult.isSuccess()) {
 			copyResult.addMessage("Successfully copied save " + sourceSaveProfile.getProfileName() + ".", ResultType.SUCCESS);
 		}
 		return copyResult;
+	}
+
+	@Override
+	public Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) {
+		return SANDBOX_SERVICE.getModlistFromSandboxConfig(sandboxConfigFile);
 	}
 
 	//Only here for development purposes
