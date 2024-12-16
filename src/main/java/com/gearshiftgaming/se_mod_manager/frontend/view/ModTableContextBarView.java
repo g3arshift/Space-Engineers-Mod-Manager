@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
@@ -69,7 +69,7 @@ public class ModTableContextBarView {
 
 	@FXML
 	@Getter
-	private ComboBox<ModProfile> modProfileDropdown;
+	private ComboBox<ModlistProfile> modProfileDropdown;
 
 	@FXML
 	@Getter
@@ -176,12 +176,12 @@ public class ModTableContextBarView {
 		});
 		modProfileDropdown.setConverter(new StringConverter<>() {
 			@Override
-			public String toString(ModProfile modProfile) {
-				return modProfile.getProfileName();
+			public String toString(ModlistProfile modlistProfile) {
+				return modlistProfile.getProfileName();
 			}
 
 			@Override
-			public ModProfile fromString(String s) {
+			public ModlistProfile fromString(String s) {
 				return null;
 			}
 		});
@@ -287,11 +287,11 @@ public class ModTableContextBarView {
 
 	@FXML
 	private void selectModProfile() {
-		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
+		ModlistProfile modlistProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 
 		clearSearchBox();
 
-		UI_SERVICE.setCurrentModProfile(modProfile);
+		UI_SERVICE.setCurrentModlistProfile(modlistProfile);
 		MODLIST_MANAGER_VIEW.updateModTableContents();
 	}
 

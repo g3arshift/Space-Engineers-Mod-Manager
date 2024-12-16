@@ -73,6 +73,17 @@ public class Popup {
 		return yesNoDialog(stage, label, messageIcon);
 	}
 
+	public static <T> int displayYesNoDialog(Result<T> result) {
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+
+		Label label = new Label(result.getCurrentMessage());
+		FontIcon messageIcon = new FontIcon();
+		setResultWindowDressing(result, stage, messageIcon);
+
+		return yesNoDialog(stage, label, messageIcon);
+	}
+
 	/**
 	 * Displays a simple alert with only one option centered on a specific stage, with a result being the input
 	 * @param parentStage The stage this popup will be centered on
@@ -84,6 +95,25 @@ public class Popup {
 		Label label = new Label(result.getCurrentMessage());
 		FontIcon messageIcon = new FontIcon();
 
+		setResultWindowDressing(result, stage, messageIcon);
+		simpleAlert(stage, parentStage, label, messageIcon);
+	}
+
+	/**
+	 * Displays a simple alert with only one option centered on the screen, with a result being the input
+	 */
+	public static <T> void displaySimpleAlert(Result<T> result) {
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+
+		Label label = new Label(result.getCurrentMessage());
+		FontIcon messageIcon = new FontIcon();
+
+		setResultWindowDressing(result, stage, messageIcon);
+		simpleAlert(stage, label, messageIcon);
+	}
+
+	public static <T> void setResultWindowDressing(Result<T> result, Stage stage, FontIcon messageIcon) {
 		switch (result.getType()) {
 			case SUCCESS -> {
 				messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
@@ -106,7 +136,6 @@ public class Popup {
 				stage.setTitle("Unknown");
 			}
 		}
-		simpleAlert(stage, parentStage, label, messageIcon);
 	}
 
 	/**

@@ -11,7 +11,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import jakarta.xml.bind.JAXBException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +47,9 @@ public class FileStorageController implements StorageController {
 		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
 
 		if(userConfigurationResult.isSuccess()) {
-			for(ModProfile modProfile : userConfigurationResult.getPayload().getModProfiles()) {
-				for(int i = 0; i < modProfile.getModList().size(); i ++) {
-					modProfile.getModList().get(i).setLoadPriority(i + 1);
+			for(ModlistProfile modlistProfile : userConfigurationResult.getPayload().getModlistProfiles()) {
+				for(int i = 0; i < modlistProfile.getModList().size(); i ++) {
+					modlistProfile.getModList().get(i).setLoadPriority(i + 1);
 				}
 			}
 		}
@@ -124,7 +123,7 @@ public class FileStorageController implements StorageController {
 
 		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc");
 		testSaveProfile.setSaveName("Test save");
-		ModProfile testModProfile = new ModProfile("Test Profile");
+		ModlistProfile testModlistProfile = new ModlistProfile("Test Profile");
 
 		SteamMod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();
@@ -132,24 +131,24 @@ public class FileStorageController implements StorageController {
 		testCategories.add("Three Category test");
 		testMod.setFriendlyName("Test Mod");
 		testMod.setCategories(testCategories);
-		testModProfile.getModList().add(testMod);
+		testModlistProfile.getModList().add(testMod);
 
 		SteamMod secondTestMod = new SteamMod("0987654321");
 		secondTestMod.setFriendlyName("Second test mod");
 		secondTestMod.setCategories(testCategories);
-		testModProfile.getModList().add(secondTestMod);
+		testModlistProfile.getModList().add(secondTestMod);
 
 		ModIoMod thirdTestMod = new ModIoMod("122122");
 		thirdTestMod.setFriendlyName("Third test mod");
 		thirdTestMod.setCategories(testCategories);
-		testModProfile.getModList().add(thirdTestMod);
+		testModlistProfile.getModList().add(thirdTestMod);
 
-		testSaveProfile.setLastUsedModProfile(testModProfile.getID());
+		testSaveProfile.setLastUsedModProfile(testModlistProfile.getID());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();
 		userConfiguration.getSaveProfiles().add(testSaveProfile);
-		userConfiguration.getModProfiles().add(testModProfile);
+		userConfiguration.getModlistProfiles().add(testModlistProfile);
 		userConfiguration.setUserTheme(theme.getName());
 
 		System.out.println("Created test user data.");
@@ -158,7 +157,7 @@ public class FileStorageController implements StorageController {
 
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
 		UserConfiguration sortedUserConfiguration = new UserConfiguration(userConfiguration);
-		for (ModProfile m : sortedUserConfiguration.getModProfiles()) {
+		for (ModlistProfile m : sortedUserConfiguration.getModlistProfiles()) {
 			List<Mod> sortedModList = m.getModList().stream()
 					.sorted(Comparator.comparing(Mod::getLoadPriority))
 					.toList();

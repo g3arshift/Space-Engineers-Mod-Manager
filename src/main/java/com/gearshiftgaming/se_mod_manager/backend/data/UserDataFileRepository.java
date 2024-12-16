@@ -1,5 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.*;
 
@@ -15,14 +17,18 @@ import java.io.*;
 //TODO: Implement file locks
 //TODO: Add a lock so that only this application can work on the UserData files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.
 public class UserDataFileRepository implements UserDataRepository {
-    public UserConfiguration loadUserData(File userConfigurationFile) {
+    public Result<UserConfiguration> loadUserData(File userConfigurationFile) {
+        Result<UserConfiguration> userConfigurationResult = new Result<>();
         try {
             JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            return (UserConfiguration) unmarshaller.unmarshal(userConfigurationFile);
+            UserConfiguration userConfiguration = (UserConfiguration) unmarshaller.unmarshal(userConfigurationFile);
+            userConfigurationResult.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
+            userConfigurationResult.setPayload(userConfiguration);
         } catch (JAXBException f) {
-            return new UserConfiguration();
+            userConfigurationResult.addMessage("Failed to load user configuration. Error Details: " + f, ResultType.FAILED);
         }
+        return userConfigurationResult;
     }
 
     public boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {

@@ -13,7 +13,7 @@ import java.util.*;
 
  */
 @Getter
-public class ModProfile {
+public class ModlistProfile {
 
     private final UUID ID;
 
@@ -21,25 +21,25 @@ public class ModProfile {
 
     private List<Mod> modList;
 
-    public ModProfile() {
+    public ModlistProfile() {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         //TODO: Add increment if duplicate.
         profileName = "New Mod Profile";
     }
 
-    public ModProfile(String profileName) {
+    public ModlistProfile(String profileName) {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
     }
 
-    public ModProfile(ModProfile modProfile) {
+    public ModlistProfile(ModlistProfile modlistProfile) {
         ID = UUID.randomUUID();
-        profileName = modProfile.getProfileName();
+        profileName = modlistProfile.getProfileName();
         modList = new ArrayList<>();
-        if(modProfile.getModList() != null){
-            modList.addAll(modProfile.getModList());
+        if(modlistProfile.getModList() != null){
+            modList.addAll(modlistProfile.getModList());
         }
     }
 
@@ -57,7 +57,7 @@ public class ModProfile {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ModProfile that)) return false;
+        if (!(o instanceof ModlistProfile that)) return false;
 		return Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
     }
 

@@ -53,7 +53,7 @@ public class UiService {
 	private final ObservableList<LogMessage> USER_LOG;
 
 	@Getter
-	private final ObservableList<ModProfile> MOD_PROFILES;
+	private final ObservableList<ModlistProfile> MOD_PROFILES;
 
 	@Getter
 	private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -66,7 +66,7 @@ public class UiService {
 	private SaveProfile currentSaveProfile;
 
 	@Getter
-	private ModProfile currentModProfile;
+	private ModlistProfile currentModlistProfile;
 
 	@Getter
 	private ObservableList<Mod> currentModList;
@@ -89,7 +89,7 @@ public class UiService {
 	private final String MOD_DATE_FORMAT;
 
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-					 @NotNull ObservableList<ModProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+					 @NotNull ObservableList<ModlistProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
 					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
 		this.LOGGER = LOGGER;
@@ -108,19 +108,19 @@ public class UiService {
 				.findFirst();
 		if (lastUsedSaveProfile.isPresent()) {
 			currentSaveProfile = lastUsedSaveProfile.get();
-			Optional<ModProfile> lastUsedModProfile = MOD_PROFILES.stream()
+			Optional<ModlistProfile> lastUsedModProfile = MOD_PROFILES.stream()
 					.filter(modProfile -> modProfile.getID().equals(currentSaveProfile.getLastUsedModProfile()))
 					.findFirst();
-			currentModProfile = lastUsedModProfile.orElseGet(MOD_PROFILES::getFirst);
+			currentModlistProfile = lastUsedModProfile.orElseGet(MOD_PROFILES::getFirst);
 		} else {
 			log("No previously applied save profile detected.", MessageType.INFO);
 			currentSaveProfile = SAVE_PROFILES.getFirst();
-			currentModProfile = MOD_PROFILES.getFirst();
+			currentModlistProfile = MOD_PROFILES.getFirst();
 		}
 
 		//A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
 		//currentModProfile.getModList()
-		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
+		currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
 		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
 	}
 
@@ -201,9 +201,9 @@ public class UiService {
 		}
 	}
 
-	public void setCurrentModProfile(ModProfile modProfile) {
-		currentModProfile = modProfile;
-		currentModList = FXCollections.observableArrayList(currentModProfile.getModList());
+	public void setCurrentModlistProfile(ModlistProfile modlistProfile) {
+		currentModlistProfile = modlistProfile;
+		currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
 		activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
 	}
 

@@ -24,7 +24,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @XmlRootElement(name = "userConfiguration")
-@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modProfiles"})
+@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modlistProfiles"})
 public class UserConfiguration {
 
     private String userTheme;
@@ -33,26 +33,26 @@ public class UserConfiguration {
 
     private List<SaveProfile> saveProfiles;
 
-    private List<ModProfile> modProfiles;
+    private List<ModlistProfile> modlistProfiles;
 
     /**
      * Creates an entirely new XML configuration file to store user information with.
      */
     public UserConfiguration() {
         saveProfiles = new ArrayList<>();
-        modProfiles = new ArrayList<>();
+        modlistProfiles = new ArrayList<>();
         userTheme = new PrimerLight().getName();
 
         //TODO: The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
-        modProfiles.add(new ModProfile("Default"));
+        modlistProfiles.add(new ModlistProfile("Default"));
     }
 
     public UserConfiguration(UserConfiguration userConfiguration) {
         this.userTheme = userConfiguration.getUserTheme();
         this.lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
-        this.modProfiles = userConfiguration.getModProfiles();
+        this.modlistProfiles = userConfiguration.getModlistProfiles();
     }
 
     @XmlElement(name = "userTheme")
@@ -66,21 +66,21 @@ public class UserConfiguration {
         this.saveProfiles = saveProfiles;
     }
 
-    @XmlElementWrapper(name = "modProfiles")
-    @XmlElement(name = "modProfile")
-    public void setModProfiles(List<ModProfile> modProfiles) {
-        this.modProfiles = modProfiles;
+    @XmlElementWrapper(name = "modlistProfiles")
+    @XmlElement(name = "modlistProfile")
+    public void setModlistProfiles(List<ModlistProfile> modlistProfiles) {
+        this.modlistProfiles = modlistProfiles;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastUsedSaveProfileId, that.lastUsedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modProfiles, that.modProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastUsedSaveProfileId, that.lastUsedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastUsedSaveProfileId, saveProfiles, modProfiles);
+        return Objects.hash(userTheme, lastUsedSaveProfileId, saveProfiles, modlistProfiles);
     }
 }

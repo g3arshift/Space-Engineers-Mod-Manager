@@ -40,6 +40,7 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 		this.cellStyle = cellStyle;
 	}
 
+	//TODO: Change selected color to match the modtable selected color. Do same for ModlistPorifles.
 	@Override
 	protected void updateItem(SaveProfile item, boolean empty) {
 		super.updateItem(item, empty);

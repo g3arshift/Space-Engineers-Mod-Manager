@@ -35,8 +35,8 @@ public class UserDataFileRepositoryTest {
 		UserConfiguration validUserConfig = userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml"));
 		assertEquals("Primer Dark", validUserConfig.getUserTheme());
 		assertNull(validUserConfig.getLastUsedSaveProfileId());
-		assertEquals(1, validUserConfig.getModProfiles().size());
-		assertEquals("Default", validUserConfig.getModProfiles().getFirst().getProfileName());
+		assertEquals(1, validUserConfig.getModlistProfiles().size());
+		assertEquals("Default", validUserConfig.getModlistProfiles().getFirst().getProfileName());
 		assertEquals("None", validUserConfig.getSaveProfiles().getFirst().getProfileName());
 	}
 
@@ -45,8 +45,8 @@ public class UserDataFileRepositoryTest {
 		UserConfiguration badUserData = (userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
 		assertEquals("Primer Light", badUserData.getUserTheme());
 		assertNull(badUserData.getLastUsedSaveProfileId());
-		assertEquals(1, badUserData.getModProfiles().size());
-		assertEquals("Default", badUserData.getModProfiles().getFirst().getProfileName());
+		assertEquals(1, badUserData.getModlistProfiles().size());
+		assertEquals("Default", badUserData.getModlistProfiles().getFirst().getProfileName());
 		assertEquals("None", badUserData.getSaveProfiles().getFirst().getProfileName());
 	}
 

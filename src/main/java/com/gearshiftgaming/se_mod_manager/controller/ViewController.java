@@ -1,17 +1,18 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
+import atlantafx.base.theme.PrimerLight;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import jakarta.xml.bind.JAXBException;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -68,16 +69,24 @@ public class ViewController {
 
 
 		Result<UserConfiguration> userConfigurationResult = storageController.getUserData();
-		UserConfiguration userConfiguration;
+		UserConfiguration userConfiguration = new UserConfiguration();
 
 		if (userConfigurationResult.isSuccess()) {
 			userConfiguration = userConfigurationResult.getPayload();
 		} else {
-			userConfiguration = new UserConfiguration();
-			storageController.saveUserData(userConfiguration);
+			Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+			logger.error(userConfigurationResult.getCurrentMessage());
+			int choice = Popup.displayYesNoDialog("Failed to load existing user configuration, see log for details. " +
+					"Would you like to create a new user configuration and continue?", MessageType.WARN);
+			if(choice == 1) {
+				storageController.saveUserData(userConfiguration);
+			}
+			else {
+				Platform.exit();
+			}
 		}
 
-		ObservableList<ModProfile> modProfiles = FXCollections.observableList(userConfiguration.getModProfiles());
+		ObservableList<ModlistProfile> modlistProfiles = FXCollections.observableList(userConfiguration.getModlistProfiles());
 		ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 
 		//Initialize the list we use to store log messages shown to the user
@@ -89,7 +98,7 @@ public class ViewController {
 
 		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-		UI_SERVICE = new UiService(logger, userLog, modProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+		UI_SERVICE = new UiService(logger, userLog, modlistProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
 		UI_SERVICE.log(userConfigurationResult);
 
 		setupInterface(stage);

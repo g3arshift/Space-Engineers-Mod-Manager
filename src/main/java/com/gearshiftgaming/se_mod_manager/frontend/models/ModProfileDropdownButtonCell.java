@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 
 /**
@@ -17,7 +17,7 @@ public class ModProfileDropdownButtonCell extends ModProfileCell {
 	}
 
 	@Override
-	protected void updateItem(ModProfile item, boolean empty) {
+	protected void updateItem(ModlistProfile item, boolean empty) {
 		super.updateItem(item, empty);
 		if(empty || item == null) {
 			setGraphic(null);

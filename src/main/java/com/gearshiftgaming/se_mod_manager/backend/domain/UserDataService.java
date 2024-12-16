@@ -21,11 +21,10 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
 		Result<UserConfiguration> result = new Result<>();
 
 		if (!userConfigurationFile.exists()) {
-			result.addMessage("Could not load user data. Defaulting to new user configuration.", ResultType.FAILED);
+			result.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
 			result.setPayload(new UserConfiguration());
 		} else {
-            result.setPayload(userDataFileRepository.loadUserData(userConfigurationFile));
-			result.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
+            result = userDataFileRepository.loadUserData(userConfigurationFile);
 		}
 		return result;
 	}

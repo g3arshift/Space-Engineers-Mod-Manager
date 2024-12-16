@@ -8,9 +8,9 @@
             <saveName>None</saveName>
         </saveProfile>
     </saveProfiles>
-    <modProfiles>
-        <modProfile profileName="Default">
+    <modlistProfiles>
+        <modlistProfile profileName="Default">
             <mods/>
-        </modProfile>
-    </modProfiles>
+        </modlistProfile>
+    </modlistProfiles>
 </userConfiguration>

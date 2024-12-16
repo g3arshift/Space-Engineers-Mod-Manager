@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -15,7 +15,7 @@ import lombok.Getter;
  */
 
 @Getter
-public abstract class ModProfileCell extends ListCell<ModProfile> {
+public abstract class ModProfileCell extends ListCell<ModlistProfile> {
     private final Label PROFILE_NAME = new Label();
 
     private final String cellStyle;
@@ -27,7 +27,7 @@ public abstract class ModProfileCell extends ListCell<ModProfile> {
     }
 
     @Override
-    protected void updateItem(ModProfile item, boolean empty) {
+    protected void updateItem(ModlistProfile item, boolean empty) {
         super.updateItem(item, empty);
         if(empty || item == null) {
             setGraphic(null);
