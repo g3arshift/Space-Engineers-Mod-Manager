@@ -108,6 +108,8 @@ public class SaveManagerView {
 		UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
 	}
 
+	//TODO: We need another step that will ask the user if they want to import the modlist for the save they're importing.
+	// If they say "yes" ask them further if they want to add it to the current modlist, or a new modlist.
 	@FXML
 	private void addSave() throws IOException {
 		boolean duplicateSavePath = false;
@@ -134,7 +136,7 @@ public class SaveManagerView {
 						PROFILE_INPUT_VIEW.getInput().clear();
 						PROFILE_INPUT_VIEW.getInput().requestFocus();
 						PROFILE_INPUT_VIEW.show();
-						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getInput().getText());
+						duplicateProfileName = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
 
 						if (duplicateProfileName) {
 							Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
@@ -146,6 +148,20 @@ public class SaveManagerView {
 								UI_SERVICE.setCurrentSaveProfile(saveProfile);
 
 								saveList.refresh();
+
+								int addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
+
+								if(addExistingModsChoice == 1) {
+									int addExistingModsLocationChoice = Popup.displayThreeChoiceDialog("Which modlist do you want to add the mods in the save to?", stage, MessageType.INFO, "Current Modlist", "New Modlist", "Cancel");
+
+									if(addExistingModsLocationChoice != 0) {
+										if(addExistingModsLocationChoice == 2) { //Add them to the current modlist
+											//TODO: Implement.
+										} else { //Create a new modlist and add them there.
+											//TODO: Implement.
+										}
+									}
+								}
 							} else {
 								SAVE_PROFILES.add(saveProfile);
 								saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
@@ -241,7 +257,7 @@ public class SaveManagerView {
 			PROFILE_INPUT_VIEW.show();
 
 			String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
-			if (profileNameAlreadyExists(newProfileName)) {
+			if (isDuplicateProfileName(newProfileName)) {
 				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
 			} else if (!newProfileName.isBlank()) {
 				saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
@@ -269,7 +285,7 @@ public class SaveManagerView {
 				.anyMatch(saveProfile -> saveProfile.getSavePath() != null && saveProfile.getSavePath().equals(savePath));
 	}
 
-	private boolean profileNameAlreadyExists(String profileName) {
+	private boolean isDuplicateProfileName(String profileName) {
 		return SAVE_PROFILES.stream()
 				.anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
 	}

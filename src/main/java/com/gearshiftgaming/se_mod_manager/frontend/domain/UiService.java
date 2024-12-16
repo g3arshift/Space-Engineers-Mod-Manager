@@ -12,7 +12,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,8 +27,10 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -255,7 +257,7 @@ public class UiService {
 		if (modListResult.isSuccess()) {
 			int initialModlistSize = modListResult.getPayload().size();
 			HashMap<String, Mod> modMap = new HashMap<>();
-			for(Mod mod : currentModList) {
+			for (Mod mod : currentModList) {
 				modMap.put(mod.getId(), mod);
 			}
 			modListResult.getPayload().removeIf(m -> modMap.containsKey(m.getId()));
@@ -264,7 +266,7 @@ public class UiService {
 				modListResult.addMessage(String.format("%d mods were found. %d are already in the modlist.", initialModlistSize, (initialModlistSize - modListResult.getPayload().size())), ResultType.SUCCESS);
 			}
 
-			if(modListResult.getPayload().isEmpty()) {
+			if (modListResult.getPayload().isEmpty()) {
 				modListResult.addMessage("Every mod in the save is already in the modlist!", ResultType.INVALID);
 			}
 		}
@@ -377,5 +379,87 @@ public class UiService {
 
 	public double getModImportProgressPercentage() {
 		return modImportProgressPercentage.get();
+	}
+
+	public Task<List<Result<Mod>>> importModlist(List<Mod> modList) {
+		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+		return new Task<>() {
+			@Override
+			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
+				Platform.runLater(() -> modImportProgressDenominator.setValue(modList.size()));
+				List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
+				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+					for (Mod m : modList) {
+						// Submit the task without waiting for it to finish
+						Future<Result<Mod>> future = executorService.submit(() -> {
+							try {
+								return fillOutModInformation(m);
+							} catch (IOException e) {
+								Result<Mod> failedResult = new Result<>();
+								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+									failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+								} else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+									failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+								} else {
+									failedResult.addMessage(e.toString(), ResultType.FAILED);
+								}
+								return failedResult;
+							}
+						});
+						futures.add(future);
+					}
+					try {
+						for (Future<Result<Mod>> f : futures) {
+							modInfoFillOutResults.add(f.get());
+						}
+					} catch (RuntimeException e) {
+						Result<Mod> failedResult = new Result<>();
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+						modInfoFillOutResults.add(failedResult);
+					}
+				}
+				return modInfoFillOutResults;
+			}
+		};
+	}
+
+	public Task<List<Result<String>>> importSteamCollection(String collectionId) {
+		return new Task<>() {
+			@Override
+			protected List<Result<String>> call() {
+				try {
+					return scrapeSteamModCollectionModList(collectionId);
+				} catch (IOException e) {
+					List<Result<String>> failedResults = new ArrayList<>();
+					Result<String> failedResult = new Result<>();
+					if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
+						failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
+					} else {
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+					}
+					failedResults.add(failedResult);
+					return failedResults;
+				}
+			}
+		};
+	}
+
+	public Task<Result<String>> convertModIoUrlToId(String modUrl) {
+		return new Task<>() {
+			@Override
+			protected Result<String> call() {
+				try {
+					return getModIoModIdFromUrlName(modUrl);
+				} catch (IOException e) {
+					Result<String> failedResult = new Result<>();
+					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+					} else {
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+					}
+					return failedResult;
+				}
+			}
+		};
 	}
 }

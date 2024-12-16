@@ -95,6 +95,7 @@ public class SimpleInputView {
 
     public void show() {
         stage.show();
+        input.requestFocus();
         TitleBarUtility.SetTitleBar(stage);
         Platform.enterNestedEventLoop(stage);
     }
