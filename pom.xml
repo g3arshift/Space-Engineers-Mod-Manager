@@ -64,6 +64,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Scenic View for realtime JavaFX debugging -->
+        <dependency>
+            <groupId>net.raumzeitfalle.fx</groupId>
+            <artifactId>scenic-view</artifactId>
+            <version>11.0.2</version>
+        </dependency>
+
         <!-- Log4j2 module (logger) -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -113,7 +120,6 @@
         </dependency>
 
         <!-- Maven Utilities -->
-
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
@@ -162,6 +168,11 @@
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
             <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>24-ea+19</version>
         </dependency>
 
         <!-- JNA for window access -->

@@ -115,6 +115,8 @@ public class SaveInputView {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
+		} else {
+			saveName.setText(noSaveSelectedMessage);
 		}
 	}
 

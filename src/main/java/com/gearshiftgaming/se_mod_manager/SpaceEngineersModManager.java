@@ -43,6 +43,7 @@ public class SpaceEngineersModManager extends Application {
 
 		primaryStage.show();
 
+
 		TitleBarUtility.SetTitleBar(primaryStage);
 	}
 

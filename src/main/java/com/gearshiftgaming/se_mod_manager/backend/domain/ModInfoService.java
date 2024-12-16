@@ -203,80 +203,83 @@ public class ModInfoService {
 
 	private Result<String[]> scrapeSteamMod(String modId) throws IOException {
 		Result<String[]> modScrapeResult = new Result<>();
-		Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
-		String workshopItemType = modPage.select(STEAM_MOD_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString();
-		if (modPage.title().equals("Steam Community :: Error")) { //Makes sure it's a valid link at all
-			modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
-		} else if (!workshopItemType.equals("Workshop")) { //Makes sure it isn't something like a screenshot
-			modScrapeResult.addMessage("Item with ID \"" + modId + "\" is not a mod.", ResultType.FAILED);
-		} else if (modPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Collections")) { //Makes sure it's not a collection
-            modScrapeResult.addMessage("\"" + modPage.title().split("Steam Workshop::")[1] + "\" is a collection, not a mod!", ResultType.FAILED);
-		} else {
-			//The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
-			String[] modInfo = new String[4];
-			String modName = modPage.title().split("Workshop::")[1];
-			if (checkIfModIsMod(ModType.STEAM, modPage)) {
-				modInfo[0] = modName;
-
-				Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
-				Element modTagElement;
-				if (!modTagElements.isEmpty()) {
-					modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
-				} else {
-					modTagElement = null;
-				}
-
-				List<String> modTags = new ArrayList<>();
-				StringBuilder concatenatedModTags = new StringBuilder();
-				if (modTagElement != null) {
-					for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
-						modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
-					}
-
-					for (int i = 0; i < modTags.size(); i++) {
-						if (i + 1 < modTags.size()) {
-							concatenatedModTags.append(modTags.get(i)).append(",");
-						} else {
-							concatenatedModTags.append(modTags.get(i));
-						}
-					}
-				} else {
-					concatenatedModTags.append("None");
-				}
-				modInfo[1] = concatenatedModTags.toString();
-
-				modInfo[2] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
-
-				String lastUpdated;
-				if (modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).isEmpty()) {
-					lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_FIRST_POSTED_SELECTOR).toString(),
-							"<div class=\"detailsStatRight\">\n ",
-							"\n</div>");
-				} else {
-					lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
-							"<div class=\"detailsStatRight\">\n ",
-							"\n</div>");
-				}
-
-				//Append a year if we don't find one. This regex looks for any four contiguous digits.
-				Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
-				if (!yearPattern.matcher(lastUpdated).find()) {
-					String[] lastUpdatedParts = lastUpdated.split(" @ ");
-					lastUpdatedParts[0] += ", " + Year.now();
-					lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
-				}
-				modInfo[3] = lastUpdated;
-
-				modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
-				modScrapeResult.setPayload(modInfo);
+		try {
+			Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
+			if (modPage.title().equals("Steam Community :: Error")) { //Makes sure it's a valid link at all
+				modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
+			} else if (!modPage.select(STEAM_MOD_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Workshop")) { //Makes sure it isn't something like a screenshot
+				modScrapeResult.addMessage("Item with ID \"" + modId + "\" is not a mod.", ResultType.FAILED);
+			} else if (modPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Collections")) { //Makes sure it's not a collection
+				modScrapeResult.addMessage("\"" + modPage.title().split("Steam Workshop::")[1] + "\" is a collection, not a mod!", ResultType.FAILED);
 			} else {
-				if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
-					modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
-							modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
+				//The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
+				String[] modInfo = new String[4];
+				String modName = modPage.title().split("Workshop::")[1];
+				if (checkIfModIsMod(ModType.STEAM, modPage)) {
+					modInfo[0] = modName;
+
+					Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
+					Element modTagElement;
+					if (!modTagElements.isEmpty()) {
+						modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
+					} else {
+						modTagElement = null;
+					}
+
+					List<String> modTags = new ArrayList<>();
+					StringBuilder concatenatedModTags = new StringBuilder();
+					if (modTagElement != null) {
+						for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
+							modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
+						}
+
+						for (int i = 0; i < modTags.size(); i++) {
+							if (i + 1 < modTags.size()) {
+								concatenatedModTags.append(modTags.get(i)).append(",");
+							} else {
+								concatenatedModTags.append(modTags.get(i));
+							}
+						}
+					} else {
+						concatenatedModTags.append("None");
+					}
+					modInfo[1] = concatenatedModTags.toString();
+
+					modInfo[2] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
+
+					String lastUpdated;
+					if (modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).isEmpty()) {
+						lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_FIRST_POSTED_SELECTOR).toString(),
+								"<div class=\"detailsStatRight\">\n ",
+								"\n</div>");
+					} else {
+						lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
+								"<div class=\"detailsStatRight\">\n ",
+								"\n</div>");
+					}
+
+					//Append a year if we don't find one. This regex looks for any four contiguous digits.
+					Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
+					if (!yearPattern.matcher(lastUpdated).find()) {
+						String[] lastUpdatedParts = lastUpdated.split(" @ ");
+						lastUpdatedParts[0] += ", " + Year.now();
+						lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
+					}
+					modInfo[3] = lastUpdated;
+
+					modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
+					modScrapeResult.setPayload(modInfo);
 				} else {
-					modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
+					if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
+						modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
+								modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
+					} else {
+						modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
+					}
 				}
 			}
+		} catch (Exception e) {
+			modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
 		}
 		return modScrapeResult;
 	}

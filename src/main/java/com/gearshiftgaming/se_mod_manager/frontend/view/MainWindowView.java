@@ -15,6 +15,7 @@ import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.scenicview.ScenicView;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -135,6 +136,9 @@ public class MainWindowView {
 		STAGE.setMinHeight(minHeight);
 		STAGE.setWidth(prefWidth);
 		STAGE.setHeight(prefHeight);
+
+		//Here for debugging only. Disable.
+		//ScenicView.show(scene);
 
 		//Add title and icon to the stage
 		MavenXpp3Reader reader = new MavenXpp3Reader();

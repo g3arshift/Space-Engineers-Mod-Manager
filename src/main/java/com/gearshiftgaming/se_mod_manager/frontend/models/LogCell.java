@@ -12,7 +12,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class LogCell extends ListCell<LogMessage> {
     private final FontIcon MESSAGE_ICON = new FontIcon();
