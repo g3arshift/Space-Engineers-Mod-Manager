@@ -135,8 +135,6 @@ public class SaveManagerView {
 		UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
 	}
 
-	//TODO: We need another step that will ask the user if they want to import the modlist for the save they're importing.
-	// If they say "yes" ask them further if they want to add it to the current modlist, or a new modlist.
 	@FXML
 	private void addSave() throws IOException {
 		boolean duplicateSavePath = false;
