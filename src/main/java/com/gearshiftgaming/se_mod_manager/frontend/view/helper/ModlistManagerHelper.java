@@ -20,11 +20,11 @@ public class ModlistManagerHelper {
 		//If we are ascending or not sorted then set the load priority equal to the spot in the list, minus one.
 		//If we are descending then set the load priority to its inverse position.
 		if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-			for (int i = 0; i < uiService.getCurrentModProfile().getModList().size(); i++) {
+			for (int i = 0; i < uiService.getCurrentModlistProfile().getModList().size(); i++) {
 				uiService.getCurrentModList().get(i).setLoadPriority(i + 1);
 			}
 		} else {
-			for (int i = 0; i < uiService.getCurrentModProfile().getModList().size(); i++) {
+			for (int i = 0; i < uiService.getCurrentModlistProfile().getModList().size(); i++) {
 				uiService.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i, uiService));
 			}
 		}

@@ -1,5 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import javafx.scene.control.Tooltip;
+
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
@@ -8,7 +12,12 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class SaveProfileManagerCell extends SaveProfileCell {
-	public SaveProfileManagerCell() {
-		super("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;");
+
+	private String style;
+
+	private UiService uiService;
+
+	public SaveProfileManagerCell(String themeName) {
+		super("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;", themeName);
 	}
 }

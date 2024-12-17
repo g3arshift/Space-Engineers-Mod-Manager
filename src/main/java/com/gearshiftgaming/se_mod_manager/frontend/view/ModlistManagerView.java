@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.animation.Animation;
@@ -40,6 +41,7 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
@@ -55,10 +57,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -229,12 +227,12 @@ public class ModlistManagerView {
 	private final String STEAM_MOD_DATE_FORMAT;
 
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
-	private ComboBox<ModProfile> modProfileDropdown;
+	private ComboBox<ModlistProfile> modProfileDropdown;
 	private ComboBox<SaveProfile> saveProfileDropdown;
 	private TextField modTableSearchField;
 
 
-	public ModlistManagerView(UiService uiService, Stage stage, Properties properties, StatusBarView statusBarView,
+	public ModlistManagerView(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBarView statusBarView,
 							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
@@ -256,7 +254,7 @@ public class ModlistManagerView {
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-						 ComboBox<ModProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+						 ComboBox<ModlistProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
 		this.logToggle = logToggle;
 		this.modDescriptionToggle = modDescriptionToggle;
 
@@ -424,7 +422,7 @@ public class ModlistManagerView {
 		modTable.setFixedCellSize(modTableCellSize);
 	}
 
-	private LocalDateTime getModIoLastUpdatedComparatorDate(String dateString) {
+	private @NotNull LocalDateTime getModIoLastUpdatedComparatorDate(@NotNull String dateString) {
 		DateTimeFormatter formatter;
 		return switch (dateString.length()) {
 			case 18, 19: //Mod IO hour format
@@ -496,7 +494,7 @@ public class ModlistManagerView {
 			//This is a bit hacky, but it makes a LOT less code we need to maintain.
 			final Mod[] modList = new Mod[1];
 			modList[0] = mod;
-			getModImportThread(List.of(modList)).start();
+			importModlist(List.of(modList)).start();
 		}
 
 	}
@@ -510,7 +508,7 @@ public class ModlistManagerView {
 		String modId = getSteamModLocationFromUser(true);
 		if (!modId.isBlank()) {
 			try {
-				getSteamModCollectionThread(modId).start();
+				importSteamCollection(modId).start();
 			} catch (RuntimeException e) {
 				UI_SERVICE.log(e);
 				Popup.displaySimpleAlert(String.valueOf(e), STAGE, MessageType.ERROR);
@@ -528,14 +526,14 @@ public class ModlistManagerView {
 
 		if (!modId.isBlank()) {
 			if (!StringUtils.isNumeric(modId)) {
-				getModIoUrlToIdThread(modId).start();
+				convertModIoUrlToId(modId).start();
 			} else {
 				ModIoMod mod = new ModIoMod(modId);
 
 				//This is a bit hacky, but it makes a LOT less code we need to maintain.
 				final Mod[] modList = new Mod[1];
 				modList[0] = mod;
-				getModImportThread(List.of(modList)).start();
+				importModlist(List.of(modList)).start();
 			}
 		}
 	}
@@ -547,17 +545,10 @@ public class ModlistManagerView {
 		EXISTING_SAVE_MOD_IMPORT_INPUT.show();
 		File selectedSave = EXISTING_SAVE_MOD_IMPORT_INPUT.getSelectedSave();
 		if (selectedSave != null && EXISTING_SAVE_MOD_IMPORT_INPUT.getLastPressedButtonId().equals("addSave")) {
-			Result<List<Mod>> existingModlistResult = new Result<>();
-			try {
-				existingModlistResult = UI_SERVICE.getModlistFromSave(selectedSave);
-			} catch (IOException e) {
-				existingModlistResult.addMessage(e.toString(), ResultType.FAILED);
-			}
-
-			Popup.displaySimpleAlert(existingModlistResult, STAGE);
+			Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, STAGE);
 
 			if (existingModlistResult.isSuccess()) {
-				getModImportThread(existingModlistResult.getPayload()).start();
+				importModlist(existingModlistResult.getPayload()).start();
 			}
 		}
 	}
@@ -674,6 +665,7 @@ public class ModlistManagerView {
 	@FXML
 	private void manageSaveProfiles() {
 		SAVE_MANAGER_VIEW.show();
+		modTable.sort();
 	}
 
 	@FXML
@@ -778,7 +770,7 @@ public class ModlistManagerView {
 	/**
 	 * Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll.
 	 */
-	protected void handleModTableDragOver(DragEvent dragEvent) {
+	protected void handleModTableDragOver(@NotNull DragEvent dragEvent) {
 		//This normalizes our scroll speed so small and large tables all scroll at the same speed.
 		final double TOTAL_ROW_HEIGHT = UI_SERVICE.getCurrentModList().size() * singleTableRow.getHeight();
 		final double SCROLL_SPEED_CONSTANT = 0.035;
@@ -839,7 +831,7 @@ public class ModlistManagerView {
 	}
 
 	//This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
-	private void handleTableActionsOnDragDrop(DragEvent dragEvent) {
+	private void handleTableActionsOnDragDrop(@NotNull DragEvent dragEvent) {
 		Dragboard dragboard = dragEvent.getDragboard();
 
 		actions.setBorder(null);
@@ -873,7 +865,7 @@ public class ModlistManagerView {
 				but for whatever reason the changes aren't propagating without this.
 			*/
 				//TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-				UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+				UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
 				UI_SERVICE.saveUserData();
 			}
 
@@ -909,7 +901,6 @@ public class ModlistManagerView {
 	}
 
 	private String getUserModIdInput() {
-		ID_AND_URL_MOD_IMPORT_INPUT.getInput().requestFocus();
 		ID_AND_URL_MOD_IMPORT_INPUT.show();
 		return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText();
 	}
@@ -941,27 +932,8 @@ public class ModlistManagerView {
 		}
 	}
 
-	private Thread getSteamModCollectionThread(String collectionId) {
-		final Task<List<Result<String>>> TASK;
-
-		TASK = new Task<>() {
-			@Override
-			protected List<Result<String>> call() {
-				try {
-					return UI_SERVICE.scrapeSteamModCollectionModList(collectionId);
-				} catch (IOException e) {
-					List<Result<String>> failedResults = new ArrayList<>();
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-						failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					failedResults.add(failedResult);
-					return failedResults;
-				}
-			}
-		};
+	private @NotNull Thread importSteamCollection(String collectionId) {
+		final Task<List<Result<String>>> TASK = UI_SERVICE.importSteamCollection(collectionId);
 
 		TASK.setOnRunning(workerStateEvent -> {
 			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
@@ -1014,7 +986,7 @@ public class ModlistManagerView {
 					int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
 					if (userChoice == 1) {
-						getModImportThread(successfullyFoundMods).start();
+						importModlist(successfullyFoundMods).start();
 					}
 
 					Platform.runLater(() -> {
@@ -1046,25 +1018,8 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	private Thread getModIoUrlToIdThread(String modUrl) {
-		final Task<Result<String>> TASK;
-
-		TASK = new Task<>() {
-			@Override
-			protected Result<String> call() {
-				try {
-					return UI_SERVICE.getModIoModIdFromUrlName(modUrl);
-				} catch (IOException e) {
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					return failedResult;
-				}
-			}
-		};
+	private @NotNull Thread convertModIoUrlToId(String modUrl) {
+		final Task<Result<String>> TASK = UI_SERVICE.convertModIoUrlToId(modUrl);
 
 		TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
 			modIoUrlToIdName.setVisible(true);
@@ -1084,7 +1039,7 @@ public class ModlistManagerView {
 				ModIoMod mod = new ModIoMod(modIdResult.getPayload());
 				final Mod[] modList = new Mod[1];
 				modList[0] = mod;
-				getModImportThread(List.of(modList)).start();
+				importModlist(List.of(modList)).start();
 			} else {
 				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
 				Platform.runLater(() -> {
@@ -1114,47 +1069,8 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	private Thread getModImportThread(List<Mod> modList) {
-		final Task<List<Result<Mod>>> TASK;
-		List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
-		TASK = new Task<>() {
-			@Override
-			protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
-				Platform.runLater(() -> UI_SERVICE.getModImportProgressDenominatorProperty().setValue(modList.size()));
-				List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
-				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-					for (Mod m : modList) {
-						// Submit the task without waiting for it to finish
-						Future<Result<Mod>> future = executorService.submit(() -> {
-							try {
-								return UI_SERVICE.fillOutModInformation(m);
-							} catch (IOException e) {
-								Result<Mod> failedResult = new Result<>();
-								if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-									failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-								} else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-									failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-								} else {
-									failedResult.addMessage(e.toString(), ResultType.FAILED);
-								}
-								return failedResult;
-							}
-						});
-						futures.add(future);
-					}
-					try {
-						for (Future<Result<Mod>> f : futures) {
-							modInfoFillOutResults.add(f.get());
-						}
-					} catch (RuntimeException e) {
-						Result<Mod> failedResult = new Result<>();
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-						modInfoFillOutResults.add(failedResult);
-					}
-				}
-				return modInfoFillOutResults;
-			}
-		};
+	private @NotNull Thread importModlist(List<Mod> modList) {
+		final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
 
 		TASK.setOnRunning(workerStateEvent -> {
 			//We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
@@ -1165,60 +1081,20 @@ public class ModlistManagerView {
 		TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
 			modImportProgressWheel.setVisible(false);
 
-			int successfulScrapes = 0;
-			int failedScrapes = 0;
+			Mod topMostMod = ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, STAGE, TASK.getValue(), modList.size());
 
-			for (Result<Mod> currentModInfoFillOutResult : modInfoFillOutResults) {
-				boolean shouldAddMod = false;
-				if (currentModInfoFillOutResult.isSuccess() || currentModInfoFillOutResult.getType() == ResultType.REQUIRES_ADJUDICATION) {
-					if (currentModInfoFillOutResult.getType() == ResultType.REQUIRES_ADJUDICATION) {
-						int response = Popup.displayYesNoDialog(currentModInfoFillOutResult.getCurrentMessage(), STAGE, MessageType.WARN);
-						if (response == 1) {
-							shouldAddMod = true;
-						}
-					} else {
-						shouldAddMod = true;
-					}
-
-					if (shouldAddMod) {
-						Mod mod = currentModInfoFillOutResult.getPayload();
-						currentModInfoFillOutResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
-						mod.setLoadPriority(UI_SERVICE.getCurrentModList().size() + 1);
-						UI_SERVICE.getCurrentModList().add(mod);
-						successfulScrapes++;
-						modTable.sort();
-						UI_SERVICE.logPrivate(currentModInfoFillOutResult);
-					}
-				} else {
-					failedScrapes++;
-					UI_SERVICE.log(currentModInfoFillOutResult);
-				}
-			}
+			modTable.sort();
 
 			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-			for (Result<Mod> modResult : modInfoFillOutResults) {
-				if (modResult.isSuccess()) {
-					modTable.getSelectionModel().clearSelection();
-					modTable.getSelectionModel().select(modResult.getPayload());
-					modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
-					break;
-				}
+			if(topMostMod != null) {
+				modTable.getSelectionModel().clearSelection();
+				modTable.getSelectionModel().select(topMostMod);
+				modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
 			}
 
-			if (modList.size() == 1) {
-				if (modInfoFillOutResults.getFirst().getType() != ResultType.REQUIRES_ADJUDICATION) {
-					Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), STAGE);
-				}
-			} else {
-				String modFillOutResultMessage = successfulScrapes + " mods were successfully added. " +
-						failedScrapes + " failed to be added. Check the log for more information for each specific mod.";
-				UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
-			}
-
-			UI_SERVICE.getCurrentModProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
 			UI_SERVICE.saveUserData();
 
-			//TODO: We might just want to disable the progress pane stuff entirely. Needs user testing. UX question.
 			//Reset our UI settings for the mod progress
 			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
 			fadeTransition.setFromValue(1d);

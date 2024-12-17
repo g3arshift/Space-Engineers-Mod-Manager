@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public class ModTableContextBarView {
 
 	@FXML
 	@Getter
-	private ComboBox<ModProfile> modProfileDropdown;
+	private ComboBox<ModlistProfile> modProfileDropdown;
 
 	@FXML
 	@Getter
@@ -149,16 +150,17 @@ public class ModTableContextBarView {
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell());
-		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell());
-		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell()));
+		String themeName = UI_SERVICE.getUSER_CONFIGURATION().getUserTheme();
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(themeName));
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName));
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName)));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
 
-		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell());
-		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell());
-		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell()));
+		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(themeName));
+		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName));
+		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName)));
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 
@@ -176,12 +178,12 @@ public class ModTableContextBarView {
 		});
 		modProfileDropdown.setConverter(new StringConverter<>() {
 			@Override
-			public String toString(ModProfile modProfile) {
-				return modProfile.getProfileName();
+			public String toString(ModlistProfile modlistProfile) {
+				return modlistProfile.getProfileName();
 			}
 
 			@Override
-			public ModProfile fromString(String s) {
+			public ModlistProfile fromString(String s) {
 				return null;
 			}
 		});
@@ -287,11 +289,11 @@ public class ModTableContextBarView {
 
 	@FXML
 	private void selectModProfile() {
-		ModProfile modProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
+		ModlistProfile modlistProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
 
 		clearSearchBox();
 
-		UI_SERVICE.setCurrentModProfile(modProfile);
+		UI_SERVICE.setCurrentModlistProfile(modlistProfile);
 		MODLIST_MANAGER_VIEW.updateModTableContents();
 	}
 

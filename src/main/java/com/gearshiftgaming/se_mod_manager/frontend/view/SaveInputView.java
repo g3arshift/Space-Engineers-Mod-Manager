@@ -167,4 +167,8 @@ public class SaveInputView {
 	public void setAddSaveButtonText(String text) {
 		this.addSave.setText(text);
 	}
+
+	public void resetSelectedSave() {
+		this.selectedSave = null;
+	}
 }

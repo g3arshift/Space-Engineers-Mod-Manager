@@ -1,9 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Platform;
@@ -31,7 +32,7 @@ import java.util.Properties;
 public class ModProfileManagerView {
 
 	@FXML
-	private ListView<ModProfile> profileList;
+	private ListView<ModlistProfile> profileList;
 
 	@FXML
 	private Button createNewProfile;
@@ -60,7 +61,7 @@ public class ModProfileManagerView {
 
 	private ModTableContextBarView modTableContextBarView;
 
-	private final ObservableList<ModProfile> MOD_PROFILES;
+	private final ObservableList<ModlistProfile> MOD_PROFILES;
 
 	public ModProfileManagerView(UiService UI_SERVICE, SimpleInputView PROFILE_INPUT_VIEW) {
 		this.UI_SERVICE = UI_SERVICE;
@@ -81,7 +82,7 @@ public class ModProfileManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		profileList.setItems(MOD_PROFILES);
-		profileList.setCellFactory(param -> new ModProfileManagerCell());
+		profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
 
 		profileList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -94,23 +95,7 @@ public class ModProfileManagerView {
 
 	@FXML
 	private void createNewProfile() {
-		boolean duplicateProfileName;
-
-		do {
-			PROFILE_INPUT_VIEW.getInput().requestFocus();
-			PROFILE_INPUT_VIEW.show();
-			ModProfile newModProfile = new ModProfile(PROFILE_INPUT_VIEW.getInput().getText());
-			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText());
-
-			if (duplicateProfileName) {
-				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-			} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-				MOD_PROFILES.add(newModProfile);
-				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
-				PROFILE_INPUT_VIEW.getInput().clear();
-				UI_SERVICE.saveUserData();
-			}
-		} while (duplicateProfileName);
+		ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
 	}
 
 	@FXML
@@ -124,7 +109,7 @@ public class ModProfileManagerView {
 			}
 		} while (duplicateProfileName);
 
-		ModProfile copyProfile = new ModProfile(profileList.getSelectionModel().getSelectedItem());
+		ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
 		copyProfile.setProfileName(copyProfileName);
 
 		MOD_PROFILES.add(copyProfile);
@@ -133,7 +118,7 @@ public class ModProfileManagerView {
 
 	@FXML
 	private void removeProfile() {
-		if (UI_SERVICE.getCurrentModProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+		if (UI_SERVICE.getCurrentModlistProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
 			Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
 		} else {
 			int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
@@ -188,7 +173,7 @@ public class ModProfileManagerView {
 
 	@FXML
 	private void selectProfile() {
-		UI_SERVICE.setCurrentModProfile(profileList.getSelectionModel().getSelectedItem());
+		UI_SERVICE.setCurrentModlistProfile(profileList.getSelectionModel().getSelectedItem());
 		modTableContextBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
 	}
 

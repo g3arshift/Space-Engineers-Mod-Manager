@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
@@ -19,12 +20,12 @@ import javafx.scene.text.Text;
  */
 public class ModProfileDropdownItemCell extends ModProfileCell {
 
-	public ModProfileDropdownItemCell() {
-		super("");
+	public ModProfileDropdownItemCell(String themeName) {
+		super("", themeName);
 	}
 
 	@Override
-	protected void updateItem(ModProfile item, boolean empty) {
+	protected void updateItem(ModlistProfile item, boolean empty) {
 		super.updateItem(item, empty);
 		if(empty || item == null) {
 			setGraphic(null);

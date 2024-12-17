@@ -1,30 +1,33 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 
@@ -59,10 +62,28 @@ public class SaveManagerView {
 	private Button closeSaveWindow;
 
 	@FXML
-	private Pane operationInProgressDimmer;
+	private StackPane modImportProgressPanel;
 
 	@FXML
-	private ProgressIndicator progressIndicator;
+	private ProgressBar modImportProgressBar;
+
+	@FXML
+	private Label modImportProgressDenominator;
+
+	@FXML
+	private Label modImportProgressDivider;
+
+	@FXML
+	private Label modImportProgressNumerator;
+
+	@FXML
+	private Label modImportProgressActionName;
+
+	@FXML
+	private Label saveCopyMessage;
+
+	@FXML
+	private ProgressIndicator modImportProgressWheel;
 
 	private Stage stage;
 
@@ -97,11 +118,17 @@ public class SaveManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		saveList.setItems(SAVE_PROFILES);
-		saveList.setCellFactory(param -> new SaveProfileManagerCell());
+		saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
 
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
+		modImportProgressNumerator.textProperty().bind(UI_SERVICE.getModImportProgressNumeratorProperty().asString());
+		modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
+		modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
+
 		stage.setScene(scene);
+
+		saveCopyMessage.setVisible(false);
 
 		stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
 
@@ -111,7 +138,7 @@ public class SaveManagerView {
 	@FXML
 	private void addSave() throws IOException {
 		boolean duplicateSavePath = false;
-		Result<SaveProfile> saveProfileResult = new Result<>();
+		Result<SaveProfile> saveProfileResult;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
 			SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
@@ -120,13 +147,17 @@ public class SaveManagerView {
 			File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
 			if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
 				saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
+			} else {
+				saveProfileResult = new Result<>();
 			}
+
 			if (saveProfileResult.isSuccess()) {
 				SaveProfile saveProfile = saveProfileResult.getPayload();
 				duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
 
 				if (duplicateSavePath) {
 					Popup.displaySimpleAlert("Save is already being managed!", stage, MessageType.WARN);
+					SAVE_INPUT_VIEW.resetSelectedSave();
 				} else {
 					//Remove the default save profile that isn't actually a profile if it's all that we have in the list.
 					boolean duplicateProfileName;
@@ -134,7 +165,7 @@ public class SaveManagerView {
 						PROFILE_INPUT_VIEW.getInput().clear();
 						PROFILE_INPUT_VIEW.getInput().requestFocus();
 						PROFILE_INPUT_VIEW.show();
-						duplicateProfileName = profileNameAlreadyExists(PROFILE_INPUT_VIEW.getInput().getText());
+						duplicateProfileName = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
 
 						if (duplicateProfileName) {
 							Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
@@ -143,9 +174,6 @@ public class SaveManagerView {
 							if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
 								saveProfile.setSaveExists(true);
 								SAVE_PROFILES.set(0, saveProfile);
-								UI_SERVICE.setCurrentSaveProfile(saveProfile);
-
-								saveList.refresh();
 							} else {
 								SAVE_PROFILES.add(saveProfile);
 								saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
@@ -153,6 +181,31 @@ public class SaveManagerView {
 
 								PROFILE_INPUT_VIEW.getInput().clear();
 							}
+
+							int addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
+							if (addExistingModsChoice == 1) {
+								int addExistingModsLocationChoice = Popup.displayThreeChoiceDialog("Which modlist do you want to add the mods in the save to?",
+										stage, MessageType.INFO, "Current Modlist", "New Modlist", "Cancel");
+								if (addExistingModsLocationChoice != 0) {
+									if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
+										String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
+										if (!newProfileName.isEmpty()) {
+											Optional<ModlistProfile> modlistProfile = UI_SERVICE.getMOD_PROFILES().stream()
+													.filter(modlistProfile1 -> modlistProfile1.getProfileName().equals(newProfileName))
+													.findFirst();
+											modlistProfile.ifPresent(profile -> modTableContextBarView.getModProfileDropdown().getSelectionModel().select(profile));
+											importExistingModlist(selectedSave);
+										}
+									} else {
+										importExistingModlist(selectedSave);
+									}
+								}
+							}
+
+							saveList.refresh();
+							modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
+							modTableContextBarView.getSaveProfileDropdown().fireEvent(new ActionEvent());
+
 							UI_SERVICE.saveUserData();
 						}
 					} while (duplicateProfileName);
@@ -164,16 +217,47 @@ public class SaveManagerView {
 		PROFILE_INPUT_VIEW.getInput().clear();
 	}
 
+	private void importExistingModlist(final File selectedSave) {
+		Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, stage);
+		if (existingModlistResult.isSuccess()) {
+			importModlist(existingModlistResult.getPayload()).start();
+		}
+	}
+
+	private @NotNull Thread importModlist(List<Mod> modList) {
+		final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
+
+		TASK.setOnRunning(workerStateEvent -> {
+			disableUserInput(true);
+			modImportProgressPanel.setVisible(true);
+		});
+
+		TASK.setOnSucceeded(workerStateEvent -> {
+			ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
+			UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.saveUserData();
+
+			Platform.runLater(() -> {
+				FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+				fadeTransition.setFromValue(1d);
+				fadeTransition.setToValue(0d);
+
+				fadeTransition.setOnFinished(actionEvent -> resetProgressUi());
+
+				fadeTransition.play();
+			});
+		});
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
+	}
+
 	@FXML
 	private void copySave() {
 		if (saveList.getSelectionModel().getSelectedItem() != null) {
 			if (saveList.getSelectionModel().getSelectedItem().isSaveExists()) {
-
-				operationInProgressDimmer.setVisible(true);
-				progressIndicator.setVisible(true);
-				saveList.setMouseTransparent(true);
-				Thread copyThread = getCopyThread();
-				copyThread.start();
+				getCopyThread().start();
 			} else {
 				Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
 			}
@@ -191,20 +275,33 @@ public class SaveManagerView {
 			}
 		};
 
+		TASK.setOnRunning(workerStateEvent -> {
+			disableModImportBar(true);
+			disableSaveCopyBar(false);
+			modImportProgressPanel.setVisible(true);
+			disableUserInput(true);
+		});
+
 		TASK.setOnSucceeded(event -> Platform.runLater(() -> {
+			saveCopyMessage.setText("Finished!");
+			UI_SERVICE.getModImportProgressPercentageProperty().setValue(1d);
+			modImportProgressWheel.setVisible(false);
 			Result<SaveProfile> profileCopyResult = TASK.getValue();
 
 			if (profileCopyResult.isSuccess()) {
 				SAVE_PROFILES.add(profileCopyResult.getPayload());
-			} else {
 				Popup.displaySimpleAlert(profileCopyResult, stage);
 			}
 
 			UI_SERVICE.log(profileCopyResult);
-			operationInProgressDimmer.setVisible(false);
-			progressIndicator.setVisible(false);
-			saveList.setMouseTransparent(false);
 			UI_SERVICE.saveUserData();
+
+			FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+			fadeTransition.setFromValue(1d);
+			fadeTransition.setToValue(0d);
+
+			fadeTransition.setOnFinished(actionEvent -> Platform.runLater(this::resetProgressUi));
+			fadeTransition.play();
 		}));
 
 		Thread thread = Thread.ofVirtual().unstarted(TASK);
@@ -241,7 +338,7 @@ public class SaveManagerView {
 			PROFILE_INPUT_VIEW.show();
 
 			String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
-			if (profileNameAlreadyExists(newProfileName)) {
+			if (isDuplicateProfileName(newProfileName)) {
 				Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
 			} else if (!newProfileName.isBlank()) {
 				saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
@@ -269,7 +366,7 @@ public class SaveManagerView {
 				.anyMatch(saveProfile -> saveProfile.getSavePath() != null && saveProfile.getSavePath().equals(savePath));
 	}
 
-	private boolean profileNameAlreadyExists(String profileName) {
+	private boolean isDuplicateProfileName(String profileName) {
 		return SAVE_PROFILES.stream()
 				.anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
 	}
@@ -278,5 +375,37 @@ public class SaveManagerView {
 		stage.show();
 		TitleBarUtility.SetTitleBar(stage);
 		Platform.enterNestedEventLoop(stage);
+	}
+
+	private void disableModImportBar(boolean shouldDisable) {
+		modImportProgressActionName.setVisible(!shouldDisable);
+		modImportProgressNumerator.setVisible(!shouldDisable);
+		modImportProgressDivider.setVisible(!shouldDisable);
+		modImportProgressDenominator.setVisible(!shouldDisable);
+	}
+
+	private void disableSaveCopyBar(boolean shouldDisable) {
+		saveCopyMessage.setVisible(!shouldDisable);
+	}
+
+	private void disableUserInput(boolean shouldDisable) {
+		addSave.setDisable(shouldDisable);
+		copySave.setDisable(shouldDisable);
+		removeSave.setDisable(shouldDisable);
+		renameProfile.setDisable(shouldDisable);
+		selectSave.setDisable(shouldDisable);
+	}
+
+	private void resetProgressUi() {
+		saveCopyMessage.setText("Copying save...");
+		modImportProgressWheel.setVisible(true);
+		disableModImportBar(false);
+		disableSaveCopyBar(true);
+		modImportProgressPanel.setVisible(false);
+		disableUserInput(false);
+		modImportProgressPanel.setOpacity(1d);
+		UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);
+		UI_SERVICE.getModImportProgressDenominatorProperty().setValue(0);
+		UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
 	}
 }
