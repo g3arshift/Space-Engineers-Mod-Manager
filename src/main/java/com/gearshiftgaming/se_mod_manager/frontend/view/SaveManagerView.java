@@ -118,7 +118,7 @@ public class SaveManagerView {
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
 		saveList.setItems(SAVE_PROFILES);
-		saveList.setCellFactory(param -> new SaveProfileManagerCell());
+		saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
 
 		saveList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -138,7 +138,7 @@ public class SaveManagerView {
 	@FXML
 	private void addSave() throws IOException {
 		boolean duplicateSavePath = false;
-		Result<SaveProfile> saveProfileResult = new Result<>();
+		Result<SaveProfile> saveProfileResult;
 		//Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
 		do {
 			SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");

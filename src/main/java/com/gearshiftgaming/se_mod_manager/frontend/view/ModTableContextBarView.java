@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -149,16 +150,17 @@ public class ModTableContextBarView {
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
 		saveProfileDropdown.getSelectionModel().selectFirst();
 
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell());
-		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell());
-		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell()));
+		String themeName = UI_SERVICE.getUSER_CONFIGURATION().getUserTheme();
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(themeName));
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName));
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName)));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
 
-		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell());
-		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell());
-		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell()));
+		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(themeName));
+		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName));
+		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName)));
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 

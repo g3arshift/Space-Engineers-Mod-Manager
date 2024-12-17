@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import javafx.scene.control.Tooltip;
 
@@ -14,12 +15,11 @@ import javafx.scene.control.Tooltip;
 public class SaveProfileDropdownItemCell extends SaveProfileCell {
 
 
-	public SaveProfileDropdownItemCell() {
-		super("");
+	public SaveProfileDropdownItemCell(String themeName) {
+		super("", themeName);
 	}
 
 	@Override
-	//TODO: Extract to helper class
 	protected void updateItem(SaveProfile item, boolean empty) {
 		super.updateItem(item, empty);
 		if (empty || item == null) {
@@ -30,7 +30,6 @@ public class SaveProfileDropdownItemCell extends SaveProfileCell {
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
 			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsis(item.getProfileName(), 240));
 
-			//TODO: We need the profile name to actually get ellipsis functionality
 			if(!item.isSaveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
 				getPROFILE_NAME().setStrikethrough(true);
