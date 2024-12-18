@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -77,7 +78,7 @@ public class UserDataServiceTest {
 	}
 
 	@Test
-	void shouldSaveUserData() {
+	void shouldSaveUserData() throws IOException {
 		File goodUserDataFile = new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml");
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
@@ -90,7 +91,7 @@ public class UserDataServiceTest {
 	}
 
 	@Test
-	void shouldNotSaveUserData() {
+	void shouldNotSaveUserData() throws IOException {
 		File badUserDataFile = new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml");
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 

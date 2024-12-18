@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
+import java.io.IOException;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -29,7 +30,7 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
 		return result;
 	}
 
-	public Result<Void> saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {
+	public Result<Void> saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) throws IOException {
 		Result<Void> result = new Result<>();
 		if (userDataFileRepository().saveUserData(userConfiguration, userConfigurationFile)) {
 			result.addMessage("Successfully saved user data.", ResultType.SUCCESS);

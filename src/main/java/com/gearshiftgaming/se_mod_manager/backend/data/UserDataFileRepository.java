@@ -9,6 +9,8 @@ import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -34,7 +36,11 @@ public class UserDataFileRepository implements UserDataRepository {
         return userConfigurationResult;
     }
 
-    public boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) {
+    public boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) throws IOException {
+        if(!userConfigurationFile.exists()) {
+            Files.createDirectory(Path.of(userConfigurationFile.getParent()));
+        }
+
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(userConfigurationFile))) {
             JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
             Marshaller marshaller = context.createMarshaller();
