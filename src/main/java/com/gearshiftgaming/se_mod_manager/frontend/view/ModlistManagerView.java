@@ -293,12 +293,12 @@ public class ModlistManagerView {
 			}
 		});
 
-		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_primer-light.css");
+		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+		modDescription.getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_primer-light.css")).toExternalForm());
 		modDescriptionBackground.setStyle("-fx-border-color: -color-border-default; -fx-border-width:1px");
 		modDescription.setContextMenuEnabled(false);
 
-		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+		modDescription.getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toExternalForm());
 
 		//This is here to make it so we can prevent users from clicking on the purely display option "Add mods from...", while also making it clear it's not a valid option.
 		modImportDropdown.setCellFactory(param -> new ListCell<>() {

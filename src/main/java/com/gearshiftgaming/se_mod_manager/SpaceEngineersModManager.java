@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,9 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -32,6 +36,7 @@ public class SpaceEngineersModManager extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+		loadIconsForStage(primaryStage);
 		new ViewController(primaryStage, LOGGER);
 		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
 			try {
@@ -55,6 +60,19 @@ public class SpaceEngineersModManager extends Application {
 			Popup.displaySimpleAlert("An unexpected error was encountered and the application will now exit. " +
 					"Please submit a bug report along with your SEMM.log file located in the logs folder to the below link.", "https://spaceengineersmodmanager.com/bugreport", MessageType.ERROR);
 			throw e;
+		}
+	}
+	private static void loadIconsForStage(Stage stage) throws IOException {
+		String appDir = System.getProperty("app.dir");
+		if (appDir == null)
+			return;
+		Path iconsDir = Paths.get(appDir);
+		try (var dirEntries = Files.newDirectoryStream(iconsDir, "icon-*.png")) {
+			for (Path iconFile : dirEntries) {
+				try (var icon = Files.newInputStream(iconFile)) {
+					stage.getIcons().add(new Image(icon));
+				}
+			}
 		}
 	}
 }

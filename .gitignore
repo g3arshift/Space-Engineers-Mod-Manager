@@ -66,3 +66,4 @@ build/
 /.idea/
 /Storage/SEMM_Data.BACKUP
 /scenicView.properties
+/dependency-reduced-pom.xml

@@ -20,6 +20,8 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -143,10 +145,11 @@ public class MainWindowView {
 		//ScenicView.show(scene);
 
 		//Add title and icon to the stage
-		MavenXpp3Reader reader = new MavenXpp3Reader();
-		Model model = reader.read(new FileReader("pom.xml"));
-
-		STAGE.setTitle("SEMM v" + model.getVersion());
+		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("pom.xml")) {
+			MavenXpp3Reader reader = new MavenXpp3Reader();
+			Model model = reader.read(new InputStreamReader(Objects.requireNonNull(inputStream)));
+			STAGE.setTitle("SEMM v" + model.getVersion());
+		}
 
 		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
 
