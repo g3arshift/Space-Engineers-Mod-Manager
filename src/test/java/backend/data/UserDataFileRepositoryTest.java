@@ -1,5 +1,6 @@
 package backend.data;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,9 @@ public class UserDataFileRepositoryTest {
 
 	@Test
 	void shouldGetValidConfig() throws JAXBException {
-		UserConfiguration validUserConfig = userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml"));
+		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml"));
+		assertTrue(userConfigurationResult.isSuccess());
+		UserConfiguration validUserConfig = userConfigurationResult.getPayload();
 		assertEquals("Primer Dark", validUserConfig.getUserTheme());
 		assertNull(validUserConfig.getLastUsedSaveProfileId());
 		assertEquals(1, validUserConfig.getModlistProfiles().size());
@@ -42,7 +45,12 @@ public class UserDataFileRepositoryTest {
 
 	@Test
 	void shouldFailOnInvalidUserConfig() throws JAXBException {
-		UserConfiguration badUserData = (userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
+		Result<UserConfiguration> userConfigurationResult = (userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
+		UserConfiguration badUserConfiguration = new UserConfiguration();
+		badUserConfiguration.setUserTheme("Primer Light");
+		userConfigurationResult.setPayload(badUserConfiguration);
+		assertFalse(userConfigurationResult.isSuccess());
+		UserConfiguration badUserData = userConfigurationResult.getPayload();
 		assertEquals("Primer Light", badUserData.getUserTheme());
 		assertNull(badUserData.getLastUsedSaveProfileId());
 		assertEquals(1, badUserData.getModlistProfiles().size());

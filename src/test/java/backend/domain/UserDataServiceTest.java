@@ -2,16 +2,17 @@ package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,12 +38,12 @@ public class UserDataServiceTest {
 	}
 
 	@Test
-	void shouldGetNewConfigFromNonExistentUSerDataFile() throws JAXBException {
+	void shouldGetNewConfigFromNonExistentUserDataFile() throws JAXBException {
 		Result<UserConfiguration> result = userDataService.getUserData(new File("src/this/file/does/not/exist"));
 
 		UserConfiguration userData = result.getPayload();
 		assertEquals(ResultType.FAILED, result.getType());
-		assertEquals("Could not load user data. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
+		assertEquals("User data was not found. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
 		assertEquals("Primer Light", userData.getUserTheme());
 		assertNull(userData.getLastUsedSaveProfileId());
 		assertEquals(1, userData.getModlistProfiles().size());
@@ -56,8 +57,11 @@ public class UserDataServiceTest {
 
 		UserConfiguration goodUserConfig = new UserConfiguration();
 		goodUserConfig.setUserTheme("Primer Dark");
+		Result<UserConfiguration> goodResult = new Result<>();
+		goodResult.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
+		goodResult.setPayload(goodUserConfig);
 
-		when(userDataFileRepository.loadUserData(goodUserDataFile)).thenReturn(goodUserConfig);
+		when(userDataFileRepository.loadUserData(goodUserDataFile)).thenReturn(goodResult);
 
 		Result<UserConfiguration> result = userDataService.getUserData(goodUserDataFile);
 

@@ -1,8 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import javafx.scene.control.Tooltip;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved

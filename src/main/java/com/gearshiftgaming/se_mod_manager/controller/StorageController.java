@@ -2,9 +2,9 @@ package com.gearshiftgaming.se_mod_manager.controller;
 
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;

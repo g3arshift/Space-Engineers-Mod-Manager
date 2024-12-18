@@ -6,7 +6,6 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileReposito
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;

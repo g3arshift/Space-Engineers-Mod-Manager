@@ -1,10 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
@@ -23,7 +23,6 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
