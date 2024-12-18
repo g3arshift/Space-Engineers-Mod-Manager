@@ -91,7 +91,7 @@ public class ModImportUtility {
 			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			PROFILE_INPUT_VIEW.show();
 			ModlistProfile newModlistProfile = new ModlistProfile(PROFILE_INPUT_VIEW.getInput().getText());
-			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText(), UI_SERVICE);
+			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText().toLowerCase().trim(), UI_SERVICE);
 
 			if (duplicateProfileName) {
 				Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);

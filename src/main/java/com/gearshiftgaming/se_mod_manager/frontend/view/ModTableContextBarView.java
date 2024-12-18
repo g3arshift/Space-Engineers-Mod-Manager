@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -270,7 +271,7 @@ public class ModTableContextBarView {
 				modConflictBox.setStroke(getThemeBoxColor());
 
 				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
 				TitleBarUtility.SetTitleBar(STAGE);
 			}
