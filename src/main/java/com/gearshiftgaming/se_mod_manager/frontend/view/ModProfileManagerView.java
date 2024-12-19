@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -76,7 +77,7 @@ public class ModProfileManagerView {
 		stage.initModality(Modality.APPLICATION_MODAL);
 
 		stage.setTitle("Mod Profile Manager");
-		stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+		WindowDressingUtility.appendStageIcon(stage);
 
 		stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
 		stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));

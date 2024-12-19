@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -151,7 +152,7 @@ public class MainWindowView {
 			STAGE.setTitle("SEMM v" + model.getVersion());
 		}
 
-		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+		WindowDressingUtility.appendStageIcon(STAGE);
 
 		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
 		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {

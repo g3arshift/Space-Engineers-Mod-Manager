@@ -6,8 +6,8 @@
 
     <groupId>com.gearshiftgaming.se_mod_manager</groupId>
     <artifactId>Space-Engineers-Mod-Manager</artifactId>
-    <version>0.1.0</version>
-    <name>Space Engineers Mod Manager</name>
+    <version>0.1.0.1</version>
+    <name>Space-Engineers-Mod-Manager</name>
     <description>A utility to manage mods for the game Space Engineers</description>
     <licenses>
         <license>
@@ -38,79 +38,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.9.23</kotlin.version>
     </properties>
-    <profiles>
-        <profile>
-            <id>linux-x86_64</id>
-            <activation>
-                <os>
-                    <name>linux</name>
-                    <arch>amd64</arch>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>linux</javafx.platform>
-            </properties>
-        </profile>
-        <profile>
-            <id>linux-aarch64</id>
-            <activation>
-                <os>
-                    <name>linux</name>
-                    <arch>aarch64</arch>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>linux-aarch64</javafx.platform>
-            </properties>
-        </profile>
-        <profile>
-            <id>macosx-x86_64</id>
-            <activation>
-                <os>
-                    <name>mac os x</name>
-                    <arch>x86_64</arch>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>mac</javafx.platform>
-            </properties>
-        </profile>
-        <profile>
-            <id>macosx-aarch64</id>
-            <activation>
-                <os>
-                    <name>mac os x</name>
-                    <arch>aarch64</arch>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>mac-aarch64</javafx.platform>
-            </properties>
-        </profile>
-        <profile>
-            <id>windows-x86_64</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                    <arch>amd64</arch>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>win</javafx.platform>
-            </properties>
-        </profile>
-        <profile>
-            <id>javafx.platform.custom</id>
-            <activation>
-                <property>
-                    <name>javafx.platform</name>
-                </property>
-            </activation>
-            <properties>
-                <javafx.platform>${javafx.platform}</javafx.platform>
-            </properties>
-        </profile>
-    </profiles>
     <repositories>
         <repository>
             <id>openjfx</id>
@@ -123,7 +50,6 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.17.0</version>
         </dependency>
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -278,6 +204,11 @@
             <version>4.0.5</version>
         </dependency>
         <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>4.0.5</version>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>RELEASE</version>
@@ -294,6 +225,25 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jlink-plugin</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.27.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.iq80.snappy</groupId>
+            <artifactId>snappy</artifactId>
+            <version>0.5</version>
+        </dependency>
+
+
+
     </dependencies>
     <build>
         <resources>
@@ -314,26 +264,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/classpath-jars</outputDirectory>
-                            <includeScope>runtime</includeScope>
-
-                            <!-- Exclude JavaFX because we'll get that from JMODs if we need to. -->
-                            <excludeGroupIds>org.openjfx</excludeGroupIds>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.0</version>
                 <executions>
@@ -342,6 +272,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <finalName>${project.name}</finalName>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
@@ -374,10 +305,11 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
+                            <compress>2</compress>
                             <mainClass>com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager</mainClass>
-                            <launcher>app</launcher>
-                            <jlinkZipName>app</jlinkZipName>
-                            <jlinkImageName>app</jlinkImageName>
+                            <launcher>Space-Engineers-Mod-Manager</launcher>
+                            <jlinkZipName>Space-Engineers-Mod-Manager</jlinkZipName>
+                            <jlinkImageName>Space-Engineers-Mod-Manager</jlinkImageName>
                             <noManPages>true</noManPages>
                             <stripDebug>true</stripDebug>
                             <noHeaderFiles>true</noHeaderFiles>
@@ -432,6 +364,13 @@
                     <fork>true</fork>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <annotationProcessorPaths>
+                        <annotationProcessorPath>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </annotationProcessorPath>
+                    </annotationProcessorPaths>
                 </configuration>
                 <version>3.13.0</version>
                 <executions>
