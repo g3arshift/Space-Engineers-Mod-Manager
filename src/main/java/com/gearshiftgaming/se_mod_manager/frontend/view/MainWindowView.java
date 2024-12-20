@@ -17,7 +17,6 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -83,7 +82,7 @@ public class MainWindowView {
 		this.STATUS_BAR_VIEW = statusBarView;
 	}
 
-	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
 		CONTEXT_BAR_VIEW.initView();
@@ -127,7 +126,7 @@ public class MainWindowView {
 	/**
 	 * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
 	 */
-	private void setupWindow(Parent root) throws IOException, XmlPullParserException {
+	private void setupWindow(Parent root) throws IOException {
 		this.scene = new Scene(root);
 		//Prepare the scene
 		int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));
@@ -146,11 +145,7 @@ public class MainWindowView {
 		//ScenicView.show(scene);
 
 		//Add title and icon to the stage
-		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("pom.xml")) {
-			MavenXpp3Reader reader = new MavenXpp3Reader();
-			Model model = reader.read(new InputStreamReader(Objects.requireNonNull(inputStream)));
-			STAGE.setTitle("SEMM v" + model.getVersion());
-		}
+		STAGE.setTitle("SEMM v-" + getClass().getPackage().getImplementationVersion());
 
 		WindowDressingUtility.appendStageIcon(STAGE);
 
