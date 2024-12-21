@@ -1,7 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
-import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;

@@ -1,9 +1,14 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.

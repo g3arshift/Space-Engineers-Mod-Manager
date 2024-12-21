@@ -13,6 +13,9 @@ target/
 *.iml
 *.ipr
 
+### Conveyor ###
+.output/*
+
 ### Eclipse ###
 .apt_generated
 .classpath
@@ -37,6 +40,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Conveyor ###
+/output/
 
 ### Etc ###
 /Todo.md
@@ -66,3 +72,5 @@ build/
 /.idea/
 /Storage/SEMM_Data.BACKUP
 /scenicView.properties
+/dependency-reduced-pom.xml
+/.gradle/

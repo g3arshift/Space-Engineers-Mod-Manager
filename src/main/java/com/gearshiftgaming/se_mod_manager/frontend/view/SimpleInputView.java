@@ -3,18 +3,18 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
-
-import javafx.scene.control.TextField;
 import lombok.Setter;
 
 import java.util.Objects;
@@ -55,8 +55,8 @@ public class SimpleInputView {
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        stage.setTitle("Save Profile name");
-        stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+        stage.setTitle("Profile Naming");
+        WindowDressingUtility.appendStageIcon(stage);
 
         stage.setScene(scene);
 

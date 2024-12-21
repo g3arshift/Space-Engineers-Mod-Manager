@@ -7,13 +7,16 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
 import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -31,7 +34,7 @@ public class SpaceEngineersModManager extends Application {
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws IOException, XmlPullParserException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void start(Stage primaryStage) throws IOException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		new ViewController(primaryStage, LOGGER);
 		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
 			try {

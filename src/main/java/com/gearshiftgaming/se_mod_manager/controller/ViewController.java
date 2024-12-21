@@ -6,7 +6,6 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileReposito
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
@@ -20,7 +19,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +48,7 @@ public class ViewController {
 	private final UiService UI_SERVICE;
 
 	//TODO: Check for file locks to prevent two copies of the app from running simultaneously
-	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		logger.info("Started application");
 
 		PROPERTIES = new Properties();
@@ -110,7 +108,7 @@ public class ViewController {
 		}
 	}
 
-	private void setupInterface(Stage stage) throws IOException, XmlPullParserException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	private void setupInterface(Stage stage) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Manually inject our controllers into our FXML so we can reuse the FXML for the profile creation elsewhere, and have greater flexibility in controller injection and FXML initialization.
 		//This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
 		//The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.

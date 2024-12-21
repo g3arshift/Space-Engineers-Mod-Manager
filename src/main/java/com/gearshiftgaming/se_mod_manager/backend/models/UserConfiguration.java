@@ -6,13 +6,12 @@ import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
-import lombok.Setter;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.

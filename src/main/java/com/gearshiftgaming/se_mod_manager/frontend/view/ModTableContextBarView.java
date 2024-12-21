@@ -1,10 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
@@ -23,11 +23,11 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -271,7 +271,7 @@ public class ModTableContextBarView {
 				modConflictBox.setStroke(getThemeBoxColor());
 
 				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
 				TitleBarUtility.SetTitleBar(STAGE);
 			}

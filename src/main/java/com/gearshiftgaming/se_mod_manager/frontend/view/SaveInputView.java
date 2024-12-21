@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -71,9 +72,8 @@ public class SaveInputView {
 		stage.setScene(scene);
 
 		//Just a default. Usually gets overriden.
-		stage.setTitle("Add new SE save");
-
-		stage.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+		stage.setTitle("Save Selection");
+		WindowDressingUtility.appendStageIcon(stage);
 
 		saveName.setText(noSaveSelectedMessage);
 
@@ -131,7 +131,7 @@ public class SaveInputView {
 			fileChooser.setInitialDirectory(new File(APP_DATA_PATH));
 		}
 
-		fileChooser.setTitle("Select SE Save");
+		fileChooser.setTitle("Save Selection");
 		return fileChooser;
 	}
 

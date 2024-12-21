@@ -1,0 +1,42 @@
+name: Generate FatJar
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  build-gradle-project:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout project sources
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.5'
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      - name: Run customFatJar task
+        run: ./gradlew makeFatJar
+
+      - name: List contents of build/libs directory
+        run: ls -l build/libs
+
+      - name: Upload FatJar as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: customFatJarArtifact
+          path: ${{ github.workspace }}/build/libs/

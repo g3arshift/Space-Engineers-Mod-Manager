@@ -1,28 +1,32 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import lombok.Getter;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.scenicview.ScenicView;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
  * This represents the main window of the application, with a border pane at its core.
@@ -78,7 +82,7 @@ public class MainWindowView {
 		this.STATUS_BAR_VIEW = statusBarView;
 	}
 
-	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws XmlPullParserException, IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		//Prepare the UI
 		setupWindow(mainViewRoot);
 		CONTEXT_BAR_VIEW.initView();
@@ -122,7 +126,7 @@ public class MainWindowView {
 	/**
 	 * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
 	 */
-	private void setupWindow(Parent root) throws IOException, XmlPullParserException {
+	private void setupWindow(Parent root) throws IOException {
 		this.scene = new Scene(root);
 		//Prepare the scene
 		int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));
@@ -141,12 +145,16 @@ public class MainWindowView {
 		//ScenicView.show(scene);
 
 		//Add title and icon to the stage
-		MavenXpp3Reader reader = new MavenXpp3Reader();
-		Model model = reader.read(new FileReader("pom.xml"));
+		Properties versionProperties = new Properties();
+		try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("version.properties")) {
+			versionProperties.load(input);
+		} catch (IOException | NullPointerException e) {
+			UI_SERVICE.log(e);
+		}
 
-		STAGE.setTitle("SEMM v" + model.getVersion());
+		STAGE.setTitle("SEMM v" + versionProperties.getProperty("version"));
 
-		STAGE.getIcons().add(new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/icons/logo.png"))));
+		WindowDressingUtility.appendStageIcon(STAGE);
 
 		//Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
 		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {

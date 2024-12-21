@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
+import java.io.IOException;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -17,5 +18,5 @@ public interface UserDataRepository {
     Result<UserConfiguration> loadUserData(File userConfigurationFile) throws JAXBException;
 
     //TODO: Shouldn't be a file.
-    boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile);
+    boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) throws IOException;
 }

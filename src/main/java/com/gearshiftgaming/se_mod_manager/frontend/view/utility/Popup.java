@@ -536,7 +536,11 @@ public class Popup {
 		contents.setSpacing(10);
 
 		Scene scene = new Scene(contents);
-		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo.png"))));
+//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_128.png"))));
+//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_64.png"))));
+//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_32.png"))));
+//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_16.png"))));
+		WindowDressingUtility.appendStageIcon(childStage);
 		childStage.setResizable(false);
 
 		childStage.setScene(scene);

@@ -26,13 +26,16 @@ import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.*;
-import javafx.scene.control.*;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.skin.TableHeaderRow;
-import javafx.scene.input.*;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
@@ -55,8 +58,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -290,12 +293,12 @@ public class ModlistManagerView {
 			}
 		});
 
-		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_primer-light.css");
+		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+		modDescription.getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_primer-light.css")).toExternalForm());
 		modDescriptionBackground.setStyle("-fx-border-color: -color-border-default; -fx-border-width:1px");
 		modDescription.setContextMenuEnabled(false);
 
-		String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-		modDescription.getEngine().setUserStyleSheetLocation("file:src/main/resources/styles/mod-description_" + activeThemeName);
+		modDescription.getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toExternalForm());
 
 		//This is here to make it so we can prevent users from clicking on the purely display option "Add mods from...", while also making it clear it's not a valid option.
 		modImportDropdown.setCellFactory(param -> new ListCell<>() {

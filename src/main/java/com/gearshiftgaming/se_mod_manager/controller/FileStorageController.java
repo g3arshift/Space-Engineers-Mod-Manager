@@ -8,8 +8,6 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
@@ -46,9 +44,9 @@ public class FileStorageController implements StorageController {
 	public Result<UserConfiguration> getUserData() throws JAXBException {
 		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
 
-		if(userConfigurationResult.isSuccess()) {
-			for(ModlistProfile modlistProfile : userConfigurationResult.getPayload().getModlistProfiles()) {
-				for(int i = 0; i < modlistProfile.getModList().size(); i ++) {
+		if (userConfigurationResult.isSuccess()) {
+			for (ModlistProfile modlistProfile : userConfigurationResult.getPayload().getModlistProfiles()) {
+				for (int i = 0; i < modlistProfile.getModList().size(); i++) {
 					modlistProfile.getModList().get(i).setLoadPriority(i + 1);
 				}
 			}
@@ -71,7 +69,13 @@ public class FileStorageController implements StorageController {
 
 	//Sort our mod profile's mod list by loadPriority when we save so that load priority is preserved
 	public Result<Void> saveUserData(UserConfiguration userConfiguration) {
-		return USER_DATA_SERVICE.saveUserData(sortUserConfigurationModLists(userConfiguration), USER_CONFIGURATION_FILE);
+		Result<Void> saveResult = new Result<>();
+		try {
+			saveResult = USER_DATA_SERVICE.saveUserData(sortUserConfigurationModLists(userConfiguration), USER_CONFIGURATION_FILE);
+		} catch (IOException e) {
+			saveResult.addMessage(e.toString(), ResultType.FAILED);
+		}
+		return saveResult;
 	}
 
 	@Override
@@ -98,7 +102,7 @@ public class FileStorageController implements StorageController {
 	@Override
 	public Result<String> getSaveName(File sandboxConfigFile) throws IOException {
 		Result<String> sandboxfileResult = SANDBOX_SERVICE.getSandboxFromFile(sandboxConfigFile);
-		if(sandboxfileResult.isSuccess()) {
+		if (sandboxfileResult.isSuccess()) {
 			sandboxfileResult.setPayload(SAVE_SERVICE.getSessionName(sandboxfileResult.getPayload(), sandboxConfigFile.getPath()));
 		}
 		return sandboxfileResult;
@@ -152,7 +156,11 @@ public class FileStorageController implements StorageController {
 		userConfiguration.setUserTheme(theme.getName());
 
 		System.out.println("Created test user data.");
-		return USER_DATA_SERVICE.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
+		try {
+			return USER_DATA_SERVICE.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
