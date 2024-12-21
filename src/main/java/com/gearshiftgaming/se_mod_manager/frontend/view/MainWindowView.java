@@ -145,7 +145,14 @@ public class MainWindowView {
 		//ScenicView.show(scene);
 
 		//Add title and icon to the stage
-		STAGE.setTitle("SEMM v-" + getClass().getPackage().getImplementationVersion());
+		Properties versionProperties = new Properties();
+		try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("version.properties")) {
+			versionProperties.load(input);
+		} catch (IOException | NullPointerException e) {
+			UI_SERVICE.log(e);
+		}
+
+		STAGE.setTitle("SEMM v" + versionProperties.getProperty("version"));
 
 		WindowDressingUtility.appendStageIcon(STAGE);
 

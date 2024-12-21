@@ -56,15 +56,15 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.1.0.1'
+version = '0.1.0.2'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-tasks.withType(Javadoc) {
+tasks.withType(Javadoc).configureEach {
     options.encoding = 'UTF-8'
 }
 
@@ -77,3 +77,22 @@ tasks.register('makeFatJar', Jar) {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
+
+def generatedVersionDir = "./src/main/resources"
+
+sourceSets {
+    main {
+        output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
+    }
+}
+
+tasks.register('generateVersionProperties') {
+    doLast {
+        def propertiesFile = file "$generatedVersionDir/version.properties"
+        propertiesFile.parentFile.mkdirs()
+        def properties = new Properties()
+        properties.setProperty("version", rootProject.version.toString())
+        propertiesFile.withWriter { properties.store(it, null) }
+    }
+}
+processResources.dependsOn generateVersionProperties
