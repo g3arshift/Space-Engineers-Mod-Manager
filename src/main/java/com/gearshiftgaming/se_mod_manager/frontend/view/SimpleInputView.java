@@ -55,7 +55,7 @@ public class SimpleInputView {
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        stage.setTitle("Save Profile name");
+        stage.setTitle("Profile Naming");
         WindowDressingUtility.appendStageIcon(stage);
 
         stage.setScene(scene);
