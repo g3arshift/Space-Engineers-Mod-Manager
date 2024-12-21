@@ -3,7 +3,8 @@ name: Development Build
 on:
   pull_request:
     branches:
-      - save-importing-file
+      - main
+      - development/*
 
 permissions:
   contents: read
