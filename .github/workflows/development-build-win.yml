@@ -55,26 +55,38 @@ jobs:
 
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --name "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of SEMM directory
-        run: dir "Space Engineers Mod Manager"
+        run: dir "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}"
+
+      - name: Archive Release
+        uses: thedoctor0/zip-release@0.7.5
+        with:
+            type: "zip"
+            directory: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}"
+            filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: Create a Release
         uses: elgohr/Github-Release-Action@v5
         env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-            title: SEMM-win
-            tag: $VERSION_INFORMATION
+          title: SEMM-v${{ env.VERSION_INFORMATION }}-win
+          tag: ${{ env.VERSION_INFORMATION }}
 
-#      - name: Upload .exe to release
-#        if: success()
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }}
-#          asset_path: build/win/SEMM-win.exe
-#          asset_name: SEMM-win.exe
-#          asset_content_type: application/exe
+      - name: Upload Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+            artifacts: "SEMM-v${{ env.VERSION_INFORMATION }}.zip"
+            token: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ env.VERSION_INFORMATION }}
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+            asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+            tag: ${{ env.VERSION_INFORMATION }}
+            overwrite: true
