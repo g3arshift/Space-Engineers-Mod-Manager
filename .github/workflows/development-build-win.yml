@@ -43,9 +43,12 @@ jobs:
       - name: Get SEMM version
         run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q printVersionInformation)" >> $GITHUB_ENV
 
+      - name: Print SEMM version
+        run: echo $VERSION_INFORMATION
+
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{env.VERSION_INFORMATION}}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{env.VERSION_INFORMATION}} --icon "${GITHUB_WORKSPACE}\src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-$VERSION_INFORMATION.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version $VERSION_INFORMATION --icon "$GITHUB_WORKSPACE/src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of build/win directory
         run: dir build\win

@@ -29,7 +29,7 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
-      - name: Run customFatJar task
+      - name: Run makeFatJar task
         run: ./gradlew makeFatJar
 
       - name: List contents of build/libs directory
