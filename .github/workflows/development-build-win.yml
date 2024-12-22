@@ -27,11 +27,10 @@ jobs:
           file-path: 'src/main/resources/version.properties'
           keys: 'version'
       - name: Get the version
-        run: |
-          echo "VERSION_INFO=${{ steps.read-properties.outputs.version }}" >> $GITHUB_ENV
+        run: echo "VERSION_INFO=${{ steps.read-properties.outputs.version }}" >> $GITHUB_ENV
+
       - name: test env
-        run: |
-          echo "Version is $VERSION_INFO"
+        run: echo "Version is $VERSION_INFO"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
