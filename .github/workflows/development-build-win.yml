@@ -28,10 +28,10 @@ jobs:
           keys: 'version'
       - name: Get the version
         run: |
-          echo "VERSION_INFO=key1: ${{ steps.read-properties.outputs.version }}" >> $GITHUB_ENV
+          echo "VERSION_INFO=${{ steps.read-properties.outputs.version }}" >> $GITHUB_ENV
       - name: test env
         run: |
-          echo $VERSION_INFO
+          echo "Version is $VERSION_INFO"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -56,7 +56,7 @@ jobs:
 
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-$VERSION_INFO.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version $VERSION_INFO --icon "/src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar "Space-Engineers-Mod-Manager-$VERSION_INFO.jar" --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version "$VERSION_INFO" --icon "/src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of build/win directory
         run: dir build\win
