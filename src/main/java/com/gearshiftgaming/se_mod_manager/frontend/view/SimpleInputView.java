@@ -2,7 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -11,13 +11,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Objects;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -96,7 +93,7 @@ public class SimpleInputView {
     public void show() {
         stage.show();
         input.requestFocus();
-        TitleBarUtility.SetTitleBar(stage);
+        NativeWindowUtility.SetWindowsTitleBar(stage);
         Platform.enterNestedEventLoop(stage);
     }
 

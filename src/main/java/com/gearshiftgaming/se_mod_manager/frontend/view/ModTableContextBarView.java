@@ -10,7 +10,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButt
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -273,7 +273,7 @@ public class ModTableContextBarView {
 				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
 				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
-				TitleBarUtility.SetTitleBar(STAGE);
+				NativeWindowUtility.SetWindowsTitleBar(STAGE);
 			}
 		}
 

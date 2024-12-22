@@ -8,23 +8,30 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.jetbrains.annotations.NotNull;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -42,7 +49,8 @@ public class Popup {
 
 	/**
 	 * Displays a Yes/No dialog centered on a specific stage
-	 * @param message The message to display
+	 *
+	 * @param message     The message to display
 	 * @param parentStage The stage this will be centered on
 	 * @param messageType The type of message this is
 	 */
@@ -61,7 +69,7 @@ public class Popup {
 	/**
 	 * Displays a Yes/No dialog centered on the screen
 	 */
-	public static int displayYesNoDialog(String message, MessageType messageType) {
+	public static int displayYesNoDialog(String message, boolean undecorated, MessageType messageType) throws IOException {
 		Stage stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -69,11 +77,14 @@ public class Popup {
 		FontIcon messageIcon = new FontIcon();
 
 		getIconByMessageType(messageType, messageIcon, stage);
+		if (undecorated) {
+			stage.initStyle(StageStyle.UNDECORATED);
+		}
 
-		return yesNoDialog(stage, label, messageIcon);
+		return yesNoDialog(stage, undecorated, label, messageIcon);
 	}
 
-	public static <T> int displayYesNoDialog(Result<T> result) {
+	public static <T> int displayYesNoDialog(Result<T> result) throws IOException {
 		Stage stage = new Stage();
 		stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -81,11 +92,12 @@ public class Popup {
 		FontIcon messageIcon = new FontIcon();
 		setResultWindowDressing(result, stage, messageIcon);
 
-		return yesNoDialog(stage, label, messageIcon);
+		return yesNoDialog(stage, false, label, messageIcon);
 	}
 
 	/**
 	 * Displays a simple alert with only one option centered on a specific stage, with a result being the input
+	 *
 	 * @param parentStage The stage this popup will be centered on
 	 */
 	public static <T> void displaySimpleAlert(Result<T> result, Stage parentStage) {
@@ -140,6 +152,7 @@ public class Popup {
 
 	/**
 	 * Displays a simple alert with only one option centered on a specific stage
+	 *
 	 * @param parentStage The stage this popup will be centered on
 	 */
 	public static void displaySimpleAlert(String message, Stage parentStage, MessageType messageType) {
@@ -171,8 +184,9 @@ public class Popup {
 
 	/**
 	 * Displays a simple alert with only one option centered on the screen, with a clickable link for the end of the error message.
+	 *
 	 * @param message The message itself
-	 * @param link The link that will be displayed and clickable in the message
+	 * @param link    The link that will be displayed and clickable in the message
 	 */
 	public static void displaySimpleAlert(String message, String link, MessageType messageType) {
 		Stage stage = new Stage();
@@ -201,7 +215,8 @@ public class Popup {
 
 	/**
 	 * Creates a simple alert centered on a specific stage
-	 * @param childStage The stage popup will use for its own display
+	 *
+	 * @param childStage  The stage popup will use for its own display
 	 * @param parentStage The stage we will center the popup on
 	 */
 	private static void simpleAlert(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
@@ -215,6 +230,7 @@ public class Popup {
 
 	/**
 	 * Creates a simple alert centered on the screen
+	 *
 	 * @param childStage The stage popup will use for its own display
 	 */
 	private static void simpleAlert(Stage childStage, Label label, FontIcon messageIcon) {
@@ -228,8 +244,9 @@ public class Popup {
 
 	/**
 	 * Creates a simple alert centered on the screen, with a clickable link
+	 *
 	 * @param childStage The stage popup will use for its own display
-	 * @param link The link that will be displayed and clickable in the message
+	 * @param link       The link that will be displayed and clickable in the message
 	 */
 	private static void simpleAlert(Stage childStage, String message, String link, FontIcon messageIcon) {
 		HBox dialogBox = makeErrorDialogWithLink(message, link, messageIcon);
@@ -254,12 +271,18 @@ public class Popup {
 	}
 
 	//Creates a yes/no dialog centered the screen
-	private static int yesNoDialog(Stage childStage, Label label, FontIcon messageIcon) {
+	private static int yesNoDialog(Stage childStage, boolean undecorated, Label label, FontIcon messageIcon) throws IOException {
 		AtomicInteger choice = new AtomicInteger(-1);
 
-		HBox dialogBox = makeDialog(label, messageIcon);
+		HBox dialogBox;
 
 		HBox buttonBar = makeYesNoBar(choice, childStage);
+
+		if(undecorated) {
+			dialogBox = makeUndecoratedDialog(label, messageIcon);
+		} else {
+			dialogBox =  makeDialog(label, messageIcon);
+		}
 
 		createPopup(childStage, dialogBox, buttonBar);
 
@@ -268,13 +291,13 @@ public class Popup {
 
 	private static int threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
 		AtomicInteger choice = new AtomicInteger(-1);
-		
+
 		HBox dialogBox = makeDialog(label, messageIcon);
-		
+
 		HBox buttonBar = makeThreeChoiceBar(choice, childStage, leftButtonMessage, centerButtonMessage, rightButtonMessage);
-		
+
 		createPopup(childStage, parentStage, dialogBox, buttonBar);
-		
+
 		return choice.intValue();
 	}
 
@@ -282,7 +305,7 @@ public class Popup {
 		Button leftButton = new Button();
 		Button centerButton = new Button();
 		Button rightButton = new Button();
-		
+
 		leftButton.setText(leftButtonMessage);
 		centerButton.setText(centerButtonMessage);
 		rightButton.setText(rightButtonMessage);
@@ -435,6 +458,26 @@ public class Popup {
 
 	//Creates a dialog box message
 	private static HBox makeDialog(Label label, FontIcon messageIcon) {
+		return getDialogBox(label, messageIcon);
+	}
+
+	//Creates a dialog box message
+	private static HBox makeUndecoratedDialog(Label label, FontIcon messageIcon) {
+		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
+		Label title = new Label("Warning");
+
+		HBox titleBox = new HBox(new ImageView(logo), title);
+		titleBox.setAlignment(Pos.CENTER_LEFT);
+		titleBox.setPadding(new Insets(5, 0, 5, 5));
+		titleBox.setSpacing(5d);
+
+		VBox contentBox = new VBox(titleBox, getDialogBox(label, messageIcon));
+
+		return new HBox(contentBox);
+	}
+
+	@NotNull
+	private static HBox getDialogBox(Label label, FontIcon messageIcon) {
 		label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
 		messageIcon.getStyleClass().clear();
 		messageIcon.setIconSize(ICON_SIZE);
@@ -517,7 +560,7 @@ public class Popup {
 		centerStage(childStage, parentStage);
 
 		childStage.show();
-		TitleBarUtility.SetTitleBar(childStage);
+		NativeWindowUtility.SetWindowsTitleBar(childStage);
 		Platform.enterNestedEventLoop(childStage);
 	}
 
@@ -527,7 +570,7 @@ public class Popup {
 		centerStage(childStage);
 
 		childStage.show();
-		TitleBarUtility.SetTitleBar(childStage);
+		NativeWindowUtility.SetWindowsTitleBar(childStage);
 		Platform.enterNestedEventLoop(childStage);
 	}
 
@@ -536,10 +579,6 @@ public class Popup {
 		contents.setSpacing(10);
 
 		Scene scene = new Scene(contents);
-//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_128.png"))));
-//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_64.png"))));
-//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_32.png"))));
-//		childStage.getIcons().add(new Image(Objects.requireNonNull(Popup.class.getResourceAsStream("/icons/logo_16.png"))));
 		WindowDressingUtility.appendStageIcon(childStage);
 		childStage.setResizable(false);
 

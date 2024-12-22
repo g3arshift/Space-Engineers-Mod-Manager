@@ -6,7 +6,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -15,12 +15,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 
-import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -192,7 +190,7 @@ public class ModProfileManagerView {
 
 	public void show() {
 		stage.show();
-		TitleBarUtility.SetTitleBar(stage);
+		NativeWindowUtility.SetWindowsTitleBar(stage);
 		Platform.enterNestedEventLoop(stage);
 	}
 }
