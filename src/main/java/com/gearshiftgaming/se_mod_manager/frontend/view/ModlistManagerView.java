@@ -347,11 +347,6 @@ public class ModlistManagerView {
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
 		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
-		//Create a comparator for the date column so it sorts properly.
-//		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
-//				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
-
-		//TODO: This is returning unknown when we are loading the saved data from file for modio dates.
 		modLastUpdated.setCellValueFactory(cellData -> {
 			if (cellData.getValue() instanceof SteamMod steamMod) {
 				if (steamMod.getLastUpdated() != null) {
@@ -557,8 +552,8 @@ public class ModlistManagerView {
 	}
 
 	private void addModsFromFile() {
+		//TODO: Prompt the user for what kind of mods are in the file
 		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		//TODO: The actual adding to the modlist should happen here
 		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
 	}
 
@@ -1072,7 +1067,7 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	private @NotNull Thread importModlist(List<Mod> modList) {
+	public @NotNull Thread importModlist(List<Mod> modList) {
 		final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
 
 		TASK.setOnRunning(workerStateEvent -> {
@@ -1138,7 +1133,7 @@ public class ModlistManagerView {
 		modImportProgressDenominator.setVisible(!shouldDisable);
 	}
 
-	private void resetModImportProgressUi() {
+	public void resetModImportProgressUi() {
 		modImportProgressPanel.setVisible(false);
 		modImportProgressPanel.setOpacity(1d);
 		UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);
