@@ -29,6 +29,7 @@ jobs:
       - name: Get the version
         run: |
           echo "VERSION_INFO=key1: ${{ steps.read-properties.outputs.version }}" >> $GITHUB_ENV
+      - name: test env
         run: |
           echo $VERSION_INFO
 
