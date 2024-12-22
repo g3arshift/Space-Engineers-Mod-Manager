@@ -96,6 +96,7 @@ tasks.register('generateVersionProperties') {
     }
 }
 processResources.dependsOn generateVersionProperties
+compileJava.dependsOn generateVersionProperties
 
 tasks.register('printVersionInformation') {
     println(version)
