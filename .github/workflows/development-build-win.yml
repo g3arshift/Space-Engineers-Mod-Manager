@@ -64,8 +64,15 @@ jobs:
         uses: thedoctor0/zip-release@0.7.5
         with:
             type: "zip"
-            directory: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}"
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+
+      - name: Create a Release
+        uses: elgohr/Github-Release-Action@v5
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: SEMM-v${{ env.VERSION_INFORMATION }}-win
+          tag: ${{ env.VERSION_INFORMATION }}
 
       - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
@@ -75,3 +82,4 @@ jobs:
             asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
             tag: ${{ env.VERSION_INFORMATION }}
             overwrite: true
+            body: To use, extract the .zip folder to a directory and run the executable from there.
