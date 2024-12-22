@@ -21,6 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Test
+        run: ${{ github.event.workflow_run.head_commit.message }}
+
+      - name: test2
+        run: ${{ github.event.head_commit.message }}
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -42,9 +48,6 @@ jobs:
           keys: 'version'
       - name: Save app version
         run: Add-Content -Path ${env:GITHUB_ENV} -Value "VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}"
-
-      - name: Install WiX Toolset
-        run: choco install wixtoolset
 
       - name: Change wrapper permissions
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
