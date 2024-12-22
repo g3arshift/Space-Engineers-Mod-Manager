@@ -66,15 +66,6 @@ jobs:
             type: "zip"
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
-      - name: Check if tag exists
-        uses: mukunku/tag-exists-action@v1.6.0
-        id: check-tag
-        with:
-          tag: ${{ env.VERSION_INFORMATION }}
-
-      - name: Save tag status
-        run: Add-Content -Path ${env:GITHUB_ENV} -Value "TAG_EXISTS=steps.check-tag.outputs.exists"
-
       - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
         with:
