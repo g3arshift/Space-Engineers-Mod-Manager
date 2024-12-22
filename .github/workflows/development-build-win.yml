@@ -19,16 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read app version
-        uses: kurt-code/gha-properties@v0.0.1
-        id: read-properties
-        with:
-          operation: 'read'
-          file-path: 'src/main/resources/version.properties'
-          keys: 'version'
-      - name: Get the version
-        run: echo "VERSION_INFO=${{ steps.read-properties.outputs.version }}" >> $GITHUB_ENV
-
       - name: test env
         run: echo "Version is $VERSION_INFO"
 
@@ -53,9 +43,16 @@ jobs:
       - name: Make fat jar
         run: ./gradlew makeFatJar
 
+      - name: Read app version
+        uses: kurt-code/gha-properties@v0.0.1
+        id: read-properties
+        with:
+          operation: 'read'
+          file-path: 'src/main/resources/version.properties'
+          keys: 'version'
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar "Space-Engineers-Mod-Manager-$VERSION_INFO.jar" --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version "$VERSION_INFO" --icon "/src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar "Space-Engineers-Mod-Manager-${{ steps.read-properties.outputs.version }}.jar" --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version "${{ steps.read-properties.outputs.version }}" --icon "/src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of build/win directory
         run: dir build\win
