@@ -97,6 +97,6 @@ tasks.register('generateVersionProperties') {
 }
 processResources.dependsOn generateVersionProperties
 
-tasks.register('printVersionName') {
+tasks.register('printVersionInformation') {
     println(version)
 }
