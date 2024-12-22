@@ -71,4 +71,4 @@ jobs:
             asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
             tag: ${{ env.VERSION_INFORMATION }}
             overwrite: true
-            body: To use, extract the .zip folder to a directory and run the executable from there.
+            body: "${{ github.event.workflow_run.head_commit.message }} To use, extract the .zip folder to a directory and run the executable from there."
