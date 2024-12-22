@@ -38,7 +38,7 @@ jobs:
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
-        run: ./gradlew far-jar
+        run: ./gradlew makeFatJar
 
       - name: Check jpackage availability
         run: |
