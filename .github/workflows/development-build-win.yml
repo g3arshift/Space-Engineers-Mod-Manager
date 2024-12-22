@@ -6,7 +6,6 @@ on:
       - main
   push:
     branches:
-      - main
       - 'development/**'
 
 permissions:
@@ -63,9 +62,6 @@ jobs:
             type: "zip"
             directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
-
-      - name: List contents of SEMM directory
-        run: dir "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}"
 
       - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
