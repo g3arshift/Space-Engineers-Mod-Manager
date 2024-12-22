@@ -64,6 +64,7 @@ jobs:
         uses: thedoctor0/zip-release@0.7.5
         with:
             type: "zip"
+            directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: Upload archive to release
