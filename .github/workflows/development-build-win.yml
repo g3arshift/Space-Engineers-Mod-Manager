@@ -65,13 +65,13 @@ jobs:
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: List contents of SEMM directory
-        run: dir
+        run: dir/Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
 
       - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
         with:
             repo_token: ${{ secrets.GITHUB_TOKEN }}
-            file: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+            file: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
             asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
             tag: ${{ env.VERSION_INFORMATION }}
             overwrite: true
