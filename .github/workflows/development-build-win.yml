@@ -66,17 +66,18 @@ jobs:
             type: "zip"
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
-      - uses: mukunku/tag-exists-action@v1.6.0
+      - name: Check if tag exists
+        uses: mukunku/tag-exists-action@v1.6.0
         id: check-tag
         with:
           tag: ${{ env.VERSION_INFORMATION }}
 
-      - name: Check if tag exists
+      - name: Save tag status
         run: Add-Content -Path ${env:GITHUB_ENV} -Value "TAG_EXISTS=steps.check-tag.outputs.exists"
 
       - name: Create a Release
-        if: ${{ env.TAG_EXISTS }} == 'FALSE'
         uses: elgohr/Github-Release-Action@v5
+        if: ${{ env.TAG_EXISTS }} == 'FALSE'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
