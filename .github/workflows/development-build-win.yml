@@ -9,6 +9,9 @@ on:
       - main
       - 'development/**'
 
+env:
+  VERSION_INFORMATION: 0.0.0.0
+
 permissions:
   contents: read
 
@@ -31,6 +34,19 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      - name: Read app version
+        uses: kurt-code/gha-properties@v0.0.1
+        id: read-properties
+        with:
+          operation: 'read'
+          file-path: 'src/main/resources/version.properties'
+          keys: 'version'
+      - name: Save app version
+        run: echo "$VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}" >> "GITHUB_ENV"
+
+      - name: Test
+        run: echo $VERSION_INFORMATION
+
       - name: Install WiX Toolset
         run: choco install wixtoolset
 
@@ -40,38 +56,31 @@ jobs:
       - name: Make fat jar
         run: ./gradlew makeFatJar
 
-      - name: Read app version
-        uses: kurt-code/gha-properties@v0.0.1
-        id: read-properties
-        with:
-          operation: 'read'
-          file-path: 'src/main/resources/version.properties'
-          keys: 'version'
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{ steps.read-properties.outputs.version }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ steps.read-properties.outputs.version }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-$VERSION_INFORMATION.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version $VERSION_INFORMATION --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
-      - name: List contents of build/win directory
-        run: dir
+      - name: List contents of SEMM directory
+        run: dir "Space Engineers Mod Manager"
 
-#      - name: Create release
-#        id: create_release
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          tag_name: v1.0
-#          release_name: SEMM-win
-#          draft: false
-#          prerelease: false
-#
-#      - name: Upload .exe to release
-#        if: success()
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }}
-#          asset_path: build/win/SEMM-win.exe
-#          asset_name: SEMM-win.exe
-#          asset_content_type: application/exe
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0
+          release_name: SEMM-win
+          draft: false
+          prerelease: false
+
+      - name: Upload .exe to release
+        if: success()
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/win/SEMM-win.exe
+          asset_name: SEMM-win.exe
+          asset_content_type: application/exe
