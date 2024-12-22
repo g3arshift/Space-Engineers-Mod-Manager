@@ -19,40 +19,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'zulu'
-          java-package: 'jdk+fx'
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: '8.5'
-
-      - name: Install WiX Toolset
-        run: choco install wixtoolset
-
-      - name: Change wrapper permissions
-        run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
-
-      - name: Make fat jar
-        run: ./gradlew makeFatJar
-
-      - name: Read app version
-        uses: kurt-code/gha-properties@v0.0.1
-        id: read-properties
-        with:
-          operation: 'read'
-          file-path: 'src/main/resources/version.properties'
-          keys: 'version'
-      - name: Check jpackage availability
-        run: |
-          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{ steps.read-properties.outputs.version }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ steps.read-properties.outputs.version }} --icon "src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
+#      - name: Set up JDK 21
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '21'
+#          distribution: 'zulu'
+#          java-package: 'jdk+fx'
+#
+#      - name: Setup Gradle
+#        uses: gradle/gradle-build-action@v2
+#        with:
+#          gradle-version: '8.5'
+#
+#      - name: Install WiX Toolset
+#        run: choco install wixtoolset
+#
+#      - name: Change wrapper permissions
+#        run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
+#
+#      - name: Make fat jar
+#        run: ./gradlew makeFatJar
+#
+#      - name: Read app version
+#        uses: kurt-code/gha-properties@v0.0.1
+#        id: read-properties
+#        with:
+#          operation: 'read'
+#          file-path: 'src/main/resources/version.properties'
+#          keys: 'version'
+#      - name: Check jpackage availability
+#        run: |
+#          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{ steps.read-properties.outputs.version }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ steps.read-properties.outputs.version }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of build/win directory
-        run: dir build\win
+        run: dir
 
 #      - name: Create release
 #        id: create_release
