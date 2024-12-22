@@ -40,9 +40,19 @@ jobs:
       - name: Make fat jar
         run: ./gradlew makeFatJar
 
+      - name: Retrieve Version
+        run: |
+          echo "::set-output name=VERSION_NAME::$(${{github.workspace}}/gradlew -q printVersionName)"
+          id: semm_version
+
+      - name: Get version
+        run: |
+          echo "version_name=${{steps.semm_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
+
+
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --dest --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version 0.1.0.1 --icon "./src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --dest --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{env.version_name}}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{env.version_name}} --icon "./src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of build/win directory
         run: dir build\win

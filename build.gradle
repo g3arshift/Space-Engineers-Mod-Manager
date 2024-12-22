@@ -72,7 +72,7 @@ tasks.register('makeFatJar', Jar) {
     manifest {
         attributes 'Main-Class': 'com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager'
     }
-    archiveBaseName = 'SpaceEngineersModManager'
+    archiveBaseName = 'Space-Engineers-Mod-Manager'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
@@ -96,3 +96,7 @@ tasks.register('generateVersionProperties') {
     }
 }
 processResources.dependsOn generateVersionProperties
+
+tasks.register('printVersionName') {
+    println(version)
+}
