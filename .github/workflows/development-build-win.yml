@@ -20,17 +20,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Read app version
-        id: read_property
-        uses: christian-draeger/read-properties@1.1.1
+        uses: kurt-code/gha-properties@v0.0.1
+        id: read-properties
         with:
-          path: './src/main/resources/version.properties'
-          properties: 'version'
-      - name: Save app version
-        run: echo ${{ steps.read_property.outputs.version }}
-
-      - name: Get application version
-        uses: thecodemonkey/action-get-gradle-version@master
-        id: version
+          operation: 'read'
+          file-path: 'src/main/resources/version.properties'
+          keys: 'version'
+      - name: Get the version
+        run: |
+          echo "key1: ${{ steps.read-properties.outputs.version }}"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
