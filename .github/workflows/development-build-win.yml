@@ -45,7 +45,7 @@ jobs:
 
       - name: Check jpackage availability
         run: |
-          jpackage --input build\libs --dest --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{env.VERSION_INFORMATION}}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{env.VERSION_INFORMATION}} --icon "./src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
+          jpackage --input build\libs --name "Space Engineers Mod Manager" --main-jar Space-Engineers-Mod-Manager-${{env.VERSION_INFORMATION}}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{env.VERSION_INFORMATION}} --icon "./src/main/resources/icons/logo.ico" --vendor "Gear Shift Gaming"
 
       - name: List contents of build/win directory
         run: dir build\win
