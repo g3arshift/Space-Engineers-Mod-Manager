@@ -67,15 +67,7 @@ jobs:
             directory: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}"
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
-      - name: Create a Release
-        uses: elgohr/Github-Release-Action@v5
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          title: SEMM-v${{ env.VERSION_INFORMATION }}-win
-          tag: ${{ env.VERSION_INFORMATION }}
-
-      - name: Upload zip to release
+      - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
         with:
             repo_token: ${{ secrets.GITHUB_TOKEN }}
