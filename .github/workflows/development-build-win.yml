@@ -69,4 +69,5 @@ jobs:
             tag: ${{ env.VERSION_INFORMATION }}
             overwrite: true
             body: "${{ github.event.head_commit.message }}
+            
             To use, extract the .zip folder to a directory and run the executable from there."
