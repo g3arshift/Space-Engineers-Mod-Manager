@@ -15,11 +15,18 @@ permissions:
 jobs:
   build-gradle-project:
     runs-on: windows-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read app version
+        id: read_property
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: './src/main/resources/version.properties'
+          properties: 'version'
+      - name: Save app version
+        run: echo ${{ steps.read_property.outputs.version }}
 
       - name: Get application version
         uses: thecodemonkey/action-get-gradle-version@master
