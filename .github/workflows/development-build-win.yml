@@ -6,6 +6,7 @@ on:
       - main
   push:
     branches:
+      - main
       - 'development/**'
 
 permissions:
@@ -13,10 +14,7 @@ permissions:
 
 jobs:
   build-gradle-project:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +30,12 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: '8.5'
+
+      - name: Install WiX Toolset
+        run: choco install wixtoolset
+
+      - name: Change wrapper permissions
+        run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
         run: ./gradlew customFatJar
