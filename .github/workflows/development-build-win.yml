@@ -9,9 +9,6 @@ on:
       - main
       - 'development/**'
 
-env:
-  VERSION_INFORMATION: 0.0.0.0
-
 permissions:
   contents: read
 
@@ -42,10 +39,10 @@ jobs:
           file-path: 'src/main/resources/version.properties'
           keys: 'version'
       - name: Save app version
-        run: echo "$VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}" >> "GITHUB_ENV"
+        run: Add-Content -Path ${env:GITHUB_ENV} -Value "VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}"
 
       - name: Test
-        run: echo $VERSION_INFORMATION
+        run: echo ${{ env.VERSION_INFORMATION }}
 
       - name: Install WiX Toolset
         run: choco install wixtoolset
