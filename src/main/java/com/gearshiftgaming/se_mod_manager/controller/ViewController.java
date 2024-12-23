@@ -75,7 +75,7 @@ public class ViewController {
 			Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 			logger.error(userConfigurationResult.getCurrentMessage());
 			int choice = Popup.displayYesNoDialog("Failed to load existing user configuration, see log for details. " +
-					"Would you like to create a new user configuration and continue?", true, MessageType.WARN);
+					"Would you like to create a new user configuration and continue?", MessageType.WARN);
 			if(choice == 1) {
 				storageController.saveUserData(userConfiguration);
 			}

@@ -1,10 +1,12 @@
-name: Development Build
+name: Release build
 
 on:
   pull_request:
+    branches:
+      - 'main'
   push:
     branches:
-      - 'development/**'
+      - 'main'
 
 permissions:
   contents: read
@@ -54,16 +56,21 @@ jobs:
       - name: Archive Release
         uses: thedoctor0/zip-release@0.7.5
         with:
-            type: "zip"
-            directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
-            filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+          type: "zip"
+          directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
+          filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+
+      - name: "✏️ Generate release changelog"
+        uses: janheinrichmerker/action-github-changelog-generator@v2.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
         with:
-            repo_token: ${{ secrets.GITHUB_TOKEN }}
-            file: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
-            asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
-            tag: ${{ env.VERSION_INFORMATION }}
-            overwrite: true
-            body: "${{ github.event.head_commit.message }}\n\nTo use, extract the .zip folder to a directory and run the executable from there."
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+          asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+          tag: ${{ env.VERSION_INFORMATION }}
+          overwrite: true
+          #body: "${{ github.event.head_commit.message }}\n\nTo use, extract the .zip folder to a directory and run the executable from there."

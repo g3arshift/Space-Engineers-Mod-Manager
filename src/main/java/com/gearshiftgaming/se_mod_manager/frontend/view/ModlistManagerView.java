@@ -277,7 +277,7 @@ public class ModlistManagerView {
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
 
-		//Setup the mod description handlers
+		//Set up the mod description handlers
 		modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
 			Mod selectedMod = modTable.getSelectionModel().getSelectedItem();
 			if (selectedMod != null) {
