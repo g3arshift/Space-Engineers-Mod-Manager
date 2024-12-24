@@ -1,9 +1,13 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -50,5 +54,19 @@ public class ModlistManagerHelper {
 			default:
 				yield "#f8f8f2";
 		};
+	}
+
+	public static Result<Void> checkForDuplicateModIoMod(String modId, UiService uiService) {
+		Result<Void> duplicateModResult = new Result<>();
+		for (Mod mod : uiService.getCurrentModList()) {
+			if (mod instanceof ModIoMod) {
+				if (mod.getId().equals(modId)) {
+					duplicateModResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in the modlist!", ResultType.INVALID);
+					return duplicateModResult;
+				}
+			}
+		}
+		duplicateModResult.addMessage("No duplicate mods found.", ResultType.SUCCESS);
+		return duplicateModResult;
 	}
 }

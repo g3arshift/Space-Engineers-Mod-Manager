@@ -4,6 +4,7 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -437,10 +438,11 @@ public class UiService {
 
 	/**
 	 * Converts a list of Mod IO urls to their respective ID's.
+	 *
 	 * @param modUrls List of Mod.io url's
 	 * @return The task to perform the conversion.
 	 */
-	public Task<List<Result<String>>> convertModIoUrlListToStrings(List<String> modUrls) {
+	public Task<List<Result<String>>> convertModIoUrlListToIds(List<String> modUrls) {
 		List<Result<String>> modIdResults = new ArrayList<>();
 		return new Task<>() {
 			@Override
@@ -448,11 +450,27 @@ public class UiService {
 				List<Future<Result<String>>> futures = new ArrayList<>(modUrls.size());
 				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
 					for (String modUrl : modUrls) {
-						Future<Result<String>> future = executorService.submit(() -> getModIoModIdFromUrlName(modUrl));
+
+						Future<Result<String>> future = executorService.submit(() -> {
+							Result<String> idResult = new Result<>();
+							if (StringUtils.isNumeric(modUrl)) {
+								idResult.addMessage(String.format("%s is already in Mod ID format.", modUrl), ResultType.SUCCESS);
+								idResult.setPayload(modUrl);
+							} else {
+								idResult = getModIoModIdFromUrlName(modUrl);
+							}
+							if(idResult.isSuccess()) {
+								Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(idResult.getPayload(), UiService.this);
+								if(!duplicateIdResult.isSuccess()) {
+									idResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
+								}
+							}
+							return idResult;
+						});
 						futures.add(future);
 					}
 					try {
-						for(Future<Result<String>> f : futures) {
+						for (Future<Result<String>> f : futures) {
 							modIdResults.add(f.get());
 						}
 					} catch (RuntimeException e) {
@@ -468,6 +486,7 @@ public class UiService {
 
 	/**
 	 * Converts a single Mod.io URL to its respective ID.
+	 *
 	 * @param modUrl The URL to convert.
 	 * @return The task to perform the conversion.
 	 */
@@ -475,28 +494,28 @@ public class UiService {
 		return new Task<>() {
 			@Override
 			protected Result<String> call() {
-				return getModIoModIdFromUrlName(modUrl);
+				Result<String> urltoIdConversionResult = getModIoModIdFromUrlName(modUrl);
+				if(urltoIdConversionResult.isSuccess()) {
+					Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(modUrl, UiService.this);
+					if (!duplicateIdResult.isSuccess()) {
+						urltoIdConversionResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
+					}
+				}
+
+				return urltoIdConversionResult;
 			}
 		};
 	}
 
 	/**
 	 * Converts a Mod.io URL to its respective ID.
+	 *
 	 * @param modUrl The url to convert
 	 * @return The ID associated with the Mod.io URL.
 	 */
 	public Result<String> getModIoModIdFromUrlName(String modUrl) {
 		try {
-			Result<String> idFromUrlResult = MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modUrl);
-			if (idFromUrlResult.isSuccess()) {
-				for (Mod mod : currentModList) {
-					if (mod.getId().equals(idFromUrlResult.getPayload())) {
-						idFromUrlResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in the modlist!", ResultType.INVALID);
-						break;
-					}
-				}
-			}
-			return idFromUrlResult;
+			return MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modUrl);
 		} catch (IOException e) {
 			Result<String> failedResult = new Result<>();
 			if (e.toString().equals("java.net.UnknownHostException: mod.io")) {

@@ -45,6 +45,7 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
@@ -236,6 +237,8 @@ public class ModlistManagerView {
 
 	private final Pattern STEAM_WORKSHOP_MOD_ID;
 
+	private final Pattern MOD_IO_URL;
+
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
 	private ComboBox<ModlistProfile> modProfileDropdown;
 	private ComboBox<SaveProfile> saveProfileDropdown;
@@ -265,6 +268,7 @@ public class ModlistManagerView {
 		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 
 		this.STEAM_WORKSHOP_MOD_ID = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
+		this.MOD_IO_URL = Pattern.compile(properties.getProperty("semm.modio.mod.name.pattern"));
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
@@ -537,12 +541,18 @@ public class ModlistManagerView {
 			if (!StringUtils.isNumeric(modId)) {
 				convertModIoUrlToId(modId).start();
 			} else {
-				ModIoMod mod = new ModIoMod(modId);
+				Result<Void> duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modId, UI_SERVICE);
+				if (duplicateModResult.isSuccess()) {
+					ModIoMod mod = new ModIoMod(modId);
 
-				//This is a bit hacky, but it makes a LOT less code we need to maintain.
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				importModlist(List.of(modList)).start();
+					//This is a bit hacky, but it makes a LOT less code we need to maintain.
+					final Mod[] modList = new Mod[1];
+					modList[0] = mod;
+					importModlist(List.of(modList)).start();
+				} else {
+					UI_SERVICE.log(duplicateModResult);
+					Popup.displaySimpleAlert(duplicateModResult, STAGE);
+				}
 			}
 		}
 	}
@@ -583,13 +593,25 @@ public class ModlistManagerView {
 						UI_SERVICE.log(e.toString(), MessageType.ERROR);
 					}
 				} else { //Mod.io modlist file
-					//TODO: Make this a task since we have to scrape tons of shit for even the URL's.
-					// Check if it's an url or a pure ID
-					// 1. In the task, create a blocking task that gets the list of url's from the file.
-					// 2. With this list of urls, thread call converting mod IO url to ID's.
-					// 3. Create mods from the ID's. Then submit normal multithread calls to the modio scraping methods.
 					try {
 						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.MOD_IO);
+						for (int i = 0; i < modIds.size(); i++) {
+							String modName;
+							if (!StringUtils.isNumeric(modIds.get(i))) {
+								modName = MOD_IO_URL.matcher(modIds.get(i))
+										.results()
+										.map(MatchResult::group)
+										.collect(Collectors.joining());
+							} else {
+								modName = modIds.get(i);
+							}
+							if (modName.isBlank()) {
+								modIds.remove(i);
+								i--;
+							} else {
+								modIds.set(i, modName);
+							}
+						}
 					} catch (IOException e) {
 						UI_SERVICE.log(e.toString(), MessageType.ERROR);
 					}
@@ -602,18 +624,80 @@ public class ModlistManagerView {
 							selectedModlistFile.getName()), MessageType.ERROR);
 				} else {
 					List<Mod> modList = new ArrayList<>();
-					if(selectedModType == ModType.STEAM) {
-						for(String s : modIds) {
+					if (selectedModType == ModType.STEAM) {
+						for (String s : modIds) {
 							modList.add(new SteamMod(s));
 						}
 						importModlist(modList).start();
 					} else {
-						//TODO: Call a chained task for Mod IO that converts list of URLS to ID's, then when that task finishes calls the import mods func.
-						// Also need to toggle  UI stuff for mod io importing converting urls
+						importModIoListFile(modIds).start();
 					}
 				}
 			}
 		}
+	}
+
+	private @NotNull Thread importModIoListFile(List<String> modUrls) {
+		final Task<List<Result<String>>> TASK = UI_SERVICE.convertModIoUrlListToIds(modUrls);
+
+		TASK.setOnRunning(workerStateEvent -> {
+			modIoUrlToIdName.setVisible(true);
+			disableUserInputElements(true);
+			modImportProgressDenominator.setVisible(false);
+			modImportProgressPanel.setVisible(true);
+		});
+
+		TASK.setOnSucceeded(workerStateEvent -> {
+			Platform.runLater(() -> {
+				modIoUrlToIdName.setVisible(false);
+				modImportProgressDenominator.setVisible(true);
+			});
+
+			List<Result<String>> modIdResults = TASK.getValue();
+			List<Mod> modList = new ArrayList<>();
+
+			int duplicateMods = 0;
+			for (Result<String> r : modIdResults) {
+				if (r.isSuccess()) {
+					modList.add(new ModIoMod(r.getPayload()));
+				} else {
+					if (r.getCurrentMessage() != null) {
+						if (r.getCurrentMessage().endsWith("already exists in the modlist!")) {
+							duplicateMods++;
+						}
+					}
+					UI_SERVICE.log(r);
+				}
+			}
+
+			if (!modList.isEmpty()) {
+				importModlist(modList).start();
+			} else {
+				if (duplicateMods > 0) {
+					Popup.displaySimpleAlert("All the mods in the modlist file are already in the modlist!", STAGE, MessageType.INFO);
+				} else {
+					Popup.displaySimpleAlert("Could not add any of the mods in the modlist file. See the log for more information.", STAGE, MessageType.WARN);
+				}
+
+				//Reset our UI settings for the mod progress
+				modImportProgressWheel.setVisible(false);
+				FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+				fadeTransition.setFromValue(1d);
+				fadeTransition.setToValue(0d);
+
+				fadeTransition.setOnFinished(actionEvent -> {
+					disableUserInputElements(false);
+					modImportProgressWheel.setVisible(true);
+					resetModImportProgressUi();
+				});
+
+				fadeTransition.play();
+			}
+		});
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
 	}
 
 	private String getSteamModLocationFromUser(boolean steamCollection) {
@@ -678,7 +762,6 @@ public class ModlistManagerView {
 	private String getModIoModLocationFromUser() {
 		boolean goodModId = false;
 		String chosenModId = "";
-		final Pattern MOD_IO_URL = Pattern.compile("(?<=/g/spaceengineers/m/).*");
 
 		do {
 			String userInputModId = getUserModIdInput();
