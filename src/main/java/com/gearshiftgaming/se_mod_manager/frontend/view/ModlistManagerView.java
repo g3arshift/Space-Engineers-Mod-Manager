@@ -39,6 +39,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -175,6 +176,8 @@ public class ModlistManagerView {
 	@FXML
 	private Label modIoUrlToIdName;
 
+
+	//TODO: Organize the nightmare of variable declarations here.
 	private final UiService UI_SERVICE;
 
 	private final ObservableList<LogMessage> USER_LOG;
@@ -225,9 +228,13 @@ public class ModlistManagerView {
 
 	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
-	private final SaveInputView EXISTING_SAVE_MOD_IMPORT_INPUT;
+	private final SaveInputView MOD_FILE_SELECTION_VIEW;
+
+	private final GeneralFileInputView GENERAL_FILE_SELECT_VIEW;
 
 	private final String STEAM_MOD_DATE_FORMAT;
+
+	private final Pattern STEAM_WORKSHOP_MOD_ID;
 
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
 	private ComboBox<ModlistProfile> modProfileDropdown;
@@ -236,14 +243,16 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView) {
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView,
+							  GeneralFileInputView generalFileInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
-		this.EXISTING_SAVE_MOD_IMPORT_INPUT = saveInputView;
+		this.MOD_FILE_SELECTION_VIEW = saveInputView;
+		this.GENERAL_FILE_SELECT_VIEW = generalFileInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -254,6 +263,8 @@ public class ModlistManagerView {
 		SELECTIONS = new ArrayList<>();
 
 		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
+
+		this.STEAM_WORKSHOP_MOD_ID = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
@@ -538,11 +549,11 @@ public class ModlistManagerView {
 
 	private void addModsFromExistingSave() {
 		// Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
-		EXISTING_SAVE_MOD_IMPORT_INPUT.setSaveProfileInputTitle("Import mods from save");
-		EXISTING_SAVE_MOD_IMPORT_INPUT.setAddSaveButtonText("Import Mods");
-		EXISTING_SAVE_MOD_IMPORT_INPUT.show();
-		File selectedSave = EXISTING_SAVE_MOD_IMPORT_INPUT.getSelectedSave();
-		if (selectedSave != null && EXISTING_SAVE_MOD_IMPORT_INPUT.getLastPressedButtonId().equals("addSave")) {
+		MOD_FILE_SELECTION_VIEW.setSaveProfileInputTitle("Import Save Modlist");
+		MOD_FILE_SELECTION_VIEW.setAddSaveButtonText("Import Mods");
+		MOD_FILE_SELECTION_VIEW.show();
+		File selectedSave = MOD_FILE_SELECTION_VIEW.getSelectedSave();
+		if (selectedSave != null && MOD_FILE_SELECTION_VIEW.getLastPressedButtonId().equals("addSave")) {
 			Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, STAGE);
 
 			if (existingModlistResult.isSuccess()) {
@@ -552,15 +563,62 @@ public class ModlistManagerView {
 	}
 
 	private void addModsFromFile() {
-		//TODO: Prompt the user for what kind of mods are in the file
-		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
+		int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
+				"Steam", "Mod.io", "Cancel");
+		if (choice != 0) {
+			GENERAL_FILE_SELECT_VIEW.setSaveProfileInputTitle("Import Modlist from File");
+			GENERAL_FILE_SELECT_VIEW.setNextButtonText("Import Mods");
+			GENERAL_FILE_SELECT_VIEW.setExtensionFilter(new FileChooser.ExtensionFilter("Modlist Files", "*.txt", "*.doc"));
+			GENERAL_FILE_SELECT_VIEW.show();
+			File selectedModlistFile = GENERAL_FILE_SELECT_VIEW.getSelectedFile();
+			if (selectedModlistFile != null && GENERAL_FILE_SELECT_VIEW.getLastPressedButtonId().equals("next")) {
+				List<String> modIds = new ArrayList<>();
+				ModType selectedModType = null;
+
+				if (choice == 2) { //Steam modlist file
+					try {
+						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.STEAM);
+						selectedModType = ModType.STEAM;
+					} catch (IOException e) {
+						UI_SERVICE.log(e.toString(), MessageType.ERROR);
+					}
+				} else { //Mod.io modlist file
+					//TODO: Make this a task since we have to scrape tons of shit for even the URL's.
+					// Check if it's an url or a pure ID
+					// 1. In the task, create a blocking task that gets the list of url's from the file.
+					// 2. With this list of urls, thread call converting mod IO url to ID's.
+					// 3. Create mods from the ID's. Then submit normal multithread calls to the modio scraping methods.
+					try {
+						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.MOD_IO);
+					} catch (IOException e) {
+						UI_SERVICE.log(e.toString(), MessageType.ERROR);
+					}
+					selectedModType = ModType.MOD_IO;
+				}
+
+				if (modIds.isEmpty()) {
+					Popup.displaySimpleAlert(String.format("No valid %s mods found in \"%s\".",
+							(selectedModType == ModType.STEAM ? "Steam" : "Mod.io"),
+							selectedModlistFile.getName()), MessageType.ERROR);
+				} else {
+					List<Mod> modList = new ArrayList<>();
+					if(selectedModType == ModType.STEAM) {
+						for(String s : modIds) {
+							modList.add(new SteamMod(s));
+						}
+						importModlist(modList).start();
+					} else {
+						//TODO: Call a chained task for Mod IO that converts list of URLS to ID's, then when that task finishes calls the import mods func.
+						// Also need to toggle  UI stuff for mod io importing converting urls
+					}
+				}
+			}
+		}
 	}
 
 	private String getSteamModLocationFromUser(boolean steamCollection) {
 		boolean goodModId = false;
 		String chosenModId = "";
-		final Pattern STEAM_WORKSHOP_MOD_ID = Pattern.compile("\\b((id=[0-9])\\d*)");
 
 		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
 		do {
@@ -1084,7 +1142,7 @@ public class ModlistManagerView {
 			modTable.sort();
 
 			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-			if(topMostMod != null) {
+			if (topMostMod != null) {
 				modTable.getSelectionModel().clearSelection();
 				modTable.getSelectionModel().select(topMostMod);
 				modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());

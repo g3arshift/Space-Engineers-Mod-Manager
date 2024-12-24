@@ -2,7 +2,6 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
@@ -55,6 +54,8 @@ public class ModInfoService {
 
 	private final String STEAM_MOD_VERIFICATION_SELECTOR;
 
+	private final Pattern STEAM_MOD_ID_PATTERN;
+
 	private final String STEAM_COLLECTION_GAME_NAME_SELECTOR;
 
 	private final String STEAM_COLLECTION_MOD_ID_SELECTOR;
@@ -85,6 +86,8 @@ public class ModInfoService {
 		this.STEAM_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
 		this.STEAM_MOD_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
 
+		this.STEAM_MOD_ID_PATTERN = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
+
 		this.STEAM_COLLECTION_GAME_NAME_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
 		this.STEAM_COLLECTION_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
 		this.STEAM_COLLECTION_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
@@ -98,24 +101,16 @@ public class ModInfoService {
 		this.MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR = PROPERTIES.getProperty("semm.modIo.modScraper.waitCondition.cssSelector");
 	}
 
-	public Result<List<Mod>> getModListFromFile(String modFilePath) throws IOException {
-		File modlistFile = new File(modFilePath);
-		Result<List<Mod>> result = new Result<>();
-		if (!modlistFile.exists()) {
-			result.addMessage("File does not exist.", ResultType.INVALID);
-		} else if (FilenameUtils.getExtension(modlistFile.getName()).equals("txt") || FilenameUtils.getExtension(modlistFile.getName()).equals("doc")) {
-			//TODO: Add modio functionality. Ask the user if it's a steam or ModIO list.
-			result.setPayload(MODLIST_REPOSITORY.getSteamModList(modlistFile));
-			result.addMessage(modlistFile.getName() + " selected.", ResultType.SUCCESS);
+	public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
+		if(modType == ModType.STEAM) {
+			return MODLIST_REPOSITORY.getSteamModList(modlistFile);
 		} else {
-			result.addMessage("Incorrect file type selected. Please select a .txt or .doc file.", ResultType.INVALID);
+			return MODLIST_REPOSITORY.getModIoModUrls(modlistFile);
 		}
-		return result;
 	}
 
 	public List<Result<String>> scrapeSteamCollectionModIds(String collectionId) throws IOException {
 		//TODO: Double check the new regex works
-		Pattern steamCollectionModIdFromHtml = Pattern.compile("\\b((id=[0-9])\\d*)");
 		List<Result<String>> modIdScrapeResults = new ArrayList<>();
 
 		Document collectionPage = Jsoup.connect(STEAM_WORKSHOP_URL + collectionId).get();
@@ -138,7 +133,7 @@ public class ModInfoService {
 				Result<String> modIdResult = new Result<>();
 
 				try {
-					String modId = steamCollectionModIdFromHtml.matcher(nodes.get(i).childNodes().get(1).toString())
+					String modId = STEAM_MOD_ID_PATTERN.matcher(nodes.get(i).childNodes().get(1).toString())
 							.results()
 							.map(MatchResult::group)
 							.collect(Collectors.joining())

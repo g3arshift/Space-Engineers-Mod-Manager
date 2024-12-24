@@ -15,6 +15,9 @@ public class ModlistFileRepositoryTest {
     private final String goodModListPath = "src/test/resources/GoodModList.txt";
     private final String emptyModListPath = "src/test/resources/EmptyModList.txt";
 
+	public ModlistFileRepositoryTest() throws IOException {
+	}
+
 	@Test
     void shouldGetValidModList() throws IOException {
         assertFalse(repository.getSteamModList(new File(goodModListPath)).isEmpty());

@@ -133,7 +133,6 @@ public class SaveInputView {
 		return fileChooser;
 	}
 
-	@FXML
 	private void addSave() {
 		if (selectedSave == null) {
 			Popup.displaySimpleAlert("You must select a save!", stage, MessageType.ERROR);
@@ -144,7 +143,6 @@ public class SaveInputView {
 		}
 	}
 
-	@FXML
 	private void cancelAddSave() {
 		stage.close();
 		saveName.setText(noSaveSelectedMessage);

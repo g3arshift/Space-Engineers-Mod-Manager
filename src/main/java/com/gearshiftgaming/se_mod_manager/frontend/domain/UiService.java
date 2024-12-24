@@ -241,19 +241,6 @@ public class UiService {
 		return steamCollectionModIds;
 	}
 
-	public Result<String> getModIoModIdFromUrlName(String modName) throws IOException {
-		Result<String> idFromUrlResult = MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modName);
-		if (idFromUrlResult.isSuccess()) {
-			for (Mod mod : currentModList) {
-				if (mod.getId().equals(idFromUrlResult.getPayload())) {
-					idFromUrlResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in the modlist!", ResultType.INVALID);
-					break;
-				}
-			}
-		}
-		return idFromUrlResult;
-	}
-
 	public Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) throws IOException {
 		Result<List<Mod>> modListResult = STORAGE_CONTROLLER.getModlistFromSave(sandboxConfigFile);
 
@@ -447,22 +434,81 @@ public class UiService {
 		};
 	}
 
+
+	/**
+	 * Converts a list of Mod IO urls to their respective ID's.
+	 * @param modUrls List of Mod.io url's
+	 * @return The task to perform the conversion.
+	 */
+	public Task<List<Result<String>>> convertModIoUrlListToStrings(List<String> modUrls) {
+		List<Result<String>> modIdResults = new ArrayList<>();
+		return new Task<>() {
+			@Override
+			protected List<Result<String>> call() throws ExecutionException, InterruptedException {
+				List<Future<Result<String>>> futures = new ArrayList<>(modUrls.size());
+				try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+					for (String modUrl : modUrls) {
+						Future<Result<String>> future = executorService.submit(() -> getModIoModIdFromUrlName(modUrl));
+						futures.add(future);
+					}
+					try {
+						for(Future<Result<String>> f : futures) {
+							modIdResults.add(f.get());
+						}
+					} catch (RuntimeException e) {
+						Result<String> failedResult = new Result<>();
+						failedResult.addMessage(e.toString(), ResultType.FAILED);
+						modIdResults.add(failedResult);
+					}
+				}
+				return modIdResults;
+			}
+		};
+	}
+
+	/**
+	 * Converts a single Mod.io URL to its respective ID.
+	 * @param modUrl The URL to convert.
+	 * @return The task to perform the conversion.
+	 */
 	public Task<Result<String>> convertModIoUrlToId(String modUrl) {
 		return new Task<>() {
 			@Override
 			protected Result<String> call() {
-				try {
-					return getModIoModIdFromUrlName(modUrl);
-				} catch (IOException e) {
-					Result<String> failedResult = new Result<>();
-					if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-						failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-					} else {
-						failedResult.addMessage(e.toString(), ResultType.FAILED);
-					}
-					return failedResult;
-				}
+				return getModIoModIdFromUrlName(modUrl);
 			}
 		};
+	}
+
+	/**
+	 * Converts a Mod.io URL to its respective ID.
+	 * @param modUrl The url to convert
+	 * @return The ID associated with the Mod.io URL.
+	 */
+	public Result<String> getModIoModIdFromUrlName(String modUrl) {
+		try {
+			Result<String> idFromUrlResult = MOD_INFO_CONTROLLER.getModIoIdFromUrlName(modUrl);
+			if (idFromUrlResult.isSuccess()) {
+				for (Mod mod : currentModList) {
+					if (mod.getId().equals(idFromUrlResult.getPayload())) {
+						idFromUrlResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in the modlist!", ResultType.INVALID);
+						break;
+					}
+				}
+			}
+			return idFromUrlResult;
+		} catch (IOException e) {
+			Result<String> failedResult = new Result<>();
+			if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
+				failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
+			} else {
+				failedResult.addMessage(e.toString(), ResultType.FAILED);
+			}
+			return failedResult;
+		}
+	}
+
+	public List<String> getModlistFromFile(File modlistFile, ModType modType) throws IOException {
+		return MOD_INFO_CONTROLLER.getModIdsFromFile(modlistFile, modType);
 	}
 }
