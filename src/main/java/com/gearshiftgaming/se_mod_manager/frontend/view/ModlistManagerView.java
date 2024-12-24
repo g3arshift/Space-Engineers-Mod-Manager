@@ -585,6 +585,7 @@ public class ModlistManagerView {
 				List<String> modIds = new ArrayList<>();
 				ModType selectedModType = null;
 
+				//TODO: This isn't working properly if we give it just a list of numbers instead of urls.
 				if (choice == 2) { //Steam modlist file
 					try {
 						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.STEAM);
@@ -592,6 +593,7 @@ public class ModlistManagerView {
 					} catch (IOException e) {
 						UI_SERVICE.log(e.toString(), MessageType.ERROR);
 					}
+					//TODO: Trying to add steam ID's through this option locks up UI with processing mods indefinitely.
 				} else { //Mod.io modlist file
 					try {
 						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.MOD_IO);
@@ -671,6 +673,9 @@ public class ModlistManagerView {
 			}
 
 			if (!modList.isEmpty()) {
+				if(duplicateMods > 0) {
+					Popup.displaySimpleAlert(duplicateMods + " mods already in the modlist were found.", MessageType.INFO);
+				}
 				importModlist(modList).start();
 			} else {
 				if (duplicateMods > 0) {
