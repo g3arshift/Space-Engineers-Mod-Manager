@@ -156,6 +156,9 @@ public class ModInfoService {
 	Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
 		scraping process which opens a full headless, embedded web browser.
 	 */
+	//TODO: This is matching too many numbers. If we have:
+	// <meta property="og:image" content="https://thumb.modcdn.io/mods/8753/3490124/crop_1280x720/thumb.18.png">
+	// It smooshes the 8753 with the other numbers we really want.
 	public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
 		Result<String> modIdResult = new Result<>();
 		final String MOD_IO_NAME_URL = "https://mod.io/g/spaceengineers/m/";
@@ -279,6 +282,7 @@ public class ModInfoService {
 		return modScrapeResult;
 	}
 
+	//TODO: We're getting a REALLY bad memory leak here. It either isn't closing the chrome drivers, or is leaving remnants that aren't getting GC.
 	private Result<String[]> scrapeModIoMod(String modId) {
 		Result<String[]> modScrapeResult = new Result<>();
 		//By this point we should have a valid ModIO ID to lookup the mods by for the correct game. Need to verify tags and that it is a mod, however.

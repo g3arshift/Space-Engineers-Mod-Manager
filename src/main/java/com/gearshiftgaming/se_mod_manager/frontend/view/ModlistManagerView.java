@@ -583,17 +583,15 @@ public class ModlistManagerView {
 			File selectedModlistFile = GENERAL_FILE_SELECT_VIEW.getSelectedFile();
 			if (selectedModlistFile != null && GENERAL_FILE_SELECT_VIEW.getLastPressedButtonId().equals("next")) {
 				List<String> modIds = new ArrayList<>();
-				ModType selectedModType = null;
+				ModType selectedModType;
 
-				//TODO: This isn't working properly if we give it just a list of numbers instead of urls.
 				if (choice == 2) { //Steam modlist file
+					selectedModType = ModType.STEAM;
 					try {
 						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.STEAM);
-						selectedModType = ModType.STEAM;
 					} catch (IOException e) {
 						UI_SERVICE.log(e.toString(), MessageType.ERROR);
 					}
-					//TODO: Trying to add steam ID's through this option locks up UI with processing mods indefinitely.
 				} else { //Mod.io modlist file
 					try {
 						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.MOD_IO);
@@ -673,7 +671,7 @@ public class ModlistManagerView {
 			}
 
 			if (!modList.isEmpty()) {
-				if(duplicateMods > 0) {
+				if (duplicateMods > 0) {
 					Popup.displaySimpleAlert(duplicateMods + " mods already in the modlist were found.", MessageType.INFO);
 				}
 				importModlist(modList).start();
@@ -1179,12 +1177,21 @@ public class ModlistManagerView {
 			});
 
 			Result<String> modIdResult = TASK.getValue();
+			Result<Void> duplicateModResult = new Result<>();
+			//TODO: This order of if statements is bad and resulting in showing messages we shouldn't.
 			if (modIdResult.isSuccess()) {
-				ModIoMod mod = new ModIoMod(modIdResult.getPayload());
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				importModlist(List.of(modList)).start();
-			} else {
+				duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modIdResult.getPayload(), UI_SERVICE);
+				if(duplicateModResult.isSuccess()) {
+					ModIoMod mod = new ModIoMod(modIdResult.getPayload());
+					final Mod[] modList = new Mod[1];
+					modList[0] = mod;
+					importModlist(List.of(modList)).start();
+				} else {
+					Popup.displaySimpleAlert(duplicateModResult, STAGE);
+				}
+			}
+
+			if (!modIdResult.isSuccess() || !duplicateModResult.isSuccess()) {
 				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
 				Platform.runLater(() -> {
 					modImportProgressWheel.setVisible(false);

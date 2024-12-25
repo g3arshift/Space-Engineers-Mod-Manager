@@ -490,6 +490,7 @@ public class UiService {
 	 * @param modUrl The URL to convert.
 	 * @return The task to perform the conversion.
 	 */
+	//TODO: We're getting bad results on this...
 	public Task<Result<String>> convertModIoUrlToId(String modUrl) {
 		return new Task<>() {
 			@Override
