@@ -1,6 +1,5 @@
 name: Release build
 
-TODO: PROVIDE THE FATJAR AS WELL
 on:
   pull_request:
     branches:
