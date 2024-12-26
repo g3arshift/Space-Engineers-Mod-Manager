@@ -59,21 +59,31 @@ jobs:
             directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
             filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
-      - name: Upload archive to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload release
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-            repo_token: ${{ secrets.GITHUB_TOKEN }}
-            file: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
-            asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
-            tag: ${{ env.VERSION_INFORMATION }}
-            overwrite: true
-            body: "${{ github.event.head_commit.message }}\n\nTo use, extract the .zip folder to a directory and run the executable from there."
-
-      - name: Upload fat jar to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "build/libs/Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar"
-          asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
-          tag: ${{ env.VERSION_INFORMATION }}
-          overwrite: true
+            repo_token: "${{ secrets.GITHUB_TOKEN }}"
+            automatic_release_tag: ${{ env.VERSION_INFORMATION }}
+            prerelease: true
+            title: "Development Build"
+            files: |
+              "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+              "build/libs/Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar"
+#      - name: Upload archive to release
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#            repo_token: ${{ secrets.GITHUB_TOKEN }}
+#            file: "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+#            asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+#            tag: ${{ env.VERSION_INFORMATION }}
+#            overwrite: true
+#            body: "${{ github.event.head_commit.message }}\n\nTo use, extract the .zip folder to a directory and run the executable from there."
+#
+#      - name: Upload fat jar to release
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: "build/libs/Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar"
+#          asset_name: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
+#          tag: ${{ env.VERSION_INFORMATION }}
+#          overwrite: true
