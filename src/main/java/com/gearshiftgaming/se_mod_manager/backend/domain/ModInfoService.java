@@ -13,6 +13,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -279,11 +280,10 @@ public class ModInfoService {
 		return modScrapeResult;
 	}
 
-	//TODO: We're getting a REALLY bad memory leak here. It either isn't closing the chrome drivers, or is leaving remnants that aren't getting GC.
 	private Result<String[]> scrapeModIoMod(String modId) {
 		Result<String[]> modScrapeResult = new Result<>();
 		//By this point we should have a valid ModIO ID to lookup the mods by for the correct game. Need to verify tags and that it is a mod, however.
-		WebDriver driver = getWebDriver();
+		WebDriver driver = getChromeWebDriver();
 
 		try {
 			driver.get(MOD_IO_URL + modId);
@@ -335,9 +335,8 @@ public class ModInfoService {
 							modInfo[3] = Year.now().toString();
 							modInfo[4] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
 						}
-						case "y" -> {//Mod IO year only
-							modInfo[3] = Year.now().minusYears(duration).toString();
-						}
+						case "y" -> //Mod IO year only
+								modInfo[3] = Year.now().minusYears(duration).toString();
 						default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
 					}
 
@@ -383,7 +382,7 @@ public class ModInfoService {
 	}
 
 	@NotNull
-	private static WebDriver getWebDriver() {
+	private WebDriver getChromeWebDriver() {
 		ChromeOptions options = new ChromeOptions();
 		options.addArguments("--headless");
 		options.addArguments("--no-sandbox");
@@ -394,8 +393,6 @@ public class ModInfoService {
 		Map<String, Object> prefs = new HashMap<>();
 		prefs.put("profile.default_content_setting_values.images", 2); // 2 means block images
 		options.setExperimentalOption("prefs", prefs);
-//		options.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
-//		options.setExperimentalOption("useAutomationExtension", false);
 
 		return new ChromeDriver(options);
 	}

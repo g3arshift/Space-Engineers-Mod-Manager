@@ -576,6 +576,7 @@ public class ModlistManagerView {
 		int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
 				"Steam", "Mod.io", "Cancel");
 		if (choice != 0) {
+			GENERAL_FILE_SELECT_VIEW.resetSelectedSave();
 			GENERAL_FILE_SELECT_VIEW.setSaveProfileInputTitle("Import Modlist from File");
 			GENERAL_FILE_SELECT_VIEW.setNextButtonText("Import Mods");
 			GENERAL_FILE_SELECT_VIEW.setExtensionFilter(new FileChooser.ExtensionFilter("Modlist Files", "*.txt", "*.doc"));

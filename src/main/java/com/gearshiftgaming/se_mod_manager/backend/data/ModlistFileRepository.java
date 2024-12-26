@@ -5,10 +5,13 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -37,7 +40,6 @@ public class ModlistFileRepository implements ModlistRepository {
 			String modUrl;
 			while ((modUrl = br.readLine()) != null) {
 				//Grab just the ID from the full URLs
-
 				if(StringUtils.isNumeric(modUrl)) {
 					modIds.add(modUrl);
 				} else {
@@ -51,9 +53,10 @@ public class ModlistFileRepository implements ModlistRepository {
 				}
 			}
 		}
-		return new ArrayList<>(modIds);
+		return modIds.stream().toList();
 	}
 
+	//TODO: We need to move the regex from higher up down to here. Should reduce memory footprint dramatically.
 	@Override
 	public List<String> getModIoModUrls(File modListFile) throws IOException {
 		//We use a set to prevent duplicate lines from being added
