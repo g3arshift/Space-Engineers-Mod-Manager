@@ -1,5 +1,6 @@
 name: Development Build
 
+TODO: PROVIDE THE FATJAR AS WELL
 on:
   pull_request:
   push:
