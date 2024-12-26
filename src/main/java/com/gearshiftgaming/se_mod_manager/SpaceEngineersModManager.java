@@ -3,20 +3,16 @@ package com.gearshiftgaming.se_mod_manager;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
 import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -47,7 +43,7 @@ public class SpaceEngineersModManager extends Application {
 		primaryStage.show();
 
 
-		TitleBarUtility.SetTitleBar(primaryStage);
+		NativeWindowUtility.SetWindowsTitleBar(primaryStage);
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

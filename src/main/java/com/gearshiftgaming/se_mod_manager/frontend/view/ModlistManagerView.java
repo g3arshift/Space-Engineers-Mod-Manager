@@ -39,11 +39,13 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
@@ -175,6 +177,8 @@ public class ModlistManagerView {
 	@FXML
 	private Label modIoUrlToIdName;
 
+
+	//TODO: Organize the nightmare of variable declarations here.
 	private final UiService UI_SERVICE;
 
 	private final ObservableList<LogMessage> USER_LOG;
@@ -225,9 +229,15 @@ public class ModlistManagerView {
 
 	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
 
-	private final SaveInputView EXISTING_SAVE_MOD_IMPORT_INPUT;
+	private final SaveInputView MOD_FILE_SELECTION_VIEW;
+
+	private final GeneralFileInputView GENERAL_FILE_SELECT_VIEW;
 
 	private final String STEAM_MOD_DATE_FORMAT;
+
+	private final Pattern STEAM_WORKSHOP_MOD_ID;
+
+	private final Pattern MOD_IO_URL;
 
 	//These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
 	private ComboBox<ModlistProfile> modProfileDropdown;
@@ -236,14 +246,16 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView) {
+							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView,
+							  GeneralFileInputView generalFileInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
 		this.USER_LOG = uiService.getUSER_LOG();
 		this.STATUS_BAR_VIEW = statusBarView;
 		this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
 		this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
-		this.EXISTING_SAVE_MOD_IMPORT_INPUT = saveInputView;
+		this.MOD_FILE_SELECTION_VIEW = saveInputView;
+		this.GENERAL_FILE_SELECT_VIEW = generalFileInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
 		this.SAVE_MANAGER_VIEW = saveManagerView;
@@ -254,6 +266,9 @@ public class ModlistManagerView {
 		SELECTIONS = new ArrayList<>();
 
 		filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
+
+		this.STEAM_WORKSHOP_MOD_ID = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
+		this.MOD_IO_URL = Pattern.compile(properties.getProperty("semm.modio.mod.name.pattern"));
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
@@ -277,7 +292,7 @@ public class ModlistManagerView {
 		actions.setOnDragOver(this::handleTableActionsOnDragOver);
 		actions.setOnDragExited(this::handleTableActionsOnDragExit);
 
-		//Setup the mod description handlers
+		//Set up the mod description handlers
 		modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
 			Mod selectedMod = modTable.getSelectionModel().getSelectedItem();
 			if (selectedMod != null) {
@@ -347,11 +362,6 @@ public class ModlistManagerView {
 		modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
 		modName.setComparator(Comparator.comparing(Mod::getFriendlyName));
 
-		//Create a comparator for the date column so it sorts properly.
-//		modLastUpdated.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastUpdated() != null ?
-//				cellData.getValue().getLastUpdated().format(DateTimeFormatter.ofPattern(MOD_DATE_FORMAT)) : "Unknown"));
-
-		//TODO: This is returning unknown when we are loading the saved data from file for modio dates.
 		modLastUpdated.setCellValueFactory(cellData -> {
 			if (cellData.getValue() instanceof SteamMod steamMod) {
 				if (steamMod.getLastUpdated() != null) {
@@ -531,23 +541,29 @@ public class ModlistManagerView {
 			if (!StringUtils.isNumeric(modId)) {
 				convertModIoUrlToId(modId).start();
 			} else {
-				ModIoMod mod = new ModIoMod(modId);
+				Result<Void> duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modId, UI_SERVICE);
+				if (duplicateModResult.isSuccess()) {
+					ModIoMod mod = new ModIoMod(modId);
 
-				//This is a bit hacky, but it makes a LOT less code we need to maintain.
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				importModlist(List.of(modList)).start();
+					//This is a bit hacky, but it makes a LOT less code we need to maintain.
+					final Mod[] modList = new Mod[1];
+					modList[0] = mod;
+					importModlist(List.of(modList)).start();
+				} else {
+					UI_SERVICE.log(duplicateModResult);
+					Popup.displaySimpleAlert(duplicateModResult, STAGE);
+				}
 			}
 		}
 	}
 
 	private void addModsFromExistingSave() {
 		// Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
-		EXISTING_SAVE_MOD_IMPORT_INPUT.setSaveProfileInputTitle("Import mods from save");
-		EXISTING_SAVE_MOD_IMPORT_INPUT.setAddSaveButtonText("Import Mods");
-		EXISTING_SAVE_MOD_IMPORT_INPUT.show();
-		File selectedSave = EXISTING_SAVE_MOD_IMPORT_INPUT.getSelectedSave();
-		if (selectedSave != null && EXISTING_SAVE_MOD_IMPORT_INPUT.getLastPressedButtonId().equals("addSave")) {
+		MOD_FILE_SELECTION_VIEW.setSaveProfileInputTitle("Import Save Modlist");
+		MOD_FILE_SELECTION_VIEW.setAddSaveButtonText("Import Mods");
+		MOD_FILE_SELECTION_VIEW.show();
+		File selectedSave = MOD_FILE_SELECTION_VIEW.getSelectedSave();
+		if (selectedSave != null && MOD_FILE_SELECTION_VIEW.getLastPressedButtonId().equals("addSave")) {
 			Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, STAGE);
 
 			if (existingModlistResult.isSuccess()) {
@@ -557,15 +573,140 @@ public class ModlistManagerView {
 	}
 
 	private void addModsFromFile() {
-		//TODO: Check it's from the right game before anything else. Gonna have to scrape the page.
-		//TODO: The actual adding to the modlist should happen here
-		//Result<List<Mod>> modImportResult = UI_SERVICE.addModsFromFile();
+		int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
+				"Steam", "Mod.io", "Cancel");
+		if (choice != 0) {
+			GENERAL_FILE_SELECT_VIEW.resetSelectedSave();
+			GENERAL_FILE_SELECT_VIEW.setSaveProfileInputTitle("Import Modlist from File");
+			GENERAL_FILE_SELECT_VIEW.setNextButtonText("Import Mods");
+			GENERAL_FILE_SELECT_VIEW.setExtensionFilter(new FileChooser.ExtensionFilter("Modlist Files", "*.txt", "*.doc"));
+			GENERAL_FILE_SELECT_VIEW.show();
+			File selectedModlistFile = GENERAL_FILE_SELECT_VIEW.getSelectedFile();
+			if (selectedModlistFile != null && GENERAL_FILE_SELECT_VIEW.getLastPressedButtonId().equals("next")) {
+				List<String> modIds = new ArrayList<>();
+				ModType selectedModType;
+
+				if (choice == 2) { //Steam modlist file
+					selectedModType = ModType.STEAM;
+					try {
+						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.STEAM);
+					} catch (IOException e) {
+						UI_SERVICE.log(e.toString(), MessageType.ERROR);
+					}
+				} else { //Mod.io modlist file
+					try {
+						modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.MOD_IO);
+						for (int i = 0; i < modIds.size(); i++) {
+							String modName;
+							if (!StringUtils.isNumeric(modIds.get(i))) {
+								modName = MOD_IO_URL.matcher(modIds.get(i))
+										.results()
+										.map(MatchResult::group)
+										.collect(Collectors.joining());
+							} else {
+								modName = modIds.get(i);
+							}
+							if (modName.isBlank()) {
+								modIds.remove(i);
+								i--;
+							} else {
+								modIds.set(i, modName);
+							}
+						}
+					} catch (IOException e) {
+						UI_SERVICE.log(e.toString(), MessageType.ERROR);
+					}
+					selectedModType = ModType.MOD_IO;
+				}
+
+				if (modIds.isEmpty()) {
+					Popup.displaySimpleAlert(String.format("No valid %s mods found in \"%s\".",
+							(selectedModType == ModType.STEAM ? "Steam" : "Mod.io"),
+							selectedModlistFile.getName()), MessageType.ERROR);
+				} else {
+					List<Mod> modList = new ArrayList<>();
+					if (selectedModType == ModType.STEAM) {
+						for (String s : modIds) {
+							modList.add(new SteamMod(s));
+						}
+						importModlist(modList).start();
+					} else {
+						importModIoListFile(modIds).start();
+					}
+				}
+			}
+		}
+	}
+
+	private @NotNull Thread importModIoListFile(List<String> modUrls) {
+		final Task<List<Result<String>>> TASK = UI_SERVICE.convertModIoUrlListToIds(modUrls);
+
+		TASK.setOnRunning(workerStateEvent -> {
+			modIoUrlToIdName.setVisible(true);
+			disableUserInputElements(true);
+			modImportProgressDenominator.setVisible(false);
+			modImportProgressPanel.setVisible(true);
+		});
+
+		TASK.setOnSucceeded(workerStateEvent -> {
+			Platform.runLater(() -> {
+				modIoUrlToIdName.setVisible(false);
+				modImportProgressDenominator.setVisible(true);
+			});
+
+			List<Result<String>> modIdResults = TASK.getValue();
+			List<Mod> modList = new ArrayList<>();
+
+			int duplicateMods = 0;
+			for (Result<String> r : modIdResults) {
+				if (r.isSuccess()) {
+					modList.add(new ModIoMod(r.getPayload()));
+				} else {
+					if (r.getCurrentMessage() != null) {
+						if (r.getCurrentMessage().endsWith("already exists in the modlist!")) {
+							duplicateMods++;
+						}
+					}
+					UI_SERVICE.log(r);
+				}
+			}
+
+			if (!modList.isEmpty()) {
+				if (duplicateMods > 0) {
+					Popup.displaySimpleAlert(duplicateMods + " mods already in the modlist were found.", MessageType.INFO);
+				}
+				importModlist(modList).start();
+			} else {
+				if (duplicateMods > 0) {
+					Popup.displaySimpleAlert("All the mods in the modlist file are already in the modlist!", STAGE, MessageType.INFO);
+				} else {
+					Popup.displaySimpleAlert("Could not add any of the mods in the modlist file. See the log for more information.", STAGE, MessageType.WARN);
+				}
+
+				//Reset our UI settings for the mod progress
+				modImportProgressWheel.setVisible(false);
+				FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+				fadeTransition.setFromValue(1d);
+				fadeTransition.setToValue(0d);
+
+				fadeTransition.setOnFinished(actionEvent -> {
+					disableUserInputElements(false);
+					modImportProgressWheel.setVisible(true);
+					resetModImportProgressUi();
+				});
+
+				fadeTransition.play();
+			}
+		});
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
 	}
 
 	private String getSteamModLocationFromUser(boolean steamCollection) {
 		boolean goodModId = false;
 		String chosenModId = "";
-		final Pattern STEAM_WORKSHOP_MOD_ID = Pattern.compile("\\b((id=[0-9])\\d*)");
 
 		//This starts a loop that will continuously get user input until they choose any option that isn't accept.
 		do {
@@ -625,7 +766,6 @@ public class ModlistManagerView {
 	private String getModIoModLocationFromUser() {
 		boolean goodModId = false;
 		String chosenModId = "";
-		final Pattern MOD_IO_URL = Pattern.compile("(?<=/g/spaceengineers/m/).*");
 
 		do {
 			String userInputModId = getUserModIdInput();
@@ -1038,12 +1178,21 @@ public class ModlistManagerView {
 			});
 
 			Result<String> modIdResult = TASK.getValue();
+			Result<Void> duplicateModResult = new Result<>();
+			//TODO: This order of if statements is bad and resulting in showing messages we shouldn't.
 			if (modIdResult.isSuccess()) {
-				ModIoMod mod = new ModIoMod(modIdResult.getPayload());
-				final Mod[] modList = new Mod[1];
-				modList[0] = mod;
-				importModlist(List.of(modList)).start();
-			} else {
+				duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modIdResult.getPayload(), UI_SERVICE);
+				if(duplicateModResult.isSuccess()) {
+					ModIoMod mod = new ModIoMod(modIdResult.getPayload());
+					final Mod[] modList = new Mod[1];
+					modList[0] = mod;
+					importModlist(List.of(modList)).start();
+				} else {
+					Popup.displaySimpleAlert(duplicateModResult, STAGE);
+				}
+			}
+
+			if (!modIdResult.isSuccess() || !duplicateModResult.isSuccess()) {
 				//This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
 				Platform.runLater(() -> {
 					modImportProgressWheel.setVisible(false);
@@ -1072,7 +1221,7 @@ public class ModlistManagerView {
 		return thread;
 	}
 
-	private @NotNull Thread importModlist(List<Mod> modList) {
+	public @NotNull Thread importModlist(List<Mod> modList) {
 		final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
 
 		TASK.setOnRunning(workerStateEvent -> {
@@ -1089,7 +1238,7 @@ public class ModlistManagerView {
 			modTable.sort();
 
 			//TODO: This might be unwanted behavior from users. Requires actual experience testing.
-			if(topMostMod != null) {
+			if (topMostMod != null) {
 				modTable.getSelectionModel().clearSelection();
 				modTable.getSelectionModel().select(topMostMod);
 				modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
@@ -1138,7 +1287,7 @@ public class ModlistManagerView {
 		modImportProgressDenominator.setVisible(!shouldDisable);
 	}
 
-	private void resetModImportProgressUi() {
+	public void resetModImportProgressUi() {
 		modImportProgressPanel.setVisible(false);
 		modImportProgressPanel.setOpacity(1d);
 		UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);

@@ -107,7 +107,7 @@ public class MainWindowView {
 							"to remove this profile from the managed saves?";
 					UI_SERVICE.log("Save \"" + SAVE_PROFILES.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
 
-					int choice = Popup.displayYesNoDialog(errorMessage, MessageType.WARN);
+					int choice = Popup.displayYesNoDialog(errorMessage, STAGE, MessageType.WARN);
 					if (choice == 1) {
 						UI_SERVICE.log("Removing save " + SAVE_PROFILES.get(i).getSaveName() + ".", MessageType.INFO);
 						SAVE_PROFILES.remove(i);
@@ -140,9 +140,6 @@ public class MainWindowView {
 		STAGE.setMinHeight(minHeight);
 		STAGE.setWidth(prefWidth);
 		STAGE.setHeight(prefHeight);
-
-		//Here for debugging only. Disable.
-		//ScenicView.show(scene);
 
 		//Add title and icon to the stage
 		Properties versionProperties = new Properties();

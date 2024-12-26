@@ -1,18 +1,19 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TitleBarUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -20,9 +21,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -128,8 +131,6 @@ public class ModTableContextBarView {
 	private final UiService UI_SERVICE;
 
 	private final Stage STAGE;
-
-	//TODO: On dropdown select, change active profile
 
 	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		this.UI_SERVICE = uiService;
@@ -273,7 +274,7 @@ public class ModTableContextBarView {
 				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
 				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
-				TitleBarUtility.SetTitleBar(STAGE);
+				NativeWindowUtility.SetWindowsTitleBar(STAGE);
 			}
 		}
 
@@ -315,6 +316,25 @@ public class ModTableContextBarView {
 
 	@FXML
 	private void updateModInformation() {
+		updateMods(UI_SERVICE.getCurrentModList()).start();
+	}
+
+	private Thread updateMods(List<Mod> initialModList) {
+		final Task<Void> TASK;
+		List<Mod> modList = new ArrayList<>(initialModList);
+
+		TASK = new Task<>() {
+			@Override
+			protected Void call() throws Exception {
+				UI_SERVICE.getCurrentModList().clear();
+				MODLIST_MANAGER_VIEW.importModlist(modList).start();
+				return null;
+			}
+		};
+
+		Thread thread = Thread.ofVirtual().unstarted(TASK);
+		thread.setDaemon(true);
+		return thread;
 	}
 
 	private Color getThemeBoxColor() {

@@ -74,7 +74,6 @@ public class ViewController {
 		} else {
 			Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 			logger.error(userConfigurationResult.getCurrentMessage());
-			//TODO: Breaks when you click X in window controls.
 			int choice = Popup.displayYesNoDialog("Failed to load existing user configuration, see log for details. " +
 					"Would you like to create a new user configuration and continue?", MessageType.WARN);
 			if(choice == 1) {
@@ -116,7 +115,7 @@ public class ViewController {
 		//For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
 
 		//View for adding a new Save Profile
-		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/save-list-input.fxml"));
+		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
 		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(UI_SERVICE);
 		SAVE_LIST_INPUT_LOADER.setController(SAVE_INPUT_VIEW);
 		final Parent SAVE_LIST_INPUT_ROOT = SAVE_LIST_INPUT_LOADER.load();
@@ -161,9 +160,16 @@ public class ViewController {
 		final Parent ID_AND_URL_MOD_IMPORT_INPUT_ROOT = ID_AND_URL_MOD_IMPORT_INPUT_LOADER.load();
 		ID_AND_URL_MOD_IMPORT_INPUT_VIEW.initView(ID_AND_URL_MOD_IMPORT_INPUT_ROOT);
 
+		//View for handling general file input, but primarily for ingesting modlist files.
+		final FXMLLoader GENERAL_FILE_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/general-file-input.fxml"));
+		final GeneralFileInputView GENERAL_FILE_INPUT_VIEW = new GeneralFileInputView();
+		GENERAL_FILE_INPUT_LOADER.setController(GENERAL_FILE_INPUT_VIEW);
+		final Parent GENERAL_FILE_LOADER_ROOT = GENERAL_FILE_INPUT_LOADER.load();
+		GENERAL_FILE_INPUT_VIEW.initView(GENERAL_FILE_LOADER_ROOT);
+
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW, GENERAL_FILE_INPUT_VIEW);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 

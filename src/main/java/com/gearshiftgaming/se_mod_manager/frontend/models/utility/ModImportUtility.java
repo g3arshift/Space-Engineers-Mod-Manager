@@ -54,8 +54,9 @@ public class ModImportUtility {
 				Popup.displaySimpleAlert(modInfoFillOutResults.getFirst(), stage);
 			}
 		} else {
-			String modFillOutResultMessage = String.format("%d mods were successfully added. %d failed to be added. Check the log for more information for each specific mod.",
-					successfulScrapes, failedScrapes);
+			String modFillOutResultMessage = String.format("%d mods were successfully added. %d failed to be added.%s",
+					successfulScrapes, failedScrapes, failedScrapes > 0 ? " Check the log for more information for each specific mod." : "");
+			Popup.displaySimpleAlert(modFillOutResultMessage, MessageType.INFO);
 			UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
 		}
 

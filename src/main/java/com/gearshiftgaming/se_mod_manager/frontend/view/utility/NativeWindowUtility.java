@@ -16,11 +16,9 @@ import java.util.Locale;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class TitleBarUtility {
+public class NativeWindowUtility {
 
-	public static void SetTitleBar(Stage stage) {
-		//TODO: The linux equivalent
-		//TODO: Does this work on windows 11?
+	public static void SetWindowsTitleBar(Stage stage) {
 		if (Platform.isWindows()) {
 			val dwmapi = Dwmapi.INSTANCE;
 			WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, stage.getTitle());
@@ -32,12 +30,14 @@ public class TitleBarUtility {
 			}
 
 			dwmapi.DwmSetWindowAttribute(hwnd, 20, ref, WinDef.BOOL.SIZE);
-			forceRedrawOfWindowTitleBar(stage);
+			forceRedrawOfWindow(stage);
+		} else if(Platform.isLinux()) {
+			//TODO: The linux equivalent
 		}
 	}
 
 	//We can't actually set the stage back to its original size or the refresh doesn't actually set in.
-	private static void forceRedrawOfWindowTitleBar(Stage stage) {
+	private static void forceRedrawOfWindow(Stage stage) {
 		stage.setHeight(stage.getHeight() + 1);
 	}
 }

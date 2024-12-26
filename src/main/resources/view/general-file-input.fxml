@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane minWidth="350.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <HBox alignment="CENTER_LEFT" minWidth="200.0" spacing="10.0">
+               <children>
+                  <Label fx:id="fileName">
+                     <graphic>
+                        <Label text="File:" />
+                     </graphic>
+                  </Label>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="chooseFile" minWidth="95.0" mnemonicParsing="false" onAction="#chooseFile" prefWidth="76.0" text="Select File" />
+               </children>
+            </HBox>
+            <HBox>
+               <children>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <ButtonBar buttonOrder="U+FBIX_NCYOA_R">
+                    <buttons>
+                      <Button fx:id="next" mnemonicParsing="false" text="Next" />
+                        <Button fx:id="cancel" cancelButton="true" mnemonicParsing="false" text="Cancel" />
+                    </buttons>
+                  </ButtonBar>
+               </children>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+      </VBox>
+   </children>
+</AnchorPane>
