@@ -56,7 +56,6 @@ public class ModlistFileRepository implements ModlistRepository {
 		return modIds.stream().toList();
 	}
 
-	//TODO: We need to move the regex from higher up down to here. Should reduce memory footprint dramatically.
 	@Override
 	public List<String> getModIoModUrls(File modListFile) throws IOException {
 		//We use a set to prevent duplicate lines from being added
