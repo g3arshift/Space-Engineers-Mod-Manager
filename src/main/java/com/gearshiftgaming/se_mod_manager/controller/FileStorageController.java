@@ -122,6 +122,16 @@ public class FileStorageController implements StorageController {
 		return SANDBOX_SERVICE.getModlistFromSandboxConfig(sandboxConfigFile);
 	}
 
+	@Override
+	public Result<Void> exportModlist(ModlistProfile modlistProfile, File saveLocation) {
+		return USER_DATA_SERVICE.exportModlist(modlistProfile, saveLocation);
+	}
+
+	@Override
+	public Result<ModlistProfile> importModlist(File saveLocation) {
+		return USER_DATA_SERVICE.importModlist(saveLocation);
+	}
+
 	//Only here for development purposes
 	public Result<Void> createTestUserData(Theme theme) {
 

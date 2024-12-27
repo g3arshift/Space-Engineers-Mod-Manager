@@ -531,4 +531,12 @@ public class UiService {
 	public List<String> getModlistFromFile(File modlistFile, ModType modType) throws IOException {
 		return MOD_INFO_CONTROLLER.getModIdsFromFile(modlistFile, modType);
 	}
+
+	public Result<Void> exportModlist(ModlistProfile modlistProfile, File exportLocation) {
+		return STORAGE_CONTROLLER.exportModlist(modlistProfile, exportLocation);
+	}
+
+	public Result<ModlistProfile> importModlist(File saveLocation) {
+		return STORAGE_CONTROLLER.importModlist(saveLocation);
+	}
 }

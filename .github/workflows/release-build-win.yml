@@ -60,10 +60,11 @@ jobs:
           directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
           filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
-      - name: "✏️ Generate release changelog"
-        uses: janheinrichmerker/action-github-changelog-generator@v2.3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+# ONLY RUNS ON LINUX
+#      - name: "✏️ Generate release changelog"
+#        uses: janheinrichmerker/action-github-changelog-generator@v2.3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2

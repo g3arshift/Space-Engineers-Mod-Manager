@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @NoArgsConstructor
-public class SteamMod extends Mod{
+public class SteamMod extends Mod {
 
     private LocalDateTime lastUpdated;
 
@@ -24,6 +24,12 @@ public class SteamMod extends Mod{
         super(id);
 
        setPublishedServiceName("Steam");
+    }
+
+    public SteamMod(SteamMod mod) {
+        super(mod);
+        setPublishedServiceName("Steam");
+        this.lastUpdated = mod.getLastUpdated();
     }
 
     @XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)

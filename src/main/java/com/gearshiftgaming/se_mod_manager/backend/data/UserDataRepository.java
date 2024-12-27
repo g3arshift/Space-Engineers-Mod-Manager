@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.JAXBException;
@@ -17,6 +18,9 @@ import java.io.IOException;
 public interface UserDataRepository {
     Result<UserConfiguration> loadUserData(File userConfigurationFile) throws JAXBException;
 
-    //TODO: Shouldn't be a file.
     boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) throws IOException;
+
+    Result<Void> exportModlist(ModlistProfile modlistProfile, File modlistLocation);
+
+    Result<ModlistProfile> importModlist(File modlistLocation);
 }
