@@ -62,7 +62,7 @@ public class Popup {
 		Label label = new Label(message);
 		FontIcon messageIcon = new FontIcon();
 
-		getIconByMessageType(messageType, messageIcon, stage);
+		getIconByMessageType(messageType, messageIcon);
 
 		return yesNoDialog(stage, parentStage, label, messageIcon);
 	}
@@ -78,7 +78,7 @@ public class Popup {
 		Label label = new Label(message);
 		FontIcon messageIcon = new FontIcon();
 
-		getIconByMessageType(messageType, messageIcon, stage);
+		getIconByMessageType(messageType, messageIcon);
 
 		return yesNoDialog(stage, label, messageIcon);
 	}
@@ -140,7 +140,7 @@ public class Popup {
 		Label label = new Label(message);
 		FontIcon messageIcon = new FontIcon();
 
-		getIconByMessageType(messageType, messageIcon, stage);
+		getIconByMessageType(messageType, messageIcon);
 
 		simpleAlert(stage, parentStage, label, messageIcon);
 	}
@@ -156,7 +156,7 @@ public class Popup {
 		Label label = new Label(message);
 		FontIcon messageIcon = new FontIcon();
 
-		getIconByMessageType(messageType, messageIcon, stage);
+		getIconByMessageType(messageType, messageIcon);
 
 		simpleAlert(stage, label, messageIcon);
 	}
@@ -174,7 +174,7 @@ public class Popup {
 
 		FontIcon messageIcon = new FontIcon();
 
-		getIconByMessageType(messageType, messageIcon, stage);
+		getIconByMessageType(messageType, messageIcon);
 
 		simpleAlert(stage, message, link, messageIcon);
 	}
@@ -190,7 +190,7 @@ public class Popup {
 		Label label = new Label(message);
 		FontIcon messageIcon = new FontIcon();
 
-		getIconByMessageType(messageType, messageIcon, stage);
+		getIconByMessageType(messageType, messageIcon);
 		return threeChoice(stage, parentStage, label, messageIcon, leftButtonMessage, centerButtonMessage, rightButtonMessage);
 	}
 
@@ -200,22 +200,18 @@ public class Popup {
 			case SUCCESS -> {
 				messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
 				messageIcon.setIconLiteral("ci-information-square");
-				stage.setTitle("Success");
 			}
 			case INVALID -> {
 				messageIcon.setStyle("-fx-icon-color: -color-warning-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-alt");
-				stage.setTitle("Invalid");
 			}
 			case CANCELLED, FAILED -> {
 				messageIcon.setStyle("-fx-icon-color: -color-danger-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-square");
-				stage.setTitle("Failed");
 			}
 			default -> {
 				messageIcon.setStyle("-fx-icon-color: -color-neutral-emphasis;");
 				messageIcon.setIconLiteral("ci-unknown");
-				stage.setTitle("Unknown");
 			}
 		}
 	}
@@ -476,7 +472,7 @@ public class Popup {
 
 	//Creates a dialog box message
 	private static HBox makeDialog(Label label, FontIcon messageIcon) {
-		VBox contentBox = new VBox(makeTitleBox(), getDialogBox(label, messageIcon));
+		VBox contentBox = new VBox(makeTitleBox(messageIcon.getIconLiteral()), getDialogBox(label, messageIcon));
 
 		return new HBox(contentBox);
 	}
@@ -516,7 +512,7 @@ public class Popup {
 	}
 
 	private static HBox createErrorLinkBox(String link, FontIcon messageIcon, Label label) {
-		makeTitleBox();
+		makeTitleBox(messageIcon.getIconLiteral());
 
 		Hyperlink hyperlink = new Hyperlink("https://spaceengineersmodmanager.com/bugreport");
 		hyperlink.setStyle("-fx-font-size: " + FONT_SIZE + ";");
@@ -529,15 +525,21 @@ public class Popup {
 			}
 		});
 
-		VBox textLayout = new VBox(makeTitleBox(), label, hyperlink);
+		VBox textLayout = new VBox(makeTitleBox(messageIcon.getIconLiteral()), label, hyperlink);
 		textLayout.setAlignment(Pos.CENTER);
 
 		return new HBox(messageIcon, textLayout);
 	}
 
-	private static HBox makeTitleBox() {
+	private static HBox makeTitleBox(String messageIcon) {
 		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
-		Label title = new Label("Warning");
+
+		Label title = new Label(switch(messageIcon) {
+			case "ci-information-square" -> "Success";
+			case "ci-warning-alt" -> "Invalid";
+			case "ci-warning-square" -> "Error";
+			default -> "Unknown";
+		});
 
 		HBox titleBox = new HBox(new ImageView(logo), title);
 		titleBox.setAlignment(Pos.CENTER_LEFT);
@@ -554,27 +556,23 @@ public class Popup {
 		return titleBox;
 	}
 
-	private static void getIconByMessageType(MessageType messageType, FontIcon messageIcon, Stage stage) {
+	private static void getIconByMessageType(MessageType messageType, FontIcon messageIcon) {
 		switch (messageType) {
 			case INFO -> {
 				messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
 				messageIcon.setIconLiteral("ci-information-square");
-				stage.setTitle("Info");
 			}
 			case WARN -> {
 				messageIcon.setStyle("-fx-icon-color: -color-warning-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-alt");
-				stage.setTitle("Warning");
 			}
 			case ERROR -> {
 				messageIcon.setStyle("-fx-icon-color: -color-danger-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-square");
-				stage.setTitle("Error");
 			}
 			default -> {
 				messageIcon.setStyle("-fx-icon-color: -color-neutral-emphasis;");
 				messageIcon.setIconLiteral("ci-unknown");
-				stage.setTitle("Unknown");
 			}
 		}
 	}

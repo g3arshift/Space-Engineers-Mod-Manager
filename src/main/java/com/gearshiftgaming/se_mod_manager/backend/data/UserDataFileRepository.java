@@ -65,7 +65,7 @@ public class UserDataFileRepository implements UserDataRepository {
         }
 
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
-            JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
+            JAXBContext context = JAXBContext.newInstance(ModlistProfile.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
@@ -81,7 +81,12 @@ public class UserDataFileRepository implements UserDataRepository {
 
     @Override
     public Result<ModlistProfile> importModlist(File modlistLocation) {
-        //TODO: Implement
-        return null;
+        Result<ModlistProfile> modlistProfileResult = new Result<>();
+        try {
+            JAXBContext context = JAXBContext.newInstance(ModlistProfile.class);
+        } catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		return modlistProfileResult;
     }
 }
