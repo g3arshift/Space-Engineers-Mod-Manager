@@ -48,5 +48,4 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
 	public Result<ModlistProfile> importModlist(File saveLocation) {
 		return userDataFileRepository.importModlist(saveLocation);
 	}
-
 }

@@ -59,11 +59,6 @@ public class UserDataFileRepository implements UserDataRepository {
 
         Result<Void> result = new Result<>();
 
-        //We don't want to copy the description.
-        for(Mod m : copiedProfile.getModList()) {
-            m.setDescription(null);
-        }
-
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
             JAXBContext context = JAXBContext.newInstance(ModlistProfile.class);
             Marshaller marshaller = context.createMarshaller();
@@ -84,8 +79,12 @@ public class UserDataFileRepository implements UserDataRepository {
         Result<ModlistProfile> modlistProfileResult = new Result<>();
         try {
             JAXBContext context = JAXBContext.newInstance(ModlistProfile.class);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+            ModlistProfile modlistProfile = (ModlistProfile) unmarshaller.unmarshal(modlistLocation);
+            modlistProfileResult.addMessage("Successfully loaded mod profile.", ResultType.SUCCESS);
+            modlistProfileResult.setPayload(modlistProfile);
         } catch (JAXBException e) {
-			throw new RuntimeException(e);
+            modlistProfileResult.addMessage("Failed to load mod profile. Error Details: " + e, ResultType.FAILED);
 		}
 		return modlistProfileResult;
     }

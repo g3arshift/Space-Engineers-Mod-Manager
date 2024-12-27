@@ -814,19 +814,31 @@ public class ModlistManagerView {
 
 	@FXML
 	private void importModlist() {
-		//TODO: Implement. Allow importing modlists from either sandbox file or exported list.
-		// For our own applications lists, aka exported ones, create a custom file extension. Like, .SEMM. Then just marshall the modlist only.
+		FileChooser importChooser = new FileChooser();
+		importChooser.setTitle("Import Modlist");
+		importChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		importChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
+
+		File savePath = importChooser.showOpenDialog(STAGE);
+
+		if(savePath != null) {
+			Result<ModlistProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+			if(modlistProfileResult.isSuccess()) {
+				modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
+			}
+			Popup.displaySimpleAlert(modlistProfileResult, STAGE);
+		}
 	}
 
 
 	@FXML
 	private void exportModlist() {
-		FileChooser saveChooser = new FileChooser();
-		saveChooser.setTitle("Export Modlist");
-		saveChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-		saveChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
+		FileChooser exportChooser = new FileChooser();
+		exportChooser.setTitle("Export Modlist");
+		exportChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		exportChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
 
-		File savePath = saveChooser.showSaveDialog(STAGE);
+		File savePath = exportChooser.showSaveDialog(STAGE);
 		if (savePath != null) {
 			Result<Void> exportModlistResult = UI_SERVICE.exportModlist(UI_SERVICE.getCurrentModlistProfile(), savePath);
 			if (!exportModlistResult.isSuccess()) UI_SERVICE.log(exportModlistResult);

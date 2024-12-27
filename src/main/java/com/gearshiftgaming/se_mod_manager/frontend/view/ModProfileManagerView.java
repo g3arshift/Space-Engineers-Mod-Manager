@@ -64,7 +64,7 @@ public class ModProfileManagerView {
 
 	public ModProfileManagerView(UiService UI_SERVICE, SimpleInputView PROFILE_INPUT_VIEW) {
 		this.UI_SERVICE = UI_SERVICE;
-		MOD_PROFILES = UI_SERVICE.getMOD_PROFILES();
+		MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILES();
 		this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
 	}
 
