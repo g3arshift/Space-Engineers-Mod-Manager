@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 import com.gearshiftgaming.se_mod_manager.backend.models.adapters.ModDescriptionCompacterAdapter;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import lombok.Generated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,21 +25,13 @@ import java.util.Objects;
 @NoArgsConstructor
 @XmlSeeAlso({SteamMod.class, ModIoMod.class})
 public abstract class Mod {
-
-    //TODO: Refactor this into an abstract and remove the ModType field.
-    // Steam mods will have a LocalDateTime, Mod.io mods will have a LocalDate.
-
     //These are the fields required for the sandbox_config.sbc file
     //For mod.io mods we have to use an actual API here. https://docs.mod.io/support/search-by-id/
-    //TODO: In the future I might need to actually make certain values like friendly name and such observable. Or, instead, run the update code for the entire lists information
-    // before it gets put into the UI_Service so that, by the time it gets there, all our new info such as modVersion and lastUpdated is already put in place and saved to file.
     private String id;
     private String friendlyName;
     private String publishedServiceName;
 
-
     private int loadPriority;
-    //private ModImportSourceType source;
 
     private List<String> categories;
     private boolean active;
@@ -49,8 +42,17 @@ public abstract class Mod {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
-        //this.source = source;
         categories = new ArrayList<>();
+    }
+
+    //We are intentionally forgoing copying load priority as it is a generated field
+    @SuppressWarnings("CopyConstructorMissesField")
+	public Mod(Mod mod) {
+        this.id = mod.getId();
+        this.friendlyName = mod.getFriendlyName();
+        this.categories = new ArrayList<>(mod.getCategories());
+        this.active = mod.isActive();
+        this.description = mod.getDescription();
     }
 
     @Override

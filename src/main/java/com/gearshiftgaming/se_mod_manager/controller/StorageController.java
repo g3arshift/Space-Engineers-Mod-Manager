@@ -1,10 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import jakarta.xml.bind.JAXBException;
 
 import java.io.File;
@@ -32,6 +29,10 @@ public interface StorageController {
     Result<String> getSaveName(File sandboxFile) throws IOException;
 
     Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) throws IOException;
+
+    Result<Void> exportModlist(ModlistProfile modlistProfile, File saveLocation);
+
+    Result<ModlistProfile> importModlist(File saveLocation);
 
     public Result<Void> createTestUserData(Theme theme);
 }

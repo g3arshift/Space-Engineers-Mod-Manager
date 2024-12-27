@@ -39,6 +39,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -820,7 +821,17 @@ public class ModlistManagerView {
 
 	@FXML
 	private void exportModlist() {
-		//TODO: Implement. Export in our own format (use XML). Make our file end in .SEMM
+		FileChooser saveChooser = new FileChooser();
+		saveChooser.setTitle("Export Modlist");
+		saveChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		saveChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
+
+		File savePath = saveChooser.showSaveDialog(STAGE);
+		if (savePath != null) {
+			Result<Void> exportModlistResult = UI_SERVICE.exportModlist(UI_SERVICE.getCurrentModlistProfile(), savePath);
+			if (!exportModlistResult.isSuccess()) UI_SERVICE.log(exportModlistResult);
+			Popup.displaySimpleAlert(exportModlistResult);
+		}
 	}
 
 	//Apply the modlist the user is currently using to the save profile they're currently using.
@@ -1182,7 +1193,7 @@ public class ModlistManagerView {
 			//TODO: This order of if statements is bad and resulting in showing messages we shouldn't.
 			if (modIdResult.isSuccess()) {
 				duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modIdResult.getPayload(), UI_SERVICE);
-				if(duplicateModResult.isSuccess()) {
+				if (duplicateModResult.isSuccess()) {
 					ModIoMod mod = new ModIoMod(modIdResult.getPayload());
 					final Mod[] modList = new Mod[1];
 					modList[0] = mod;

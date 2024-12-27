@@ -41,7 +41,7 @@ import java.util.Properties;
 
  */
 public class ViewController {
-	private final String DESKTOP_PATH = System.getProperty("user.home") + "/Desktop";
+	private final String HOME_PATH = System.getProperty("user.home");
 
 	private final Properties PROPERTIES;
 

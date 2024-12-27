@@ -1,8 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -11,6 +9,8 @@ import jakarta.xml.bind.Unmarshaller;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -19,8 +19,6 @@ import java.nio.file.Path;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-//TODO: Implement file locks
-//TODO: Add a lock so that only this application can work on the UserData files. Allow it to access as much as it wants, but prevent outside stuff from writing to it.
 public class UserDataFileRepository implements UserDataRepository {
     public Result<UserConfiguration> loadUserData(File userConfigurationFile) {
         Result<UserConfiguration> userConfigurationResult = new Result<>();
@@ -53,5 +51,37 @@ public class UserDataFileRepository implements UserDataRepository {
         } catch (JAXBException | IOException e) {
             return false;
         }
+    }
+
+    @Override
+    public Result<Void> exportModlist(ModlistProfile modlistProfile, File modlistLocation) {
+        ModlistProfile copiedProfile = new ModlistProfile(modlistProfile);
+
+        Result<Void> result = new Result<>();
+
+        //We don't want to copy the description.
+        for(Mod m : copiedProfile.getModList()) {
+            m.setDescription(null);
+        }
+
+        try(BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
+            JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            StringWriter sw = new StringWriter();
+
+            marshaller.marshal(copiedProfile, sw);
+            bw.write(sw.toString());
+            result.addMessage("Successfully exported modlist.", ResultType.SUCCESS);
+        } catch (JAXBException | IOException e) {
+            result.addMessage(e.toString(), ResultType.FAILED);
+        }
+        return result;
+    }
+
+    @Override
+    public Result<ModlistProfile> importModlist(File modlistLocation) {
+        //TODO: Implement
+        return null;
     }
 }

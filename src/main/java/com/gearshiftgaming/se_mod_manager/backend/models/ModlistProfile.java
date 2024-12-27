@@ -1,8 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.*;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -18,6 +16,7 @@ import java.util.UUID;
 
  */
 @Getter
+@XmlRootElement(name = "modlistProfile")
 public class ModlistProfile {
 
     private final UUID ID;
@@ -40,11 +39,17 @@ public class ModlistProfile {
     }
 
     public ModlistProfile(ModlistProfile modlistProfile) {
-        ID = UUID.randomUUID();
-        profileName = modlistProfile.getProfileName();
-        modList = new ArrayList<>();
+        this.ID = modlistProfile.getID();
+        this.profileName = modlistProfile.getProfileName();
+        this.modList = new ArrayList<>();
         if(modlistProfile.getModList() != null){
-            modList.addAll(modlistProfile.getModList());
+            for(Mod m : modlistProfile.getModList()) {
+                if(m instanceof SteamMod) {
+                    modList.add(new SteamMod((SteamMod) m));
+                } else {
+                    modList.add(new ModIoMod((ModIoMod) m));
+                }
+            }
         }
     }
 
