@@ -188,7 +188,7 @@ public class SaveManagerView {
 									if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
 										String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
 										if (!newProfileName.isEmpty()) {
-											Optional<ModlistProfile> modlistProfile = UI_SERVICE.getMOD_PROFILES().stream()
+											Optional<ModlistProfile> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
 													.filter(modlistProfile1 -> modlistProfile1.getProfileName().equals(newProfileName))
 													.findFirst();
 											modlistProfile.ifPresent(profile -> modTableContextBarView.getModProfileDropdown().getSelectionModel().select(profile));

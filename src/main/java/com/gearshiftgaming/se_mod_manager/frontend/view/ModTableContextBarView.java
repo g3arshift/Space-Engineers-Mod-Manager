@@ -7,10 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButt
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -21,11 +18,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -156,7 +151,7 @@ public class ModTableContextBarView {
 		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName));
 		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName)));
 
-		modProfileDropdown.setItems(UI_SERVICE.getMOD_PROFILES());
+		modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
 		modProfileDropdown.getSelectionModel().selectFirst();
 
 		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(themeName));

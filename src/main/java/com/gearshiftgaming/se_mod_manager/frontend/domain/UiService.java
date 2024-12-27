@@ -57,7 +57,7 @@ public class UiService {
 	private final ObservableList<LogMessage> USER_LOG;
 
 	@Getter
-	private final ObservableList<ModlistProfile> MOD_PROFILES;
+	private final ObservableList<ModlistProfile> MODLIST_PROFILES;
 
 	@Getter
 	private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -93,13 +93,13 @@ public class UiService {
 	private final String MOD_DATE_FORMAT;
 
 	public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-					 @NotNull ObservableList<ModlistProfile> MOD_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+					 @NotNull ObservableList<ModlistProfile> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
 					 StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
 		this.LOGGER = LOGGER;
 		this.MOD_INFO_CONTROLLER = modInfoController;
 		this.USER_LOG = USER_LOG;
-		this.MOD_PROFILES = MOD_PROFILES;
+		this.MODLIST_PROFILES = MODLIST_PROFILES;
 		this.SAVE_PROFILES = SAVE_PROFILES;
 		this.STORAGE_CONTROLLER = storageController;
 		this.USER_CONFIGURATION = USER_CONFIGURATION;
@@ -112,14 +112,14 @@ public class UiService {
 				.findFirst();
 		if (lastUsedSaveProfile.isPresent()) {
 			currentSaveProfile = lastUsedSaveProfile.get();
-			Optional<ModlistProfile> lastUsedModProfile = MOD_PROFILES.stream()
+			Optional<ModlistProfile> lastUsedModProfile = MODLIST_PROFILES.stream()
 					.filter(modProfile -> modProfile.getID().equals(currentSaveProfile.getLastUsedModProfile()))
 					.findFirst();
-			currentModlistProfile = lastUsedModProfile.orElseGet(MOD_PROFILES::getFirst);
+			currentModlistProfile = lastUsedModProfile.orElseGet(MODLIST_PROFILES::getFirst);
 		} else {
 			log("No previously applied save profile detected.", MessageType.INFO);
 			currentSaveProfile = SAVE_PROFILES.getFirst();
-			currentModlistProfile = MOD_PROFILES.getFirst();
+			currentModlistProfile = MODLIST_PROFILES.getFirst();
 		}
 
 		//A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
@@ -459,9 +459,9 @@ public class UiService {
 							} else {
 								idResult = getModIoModIdFromUrlName(modUrl);
 							}
-							if(idResult.isSuccess()) {
+							if (idResult.isSuccess()) {
 								Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(idResult.getPayload(), UiService.this);
-								if(!duplicateIdResult.isSuccess()) {
+								if (!duplicateIdResult.isSuccess()) {
 									idResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
 								}
 							}
@@ -496,7 +496,7 @@ public class UiService {
 			@Override
 			protected Result<String> call() {
 				Result<String> urltoIdConversionResult = getModIoModIdFromUrlName(modUrl);
-				if(urltoIdConversionResult.isSuccess()) {
+				if (urltoIdConversionResult.isSuccess()) {
 					Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(modUrl, UiService.this);
 					if (!duplicateIdResult.isSuccess()) {
 						urltoIdConversionResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
@@ -537,6 +537,20 @@ public class UiService {
 	}
 
 	public Result<ModlistProfile> importModlist(File saveLocation) {
-		return STORAGE_CONTROLLER.importModlist(saveLocation);
+		Result<ModlistProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
+		if (modlistProfileResult.isSuccess()) {
+			ModlistProfile importModlistProfile = modlistProfileResult.getPayload();
+			boolean duplicateProfileExists = MODLIST_PROFILES
+					.stream()
+					.anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModlistProfile.getProfileName().toLowerCase().trim()));
+			if (!duplicateProfileExists) {
+				for(int i = 0; i < importModlistProfile.getModList().size(); i++) {
+					importModlistProfile.getModList().get(i).setLoadPriority(i + 1);
+				}
+				MODLIST_PROFILES.add(modlistProfileResult.getPayload());
+			} else
+				modlistProfileResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
+		}
+		return modlistProfileResult;
 	}
 }
