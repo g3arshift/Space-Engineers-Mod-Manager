@@ -114,6 +114,7 @@ public class ViewController {
 		//The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
 		//For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
 
+
 		//View for adding a new Save Profile
 		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
 		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(UI_SERVICE);
@@ -190,7 +191,5 @@ public class ViewController {
 		MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
 		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
 		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);
-
-		//UI_SERVICE.saveUserData();
 	}
 }

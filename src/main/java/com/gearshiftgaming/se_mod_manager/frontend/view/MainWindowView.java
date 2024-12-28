@@ -121,6 +121,11 @@ public class MainWindowView {
 		}
 
 		mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
+
+		//TODO: REMOVE FOR FULL RELEASE
+		Popup.displayInfoMessageWithLink("This is a pre-release version of SEMM, and you will likely encounter bugs. " +
+				"Make sure to backup your Space Engineers saves before use, and please report any bugs you find at the following link.",
+				"https://spaceengineersmodmanager.com/bugreport", "ATTENTION!!!", MessageType.INFO);
 	}
 
 	/**

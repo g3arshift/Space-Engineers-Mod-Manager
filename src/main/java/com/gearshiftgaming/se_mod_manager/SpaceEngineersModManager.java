@@ -43,7 +43,6 @@ public class SpaceEngineersModManager extends Application {
 
 		primaryStage.show();
 
-
 		NativeWindowUtility.SetWindowsTitleBar(primaryStage);
 	}
 
