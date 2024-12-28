@@ -850,12 +850,26 @@ public class ModlistManagerView {
 	//TODO: This whole thing likely need rewritten
 	@FXML
 	private void applyModlist() throws IOException {
+		//TODO: Do status bar stuff
 		//TODO: Disable this button when our save profile save is not found
+		//TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
+		SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
+		ModlistProfile currentModlistProfile = UI_SERVICE.getCurrentModlistProfile();
+
+		if(currentSaveProfile.isSaveExists()) {
+			if(!currentModlistProfile.getModList().isEmpty()) {
+				//TODO: Do stuff.
+				// Deep copy list and sort by priority.
+				// Once sorted, apply modlist. Return result and log + display the message. Double check our lower level stuff works fine with our current implementation of things.
+			}
+		} else {
+			//TODO: Some error message
+		}
 //		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
 //		ModProfile currentModProfile = uiService.getCurrentModProfile();
 //		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
 //		if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
-//			//TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
+//
 //			Result<Void> modlistResult = uiService.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
 //			uiService.log(modlistResult);
 //			if (!modlistResult.isSuccess()) {

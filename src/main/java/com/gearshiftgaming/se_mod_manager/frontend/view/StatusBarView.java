@@ -21,7 +21,6 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-//TODO: Add border to top
 public class StatusBarView {
 
 	@FXML
@@ -81,7 +80,7 @@ public class StatusBarView {
 		updateLastInjected();
 	}
 
-	//TODO: MAybe make the graphic label also colored?
+	//TODO: Maybe make the graphic label also colored?
 	private void updateSaveStatus(SaveProfile saveProfile) {
 		switch (saveProfile.getLastSaveStatus()) {
 			case SAVED -> {
@@ -137,6 +136,6 @@ public class StatusBarView {
 	}
 
 	public void update(SaveProfile saveProfile) {
-
+		//TODO: Implement
 	}
 }
