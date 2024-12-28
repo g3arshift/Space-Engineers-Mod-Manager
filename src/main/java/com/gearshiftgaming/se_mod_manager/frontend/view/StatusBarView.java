@@ -125,8 +125,8 @@ public class StatusBarView {
 
 	private Optional<SaveProfile> findLastUsedSaveProfile() {
 		Optional<SaveProfile> lastUsedSaveProfile = Optional.empty();
-		if (UI_SERVICE.getUSER_CONFIGURATION().getLastUsedSaveProfileId() != null) {
-			UUID lastUsedSaveProfileId = UI_SERVICE.getUSER_CONFIGURATION().getLastUsedSaveProfileId();
+		if (UI_SERVICE.getUSER_CONFIGURATION().getLastAppliedSaveProfileId() != null) {
+			UUID lastUsedSaveProfileId = UI_SERVICE.getUSER_CONFIGURATION().getLastAppliedSaveProfileId();
 
 			lastUsedSaveProfile = UI_SERVICE.getSAVE_PROFILES().stream()
 					.filter(saveProfile -> saveProfile.getID().equals(lastUsedSaveProfileId))

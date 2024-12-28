@@ -19,6 +19,7 @@ import java.util.UUID;
 @XmlRootElement(name = "modlistProfile")
 public class ModlistProfile {
 
+    @XmlElement
     private final UUID ID;
 
     private String profileName;

@@ -21,11 +21,13 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -127,14 +129,13 @@ public class ModTableContextBarView {
 
 	private final Stage STAGE;
 
-	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) {
 		this.UI_SERVICE = uiService;
 		this.MODLIST_MANAGER_VIEW = modlistManagerView;
 		this.STAGE = stage;
 	}
 
 	public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-
 		THEME_LIST.add(primerLightTheme);
 		THEME_LIST.add(primerDarkTheme);
 		THEME_LIST.add(nordLightTheme);
@@ -144,7 +145,11 @@ public class ModTableContextBarView {
 		THEME_LIST.add(draculaTheme);
 
 		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
-		saveProfileDropdown.getSelectionModel().selectFirst();
+		Optional<SaveProfile> lastActiveSaveProfile = UI_SERVICE.getLastActiveSaveProfile();
+		if (lastActiveSaveProfile.isPresent())
+			saveProfileDropdown.getSelectionModel().select(lastActiveSaveProfile.get());
+		else
+			saveProfileDropdown.getSelectionModel().selectFirst();
 
 		String themeName = UI_SERVICE.getUSER_CONFIGURATION().getUserTheme();
 		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(themeName));
@@ -152,7 +157,12 @@ public class ModTableContextBarView {
 		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName)));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
-		modProfileDropdown.getSelectionModel().selectFirst();
+		Optional<ModlistProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+		if (lastActiveModlistProfile.isPresent())
+			modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
+		else
+			modProfileDropdown.getSelectionModel().selectFirst();
+
 
 		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(themeName));
 		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName));
@@ -285,11 +295,9 @@ public class ModTableContextBarView {
 
 	@FXML
 	private void selectModProfile() {
-		ModlistProfile modlistProfile = modProfileDropdown.getSelectionModel().getSelectedItem();
-
 		clearSearchBox();
 
-		UI_SERVICE.setCurrentModlistProfile(modlistProfile);
+		UI_SERVICE.setCurrentModlistProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
 		MODLIST_MANAGER_VIEW.updateModTableContents();
 	}
 

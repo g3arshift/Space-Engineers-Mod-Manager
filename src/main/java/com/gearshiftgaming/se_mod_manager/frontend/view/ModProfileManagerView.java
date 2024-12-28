@@ -172,8 +172,10 @@ public class ModProfileManagerView {
 
 	@FXML
 	private void selectProfile() {
-		UI_SERVICE.setCurrentModlistProfile(profileList.getSelectionModel().getSelectedItem());
-		modTableContextBarView.getModProfileDropdown().getSelectionModel().select(profileList.getSelectionModel().getSelectedItem());
+		ModlistProfile modlistProfile = profileList.getSelectionModel().getSelectedItem();
+		UI_SERVICE.setCurrentModlistProfile(modlistProfile);
+		modTableContextBarView.getModProfileDropdown().getSelectionModel().select(modlistProfile);
+		UI_SERVICE.setLastActiveModlistProfile(modlistProfile.getID());
 	}
 
 	@FXML

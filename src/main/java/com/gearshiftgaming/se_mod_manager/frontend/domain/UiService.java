@@ -66,7 +66,6 @@ public class UiService {
 	private final UserConfiguration USER_CONFIGURATION;
 
 	@Getter
-	@Setter
 	private SaveProfile currentSaveProfile;
 
 	@Getter
@@ -78,14 +77,11 @@ public class UiService {
 	@Getter
 	private final IntegerProperty activeModCount;
 
-
 	@Setter
 	private IntegerProperty modImportProgressNumerator;
 
-
 	@Setter
 	private IntegerProperty modImportProgressDenominator;
-
 
 	@Setter
 	private DoubleProperty modImportProgressPercentage;
@@ -106,21 +102,14 @@ public class UiService {
 
 		this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
-		//Initialize our current mod and save profiles
-		Optional<SaveProfile> lastUsedSaveProfile = SAVE_PROFILES.stream()
-				.filter(saveProfile -> saveProfile.getID().equals(USER_CONFIGURATION.getLastUsedSaveProfileId()))
-				.findFirst();
-		if (lastUsedSaveProfile.isPresent()) {
-			currentSaveProfile = lastUsedSaveProfile.get();
-			Optional<ModlistProfile> lastUsedModProfile = MODLIST_PROFILES.stream()
-					.filter(modProfile -> modProfile.getID().equals(currentSaveProfile.getLastUsedModProfile()))
-					.findFirst();
-			currentModlistProfile = lastUsedModProfile.orElseGet(MODLIST_PROFILES::getFirst);
-		} else {
-			log("No previously applied save profile detected.", MessageType.INFO);
-			currentSaveProfile = SAVE_PROFILES.getFirst();
+		getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModlistProfile = modlistProfile, () -> {
+			log("No previously chosen modlist detected.", MessageType.INFO);
 			currentModlistProfile = MODLIST_PROFILES.getFirst();
-		}
+		});
+		getLastActiveSaveProfile().ifPresentOrElse(saveProfile -> currentSaveProfile = saveProfile, () -> {
+			log("No previously chosen save profile detected.", MessageType.INFO);
+			currentSaveProfile = SAVE_PROFILES.getFirst();
+		});
 
 		//A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
 		//currentModProfile.getModList()
@@ -170,8 +159,8 @@ public class UiService {
 		return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
 	}
 
-	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		return STORAGE_CONTROLLER.applyModlist(modList, sandboxConfigPath);
+	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
+		return STORAGE_CONTROLLER.applyModlist(modList, saveProfile);
 	}
 
 	public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
@@ -209,6 +198,14 @@ public class UiService {
 		currentModlistProfile = modlistProfile;
 		currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
 		activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
+		setLastActiveModlistProfile(modlistProfile.getID());
+		saveUserData();
+	}
+
+	public void setCurrentSaveProfile(SaveProfile currentSaveProfile) {
+		this.currentSaveProfile = currentSaveProfile;
+		setLastActiveSaveProfile(currentSaveProfile.getID());
+		saveUserData();
 	}
 
 	public void modifyActiveModCount(@NotNull Mod mod) {
@@ -544,7 +541,7 @@ public class UiService {
 					.stream()
 					.anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModlistProfile.getProfileName().toLowerCase().trim()));
 			if (!duplicateProfileExists) {
-				for(int i = 0; i < importModlistProfile.getModList().size(); i++) {
+				for (int i = 0; i < importModlistProfile.getModList().size(); i++) {
 					importModlistProfile.getModList().get(i).setLoadPriority(i + 1);
 				}
 				MODLIST_PROFILES.add(modlistProfileResult.getPayload());
@@ -552,5 +549,25 @@ public class UiService {
 				modlistProfileResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
 		}
 		return modlistProfileResult;
+	}
+
+	public void setLastActiveModlistProfile(UUID modlistProfileId) {
+		USER_CONFIGURATION.setLastActiveModProfileId(modlistProfileId);
+	}
+
+	public void setLastActiveSaveProfile(UUID saveProfileId) {
+		USER_CONFIGURATION.setLastActiveSaveProfileId(saveProfileId);
+	}
+
+	public Optional<ModlistProfile> getLastActiveModlistProfile() {
+		return MODLIST_PROFILES.stream()
+				.filter(modlistProfile -> modlistProfile.getID().equals(USER_CONFIGURATION.getLastActiveModProfileId()))
+				.findAny();
+	}
+
+	public Optional<SaveProfile> getLastActiveSaveProfile() {
+		return SAVE_PROFILES.stream()
+				.filter(saveProfile -> saveProfile.getID().equals(USER_CONFIGURATION.getLastActiveSaveProfileId()))
+				.findFirst();
 	}
 }

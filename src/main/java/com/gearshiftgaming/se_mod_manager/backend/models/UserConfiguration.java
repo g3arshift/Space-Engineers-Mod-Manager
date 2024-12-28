@@ -23,16 +23,20 @@ import java.util.UUID;
 @Getter
 @Setter
 @XmlRootElement(name = "userConfiguration")
-@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modlistProfiles"})
+//@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modlistProfiles"})
 public class UserConfiguration {
 
     private String userTheme;
 
-    private UUID lastUsedSaveProfileId;
+    private UUID lastAppliedSaveProfileId;
 
     private List<SaveProfile> saveProfiles;
 
     private List<ModlistProfile> modlistProfiles;
+
+    private UUID lastActiveModProfileId;
+
+    private UUID lastActiveSaveProfileId;
 
     /**
      * Creates an entirely new XML configuration file to store user information with.
@@ -44,14 +48,18 @@ public class UserConfiguration {
 
         //TODO: The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
-        modlistProfiles.add(new ModlistProfile("Default"));
+        ModlistProfile modlistProfile = new ModlistProfile("Default");
+        modlistProfiles.add(modlistProfile);
+        lastActiveModProfileId = modlistProfile.getID();
     }
 
     public UserConfiguration(UserConfiguration userConfiguration) {
         this.userTheme = userConfiguration.getUserTheme();
-        this.lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
+        this.lastAppliedSaveProfileId = userConfiguration.getLastAppliedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
         this.modlistProfiles = userConfiguration.getModlistProfiles();
+        this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
+        this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
     }
 
     @XmlElement(name = "userTheme")
@@ -75,11 +83,11 @@ public class UserConfiguration {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastUsedSaveProfileId, that.lastUsedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastAppliedSaveProfileId, that.lastAppliedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastUsedSaveProfileId, saveProfiles, modlistProfiles);
+        return Objects.hash(userTheme, lastAppliedSaveProfileId, saveProfiles, modlistProfiles);
     }
 }

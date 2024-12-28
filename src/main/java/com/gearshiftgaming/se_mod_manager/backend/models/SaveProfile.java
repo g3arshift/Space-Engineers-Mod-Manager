@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
 import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Getter
 public class SaveProfile {
 
+    @XmlElement
     private final UUID ID;
 
     private String profileName;

@@ -536,7 +536,7 @@ public class Popup {
 
 		Label title = new Label(switch(messageIcon) {
 			case "ci-information-square" -> "Success";
-			case "ci-warning-alt" -> "Invalid";
+			case "ci-warning-alt" -> "Warning";
 			case "ci-warning-square" -> "Error";
 			default -> "Unknown";
 		});

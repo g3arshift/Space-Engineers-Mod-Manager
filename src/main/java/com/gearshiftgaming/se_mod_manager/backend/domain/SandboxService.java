@@ -101,6 +101,7 @@ public class SandboxService {
 		return result;
 	}
 
+	//TODO: Check for mod io crossfunction
 	public Result<String> injectModsIntoSandboxConfig(File sandboxConfig, List<Mod> modList) throws IOException {
 		Result<String> result = new Result<>();
 		String sandboxFileContent = Files.readString(sandboxConfig.toPath());
@@ -124,20 +125,24 @@ public class SandboxService {
 		generateModifiedSandboxConfig(preModSandboxContent, sandboxContent);
 
 		//Inject our new mod list
-		sandboxContent.append("  <Mods>");
-		sandboxContent.append(System.lineSeparator());
-		for (Mod m : modList) {
-			String modItem = "    <ModItem FriendlyName=\"%s\">%n" +
-					"      <Name>%s.sbm</Name>%n" +
-					"      <PublishedFileId>%s</PublishedFileId>%n" +
-					"      <PublishedServiceName>%s</PublishedServiceName>%n" +
-					"    </ModItem>%n";
+		if (!modList.isEmpty()) {
+			sandboxContent.append("  <Mods>");
+			sandboxContent.append(System.lineSeparator());
+			for (Mod m : modList) {
+				String modItem = "    <ModItem FriendlyName=\"%s\">%n" +
+						"      <Name>%s.sbm</Name>%n" +
+						"      <PublishedFileId>%s</PublishedFileId>%n" +
+						"      <PublishedServiceName>%s</PublishedServiceName>%n" +
+						"    </ModItem>%n";
 
-			sandboxContent.append(String.format(modItem, m.getFriendlyName(), m.getId(), m.getId(), m.getPublishedServiceName()));
+				sandboxContent.append(String.format(modItem, m.getFriendlyName(), m.getId(), m.getId(), m.getPublishedServiceName()));
+			}
+
+			//Append the text in the Sandbox_config that comes after the mod section
+			sandboxContent.append("  </Mods>");
+		} else {
+			sandboxContent.append("  <Mods />");
 		}
-
-		//Append the text in the Sandbox_config that comes after the mod section
-		sandboxContent.append("  </Mods>");
 
 		//TODO: It's having the issue with newlines in the last section again, but perhaps only when not saving back to OG file? Needs testing. It might not actually be an issue.
 		if (!sandboxContent.toString().endsWith("\n")) {

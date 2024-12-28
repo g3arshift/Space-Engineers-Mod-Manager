@@ -39,14 +39,12 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
@@ -821,10 +819,11 @@ public class ModlistManagerView {
 
 		File savePath = importChooser.showOpenDialog(STAGE);
 
-		if(savePath != null) {
+		if (savePath != null) {
 			Result<ModlistProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
-			if(modlistProfileResult.isSuccess()) {
+			if (modlistProfileResult.isSuccess()) {
 				modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
+				UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
 			}
 			Popup.displaySimpleAlert(modlistProfileResult, STAGE);
 		}
@@ -847,53 +846,30 @@ public class ModlistManagerView {
 	}
 
 	//Apply the modlist the user is currently using to the save profile they're currently using.
-	//TODO: This whole thing likely need rewritten
 	@FXML
 	private void applyModlist() throws IOException {
 		//TODO: Do status bar stuff
 		//TODO: Disable this button when our save profile save is not found
-		//TODO: Have a warning popup asking the user if they want to continue IF they have a mod profile that contains no mods.
 		SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
-		ModlistProfile currentModlistProfile = UI_SERVICE.getCurrentModlistProfile();
-
-		if(currentSaveProfile.isSaveExists()) {
-			if(!currentModlistProfile.getModList().isEmpty()) {
-				//TODO: Do stuff.
+		if (currentSaveProfile.isSaveExists()) {
+			int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
+			if (overwriteChoice == 1) {
 				// Deep copy list and sort by priority.
-				// Once sorted, apply modlist. Return result and log + display the message. Double check our lower level stuff works fine with our current implementation of things.
+				List<Mod> copiedModList = new ArrayList<>(UI_SERVICE.getCurrentModList());
+				copiedModList.sort(Comparator.comparing(Mod::getLoadPriority));
+
+				if (copiedModList.isEmpty()) {
+					int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
+					if (emptyWriteChoice != 1) {
+						return;
+					}
+				}
+
+				Popup.displaySimpleAlert(UI_SERVICE.applyModlist(copiedModList, UI_SERVICE.getCurrentSaveProfile()), STAGE);
 			}
 		} else {
-			//TODO: Some error message
+			Popup.displaySimpleAlert("The current save cannot be found on the disk.", STAGE, MessageType.ERROR);
 		}
-//		SaveProfile currentSaveProfile = uiService.getCurrentSaveProfile();
-//		ModProfile currentModProfile = uiService.getCurrentModProfile();
-//		//This should only return null when the SEMM has been run for the first time and the user hasn't made and modlists or save profiles.
-//		if (currentSaveProfile != null && currentModProfile != null && currentSaveProfile.getSavePath() != null) {
-//
-//			Result<Void> modlistResult = uiService.applyModlist(currentModProfile.getModList(), currentSaveProfile.getSavePath());
-//			uiService.log(modlistResult);
-//			if (!modlistResult.isSuccess()) {
-//				currentSaveProfile.setLastSaveStatus(SaveStatus.FAILED);
-//			} else {
-//				currentSaveProfile.setLastAppliedModProfileId(currentModProfile.getId());
-//
-//				//TODO: This and the currentSave profile are both null, but they aren't actually. Why? This logic probably needs all looked over and rewritten.
-//				int modProfileIndex = modProfiles.indexOf(currentModProfile);
-//				modProfiles.set(modProfileIndex, currentModProfile);
-//
-//				int saveProfileIndex = saveProfiles.indexOf(currentSaveProfile);
-//				saveProfiles.set(saveProfileIndex, currentSaveProfile);
-//
-//				uiService.log(uiService.saveUserData(userConfiguration));
-//				currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
-//			}
-//			statusBarView.update(currentSaveProfile);
-//		} else {
-//			//Save or Mod profile not setup yet. Create both a Save and Mod profile to be able to apply a modlist.
-//			String errorMessage = "Save profile not setup yet. Create a save profile to apply a modlist.";
-//			uiService.log(errorMessage, MessageType.ERROR);
-//			Popup.displaySimpleAlert(errorMessage, stage, MessageType.ERROR);
-//		}
 	}
 
 	@FXML
