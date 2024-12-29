@@ -60,18 +60,13 @@ jobs:
           directory: Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}
           filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
-# ONLY RUNS ON LINUX
-#      - name: "✏️ Generate release changelog"
-#        uses: janheinrichmerker/action-github-changelog-generator@v2.3
-#        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          prerelease: true
           tag_name: ${{ env.VERSION_INFORMATION }}
           files: |
             Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip
             build/libs/Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar
-          body: "${{ github.event.head_commit.message }}\n\nTo use, extract the .zip folder to a directory and run the executable. Alternatively, you can download the .jar file and run standalone. Running the .exe will not require Java to be installed, but running the .jar will require Java21 and JavaFX."
+          body: "To use, extract the .zip folder to a directory and run the executable. Alternatively, you can download the .jar file and run standalone. Running the .exe will not require Java to be installed, but running the .jar will require Java21 and JavaFX.\n\n"
+          generate_release_notes: true
+          make_latest: true
