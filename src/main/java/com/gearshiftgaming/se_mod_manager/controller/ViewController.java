@@ -103,6 +103,8 @@ public class ViewController {
 
 		//TODO: Actually implement this. Function is empty at the moment.
 		//TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
+		//TODO: To highlight specific areas during setup, use four semi-opaque panes to create a clickable area and hide the rest.
+		//TODO: Disable resizing before first time setup and re-enable after.
 		if (!userConfigurationResult.isSuccess()) {
 			UI_SERVICE.firstTimeSetup();
 		}
@@ -113,6 +115,7 @@ public class ViewController {
 		//This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
 		//The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
 		//For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
+
 
 		//View for adding a new Save Profile
 		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
@@ -190,7 +193,5 @@ public class ViewController {
 		MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
 		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
 		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);
-
-		//UI_SERVICE.saveUserData();
 	}
 }

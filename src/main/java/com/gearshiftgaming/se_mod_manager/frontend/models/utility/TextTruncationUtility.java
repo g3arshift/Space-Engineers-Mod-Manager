@@ -13,8 +13,8 @@ import javafx.scene.text.Text;
  */
 public class TextTruncationUtility {
 
-	//TODO: We need to fix the fucking button cells again. They overrun when we're below the minimum size of buttons because we give a flat int.
-	// Also may need to fix the item cells, but needs checked.
+
+	//TODO: Have this worked based on the actual current size. SUPER FUCKING IMPORTANT.
 
 	public static String truncateWithEllipsisWithRealWidth(String text, double maxWidth) {
 		Text tempText = new Text(text);

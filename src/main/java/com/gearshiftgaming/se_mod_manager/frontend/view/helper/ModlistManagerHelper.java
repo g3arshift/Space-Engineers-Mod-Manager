@@ -5,9 +5,13 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import org.checkerframework.checker.guieffect.qual.UI;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+
+import java.io.File;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -68,5 +72,19 @@ public class ModlistManagerHelper {
 		}
 		duplicateModResult.addMessage("No duplicate mods found.", ResultType.SUCCESS);
 		return duplicateModResult;
+	}
+
+	public static  void exportModlistFile(final Stage STAGE, final UiService UI_SERVICE) {
+		FileChooser exportChooser = new FileChooser();
+		exportChooser.setTitle("Export Modlist");
+		exportChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		exportChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
+
+		File savePath = exportChooser.showSaveDialog(STAGE);
+		if (savePath != null) {
+			Result<Void> exportModlistResult = UI_SERVICE.exportModlist(UI_SERVICE.getCurrentModlistProfile(), savePath);
+			if (!exportModlistResult.isSuccess()) UI_SERVICE.log(exportModlistResult);
+			Popup.displaySimpleAlert(exportModlistResult, STAGE);
+		}
 	}
 }

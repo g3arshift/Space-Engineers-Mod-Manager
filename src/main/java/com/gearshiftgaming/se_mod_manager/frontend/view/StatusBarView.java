@@ -1,10 +1,12 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,17 +23,20 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-//TODO: Add border to top
 public class StatusBarView {
 
 	@FXML
 	private Label lastInjected;
 
 	@FXML
-	private Label saveStatus;
+	private Label lastSaveModifiedName;
 
 	@FXML
-	private Label lastModifiedBy;
+	private Label lastModlistAppliedName;
+
+	@FXML
+	@Getter
+	private Label saveStatus;
 
 	private String statusBaseStyling;
 
@@ -46,13 +51,9 @@ public class StatusBarView {
 	}
 
 	public void initView() {
-		Optional<SaveProfile> lastUsedSaveProfile = findLastUsedSaveProfile();
+		Optional<SaveProfile> lastUsedSaveProfile = findLastModifiedSaveProfileId();
 		if (lastUsedSaveProfile.isPresent()) {
-			UI_SERVICE.setCurrentSaveProfile(lastUsedSaveProfile.get());
 			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
-
-			updateSaveStatus(UI_SERVICE.getCurrentSaveProfile());
-			updateLastModifiedBy(UI_SERVICE.getCurrentSaveProfile());
 
 			//Set the text for the last time this profile was saved
 			if (UI_SERVICE.getCurrentSaveProfile().getLastSaved() == null || UI_SERVICE.getCurrentSaveProfile().getLastSaved().isEmpty()) {
@@ -60,40 +61,45 @@ public class StatusBarView {
 			} else {
 				lastInjected.setText(UI_SERVICE.getCurrentSaveProfile().getLastSaved());
 			}
+
+			lastSaveModifiedName.setText(lastUsedSaveProfile.get().getProfileName());
+			Optional<ModlistProfile> lastAppliedModlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
+							.filter(modlistProfile -> modlistProfile.getID().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
+									.findFirst();
+
+			lastAppliedModlistProfile.ifPresentOrElse(modlistProfile -> lastModlistAppliedName.setText(modlistProfile.getProfileName()), () -> {
+				lastModlistAppliedName.setText("None");
+			});
+
+			updateSaveStatus(UI_SERVICE.getCurrentSaveProfile());
 		} else {
 			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
 
+			lastInjected.setText("Never");
+
+			lastSaveModifiedName.setText("None");
+
+			lastModlistAppliedName.setText("None");
+
 			saveStatus.setText("None");
 			saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
-
-			lastModifiedBy.setText("None");
-			lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
-
-			lastInjected.setText("Never");
 		}
 
 		UI_SERVICE.logPrivate("Successfully initialized status bar.", MessageType.INFO);
 	}
 
-	private void updateInfoBar(SaveProfile saveProfile) {
-		updateSaveStatus(saveProfile);
-		updateLastModifiedBy(saveProfile);
-		updateLastInjected();
-	}
-
-	//TODO: MAybe make the graphic label also colored?
 	private void updateSaveStatus(SaveProfile saveProfile) {
 		switch (saveProfile.getLastSaveStatus()) {
 			case SAVED -> {
-				saveStatus.setText("Saved");
+				saveStatus.setText("Modlist Applied");
 				saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-success-emphasis; -fx-text-fill: -color-success-emphasis;");
 			}
 			case UNSAVED -> {
-				saveStatus.setText("Unsaved");
+				saveStatus.setText("Unsaved Modlist Changes");
 				saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-warning-emphasis; -fx-text-fill: -color-warning-emphasis;");
 			}
 			case FAILED -> {
-				saveStatus.setText("Failed to save");
+				saveStatus.setText("Failed to Apply Modlist");
 				saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-danger-emphasis; -fx-text-fill: -color-danger-emphasis;");
 			}
 			default -> {
@@ -102,32 +108,15 @@ public class StatusBarView {
 			}
 		}
 	}
-	
-	private void updateLastModifiedBy(SaveProfile saveProfile) {
-		switch (saveProfile.getLastModifiedBy()) {
-			case SEMM -> {
-				lastModifiedBy.setText("SEMM");
-				lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-success-emphasis; -fx-text-fill: -color-success-emphasis;");
-			}
-			case SPACE_ENGINEERS_IN_GAME -> {
-				lastModifiedBy.setText("In-game Mod Manager");
-				lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-warning-emphasis; -fx-text-fill: -color-warning-emphasis;");
-			}
-			default -> {
-				lastModifiedBy.setText("None");
-				lastModifiedBy.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
-			}
-		}
-	}
 
 	private void updateLastInjected() {
-		lastInjected.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a")));
+		lastInjected.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h:mma")));
 	}
 
-	private Optional<SaveProfile> findLastUsedSaveProfile() {
+	private Optional<SaveProfile> findLastModifiedSaveProfileId() {
 		Optional<SaveProfile> lastUsedSaveProfile = Optional.empty();
-		if (UI_SERVICE.getUSER_CONFIGURATION().getLastUsedSaveProfileId() != null) {
-			UUID lastUsedSaveProfileId = UI_SERVICE.getUSER_CONFIGURATION().getLastUsedSaveProfileId();
+		if (UI_SERVICE.getUSER_CONFIGURATION().getLastModifiedSaveProfileId() != null) {
+			UUID lastUsedSaveProfileId = UI_SERVICE.getUSER_CONFIGURATION().getLastModifiedSaveProfileId();
 
 			lastUsedSaveProfile = UI_SERVICE.getSAVE_PROFILES().stream()
 					.filter(saveProfile -> saveProfile.getID().equals(lastUsedSaveProfileId))
@@ -136,7 +125,10 @@ public class StatusBarView {
 		return lastUsedSaveProfile;
 	}
 
-	public void update(SaveProfile saveProfile) {
-
+	public void update(SaveProfile saveProfile, ModlistProfile modlistProfile) {
+		updateSaveStatus(saveProfile);
+		updateLastInjected();
+		lastModlistAppliedName.setText(modlistProfile.getProfileName());
+		lastSaveModifiedName.setText(saveProfile.getProfileName());
 	}
 }

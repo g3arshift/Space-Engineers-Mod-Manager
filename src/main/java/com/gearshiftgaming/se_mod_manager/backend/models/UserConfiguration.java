@@ -4,7 +4,6 @@ import atlantafx.base.theme.PrimerLight;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,16 +22,19 @@ import java.util.UUID;
 @Getter
 @Setter
 @XmlRootElement(name = "userConfiguration")
-@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modlistProfiles"})
 public class UserConfiguration {
 
     private String userTheme;
 
-    private UUID lastUsedSaveProfileId;
+    private UUID lastModifiedSaveProfileId;
 
     private List<SaveProfile> saveProfiles;
 
     private List<ModlistProfile> modlistProfiles;
+
+    private UUID lastActiveModProfileId;
+
+    private UUID lastActiveSaveProfileId;
 
     /**
      * Creates an entirely new XML configuration file to store user information with.
@@ -42,16 +44,20 @@ public class UserConfiguration {
         modlistProfiles = new ArrayList<>();
         userTheme = new PrimerLight().getName();
 
-        //TODO: The save profile is actually useless here because it has no save path.
+        //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
-        modlistProfiles.add(new ModlistProfile("Default"));
+        ModlistProfile modlistProfile = new ModlistProfile("Default");
+        modlistProfiles.add(modlistProfile);
+        lastActiveModProfileId = modlistProfile.getID();
     }
 
     public UserConfiguration(UserConfiguration userConfiguration) {
         this.userTheme = userConfiguration.getUserTheme();
-        this.lastUsedSaveProfileId = userConfiguration.getLastUsedSaveProfileId();
+        this.lastModifiedSaveProfileId = userConfiguration.getLastModifiedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
         this.modlistProfiles = userConfiguration.getModlistProfiles();
+        this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
+        this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
     }
 
     @XmlElement(name = "userTheme")
@@ -75,11 +81,11 @@ public class UserConfiguration {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastUsedSaveProfileId, that.lastUsedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastUsedSaveProfileId, saveProfiles, modlistProfiles);
+        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modlistProfiles);
     }
 }

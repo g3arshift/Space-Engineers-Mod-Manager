@@ -18,7 +18,7 @@ import java.util.List;
 public interface StorageController {
     Result<UserConfiguration> getUserData() throws JAXBException;
 
-    Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException;
+    Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException;
 
     Result<Void> saveUserData(UserConfiguration userConfiguration);
 

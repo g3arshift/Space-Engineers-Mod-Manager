@@ -13,7 +13,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -180,6 +179,24 @@ public class Popup {
 	}
 
 	/**
+	 * Displays a simple alert with only one option centered on the screen, with a clickable link for the end of the error message and a custom title message.
+	 *
+	 * @param message The message itself
+	 * @param link    The link that will be displayed and clickable in the message
+	 */
+	public static void displayInfoMessageWithLink(String message, String link, String titleMessage, MessageType messageType) {
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.initStyle(StageStyle.UNDECORATED);
+
+		FontIcon messageIcon = new FontIcon();
+		messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
+		messageIcon.setIconLiteral("ci-information-square");
+
+		simpleAlert(stage, message, link, titleMessage, messageIcon);
+	}
+
+	/**
 	 * Displays a dialog centered on a specific stage that has three choices the user can make.
 	 */
 	public static int displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
@@ -253,6 +270,21 @@ public class Popup {
 	 */
 	private static void simpleAlert(Stage childStage, String message, String link, FontIcon messageIcon) {
 		HBox dialogBox = makeErrorDialogWithLink(message, link, messageIcon);
+
+		//Setup our button
+		HBox buttonBar = makeOkBar(childStage);
+
+		createPopup(childStage, dialogBox, buttonBar);
+	}
+
+	/**
+	 * Creates a simple alert centered on the screen, with a clickable link and a customized title message.
+	 *
+	 * @param childStage The stage popup will use for its own display
+	 * @param link       The link that will be displayed and clickable in the message
+	 */
+	private static void simpleAlert(Stage childStage, String message, String link, String titleMessage, FontIcon messageIcon) {
+		HBox dialogBox = makeErrorDialogWithLink(message, link, titleMessage, messageIcon);
 
 		//Setup our button
 		HBox buttonBar = makeOkBar(childStage);
@@ -472,7 +504,7 @@ public class Popup {
 
 	//Creates a dialog box message
 	private static HBox makeDialog(Label label, FontIcon messageIcon) {
-		VBox contentBox = new VBox(makeTitleBox(messageIcon.getIconLiteral()), getDialogBox(label, messageIcon));
+		VBox contentBox = new VBox(makeTitleBar(messageIcon), getDialogBox(label, messageIcon));
 
 		return new HBox(contentBox);
 	}
@@ -511,10 +543,31 @@ public class Popup {
 		return dialogBox;
 	}
 
-	private static HBox createErrorLinkBox(String link, FontIcon messageIcon, Label label) {
-		makeTitleBox(messageIcon.getIconLiteral());
+	//Creates a dialog box message, with a hyperlink and a customized title message
+	private static HBox makeErrorDialogWithLink(String message, String link, String titleMessage, FontIcon messageIcon) {
+		messageIcon.getStyleClass().clear();
+		messageIcon.setIconSize(ICON_SIZE);
 
-		Hyperlink hyperlink = new Hyperlink("https://spaceengineersmodmanager.com/bugreport");
+		Label label = new Label(message);
+		label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+		label.setWrapText(true);
+
+		HBox dialogBox = createErrorLinkBox(link, messageIcon, titleMessage, label);
+		dialogBox.setAlignment(Pos.TOP_LEFT);
+		dialogBox.setPadding(new Insets(0, 5, 0, 5));
+		dialogBox.setSpacing(5d);
+		dialogBox.setMaxWidth(600);
+
+		return dialogBox;
+	}
+
+	private static HBox createErrorLinkBox(String link, FontIcon messageIcon, Label label) {
+		return createErrorLinkBoxContent(link, messageIcon, label, makeTitleBar(messageIcon));
+	}
+
+	@NotNull
+	private static HBox createErrorLinkBoxContent(String link, FontIcon messageIcon, Label label, HBox hBox) {
+		Hyperlink hyperlink = new Hyperlink("bugreport.spaceengineersmodmanager.com");
 		hyperlink.setStyle("-fx-font-size: " + FONT_SIZE + ";");
 
 		hyperlink.setOnAction(actionEvent -> {
@@ -525,22 +578,33 @@ public class Popup {
 			}
 		});
 
-		VBox textLayout = new VBox(makeTitleBox(messageIcon.getIconLiteral()), label, hyperlink);
+		HBox messageBox = new HBox(messageIcon, label);
+		messageBox.setSpacing(5d);
+		VBox textLayout = new VBox(hBox, messageBox, hyperlink);
 		textLayout.setAlignment(Pos.CENTER);
 
-		return new HBox(messageIcon, textLayout);
+		return new HBox(textLayout);
 	}
 
-	private static HBox makeTitleBox(String messageIcon) {
+	private static HBox createErrorLinkBox(String link, FontIcon messageIcon, String titleMessage, Label label) {
+		return createErrorLinkBoxContent(link, messageIcon, label, makeTitleBar(titleMessage));
+	}
+
+	private static HBox makeTitleBar(FontIcon messageIcon) {
 		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
 
-		Label title = new Label(switch(messageIcon) {
+		Label title = new Label(switch(messageIcon.getIconLiteral()) {
 			case "ci-information-square" -> "Success";
-			case "ci-warning-alt" -> "Invalid";
+			case "ci-warning-alt" -> "Warning";
 			case "ci-warning-square" -> "Error";
 			default -> "Unknown";
 		});
 
+		return makeTitleBarContent(logo, title);
+	}
+
+	@NotNull
+	private static HBox makeTitleBarContent(Image logo, Label title) {
 		HBox titleBox = new HBox(new ImageView(logo), title);
 		titleBox.setAlignment(Pos.CENTER_LEFT);
 		titleBox.setPadding(new Insets(5, 0, 5, 5));
@@ -551,9 +615,18 @@ public class Popup {
 		} else {
 			background = new Background(new BackgroundFill(Color.BLACK, null, null));
 		}
+
 		titleBox.setBackground(background);
 
 		return titleBox;
+	}
+
+	private static HBox makeTitleBar(String titleMessage) {
+		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
+
+		Label title = new Label(titleMessage);
+
+		return makeTitleBarContent(logo, title);
 	}
 
 	private static void getIconByMessageType(MessageType messageType, FontIcon messageIcon) {

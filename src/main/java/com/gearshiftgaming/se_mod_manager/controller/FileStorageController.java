@@ -55,11 +55,11 @@ public class FileStorageController implements StorageController {
 		return userConfigurationResult;
 	}
 
-	//TODO: Sort the incoming mod list based on priority without modifying the actual list
-	public Result<Void> applyModlist(List<Mod> modList, String sandboxConfigPath) throws IOException {
-		Result<String> modifiedSandboxConfigResult = SANDBOX_SERVICE.injectModsIntoSandboxConfig(new File(sandboxConfigPath), modList);
+	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
+		File sandboxConfigFile = new File(saveProfile.getSavePath());
+		Result<String> modifiedSandboxConfigResult = SANDBOX_SERVICE.injectModsIntoSandboxConfig(sandboxConfigFile, modList);
 		if (modifiedSandboxConfigResult.isSuccess()) {
-			return SANDBOX_SERVICE.saveSandboxToFile(sandboxConfigPath, modifiedSandboxConfigResult.getPayload());
+			return SANDBOX_SERVICE.saveSandboxToFile(saveProfile.getSavePath(), modifiedSandboxConfigResult.getPayload());
 		} else {
 			Result<Void> failedModification = new Result<>();
 			failedModification.addMessage(modifiedSandboxConfigResult.getCurrentMessage(), ResultType.FAILED);
@@ -157,7 +157,7 @@ public class FileStorageController implements StorageController {
 		thirdTestMod.setCategories(testCategories);
 		testModlistProfile.getModList().add(thirdTestMod);
 
-		testSaveProfile.setLastUsedModProfile(testModlistProfile.getID());
+		testSaveProfile.setLastUsedModProfileId(testModlistProfile.getID());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();

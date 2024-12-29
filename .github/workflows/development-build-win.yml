@@ -63,7 +63,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          name: ${{ github.ref }}
           tag_name: ${{ env.VERSION_INFORMATION }}
           files: |
             Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip

@@ -46,7 +46,7 @@ public class UserDataServiceTest {
 		assertEquals(ResultType.FAILED, result.getType());
 		assertEquals("User data was not found. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
 		assertEquals("Primer Light", userData.getUserTheme());
-		assertNull(userData.getLastUsedSaveProfileId());
+		assertNull(userData.getLastModifiedSaveProfileId());
 		assertEquals(1, userData.getModlistProfiles().size());
 		assertEquals("Default", userData.getModlistProfiles().getFirst().getProfileName());
 		assertEquals("None", userData.getSaveProfiles().getFirst().getProfileName());
@@ -71,7 +71,7 @@ public class UserDataServiceTest {
 		assertEquals("Successfully loaded user data.", result.getMESSAGES().getFirst());
 
 		assertEquals("Primer Dark", userConfiguration.getUserTheme());
-		assertNull(userConfiguration.getLastUsedSaveProfileId());
+		assertNull(userConfiguration.getLastModifiedSaveProfileId());
 		assertEquals(1, userConfiguration.getModlistProfiles().size());
 		assertEquals("Default", userConfiguration.getModlistProfiles().getFirst().getProfileName());
 		assertEquals("None", userConfiguration.getSaveProfiles().getFirst().getProfileName());
