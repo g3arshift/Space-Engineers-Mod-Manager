@@ -52,7 +52,7 @@ public class SpaceEngineersModManager extends Application {
 		if (Platform.isFxApplicationThread()) {
 			LOGGER.error("Uncaught exception in thread: {}", t.getName(), e);
 			Popup.displaySimpleAlert("An unexpected error was encountered and the application will now exit. " +
-					"Please submit a bug report along with your SEMM.log file located in the logs folder to the below link.", "https://spaceengineersmodmanager.com/bugreport", MessageType.ERROR);
+					"Please submit a bug report along with your SEMM.log file located in the logs folder to the below link.", "https://bugreport.spaceengineersmodmanager.com", MessageType.ERROR);
 			throw e;
 		}
 	}
