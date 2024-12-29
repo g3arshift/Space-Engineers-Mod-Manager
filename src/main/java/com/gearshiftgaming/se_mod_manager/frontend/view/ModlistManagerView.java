@@ -838,9 +838,6 @@ public class ModlistManagerView {
 	//Apply the modlist the user is currently using to the save profile they're currently using.
 	@FXML
 	private void applyModlist() throws IOException {
-		//TODO: Do status bar stuff
-		//TODO: Disable this button when our save profile save is not found.
-		// Do this by disabling the button if the save profile isn't alive when we switch save profiles, and reenable it there too.
 		SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
 		if (currentSaveProfile.isSaveExists()) {
 			int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);

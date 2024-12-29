@@ -567,7 +567,7 @@ public class Popup {
 
 	@NotNull
 	private static HBox createErrorLinkBoxContent(String link, FontIcon messageIcon, Label label, HBox hBox) {
-		Hyperlink hyperlink = new Hyperlink("https://bugreport.spaceengineersmodmanager.com");
+		Hyperlink hyperlink = new Hyperlink("bugreport.spaceengineersmodmanager.com");
 		hyperlink.setStyle("-fx-font-size: " + FONT_SIZE + ";");
 
 		hyperlink.setOnAction(actionEvent -> {
@@ -615,6 +615,7 @@ public class Popup {
 		} else {
 			background = new Background(new BackgroundFill(Color.BLACK, null, null));
 		}
+
 		titleBox.setBackground(background);
 
 		return titleBox;
