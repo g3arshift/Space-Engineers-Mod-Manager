@@ -4,7 +4,6 @@ import atlantafx.base.theme.PrimerLight;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,12 +22,11 @@ import java.util.UUID;
 @Getter
 @Setter
 @XmlRootElement(name = "userConfiguration")
-//@XmlType(propOrder = {"userTheme", "lastUsedSaveProfileId", "saveProfiles", "modlistProfiles"})
 public class UserConfiguration {
 
     private String userTheme;
 
-    private UUID lastAppliedSaveProfileId;
+    private UUID lastModifiedSaveProfileId;
 
     private List<SaveProfile> saveProfiles;
 
@@ -55,7 +53,7 @@ public class UserConfiguration {
 
     public UserConfiguration(UserConfiguration userConfiguration) {
         this.userTheme = userConfiguration.getUserTheme();
-        this.lastAppliedSaveProfileId = userConfiguration.getLastAppliedSaveProfileId();
+        this.lastModifiedSaveProfileId = userConfiguration.getLastModifiedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
         this.modlistProfiles = userConfiguration.getModlistProfiles();
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
@@ -83,11 +81,11 @@ public class UserConfiguration {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastAppliedSaveProfileId, that.lastAppliedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastAppliedSaveProfileId, saveProfiles, modlistProfiles);
+        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modlistProfiles);
     }
 }

@@ -17,7 +17,6 @@ import java.util.UUID;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 @Getter
 public class SaveProfile {
@@ -33,10 +32,7 @@ public class SaveProfile {
     @Setter
     private String savePath;
 
-    private UUID lastUsedModProfile;
-
-    @Setter 
-    private ModlistChangeSourceType lastModifiedBy;
+    private UUID lastUsedModProfileId;
 
     @Setter
     private SaveStatus lastSaveStatus;
@@ -51,7 +47,6 @@ public class SaveProfile {
         ID = UUID.randomUUID();
         this.profileName = "None";
         this.saveName = "None";
-        this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
         saveExists = false;
     }
@@ -59,7 +54,6 @@ public class SaveProfile {
     public SaveProfile(String profileName, String savePath) {
         ID = UUID.randomUUID();
         this.profileName = profileName;
-        this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
         saveExists = true;
@@ -68,7 +62,6 @@ public class SaveProfile {
     public SaveProfile(File saveFile) {
         ID = UUID.randomUUID();
         this.profileName = "Default";
-        this.lastModifiedBy = ModlistChangeSourceType.NOT_MODIFIED;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = saveFile.getPath();
         saveExists = true;
@@ -79,15 +72,14 @@ public class SaveProfile {
         this.profileName = saveProfile.getProfileName();
         this.saveName = saveProfile.getSaveName();
         this.savePath = saveProfile.getSavePath();
-        this.lastUsedModProfile = saveProfile.getLastUsedModProfile();
-        this.lastModifiedBy = saveProfile.getLastModifiedBy();
+        this.lastUsedModProfileId = saveProfile.getLastUsedModProfileId();
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
         this.saveExists = saveProfile.isSaveExists();
     }
 
-    public void setLastUsedModProfile(UUID lastUsedModProfile) {
-        this.lastUsedModProfile = lastUsedModProfile;
+    public void setLastUsedModProfileId(UUID lastUsedModProfileId) {
+        this.lastUsedModProfileId = lastUsedModProfileId;
         lastSaved = getCurrentTime();
     }
 
@@ -97,7 +89,7 @@ public class SaveProfile {
     }
 
     private String getCurrentTime() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd hh:mm a"));
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h:mma"));
     }
 
     @XmlAttribute
@@ -109,11 +101,11 @@ public class SaveProfile {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SaveProfile that)) return false;
-		return saveExists == that.saveExists && Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModProfile, that.lastUsedModProfile) && lastModifiedBy == that.lastModifiedBy && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
+		return saveExists == that.saveExists && Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModProfileId, that.lastUsedModProfileId) && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ID, profileName, saveName, savePath, lastUsedModProfile, lastModifiedBy, lastSaveStatus, lastSaved, saveExists);
+        return Objects.hash(ID, profileName, saveName, savePath, lastUsedModProfileId, lastSaveStatus, lastSaved, saveExists);
     }
 }

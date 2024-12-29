@@ -157,7 +157,7 @@ public class FileStorageController implements StorageController {
 		thirdTestMod.setCategories(testCategories);
 		testModlistProfile.getModList().add(thirdTestMod);
 
-		testSaveProfile.setLastUsedModProfile(testModlistProfile.getID());
+		testSaveProfile.setLastUsedModProfileId(testModlistProfile.getID());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();

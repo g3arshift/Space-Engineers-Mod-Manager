@@ -856,7 +856,15 @@ public class ModlistManagerView {
 					}
 				}
 
-				Popup.displaySimpleAlert(UI_SERVICE.applyModlist(copiedModList, UI_SERVICE.getCurrentSaveProfile()), STAGE);
+				Result<Void> modApplyResult = UI_SERVICE.applyModlist(copiedModList, UI_SERVICE.getCurrentSaveProfile());
+				Popup.displaySimpleAlert(modApplyResult, STAGE);
+
+				if (modApplyResult.isSuccess())
+					UI_SERVICE.setSaveProfileInformationAfterSuccessfullyApplyingModlist();
+				else
+					UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
+
+				STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModlistProfile());
 			}
 		} else {
 			Popup.displaySimpleAlert("The current save cannot be found on the disk.", STAGE, MessageType.ERROR);

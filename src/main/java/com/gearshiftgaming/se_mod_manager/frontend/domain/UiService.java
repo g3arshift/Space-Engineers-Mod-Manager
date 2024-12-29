@@ -112,7 +112,6 @@ public class UiService {
 		});
 
 		//A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
-		//currentModProfile.getModList()
 		currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
 		activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
 	}
@@ -487,7 +486,6 @@ public class UiService {
 	 * @param modUrl The URL to convert.
 	 * @return The task to perform the conversion.
 	 */
-	//TODO: We're getting bad results on this...
 	public Task<Result<String>> convertModIoUrlToId(String modUrl) {
 		return new Task<>() {
 			@Override
@@ -499,7 +497,6 @@ public class UiService {
 						urltoIdConversionResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
 					}
 				}
-
 				return urltoIdConversionResult;
 			}
 		};
@@ -569,5 +566,12 @@ public class UiService {
 		return SAVE_PROFILES.stream()
 				.filter(saveProfile -> saveProfile.getID().equals(USER_CONFIGURATION.getLastActiveSaveProfileId()))
 				.findFirst();
+	}
+
+	public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
+		currentSaveProfile.setLastUsedModProfileId(currentModlistProfile.getID());
+		currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
+		USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
+		saveUserData();
 	}
 }

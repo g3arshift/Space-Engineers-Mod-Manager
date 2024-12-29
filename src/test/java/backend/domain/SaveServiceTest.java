@@ -215,7 +215,7 @@ public class SaveServiceTest {
 		SaveProfile testSaveProfile = new SaveProfile();
 		testSaveProfile.setSaveName("Test Save");
 		testSaveProfile.setSavePath(testDir.toString() + "\\Sandbox_config.sbc");
-		testSaveProfile.setLastUsedModProfile(testModlistProfile.getID());
+		testSaveProfile.setLastUsedModProfileId(testModlistProfile.getID());
 
 		return testSaveProfile;
 	}

@@ -195,6 +195,7 @@ public class ModProfileManagerView {
 		Platform.exitNestedEventLoop(stage, null);
 	}
 
+	//TODO: Refactor to being genercized later. This is basically duplicated in ModlistManagerView's version of this function.
 	@FXML
 	private void importModlistFile() {
 		FileChooser importChooser = new FileChooser();

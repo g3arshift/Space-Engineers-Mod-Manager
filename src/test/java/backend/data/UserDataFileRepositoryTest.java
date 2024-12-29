@@ -37,7 +37,7 @@ public class UserDataFileRepositoryTest {
 		assertTrue(userConfigurationResult.isSuccess());
 		UserConfiguration validUserConfig = userConfigurationResult.getPayload();
 		assertEquals("Primer Dark", validUserConfig.getUserTheme());
-		assertNull(validUserConfig.getLastAppliedSaveProfileId());
+		assertNull(validUserConfig.getLastModifiedSaveProfileId());
 		assertEquals(1, validUserConfig.getModlistProfiles().size());
 		assertEquals("Default", validUserConfig.getModlistProfiles().getFirst().getProfileName());
 		assertEquals("None", validUserConfig.getSaveProfiles().getFirst().getProfileName());
@@ -52,7 +52,7 @@ public class UserDataFileRepositoryTest {
 		assertFalse(userConfigurationResult.isSuccess());
 		UserConfiguration badUserData = userConfigurationResult.getPayload();
 		assertEquals("Primer Light", badUserData.getUserTheme());
-		assertNull(badUserData.getLastAppliedSaveProfileId());
+		assertNull(badUserData.getLastModifiedSaveProfileId());
 		assertEquals(1, badUserData.getModlistProfiles().size());
 		assertEquals("Default", badUserData.getModlistProfiles().getFirst().getProfileName());
 		assertEquals("None", badUserData.getSaveProfiles().getFirst().getProfileName());
