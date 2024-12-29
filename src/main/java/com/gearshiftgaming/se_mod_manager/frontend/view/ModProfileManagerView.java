@@ -2,9 +2,11 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
@@ -15,10 +17,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 
+import java.io.File;
 import java.util.Properties;
 
 /**
@@ -47,6 +51,12 @@ public class ModProfileManagerView {
 
 	@FXML
 	private Button selectProfile;
+
+	@FXML
+	private Button importModlist;
+
+	@FXML
+	private Button exportModlist;
 
 	@FXML
 	private Button closeProfileWindow;
@@ -183,6 +193,30 @@ public class ModProfileManagerView {
 		stage.close();
         profileList.getSelectionModel().clearSelection();
 		Platform.exitNestedEventLoop(stage, null);
+	}
+
+	@FXML
+	private void importModlistFile() {
+		FileChooser importChooser = new FileChooser();
+		importChooser.setTitle("Import Modlist");
+		importChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		importChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
+
+		File savePath = importChooser.showOpenDialog(stage);
+
+		if (savePath != null) {
+			Result<ModlistProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+			if (modlistProfileResult.isSuccess()) {
+				modTableContextBarView.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
+				UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
+			}
+			Popup.displaySimpleAlert(modlistProfileResult, stage);
+		}
+	}
+
+	@FXML
+	private void exportModlistFile() {
+		ModlistManagerHelper.exportModlistFile(stage, UI_SERVICE);
 	}
 
 	private boolean profileNameExists(String profileName) {

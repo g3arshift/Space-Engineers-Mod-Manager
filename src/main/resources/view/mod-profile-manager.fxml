@@ -33,11 +33,13 @@
                   </ListView>
                   <VBox alignment="TOP_CENTER" minWidth="96.0" spacing="10.0">
                      <children>
-                        <Button fx:id="createNewProfile" minWidth="96.0" mnemonicParsing="false" onAction="#createNewProfile" text="Create New" />
-                        <Button fx:id="copyProfile" minWidth="96.0" mnemonicParsing="false" onAction="#copyProfile" text="Copy" />
-                        <Button fx:id="removeProfile" minWidth="96.0" mnemonicParsing="false" onAction="#removeProfile" text="Remove" />
-                        <Button fx:id="renameProfile" minWidth="96.0" mnemonicParsing="false" onAction="#renameProfile" text="Rename" />
-                      <Button fx:id="selectProfile" minWidth="96.0" mnemonicParsing="false" onAction="#selectProfile" text="Set Active" />
+                        <Button fx:id="createNewProfile" minWidth="117.0" mnemonicParsing="false" onAction="#createNewProfile" text="Create New" />
+                        <Button fx:id="copyProfile" minWidth="117.0" mnemonicParsing="false" onAction="#copyProfile" text="Copy" />
+                        <Button fx:id="removeProfile" minWidth="117.0" mnemonicParsing="false" onAction="#removeProfile" text="Remove" />
+                        <Button fx:id="renameProfile" minWidth="117.0" mnemonicParsing="false" onAction="#renameProfile" text="Rename" />
+                      <Button fx:id="selectProfile" minWidth="117.0" mnemonicParsing="false" onAction="#selectProfile" text="Set Active" />
+                        <Button fx:id="importModlist" minWidth="117.0" mnemonicParsing="false" onAction="#importModlistFile" text="Import Modlist" />
+                        <Button fx:id="exportModlist" minWidth="117.0" mnemonicParsing="false" onAction="#exportModlistFile" text="Export Modlist" />
                      </children>
                      <HBox.margin>
                         <Insets />

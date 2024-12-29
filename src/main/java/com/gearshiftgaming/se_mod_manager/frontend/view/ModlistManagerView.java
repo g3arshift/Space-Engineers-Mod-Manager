@@ -811,7 +811,7 @@ public class ModlistManagerView {
 	}
 
 	@FXML
-	private void importModlist() {
+	private void importModlistFile() {
 		FileChooser importChooser = new FileChooser();
 		importChooser.setTitle("Import Modlist");
 		importChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -831,25 +831,16 @@ public class ModlistManagerView {
 
 
 	@FXML
-	private void exportModlist() {
-		FileChooser exportChooser = new FileChooser();
-		exportChooser.setTitle("Export Modlist");
-		exportChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-		exportChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SEMM Modlists", "*.semm"));
-
-		File savePath = exportChooser.showSaveDialog(STAGE);
-		if (savePath != null) {
-			Result<Void> exportModlistResult = UI_SERVICE.exportModlist(UI_SERVICE.getCurrentModlistProfile(), savePath);
-			if (!exportModlistResult.isSuccess()) UI_SERVICE.log(exportModlistResult);
-			Popup.displaySimpleAlert(exportModlistResult, STAGE);
-		}
+	private void exportModlistFile() {
+		ModlistManagerHelper.exportModlistFile(STAGE, UI_SERVICE);
 	}
 
 	//Apply the modlist the user is currently using to the save profile they're currently using.
 	@FXML
 	private void applyModlist() throws IOException {
 		//TODO: Do status bar stuff
-		//TODO: Disable this button when our save profile save is not found
+		//TODO: Disable this button when our save profile save is not found.
+		// Do this by disabling the button if the save profile isn't alive when we switch save profiles, and reenable it there too.
 		SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
 		if (currentSaveProfile.isSaveExists()) {
 			int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);

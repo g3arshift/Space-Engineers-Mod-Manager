@@ -103,6 +103,8 @@ public class ViewController {
 
 		//TODO: Actually implement this. Function is empty at the moment.
 		//TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
+		//TODO: To highlight specific areas during setup, use four semi-opaque panes to create a clickable area and hide the rest.
+		//TODO: Disable resizing before first time setup and re-enable after.
 		if (!userConfigurationResult.isSuccess()) {
 			UI_SERVICE.firstTimeSetup();
 		}
