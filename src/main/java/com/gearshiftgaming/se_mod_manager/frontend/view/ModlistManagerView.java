@@ -843,8 +843,8 @@ public class ModlistManagerView {
 			int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
 			if (overwriteChoice == 1) {
 				// Deep copy list and sort by priority.
-				List<Mod> copiedModList = new ArrayList<>(UI_SERVICE.getCurrentModList());
-				copiedModList.sort(Comparator.comparing(Mod::getLoadPriority));
+				List<Mod> copiedModList = UI_SERVICE.getCurrentModList().stream()
+						.filter(Mod::isActive).sorted(Comparator.comparing(Mod::getLoadPriority)).collect(Collectors.toList());
 
 				if (copiedModList.isEmpty()) {
 					int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);

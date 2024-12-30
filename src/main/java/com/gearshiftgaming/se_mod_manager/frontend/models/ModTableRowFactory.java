@@ -93,7 +93,27 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
-		final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mod");
+		final MenuItem ACTIVATE_MODS_MENU_ITEM = new MenuItem("Activate mod");
+		ACTIVATE_MODS_MENU_ITEM.setOnAction(actionEvent -> {
+			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
+			for(Mod m : selectedMods) {
+				m.setActive(true);
+			}
+			modTable.refresh();
+			UI_SERVICE.saveUserData();
+		});
+
+		final MenuItem DEACTIVATE_MODS_MENU_ITEM = new MenuItem("Deactivate mod");
+		DEACTIVATE_MODS_MENU_ITEM.setOnAction(actionEvent -> {
+			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
+			for(Mod m : selectedMods) {
+				m.setActive(false);
+			}
+			modTable.refresh();
+			UI_SERVICE.saveUserData();
+		});
+
+		final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete mod");
 		DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTable.getSelectionModel().getSelectedItems()));
 		DELETE_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
@@ -128,7 +148,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		});
 
 
-		TABLE_CONTEXT_MENU.getItems().addAll(WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM);
+		TABLE_CONTEXT_MENU.getItems().addAll(ACTIVATE_MODS_MENU_ITEM, DEACTIVATE_MODS_MENU_ITEM, WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM);
 
 		row.contextMenuProperty().bind(
 				Bindings.when(Bindings.isNotNull(row.itemProperty()))
