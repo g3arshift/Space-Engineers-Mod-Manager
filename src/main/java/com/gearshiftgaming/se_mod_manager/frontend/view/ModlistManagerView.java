@@ -844,7 +844,9 @@ public class ModlistManagerView {
 			if (overwriteChoice == 1) {
 				// Deep copy list and sort by priority.
 				List<Mod> copiedModList = UI_SERVICE.getCurrentModList().stream()
-						.filter(Mod::isActive).sorted(Comparator.comparing(Mod::getLoadPriority)).collect(Collectors.toList());
+						.filter(Mod::isActive)
+						.sorted(Comparator.comparing(Mod::getLoadPriority))
+						.collect(Collectors.toList());
 
 				if (copiedModList.isEmpty()) {
 					int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
