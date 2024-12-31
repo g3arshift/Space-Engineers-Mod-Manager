@@ -4,14 +4,17 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SaveRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -19,8 +22,8 @@ import java.nio.file.Path;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
+@Slf4j
 public class SaveService {
 
 	private final SaveRepository SAVE_REPOSITORY;
@@ -37,15 +40,28 @@ public class SaveService {
 
 		//Gets the path without Sandbox_config.sbc at the end
 		String sourceSavePath = sourceSaveProfile.getSavePath().substring(0, sourceSaveProfile.getSavePath().length() - 19);
-		String destinationSavePath;
 
 		//Checks if our intended save path already exists, and if it does, create a new name.
+
 		boolean pathHasDuplicate;
 		int copyIndex = 1;
+		String copyProfilePath;
+
+		String endOfSourcePath = sourceSavePath.substring(sourceSaveProfile.getProfileName().length() - 3);
+		Pattern endOfProfileNameRegex = Pattern.compile("\\(([^d\\)]+)\\)");
+
+		if (endOfProfileNameRegex.matcher(endOfSourcePath).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
+			copyProfilePath = sourceSavePath;
+		} else {
+			copyProfilePath = String.format("%s (%d)", sourceSavePath, copyIndex);
+		}
+
 		do {
-			destinationSavePath = sourceSavePath + "_" + copyIndex;
-			pathHasDuplicate = Files.exists(Path.of(destinationSavePath));
-			copyIndex++;
+			pathHasDuplicate = Files.exists(Path.of(copyProfilePath));
+			if (pathHasDuplicate) {
+				copyIndex++;
+			}
+			copyProfilePath = String.format("%s (%d)", copyProfilePath.substring(0, copyProfilePath.length() - 3).trim(), copyIndex);
 		} while (pathHasDuplicate);
 
 		Result<String> sandboxConfigResult = SANDBOX_SERVICE.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));
@@ -58,24 +74,29 @@ public class SaveService {
 			//Check if the sandbox_config actually contains a <SessionName> tag.
 			if (sessionNameIndexPositions[0] != -1 && sessionNameIndexPositions[1] != -1) {
 				//Copies our source directory to a new location.
-				SAVE_REPOSITORY.copySave(sourceSavePath, destinationSavePath);
+				SAVE_REPOSITORY.copySave(sourceSavePath, copyProfilePath);
 				SaveProfile copiedSaveProfile = new SaveProfile(sourceSaveProfile);
 
 				//Check that our copy performed correctly.
-				if (Files.exists(Path.of(destinationSavePath))) {
+				if (Files.exists(Path.of(copyProfilePath))) {
 					result.addMessage("Save directory successfully copied.", ResultType.SUCCESS);
-					copiedSaveProfile.setSavePath(destinationSavePath + "\\Sandbox_config.sbc");
+					copiedSaveProfile.setSavePath(copyProfilePath + "\\Sandbox_config.sbc");
 
 					//Change the name in our copied save's Sandbox_config and Sandbox files to match the save name.
-					copiedSaveProfile.setSaveName(getSessionName(sandboxConfig, destinationSavePath) + "_" + (copyIndex - 1));
-					copiedSaveProfile.setProfileName(copiedSaveProfile.getProfileName() + "_" + (copyIndex - 1));
+					String sessionName = getSessionName(sandboxConfig, copyProfilePath);
+					sessionName = getProfileName(copyIndex, endOfProfileNameRegex, sessionName);
+					copiedSaveProfile.setSaveName(sessionName);
+
+					String profileName = copiedSaveProfile.getProfileName();
+					profileName = getProfileName(copyIndex, endOfProfileNameRegex, profileName);
+					copiedSaveProfile.setProfileName(profileName);
 
 					//Change the name in our copied save's Sandbox_config file to match the save name.
 					Result<Void> sandboxConfigNameChangeResult = changeSandboxConfigSessionName(sandboxConfig, copiedSaveProfile);
 
 					//Change the name in our copied save's Sandbox file to match the save name.
 					if (sandboxConfigNameChangeResult.isSuccess()) {
-						Result<String> sandboxResult = SANDBOX_SERVICE.getSandboxFromFile(new File(destinationSavePath + "\\Sandbox.sbc"));
+						Result<String> sandboxResult = SANDBOX_SERVICE.getSandboxFromFile(new File(copyProfilePath + "\\Sandbox.sbc"));
 						String sandbox = sandboxResult.getPayload();
 
 						//Change the name in our copied save's Sandbox file to match the save name. This is NOT THE SAME AS the previous step.
@@ -87,13 +108,13 @@ public class SaveService {
 							result.addMessage(sandboxNameChangeResult);
 
 							//Cleanup the copied save since our rename failed
-							FileUtils.deleteDirectory(new File(destinationSavePath));
+							FileUtils.deleteDirectory(new File(copyProfilePath));
 						}
 					} else {
 						result.addMessage(sandboxConfigNameChangeResult);
 
 						//Cleanup the copied save since our rename failed
-						FileUtils.deleteDirectory(new File(destinationSavePath));
+						FileUtils.deleteDirectory(new File(copyProfilePath));
 					}
 				} else {
 					result.addMessage("Failed to copy save directory.", ResultType.FAILED);
@@ -105,6 +126,17 @@ public class SaveService {
 			result.addMessage(sandboxConfigResult);
 		}
 		return result;
+	}
+
+	@NotNull
+	private String getProfileName(int copyIndex, Pattern endOfProfileNameRegex, String profileName) {
+		String profileNameEnd = profileName.substring(profileName.length() - 3);
+		if (endOfProfileNameRegex.matcher(profileNameEnd).find()) { //Contains a (number) end
+			profileName = String.format("%s (%d)", profileName.substring(0, profileName.length() - 3).trim(), copyIndex);
+		} else {
+			profileName = String.format("%s (%d)", profileName, copyIndex);
+		}
+		return profileName;
 	}
 
 	public String getSessionName(String sandboxConfig, String saveDestinationPath) {

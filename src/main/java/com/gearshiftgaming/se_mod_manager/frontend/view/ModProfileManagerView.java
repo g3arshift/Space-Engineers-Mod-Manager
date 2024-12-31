@@ -118,11 +118,10 @@ public class ModProfileManagerView {
 			int copyIndex = 1;
 			String copyProfileName;
 
-			//TODO: Apply same check to Save profile copy instead of doing _number.
 			//Prepare our copy string by removing any existing copy numbers.
-			String endofString = profileToCopy.getProfileName().substring(profileToCopy.getProfileName().length() - 3);
-			Pattern endOfStringPattern = Pattern.compile("\\(([^d\\)]+)\\)");
-			if(endOfStringPattern.matcher(endofString).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
+			String endOfModlistName = profileToCopy.getProfileName().substring(profileToCopy.getProfileName().length() - 3);
+			Pattern endOfModlistNameRegex = Pattern.compile("\\(([^d\\)]+)\\)");
+			if(endOfModlistNameRegex.matcher(endOfModlistName).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
 				copyProfileName = profileToCopy.getProfileName();
 			} else {
 				copyProfileName = String.format("%s (%d)", profileToCopy.getProfileName(), copyIndex);
@@ -133,7 +132,7 @@ public class ModProfileManagerView {
 				if (duplicateProfileName) {
 					copyIndex++;
 				}
-				copyProfileName = String.format("%s(%d)", copyProfileName.substring(0, copyProfileName.length() - 3), copyIndex);
+				copyProfileName = String.format("%s (%d)", copyProfileName.substring(0, copyProfileName.length() - 3).trim(), copyIndex);
 			} while (duplicateProfileName);
 
 			ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
