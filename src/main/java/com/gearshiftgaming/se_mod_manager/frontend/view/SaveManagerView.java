@@ -253,9 +253,12 @@ public class SaveManagerView {
 
 	@FXML
 	private void copySave() {
-		if (saveList.getSelectionModel().getSelectedItem() != null) {
-			if (saveList.getSelectionModel().getSelectedItem().isSaveExists()) {
-				getCopyThread().start();
+		SaveProfile profileToCopy = saveList.getSelectionModel().getSelectedItem();
+		if (profileToCopy != null) {
+			if (profileToCopy.isSaveExists()) {
+				int choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the save \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
+				if (choice == 1)
+					getCopyThread().start();
 			} else {
 				Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
 			}
@@ -288,8 +291,9 @@ public class SaveManagerView {
 
 			if (profileCopyResult.isSuccess()) {
 				SAVE_PROFILES.add(profileCopyResult.getPayload());
-				Popup.displaySimpleAlert(profileCopyResult, stage);
 			}
+
+			Popup.displaySimpleAlert(profileCopyResult, stage);
 
 			UI_SERVICE.log(profileCopyResult);
 			UI_SERVICE.saveUserData();
