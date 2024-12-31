@@ -112,7 +112,7 @@ public class FileStorageController implements StorageController {
 	public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
 		Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile);
 		if (copyResult.isSuccess()) {
-			copyResult.addMessage("Successfully copied save " + sourceSaveProfile.getProfileName() + ".", ResultType.SUCCESS);
+			copyResult.addMessage("Successfully copied save \"" + sourceSaveProfile.getProfileName() + "\".", ResultType.SUCCESS);
 		}
 		return copyResult;
 	}
