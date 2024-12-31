@@ -21,9 +21,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -109,20 +111,39 @@ public class ModProfileManagerView {
 
 	@FXML
 	private void copyProfile() {
-		boolean duplicateProfileName;
-		String copyProfileName = profileList.getSelectionModel().getSelectedItem().getProfileName() + "_Copy";
-		do {
-			duplicateProfileName = profileNameExists(copyProfileName);
-			if (duplicateProfileName) {
-				copyProfileName += "_Copy";
+		ModlistProfile profileToCopy = profileList.getSelectionModel().getSelectedItem();
+		int choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
+		if (choice == 1) {
+			boolean duplicateProfileName;
+			int copyIndex = 1;
+			String copyProfileName;
+
+			//TODO: Apply same check to Save profile copy instead of doing _number.
+			//Prepare our copy string by removing any existing copy numbers.
+			String endofString = profileToCopy.getProfileName().substring(profileToCopy.getProfileName().length() - 3);
+			Pattern endOfStringPattern = Pattern.compile("\\(([^d\\)]+)\\)");
+			if(endOfStringPattern.matcher(endofString).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
+				copyProfileName = profileToCopy.getProfileName();
+			} else {
+				copyProfileName = String.format("%s (%d)", profileToCopy.getProfileName(), copyIndex);
 			}
-		} while (duplicateProfileName);
 
-		ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
-		copyProfile.setProfileName(copyProfileName);
+			do {
+				duplicateProfileName = profileNameExists(copyProfileName);
+				if (duplicateProfileName) {
+					copyIndex++;
+				}
+				copyProfileName = String.format("%s(%d)", copyProfileName.substring(0, copyProfileName.length() - 3), copyIndex);
+			} while (duplicateProfileName);
 
-		MOD_PROFILES.add(copyProfile);
-		UI_SERVICE.saveUserData();
+			ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
+			copyProfile.setProfileName(copyProfileName);
+
+			MOD_PROFILES.add(copyProfile);
+			UI_SERVICE.saveUserData();
+
+			Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
+		}
 	}
 
 	@FXML
@@ -175,8 +196,8 @@ public class ModProfileManagerView {
 					UI_SERVICE.saveUserData();
 				}
 			} else {
-                duplicateProfileName = false;
-            }
+				duplicateProfileName = false;
+			}
 		} while (duplicateProfileName);
 	}
 
@@ -191,7 +212,7 @@ public class ModProfileManagerView {
 	@FXML
 	private void closeProfileWindow() {
 		stage.close();
-        profileList.getSelectionModel().clearSelection();
+		profileList.getSelectionModel().clearSelection();
 		Platform.exitNestedEventLoop(stage, null);
 	}
 

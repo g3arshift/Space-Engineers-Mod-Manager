@@ -34,7 +34,7 @@ public class FileStorageController implements StorageController {
 
 	private final File USER_CONFIGURATION_FILE;
 
-	public FileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
+	public FileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, File USER_CONFIGURATION_FILE) {
 		this.SANDBOX_SERVICE = new SandboxService(sandboxConfigRepository);
 		this.USER_DATA_SERVICE = new UserDataService(userDataRepository);
 		this.USER_CONFIGURATION_FILE = USER_CONFIGURATION_FILE;

@@ -62,7 +62,6 @@ public class ViewController {
 		StorageController storageController = new FileStorageController(new SandboxConfigFileRepository(),
 				new UserDataFileRepository(),
 				new SaveFileRepository(),
-				PROPERTIES,
 				new File(PROPERTIES.getProperty("semm.userData.default.location")));
 
 
