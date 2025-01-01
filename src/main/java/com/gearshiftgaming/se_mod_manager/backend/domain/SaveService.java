@@ -61,7 +61,8 @@ public class SaveService {
 			if (pathHasDuplicate) {
 				copyIndex++;
 			}
-			copyProfilePath = String.format("%s (%d)", copyProfilePath.substring(0, copyProfilePath.length() - 3).trim(), copyIndex);
+			int copyIndexStringLength = 2 + (String.valueOf(copyIndex).length());
+			copyProfilePath = String.format("%s (%d)", copyProfilePath.substring(0, copyProfilePath.length() - copyIndexStringLength).trim(), copyIndex);
 		} while (pathHasDuplicate);
 
 		Result<String> sandboxConfigResult = SANDBOX_SERVICE.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));

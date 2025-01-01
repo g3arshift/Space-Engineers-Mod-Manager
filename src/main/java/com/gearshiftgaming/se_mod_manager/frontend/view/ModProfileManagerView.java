@@ -130,7 +130,8 @@ public class ModProfileManagerView {
 				if (duplicateProfileName) {
 					copyIndex++;
 				}
-				copyProfileName = String.format("%s (%d)", copyProfileName.substring(0, copyProfileName.length() - 3).trim(), copyIndex);
+				int copyIndexStringLength = 2 + (String.valueOf(copyIndex).length());
+				copyProfileName = String.format("%s (%d)", copyProfileName.substring(0, copyProfileName.length() - copyIndexStringLength).trim(), copyIndex);
 			} while (duplicateProfileName);
 
 			ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
