@@ -39,6 +39,8 @@ public class TextTruncationUtility {
 		}
 
 		//TODO: We need to make this perform at O(log n)
+		// To make this perform better, split the size in half and check if it's beyond our length. EG, if we target 150 and original length is 1200"
+		// Step 1: 1200, step 2: 600, step 3: 300, step 4: 150, step 5: 225, step 6: decrease by 1 and check length until we get to desired length.
 		// If the text is too long, truncate it
 		String ellipsis = "...";
 		String truncatedText = text;
