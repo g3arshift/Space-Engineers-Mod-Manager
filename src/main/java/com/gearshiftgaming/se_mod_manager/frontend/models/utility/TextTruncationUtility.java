@@ -38,6 +38,7 @@ public class TextTruncationUtility {
 			return text;
 		}
 
+		//TODO: We need to make this perform at O(log n)
 		// If the text is too long, truncate it
 		String ellipsis = "...";
 		String truncatedText = text;

@@ -94,11 +94,9 @@ public class ModProfileManagerView {
 
 		profileList.setItems(MOD_PROFILES);
 		profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
-
 		profileList.setStyle("-fx-background-color: -color-bg-default;");
 
 		stage.setScene(scene);
-
 		stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
 
 		UI_SERVICE.logPrivate("Successfully initialized mod profile manager.", MessageType.INFO);

@@ -872,7 +872,6 @@ public class ModlistManagerView {
 
 	@FXML
 	private void launchSpaceEngineers() throws URISyntaxException, IOException {
-		//TODO: Check this works on systems with no previous steam url association
 		Desktop.getDesktop().browse(new URI("steam://rungameid/244850"));
 	}
 
