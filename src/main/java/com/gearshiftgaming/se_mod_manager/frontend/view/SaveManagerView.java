@@ -370,7 +370,7 @@ public class SaveManagerView {
 
 	private boolean isDuplicateProfileName(String profileName) {
 		return SAVE_PROFILES.stream()
-				.anyMatch(saveProfile -> saveProfile.getProfileName().equals(profileName));
+				.anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equals(profileName.toLowerCase().trim()));
 	}
 
 	public void show() {
