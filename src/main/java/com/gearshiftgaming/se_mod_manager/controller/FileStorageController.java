@@ -173,6 +173,20 @@ public class FileStorageController implements StorageController {
 		}
 	}
 
+	public Result<Void> resetUserConfig() {
+		Result<Void> userConfigResetResult = USER_DATA_SERVICE.resetUserConfig(USER_CONFIGURATION_FILE);
+		if(userConfigResetResult.isSuccess()) {
+            try {
+                USER_DATA_SERVICE.saveUserData(new UserConfiguration(), USER_CONFIGURATION_FILE);
+				userConfigResetResult.addMessage("Succesfully deleted existing user configuration and saved new one.", ResultType.SUCCESS);
+            } catch (IOException e) {
+                userConfigResetResult.addMessage(e.toString(), ResultType.FAILED);
+            }
+        }
+
+		return userConfigResetResult;
+	}
+
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
 		UserConfiguration sortedUserConfiguration = new UserConfiguration(userConfiguration);
 		for (ModlistProfile m : sortedUserConfiguration.getModlistProfiles()) {

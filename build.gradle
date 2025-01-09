@@ -32,7 +32,6 @@ dependencies {
     api libs.org.jsoup.jsoup
     api libs.org.seleniumhq.selenium.selenium.java
     api libs.org.mockito.mockito.core
-    api libs.org.apache.maven.maven.model
     api libs.org.openjfx.javafx.controls
     api libs.org.openjfx.javafx.fxml
     api libs.org.openjfx.javafx.graphics

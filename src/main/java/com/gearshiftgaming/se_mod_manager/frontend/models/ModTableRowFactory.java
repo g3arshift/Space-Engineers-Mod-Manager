@@ -77,7 +77,9 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 		//Setup our context menu
 		final ContextMenu TABLE_CONTEXT_MENU = new ContextMenu();
 
-		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open mod page");
+		//TODO: Add select all option
+
+		final MenuItem WEB_BROWSE_MENU_ITEM = new MenuItem("Open selected mod pages");
 		WEB_BROWSE_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 			for (Mod m : selectedMods) {
@@ -93,7 +95,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 		});
 
-		final MenuItem ACTIVATE_MODS_MENU_ITEM = new MenuItem("Activate mod");
+		final MenuItem ACTIVATE_MODS_MENU_ITEM = new MenuItem("Activate selected mods");
 		ACTIVATE_MODS_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 			for(Mod m : selectedMods) {
@@ -103,7 +105,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			UI_SERVICE.saveUserData();
 		});
 
-		final MenuItem DEACTIVATE_MODS_MENU_ITEM = new MenuItem("Deactivate mod");
+		final MenuItem DEACTIVATE_MODS_MENU_ITEM = new MenuItem("Deactivate selected mods");
 		DEACTIVATE_MODS_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 			for(Mod m : selectedMods) {
@@ -113,7 +115,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			UI_SERVICE.saveUserData();
 		});
 
-		final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete mod");
+		final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mods");
 		DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTable.getSelectionModel().getSelectedItems()));
 		DELETE_MENU_ITEM.setOnAction(actionEvent -> {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());

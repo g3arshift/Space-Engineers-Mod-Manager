@@ -48,4 +48,8 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
 	public Result<ModlistProfile> importModlist(File saveLocation) {
 		return userDataFileRepository.importModlist(saveLocation);
 	}
+
+	public Result<Void> resetUserConfig(File userConfigFile) {
+		return userDataFileRepository.resetUserConfiguration(userConfigFile);
+	}
 }
