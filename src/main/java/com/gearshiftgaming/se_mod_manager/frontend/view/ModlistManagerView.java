@@ -224,6 +224,7 @@ public class ModlistManagerView {
 	@Getter
 	private FilteredList<Mod> filteredModList;
 
+	@Getter
 	private final Stage STAGE;
 
 	private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
