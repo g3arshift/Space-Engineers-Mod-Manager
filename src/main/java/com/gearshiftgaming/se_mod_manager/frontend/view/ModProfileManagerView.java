@@ -214,6 +214,7 @@ public class ModProfileManagerView {
 	@FXML
 	private void closeProfileWindow() {
 		stage.close();
+		stage.setHeight(stage.getHeight() - 1);
 		profileList.getSelectionModel().clearSelection();
 		Platform.exitNestedEventLoop(stage, null);
 	}

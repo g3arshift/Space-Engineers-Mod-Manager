@@ -359,6 +359,7 @@ public class SaveManagerView {
 	@FXML
 	private void closeSaveWindow() {
 		stage.close();
+		stage.setHeight(stage.getHeight() - 1);
 		saveList.getSelectionModel().clearSelection();
 		Platform.exitNestedEventLoop(stage, null);
 	}
