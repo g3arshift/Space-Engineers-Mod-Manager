@@ -207,7 +207,6 @@ public class ModlistManagerView {
 	private CheckMenuItem modDescriptionToggle;
 
 	//This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
-	//TODO: Hook this up
 	private final StatusBarView STATUS_BAR_VIEW;
 
 	private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
@@ -219,7 +218,7 @@ public class ModlistManagerView {
 
 	private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
 
-	private final SaveManagerView SAVE_MANAGER_VIEW;
+	private final SaveProfileManagerView SAVE_MANAGER_VIEW;
 
 	@Getter
 	private FilteredList<Mod> filteredModList;
@@ -246,7 +245,7 @@ public class ModlistManagerView {
 
 
 	public ModlistManagerView(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBarView statusBarView,
-							  ModProfileManagerView modProfileManagerView, SaveManagerView saveManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView,
+							  ModProfileManagerView modProfileManagerView, SaveProfileManagerView saveProfileManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView,
 							  GeneralFileInputView generalFileInputView) {
 		this.UI_SERVICE = uiService;
 		this.STAGE = stage;
@@ -258,7 +257,7 @@ public class ModlistManagerView {
 		this.GENERAL_FILE_SELECT_VIEW = generalFileInputView;
 
 		this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
-		this.SAVE_MANAGER_VIEW = saveManagerView;
+		this.SAVE_MANAGER_VIEW = saveProfileManagerView;
 
 		this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 

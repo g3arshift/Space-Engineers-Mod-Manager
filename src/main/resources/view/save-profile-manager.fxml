@@ -77,7 +77,7 @@
                         <Button fx:id="copySave" minWidth="96.0" mnemonicParsing="false" onAction="#copySave" text="Copy" />
                         <Button fx:id="removeSave" minWidth="96.0" mnemonicParsing="false" onAction="#removeSave" text="Remove" />
                         <Button fx:id="renameProfile" minWidth="96.0" mnemonicParsing="false" onAction="#renameProfile" text="Rename" />
-                      <Button fx:id="selectSave" minWidth="96.0" mnemonicParsing="false" onAction="#selectSave" text="Set Active" />
+                      <Button fx:id="selectSave" minWidth="96.0" mnemonicParsing="false" onAction="#setActive" text="Set Active" />
                      </children>
                      <HBox.margin>
                         <Insets />

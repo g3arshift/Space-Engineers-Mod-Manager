@@ -139,7 +139,7 @@ public class ViewController {
 
 		//View for managing Save Profiles
 		final FXMLLoader SAVE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
-		final SaveManagerView SAVE_MANAGER_VIEW = new SaveManagerView(UI_SERVICE, SAVE_INPUT_VIEW, SAVE_PROFILE_INPUT_VIEW);
+		final SaveProfileManagerView SAVE_MANAGER_VIEW = new SaveProfileManagerView(UI_SERVICE, SAVE_INPUT_VIEW, SAVE_PROFILE_INPUT_VIEW);
 		SAVE_MANAGER_LOADER.setController(SAVE_MANAGER_VIEW);
 		final Parent SAVE_MANAGER_ROOT = SAVE_MANAGER_LOADER.load();
 

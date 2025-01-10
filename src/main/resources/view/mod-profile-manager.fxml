@@ -37,7 +37,7 @@
                         <Button fx:id="copyProfile" minWidth="117.0" mnemonicParsing="false" onAction="#copyProfile" text="Copy" />
                         <Button fx:id="removeProfile" minWidth="117.0" mnemonicParsing="false" onAction="#removeProfile" text="Remove" />
                         <Button fx:id="renameProfile" minWidth="117.0" mnemonicParsing="false" onAction="#renameProfile" text="Rename" />
-                      <Button fx:id="selectProfile" minWidth="117.0" mnemonicParsing="false" onAction="#selectProfile" text="Set Active" />
+                      <Button fx:id="selectProfile" minWidth="117.0" mnemonicParsing="false" onAction="#setActive" text="Set Active" />
                         <Button fx:id="importModlist" minWidth="117.0" mnemonicParsing="false" onAction="#importModlistFile" text="Import Modlist" />
                         <Button fx:id="exportModlist" minWidth="117.0" mnemonicParsing="false" onAction="#exportModlistFile" text="Export Modlist" />
                      </children>
