@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
@@ -23,6 +24,8 @@ import javafx.stage.Stage;
 import lombok.Getter;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -156,12 +159,17 @@ public class ModProfileManagerView {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
                 if (choice == 1) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                    MOD_PROFILES.remove(profileIndex);
-                    System.out.println("Removing " + profileIndex);
-                    if (profileIndex != 0) {
-                        profileList.getSelectionModel().select(profileIndex - 1);
-                    }
+                    //This is dumb, but prevents a weird bug of exponentially cascading event notification update messages
+                    List<ModlistProfile> modList = new ArrayList<>(MOD_PROFILES);
+                    modList.remove(profileIndex);
+                    MOD_PROFILES.setAll(modList);
+
                     UI_SERVICE.saveUserData();
+                    if (profileIndex > MOD_PROFILES.size())
+                        profileList.getSelectionModel().select(MOD_PROFILES.size() - 1);
+                    else
+                        profileList.getSelectionModel().select(profileIndex);
+                    modTableContextBarView.getModProfileDropdown().getSelectionModel().select(UI_SERVICE.getCurrentModlistProfile());
                 }
             }
         }

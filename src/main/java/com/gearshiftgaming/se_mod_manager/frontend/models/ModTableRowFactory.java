@@ -265,7 +265,6 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					We shouldn't need this since currentModList which backs our table is an observable list backed by the currentModProfile.getModList,
 					but for whatever reason the changes aren't propagating without this.
 				 */
-
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
                 UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
                 UI_SERVICE.saveUserData();
@@ -321,7 +320,6 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 
 			//Update the priority of our columns
-
 			UI_SERVICE.getCurrentModList().sort(Comparator.comparing(Mod::getLoadPriority));
 			for (int i = 0; i < UI_SERVICE.getCurrentModList().size(); i++) {
 				UI_SERVICE.getCurrentModList().get(i).setLoadPriority(i + 1);

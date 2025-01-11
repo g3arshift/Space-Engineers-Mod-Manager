@@ -32,10 +32,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.TableHeaderRow;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
@@ -268,6 +265,7 @@ public class ModlistManagerView {
 
 		this.STEAM_WORKSHOP_MOD_ID = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
 		this.MOD_IO_URL = Pattern.compile(properties.getProperty("semm.modio.mod.name.pattern"));
+
 	}
 
 	public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
@@ -344,8 +342,7 @@ public class ModlistManagerView {
 		viewableLog.setFixedCellSize(35);
 
 		//This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
-		modDescription.setOnDragOver(dragEvent -> {
-		});
+		modDescription.setOnDragOver(dragEvent -> {});
 
 		UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
 	}
