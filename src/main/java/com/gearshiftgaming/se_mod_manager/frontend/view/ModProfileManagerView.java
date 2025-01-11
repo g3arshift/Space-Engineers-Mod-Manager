@@ -185,24 +185,38 @@ public class ModProfileManagerView {
             if (profileList.getSelectionModel().getSelectedItem() != null) {
                 PROFILE_INPUT_VIEW.show();
 
-                duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText());
+                String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
+                duplicateProfileName = profileNameExists(newProfileName);
 
-                if (duplicateProfileName) {
+                if (profileNameExists(newProfileName)) {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-                } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
+                } else if (!newProfileName.isBlank()) {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                    MOD_PROFILES.get(profileIndex).setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
+                    String originalProfileName = MOD_PROFILES.get(profileIndex).getProfileName();
+                    MOD_PROFILES.get(profileIndex).setProfileName(newProfileName);
 
                     //We manually refresh here because the original profile won't update its name while it's selected in the list
                     profileList.refresh();
 
                     //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
-                    modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
-                    modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                    int modProfileDropdownSelectedIndex = modTableContextBarView.getModProfileDropdown().getSelectionModel().getSelectedIndex();
+                    if(modProfileDropdownSelectedIndex != MOD_PROFILES.size() - 1) {
+                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                    } else if (MOD_PROFILES.size() == 1) {
+                        MOD_PROFILES.add(new ModlistProfile());
+                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                        MOD_PROFILES.removeLast();
+                    }
+                    else {
+                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                    }
 
+                    UI_SERVICE.log(String.format("Successfully renamed mod profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
-                    UI_SERVICE.log("Successfully renamed profile.", MessageType.INFO);
                     UI_SERVICE.saveUserData();
                 }
             } else {

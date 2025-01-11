@@ -342,16 +342,33 @@ public class SaveProfileManagerView {
         PROFILE_INPUT_VIEW.getInput().clear();
         PROFILE_INPUT_VIEW.getInput().requestFocus();
         if (saveList.getSelectionModel().getSelectedItem() != null) {
-
-
             PROFILE_INPUT_VIEW.show();
 
             String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
             if (isDuplicateProfileName(newProfileName)) {
                 Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
             } else if (!newProfileName.isBlank()) {
+                String originalProfileName = saveList.getSelectionModel().getSelectedItem().getProfileName();
                 saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
                 saveList.refresh();
+
+                int saveProfileDropdownSelectedIndex  = modTableContextBarView.getSaveProfileDropdown().getSelectionModel().getSelectedIndex();
+                if(saveProfileDropdownSelectedIndex != SAVE_PROFILES.size() - 1) {
+                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
+                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
+                } else if (SAVE_PROFILES.size() == 1) {
+                    SAVE_PROFILES.add(new SaveProfile());
+                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
+                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
+                    SAVE_PROFILES.removeLast();
+                }
+                else {
+                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
+                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
+                }
+
+                UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
+                PROFILE_INPUT_VIEW.getInput().clear();
                 UI_SERVICE.saveUserData();
             }
         }
