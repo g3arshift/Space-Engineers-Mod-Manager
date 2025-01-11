@@ -12,10 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.*;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
@@ -133,6 +130,16 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
                 Bindings.when(Bindings.isNotNull(row.itemProperty()))
                         .then(TABLE_CONTEXT_MENU)
                         .otherwise((ContextMenu) null));
+
+        //Lets the user press the delete key to delete selected mods instead of having to right click every time.
+        modTable.setOnKeyPressed(event -> {
+            List<Mod> selectedItems = modTable.getSelectionModel().getSelectedItems();
+            if(event.getCode().equals(KeyCode.DELETE)) {
+                if(!selectedItems.isEmpty()) {
+                    deleteMods(modTable);
+                }
+            }
+        });
 
         //Setup drag and drop reordering for the table
         row.setOnDragDetected(dragEvent -> {
