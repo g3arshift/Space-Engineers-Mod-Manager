@@ -656,26 +656,6 @@ public class Popup {
 		}
 	}
 
-	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
-		prepareStage(childStage, dialogBox, buttonBar);
-
-		centerStage(childStage, parentStage);
-
-		childStage.show();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
-		Platform.enterNestedEventLoop(childStage);
-	}
-
-	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
-		prepareStage(childStage, dialogBox, buttonBar);
-
-		centerStage(childStage);
-
-		childStage.show();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
-		Platform.enterNestedEventLoop(childStage);
-	}
-
 	private static void prepareStage(Stage childStage, HBox dialogBox, HBox buttonBar) {
 		VBox contents = new VBox(dialogBox, buttonBar);
 		Color borderColor;
@@ -696,5 +676,27 @@ public class Popup {
 		childStage.setResizable(false);
 
 		childStage.setScene(scene);
+	}
+
+	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
+		prepareStage(childStage, dialogBox, buttonBar);
+
+		centerStage(childStage, parentStage);
+
+		childStage.show();
+		buttonBar.getChildren().getLast().requestFocus();
+		NativeWindowUtility.SetWindowsTitleBar(childStage);
+		Platform.enterNestedEventLoop(childStage);
+	}
+
+	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
+		prepareStage(childStage, dialogBox, buttonBar);
+
+		centerStage(childStage);
+
+		childStage.show();
+		buttonBar.getChildren().getLast().requestFocus();
+		NativeWindowUtility.SetWindowsTitleBar(childStage);
+		Platform.enterNestedEventLoop(childStage);
 	}
 }
