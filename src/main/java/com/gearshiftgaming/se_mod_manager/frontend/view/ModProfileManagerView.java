@@ -157,10 +157,9 @@ public class ModProfileManagerView {
                 if (choice == 1) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                     MOD_PROFILES.remove(profileIndex);
-                    if (profileIndex > MOD_PROFILES.size()) {
+                    System.out.println("Removing " + profileIndex);
+                    if (profileIndex != 0) {
                         profileList.getSelectionModel().select(profileIndex - 1);
-                    } else {
-                        profileList.getSelectionModel().select(profileIndex);
                     }
                     UI_SERVICE.saveUserData();
                 }
@@ -222,7 +221,7 @@ public class ModProfileManagerView {
         Platform.exitNestedEventLoop(stage, null);
     }
 
-    //TODO: Refactor to being genercized later. This is basically duplicated in ModlistManagerView's version of this function.
+    //TODO: Refactor to being genericized  later. This is basically duplicated in ModlistManagerView's version of this function.
     @FXML
     private void importModlistFile() {
         FileChooser importChooser = new FileChooser();
