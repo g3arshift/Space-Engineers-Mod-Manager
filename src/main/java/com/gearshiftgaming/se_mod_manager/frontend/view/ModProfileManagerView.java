@@ -176,15 +176,17 @@ public class ModProfileManagerView {
         boolean duplicateProfileName;
 
         do {
-            PROFILE_INPUT_VIEW.getInput().clear();
-            PROFILE_INPUT_VIEW.getInput().requestFocus();
-            if (profileList.getSelectionModel().getSelectedItem() != null) {
+            ModlistProfile selectedProfile = profileList.getSelectionModel().getSelectedItem();
+            if (selectedProfile != null) {
+                PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getProfileName());
+                PROFILE_INPUT_VIEW.getInput().requestFocus();
+                PROFILE_INPUT_VIEW.getInput().selectAll();
                 PROFILE_INPUT_VIEW.show();
 
                 String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
                 duplicateProfileName = profileNameExists(newProfileName);
 
-                if (profileNameExists(newProfileName)) {
+                if (duplicateProfileName) {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
                 } else if (!newProfileName.isBlank()) {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
