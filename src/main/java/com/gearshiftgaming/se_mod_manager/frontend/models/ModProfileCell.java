@@ -19,7 +19,7 @@ import lombok.Getter;
 public abstract class ModProfileCell extends ListCell<ModlistProfile> {
     private final Label PROFILE_NAME = new Label();
 
-    private String cellStyle;
+    private final String cellStyle;
 
     private final String THEME_NAME;
 
@@ -40,13 +40,13 @@ public abstract class ModProfileCell extends ListCell<ModlistProfile> {
             PROFILE_NAME.setText(item.getProfileName());
             setGraphic(PROFILE_NAME);
 
+            StringBuilder styleBuilder = new StringBuilder(cellStyle);
             if (this.isSelected()) {
-                cellStyle += cellStyle + "-color-cell-fg-selected: -color-fg-default;" +
-                        "-color-cell-fg-selected-focused: -color-fg-default;" +
-                        ListCellUtility.getSelectedCellColor(THEME_NAME);
+                styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
+                        .append("-color-cell-fg-selected-focused: -color-fg-default;")
+                        .append(ListCellUtility.getSelectedCellColor(THEME_NAME));
             }
-            setStyle(cellStyle);
+            setStyle(styleBuilder.toString());
         }
     }
-
 }

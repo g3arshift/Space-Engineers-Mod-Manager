@@ -99,7 +99,7 @@ public class ModProfileManagerView {
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
         stage.setScene(scene);
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        //stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
 
         UI_SERVICE.logPrivate("Successfully initialized mod profile manager.", MessageType.INFO);
     }
@@ -159,17 +159,13 @@ public class ModProfileManagerView {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
                 if (choice == 1) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                    //This is dumb, but prevents a weird bug of exponentially cascading event notification update messages
-                    List<ModlistProfile> modList = new ArrayList<>(MOD_PROFILES);
-                    modList.remove(profileIndex);
-                    MOD_PROFILES.setAll(modList);
+                    MOD_PROFILES.remove(profileIndex);
 
                     UI_SERVICE.saveUserData();
                     if (profileIndex > MOD_PROFILES.size())
                         profileList.getSelectionModel().select(MOD_PROFILES.size() - 1);
                     else
                         profileList.getSelectionModel().select(profileIndex);
-                    modTableContextBarView.getModProfileDropdown().getSelectionModel().select(UI_SERVICE.getCurrentModlistProfile());
                 }
             }
         }
@@ -240,7 +236,7 @@ public class ModProfileManagerView {
         stage.close();
         stage.setHeight(stage.getHeight() - 1);
         profileList.getSelectionModel().clearSelection();
-        Platform.exitNestedEventLoop(stage, null);
+        //Platform.exitNestedEventLoop(stage, null);
     }
 
     //TODO: Refactor to being genericized  later. This is basically duplicated in ModlistManagerView's version of this function.
@@ -278,6 +274,6 @@ public class ModProfileManagerView {
     public void show() {
         stage.show();
         NativeWindowUtility.SetWindowsTitleBar(stage);
-        Platform.enterNestedEventLoop(stage);
+        //Platform.enterNestedEventLoop(stage);
     }
 }

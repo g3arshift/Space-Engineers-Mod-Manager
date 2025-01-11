@@ -321,17 +321,13 @@ public class SaveProfileManagerView {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
                 if (choice == 1) {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
-                    //This is dumb, but prevents a weird bug of exponentially cascading event notification update messages
-                    List<SaveProfile> saveProfileList = new ArrayList<>(SAVE_PROFILES);
-                    saveProfileList.remove(profileIndex);
-                    SAVE_PROFILES.setAll(saveProfileList);
+                    SAVE_PROFILES.remove(profileIndex);
 
                     UI_SERVICE.saveUserData();
                     if (profileIndex > SAVE_PROFILES.size())
                         saveList.getSelectionModel().select(profileIndex - 1);
                     else
                         saveList.getSelectionModel().select(profileIndex);
-                    modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(UI_SERVICE.getCurrentSaveProfile());
                 }
             }
         }

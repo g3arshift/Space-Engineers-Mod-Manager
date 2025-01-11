@@ -33,7 +33,7 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 
 	private final HBox LAYOUT = new HBox(STACK_PANE);
 
-	private String cellStyle;
+	private final String cellStyle;
 
 	private final String THEME_NAME;
 
@@ -64,12 +64,13 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 			Tooltip.install(getREGION(), getSAVE_NAME());
 			setGraphic(getLAYOUT());
 
+			StringBuilder styleBuilder = new StringBuilder(cellStyle);
 			if (this.isSelected()) {
-				cellStyle += cellStyle + "-color-cell-fg-selected: -color-fg-default;" +
-						"-color-cell-fg-selected-focused: -color-fg-default;" +
-						ListCellUtility.getSelectedCellColor(THEME_NAME);
+				styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
+						.append("-color-cell-fg-selected-focused: -color-fg-default;")
+						.append(ListCellUtility.getSelectedCellColor(THEME_NAME));
 			}
-			setStyle(cellStyle);
+			setStyle(styleBuilder.toString());
 		}
 	}
 }
