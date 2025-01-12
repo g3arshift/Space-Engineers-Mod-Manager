@@ -119,7 +119,7 @@ public class SaveProfileManagerView {
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
         saveList.setItems(SAVE_PROFILES);
-        saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme(), UI_SERVICE));
+        saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE));
 
         saveList.setStyle("-fx-background-color: -color-bg-default;");
 
