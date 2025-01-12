@@ -1112,47 +1112,35 @@ public class ModlistManagerView {
                     }
                 }
 
+
                 if (duplicateModIds == steamCollectionModIds.size()) {
                     Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
-                    Platform.runLater(() -> {
-                        FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-                        fadeTransition.setFromValue(1d);
-                        fadeTransition.setToValue(0d);
+                    resetUiOnInvalidCollectionModImportCount();
+                } else if (modIdsSuccessfullyFound == 0) {
+                    Popup.displaySimpleAlert("No mods were found. Items like scripts, blueprints, worlds, and other non-mod objects are not able to be imported.", STAGE, MessageType.WARN);
 
-                        fadeTransition.setOnFinished(actionEvent -> {
-                            modImportSteamCollectionName.setVisible(false);
-                            disableModImportUiText(false);
-                            disableUserInputElements(false);
-                            resetModImportProgressUi();
-                        });
-
-                        fadeTransition.play();
-                    });
+                    resetUiOnInvalidCollectionModImportCount();
                 } else {
                     int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
-                    if (modIdsSuccessfullyFound == 0) {
-                        Popup.displaySimpleAlert("No mods were found. Only mods are able to be imported, other items like blueprints or scripts are not valid.", MessageType.WARN);
-                    } else {
-                        String postCollectionScrapeMessage = totalNumberOfMods +
-                                " mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
-                                (totalNumberOfMods - duplicateModIds) + "?";
+                    String postCollectionScrapeMessage = totalNumberOfMods +
+                            " mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
+                            (totalNumberOfMods - duplicateModIds) + "?";
 
-                        int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
+                    int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
-                        if (userChoice == 1) {
-                            importModlist(successfullyFoundMods).start();
-                        }
-
-                        Platform.runLater(() -> {
-                            modImportSteamCollectionName.setVisible(false);
-                            disableModImportUiText(false);
-
-                            if (userChoice != 1) {
-                                disableUserInputElements(false);
-                                resetModImportProgressUi();
-                            }
-                        });
+                    if (userChoice == 1) {
+                        importModlist(successfullyFoundMods).start();
                     }
+
+                    Platform.runLater(() -> {
+                        modImportSteamCollectionName.setVisible(false);
+                        disableModImportUiText(false);
+
+                        if (userChoice != 1) {
+                            disableUserInputElements(false);
+                            resetModImportProgressUi();
+                        }
+                    });
                 }
             } else {
                 Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), STAGE);
@@ -1168,10 +1156,26 @@ public class ModlistManagerView {
 
         });
 
-
         Thread thread = Thread.ofVirtual().unstarted(TASK);
         thread.setDaemon(true);
         return thread;
+    }
+
+    private void resetUiOnInvalidCollectionModImportCount() {
+        Platform.runLater(() -> {
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+            fadeTransition.setFromValue(1d);
+            fadeTransition.setToValue(0d);
+
+            fadeTransition.setOnFinished(actionEvent -> {
+                modImportSteamCollectionName.setVisible(false);
+                disableModImportUiText(false);
+                disableUserInputElements(false);
+                resetModImportProgressUi();
+            });
+
+            fadeTransition.play();
+        });
     }
 
     private @NotNull Thread convertModIoUrlToId(String modUrl) {
