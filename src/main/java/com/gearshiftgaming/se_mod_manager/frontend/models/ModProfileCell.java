@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -21,13 +22,13 @@ public abstract class ModProfileCell extends ListCell<ModlistProfile> {
 
     private final String cellStyle;
 
-    private final String THEME_NAME;
+    private final UiService UI_SERVICE;
 
-    public ModProfileCell(String cellStyle, String themeName) {
+    public ModProfileCell(String cellStyle, UiService uiService) {
         super();
-        this.THEME_NAME = themeName;
         PROFILE_NAME.setAlignment(Pos.CENTER_LEFT);
         this.cellStyle = cellStyle;
+        this.UI_SERVICE = uiService;
     }
 
     @Override
@@ -44,7 +45,7 @@ public abstract class ModProfileCell extends ListCell<ModlistProfile> {
             if (this.isSelected()) {
                 styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
                         .append("-color-cell-fg-selected-focused: -color-fg-default;")
-                        .append(ListCellUtility.getSelectedCellColor(THEME_NAME));
+                        .append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
             }
             setStyle(styleBuilder.toString());
         }

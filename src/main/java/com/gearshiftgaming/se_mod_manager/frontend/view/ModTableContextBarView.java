@@ -155,9 +155,9 @@ public class ModTableContextBarView {
 			saveProfileDropdown.getSelectionModel().selectFirst();
 
 		String themeName = UI_SERVICE.getUSER_CONFIGURATION().getUserTheme();
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(themeName));
-		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName));
-		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName)));
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(UI_SERVICE));
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
 		Optional<ModlistProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
@@ -167,9 +167,9 @@ public class ModTableContextBarView {
 			modProfileDropdown.getSelectionModel().selectFirst();
 
 
-		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(themeName));
-		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName));
-		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName)));
+		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(UI_SERVICE));
+		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE));
+		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE)));
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 

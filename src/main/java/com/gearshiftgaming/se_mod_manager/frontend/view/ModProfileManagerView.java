@@ -17,11 +17,13 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,6 +65,9 @@ public class ModProfileManagerView {
     private Button exportModlist;
 
     @FXML
+    private Label activeProfileName;
+
+    @FXML
     private Button closeProfileWindow;
 
     @Getter
@@ -95,7 +100,7 @@ public class ModProfileManagerView {
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
         profileList.setItems(MOD_PROFILES);
-        profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
+        profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme(), UI_SERVICE));
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
         stage.setScene(scene);
@@ -192,7 +197,8 @@ public class ModProfileManagerView {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                     String originalProfileName = MOD_PROFILES.get(profileIndex).getProfileName();
-                    MOD_PROFILES.get(profileIndex).setProfileName(newProfileName);
+                    ModlistProfile profileToModify = MOD_PROFILES.get(profileIndex);
+                    profileToModify.setProfileName(newProfileName);
 
                     //We manually refresh here because the original profile won't update its name while it's selected in the list
                     profileList.refresh();
@@ -213,6 +219,10 @@ public class ModProfileManagerView {
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
+                    if(profileToModify.equals(UI_SERVICE.getCurrentModlistProfile())) {
+                        activeProfileName.setText(profileToModify.getProfileName());
+                    }
+
                     UI_SERVICE.log(String.format("Successfully renamed mod profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
                     UI_SERVICE.saveUserData();
@@ -230,6 +240,8 @@ public class ModProfileManagerView {
             UI_SERVICE.setCurrentModlistProfile(modlistProfile);
             modTableContextBarView.getModProfileDropdown().getSelectionModel().select(modlistProfile);
             UI_SERVICE.setLastActiveModlistProfile(modlistProfile.getID());
+            activeProfileName.setText(modlistProfile.getProfileName());
+            profileList.refresh();
         }
     }
 
@@ -238,7 +250,6 @@ public class ModProfileManagerView {
         stage.close();
         stage.setHeight(stage.getHeight() - 1);
         profileList.getSelectionModel().clearSelection();
-        //Platform.exitNestedEventLoop(stage, null);
     }
 
     //TODO: Refactor to being genericized  later. This is basically duplicated in ModlistManagerView's version of this function.
@@ -256,6 +267,7 @@ public class ModProfileManagerView {
             if (modlistProfileResult.isSuccess()) {
                 modTableContextBarView.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
                 UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
+                profileList.refresh();
             }
             Popup.displaySimpleAlert(modlistProfileResult, stage);
         }
@@ -274,8 +286,10 @@ public class ModProfileManagerView {
     }
 
     public void show() {
+        profileList.refresh();
         stage.show();
         NativeWindowUtility.SetWindowsTitleBar(stage);
+        activeProfileName.setText(UI_SERVICE.getCurrentModlistProfile().getProfileName());
         //Platform.enterNestedEventLoop(stage);
     }
 }

@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -56,6 +55,9 @@ public class SaveProfileManagerView {
 
     @FXML
     private Button selectSave;
+
+    @FXML
+    private Label activeProfileName;
 
     @FXML
     private Button closeSaveWindow;
@@ -117,7 +119,7 @@ public class SaveProfileManagerView {
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
         saveList.setItems(SAVE_PROFILES);
-        saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
+        saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme(), UI_SERVICE));
 
         saveList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -129,7 +131,7 @@ public class SaveProfileManagerView {
 
         saveCopyMessage.setVisible(false);
 
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        //stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
 
         UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
     }
@@ -351,7 +353,8 @@ public class SaveProfileManagerView {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
                 } else if (!newProfileName.isBlank()) {
                     String originalProfileName = saveList.getSelectionModel().getSelectedItem().getProfileName();
-                    saveList.getSelectionModel().getSelectedItem().setProfileName(newProfileName);
+                    SaveProfile profileToModify = saveList.getSelectionModel().getSelectedItem();
+                    profileToModify.setProfileName(newProfileName);
                     saveList.refresh();
 
                     int saveProfileDropdownSelectedIndex = modTableContextBarView.getSaveProfileDropdown().getSelectionModel().getSelectedIndex();
@@ -366,6 +369,10 @@ public class SaveProfileManagerView {
                     } else {
                         modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
+                    }
+
+                    if(profileToModify.equals(UI_SERVICE.getCurrentSaveProfile())) {
+                        activeProfileName.setText(profileToModify.getProfileName());
                     }
 
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
@@ -383,6 +390,8 @@ public class SaveProfileManagerView {
         if (saveList.getSelectionModel().getSelectedItem() != null) {
             UI_SERVICE.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
             modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
+            activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
+            saveList.refresh();
         }
     }
 
@@ -391,7 +400,7 @@ public class SaveProfileManagerView {
         stage.close();
         stage.setHeight(stage.getHeight() - 1);
         saveList.getSelectionModel().clearSelection();
-        Platform.exitNestedEventLoop(stage, null);
+        //Platform.exitNestedEventLoop(stage, null);
     }
 
     private boolean saveAlreadyExists(String savePath) {
@@ -405,9 +414,11 @@ public class SaveProfileManagerView {
     }
 
     public void show() {
+        saveList.refresh();
         stage.show();
         NativeWindowUtility.SetWindowsTitleBar(stage);
-        Platform.enterNestedEventLoop(stage);
+        activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
+        //Platform.enterNestedEventLoop(stage);
     }
 
     private void disableModImportBar(boolean shouldDisable) {

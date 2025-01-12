@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import javafx.scene.control.Tooltip;
 
@@ -14,8 +15,8 @@ import javafx.scene.control.Tooltip;
 public class SaveProfileDropdownItemCell extends SaveProfileCell {
 
 
-	public SaveProfileDropdownItemCell(String themeName) {
-		super("", themeName);
+	public SaveProfileDropdownItemCell(UiService uiService) {
+		super("", uiService);
 	}
 
 	@Override
