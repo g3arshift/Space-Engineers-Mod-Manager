@@ -18,7 +18,7 @@ public class ModProfileManagerCell extends ModProfileCell{
 
 	private final UiService UI_SERVICE;
 
-	public ModProfileManagerCell(String themeName, final UiService UI_SERVICE) {
+	public ModProfileManagerCell(final UiService UI_SERVICE) {
 		super("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;", UI_SERVICE);
 		this.UI_SERVICE = UI_SERVICE;
 	}

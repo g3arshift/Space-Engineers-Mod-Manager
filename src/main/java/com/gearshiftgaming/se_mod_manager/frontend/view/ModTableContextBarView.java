@@ -154,7 +154,6 @@ public class ModTableContextBarView {
 		else
 			saveProfileDropdown.getSelectionModel().selectFirst();
 
-		String themeName = UI_SERVICE.getUSER_CONFIGURATION().getUserTheme();
 		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(UI_SERVICE));
 		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
 		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
@@ -349,7 +348,7 @@ public class ModTableContextBarView {
 
 		TASK = new Task<>() {
 			@Override
-			protected Void call() throws Exception {
+			protected Void call() {
 				UI_SERVICE.getCurrentModList().clear();
 				MODLIST_MANAGER_VIEW.importModlist(modList).start();
 				return null;

@@ -100,7 +100,7 @@ public class ModProfileManagerView {
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
         profileList.setItems(MOD_PROFILES);
-        profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme(), UI_SERVICE));
+        profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE));
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
         stage.setScene(scene);
