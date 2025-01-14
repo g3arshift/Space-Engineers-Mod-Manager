@@ -3,6 +3,9 @@ SEMM is designed to simplify the management of mods for Space Engineers. It supp
 
 It can do this for either Space Engineers servers or clients, providing a far easier way to manage mods for complex builds or server setups. Currently, seven different themes are supported with three light and four dark.
 
+**Plannned Features**
+* [ ] Mod Conflict Tracking
+
 ![image](https://github.com/user-attachments/assets/924d4329-8b38-4b85-9306-5459763f7aed)
 ![image](https://github.com/user-attachments/assets/59a67789-0c50-4cfb-9611-663cdaff192a)
 ![image](https://github.com/user-attachments/assets/267cbbf9-a457-4dbc-b863-f23a741b02ae)
