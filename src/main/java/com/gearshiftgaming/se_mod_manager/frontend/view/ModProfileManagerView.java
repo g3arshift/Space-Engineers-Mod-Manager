@@ -112,14 +112,15 @@ public class ModProfileManagerView {
     @FXML
     private void createNewProfile() {
         ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
+        //TODO: Switch active profile to the new profile
     }
 
     @FXML
     private void copyProfile() {
         ModlistProfile profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
-            int choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
-            if (choice == 1) {
+            int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
+            if (copyChoice == 1) {
                 boolean duplicateProfileName;
                 int copyIndex = 1;
                 String copyProfileName;
@@ -133,22 +134,45 @@ public class ModProfileManagerView {
                     copyProfileName = String.format("%s (%d)", profileToCopy.getProfileName(), copyIndex);
                 }
 
-                do {
-                    duplicateProfileName = profileNameExists(copyProfileName);
-                    if (duplicateProfileName) {
-                        copyIndex++;
-                    }
-                    int copyIndexStringLength = 2 + (String.valueOf(copyIndex).length());
-                    copyProfileName = String.format("%s (%d)", copyProfileName.substring(0, copyProfileName.length() - copyIndexStringLength).trim(), copyIndex);
-                } while (duplicateProfileName);
+                int renameChoice = Popup.displayThreeChoiceDialog("Do you want to rename the copied profile?", stage, MessageType.INFO, "Yes", "No", "Cancel");
 
-                ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
-                copyProfile.setProfileName(copyProfileName);
+                if (renameChoice == 0) {
+                    return;
+                }
 
-                MOD_PROFILES.add(copyProfile);
-                UI_SERVICE.saveUserData();
+                if (renameChoice == 2) {
+                    do {
+                        PROFILE_INPUT_VIEW.getInput().setText(copyProfileName);
+                        PROFILE_INPUT_VIEW.getInput().requestFocus();
+                        PROFILE_INPUT_VIEW.getInput().selectAll();
+                        PROFILE_INPUT_VIEW.show();
 
-                Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
+                        copyProfileName = PROFILE_INPUT_VIEW.getInput().getText();
+                        duplicateProfileName = profileNameExists(copyProfileName);
+                        if (duplicateProfileName) {
+                            Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+                        } //There's an implicit else here that if you hit the cancel button on the rename the entire process will cancel
+                    } while (duplicateProfileName);
+                } else {
+                    do {
+                        duplicateProfileName = profileNameExists(copyProfileName);
+                        if (duplicateProfileName) {
+                            copyIndex++;
+                        }
+                        int copyIndexStringLength = 2 + (String.valueOf(copyIndex).length());
+                        copyProfileName = String.format("%s (%d)", copyProfileName.substring(0, copyProfileName.length() - copyIndexStringLength).trim(), copyIndex);
+                    } while (duplicateProfileName);
+                }
+
+                if(!copyProfileName.isBlank()) {
+                    ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
+                    copyProfile.setProfileName(copyProfileName);
+
+                    MOD_PROFILES.add(copyProfile);
+                    UI_SERVICE.saveUserData();
+
+                    Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
+                }
             }
         } else {
             Popup.displaySimpleAlert("You have to select a profile first!", stage, MessageType.ERROR);
@@ -205,7 +229,7 @@ public class ModProfileManagerView {
 
                     //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
                     int modProfileDropdownSelectedIndex = modTableContextBarView.getModProfileDropdown().getSelectionModel().getSelectedIndex();
-                    if(modProfileDropdownSelectedIndex != MOD_PROFILES.size() - 1) {
+                    if (modProfileDropdownSelectedIndex != MOD_PROFILES.size() - 1) {
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (MOD_PROFILES.size() == 1) {
@@ -213,13 +237,12 @@ public class ModProfileManagerView {
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
                         MOD_PROFILES.removeLast();
-                    }
-                    else {
+                    } else {
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
                         modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if(profileToModify.equals(UI_SERVICE.getCurrentModlistProfile())) {
+                    if (profileToModify.equals(UI_SERVICE.getCurrentModlistProfile())) {
                         activeProfileName.setText(profileToModify.getProfileName());
                     }
 

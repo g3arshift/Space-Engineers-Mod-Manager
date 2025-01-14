@@ -69,6 +69,7 @@ import java.util.stream.Collectors;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
+//TODO: At some point a bunch of logic needs to be rewritten with guard clause format. Especially for the mod scraping.
 public class ModlistManagerView {
     @FXML
     private ComboBox<String> modImportDropdown;
@@ -1117,7 +1118,7 @@ public class ModlistManagerView {
                     Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", STAGE, MessageType.INFO);
                     resetUiOnInvalidCollectionModImportCount();
                 } else if (modIdsSuccessfullyFound == 0) {
-                    Popup.displaySimpleAlert("No mods were found. Items like scripts, blueprints, worlds, and other non-mod objects are not able to be imported.", STAGE, MessageType.WARN);
+                    Popup.displaySimpleAlert("Collection contained no mods. Items like scripts, blueprints, worlds, and other non-mod objects are not able to be imported.", STAGE, MessageType.WARN);
 
                     resetUiOnInvalidCollectionModImportCount();
                 } else {

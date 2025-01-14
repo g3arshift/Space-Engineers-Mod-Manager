@@ -141,6 +141,7 @@ public class SaveProfileManagerView {
         boolean duplicateSavePath = false;
         Result<SaveProfile> saveProfileResult;
         //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
+        //TODO: This is kind of ugly. Needs a rewrite at some point, probably with guard clauses.
         do {
             SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
             SAVE_INPUT_VIEW.setAddSaveButtonText("Next");
@@ -181,6 +182,7 @@ public class SaveProfileManagerView {
                                 UI_SERVICE.log(saveProfileResult);
 
                                 PROFILE_INPUT_VIEW.getInput().clear();
+                                //TODO: Switch active profile to the new profile
                             }
 
                             int addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
