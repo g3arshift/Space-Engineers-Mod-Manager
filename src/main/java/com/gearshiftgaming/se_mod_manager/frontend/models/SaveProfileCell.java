@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.ListCell;
@@ -33,13 +34,13 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 
 	private final HBox LAYOUT = new HBox(STACK_PANE);
 
-	private String cellStyle;
+	private final String cellStyle;
 
-	private final String THEME_NAME;
+	private final UiService UI_SERVICE;
 
-	public SaveProfileCell(String cellStyle, String themeName) {
+	public SaveProfileCell(String cellStyle, UiService uiService) {
 		super();
-		this.THEME_NAME = themeName;
+		this.UI_SERVICE = uiService;
 		HBox.setHgrow(STACK_PANE, Priority.ALWAYS);
 		STACK_PANE.setAlignment(Pos.CENTER_LEFT);
 		this.cellStyle = cellStyle;
@@ -64,12 +65,13 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 			Tooltip.install(getREGION(), getSAVE_NAME());
 			setGraphic(getLAYOUT());
 
+			StringBuilder styleBuilder = new StringBuilder(cellStyle);
 			if (this.isSelected()) {
-				cellStyle += cellStyle + "-color-cell-fg-selected: -color-fg-default;" +
-						"-color-cell-fg-selected-focused: -color-fg-default;" +
-						ListCellUtility.getSelectedCellColor(THEME_NAME);
+				styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
+						.append("-color-cell-fg-selected-focused: -color-fg-default;")
+						.append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
 			}
-			setStyle(cellStyle);
+			setStyle(styleBuilder.toString());
 		}
 	}
 }

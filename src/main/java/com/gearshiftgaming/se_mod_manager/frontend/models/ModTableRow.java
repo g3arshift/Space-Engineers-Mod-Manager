@@ -35,17 +35,17 @@ public class ModTableRow extends TableRow<Mod> {
 						"-color-cell-fg-selected-focused: -color-fg-default;" +
 						ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
 			} else {
-				String style;
+				StringBuilder styleBuilder = new StringBuilder();
 				if (getIndex() % 2 == 0) {
-					style = "-fx-background-color: -color-cell-border, -color-cell-bg;";
+					styleBuilder.append("-fx-background-color: -color-cell-border, -color-cell-bg;");
 				} else {
-					style = "-fx-background-color: -color-cell-border, -color-cell-bg-odd;";
+					styleBuilder.append("-fx-background-color: -color-cell-border, -color-cell-bg-odd;");
 				}
 
-				style += "-fx-background-insets: 0, 0 0 1 0;" +
+				styleBuilder.append("-fx-background-insets: 0, 0 0 1 0;" +
 						"-fx-padding: 0;" +
-						"-fx-cell-size: 2.8em;";
-				setStyle(style);
+						"-fx-cell-size: 2.8em;");
+				setStyle(styleBuilder.toString());
 			}
 		}
 	}

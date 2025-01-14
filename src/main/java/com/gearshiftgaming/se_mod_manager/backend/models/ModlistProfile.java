@@ -29,7 +29,6 @@ public class ModlistProfile {
     public ModlistProfile() {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
-        //TODO: Add increment if duplicate.
         profileName = "New Mod Profile";
     }
 
@@ -40,7 +39,7 @@ public class ModlistProfile {
     }
 
     public ModlistProfile(ModlistProfile modlistProfile) {
-        this.ID = modlistProfile.getID();
+        this.ID = UUID.randomUUID();
         this.profileName = modlistProfile.getProfileName();
         this.modList = new ArrayList<>();
         if(modlistProfile.getModList() != null){

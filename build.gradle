@@ -23,12 +23,15 @@ dependencies {
     api libs.org.apache.commons.commons.lang3
     api libs.commons.io.commons.io
     api libs.net.raumzeitfalle.fx.scenic.view
-    api libs.org.apache.logging.log4j.log4j.core
-    api libs.org.apache.logging.log4j.log4j.api
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.24.3'
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.24.3'
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.24.3'
     api libs.org.jsoup.jsoup
     api libs.org.seleniumhq.selenium.selenium.java
     api libs.org.mockito.mockito.core
-    api libs.org.apache.maven.maven.model
     api libs.org.openjfx.javafx.controls
     api libs.org.openjfx.javafx.fxml
     api libs.org.openjfx.javafx.graphics
@@ -56,7 +59,7 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.4.0'
+version = '0.4.8'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 

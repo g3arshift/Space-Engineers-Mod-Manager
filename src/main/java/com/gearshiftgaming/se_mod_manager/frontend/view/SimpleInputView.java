@@ -87,6 +87,7 @@ public class SimpleInputView {
     private void closeWindow() {
         input.clear();
         stage.close();
+        stage.setHeight(stage.getHeight() - 1);
         Platform.exitNestedEventLoop(stage, null);
     }
 

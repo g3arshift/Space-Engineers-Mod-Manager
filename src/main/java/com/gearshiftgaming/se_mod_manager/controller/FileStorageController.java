@@ -34,7 +34,7 @@ public class FileStorageController implements StorageController {
 
 	private final File USER_CONFIGURATION_FILE;
 
-	public FileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, Properties properties, File USER_CONFIGURATION_FILE) {
+	public FileStorageController(SandboxConfigRepository sandboxConfigRepository, UserDataRepository userDataRepository, SaveRepository saveRepository, File USER_CONFIGURATION_FILE) {
 		this.SANDBOX_SERVICE = new SandboxService(sandboxConfigRepository);
 		this.USER_DATA_SERVICE = new UserDataService(userDataRepository);
 		this.USER_CONFIGURATION_FILE = USER_CONFIGURATION_FILE;
@@ -112,7 +112,7 @@ public class FileStorageController implements StorageController {
 	public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
 		Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile);
 		if (copyResult.isSuccess()) {
-			copyResult.addMessage("Successfully copied save " + sourceSaveProfile.getProfileName() + ".", ResultType.SUCCESS);
+			copyResult.addMessage("Successfully copied save \"" + sourceSaveProfile.getProfileName() + "\".", ResultType.SUCCESS);
 		}
 		return copyResult;
 	}
@@ -171,6 +171,20 @@ public class FileStorageController implements StorageController {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public Result<Void> resetUserConfig() {
+		Result<Void> userConfigResetResult = USER_DATA_SERVICE.resetUserConfig(USER_CONFIGURATION_FILE);
+		if(userConfigResetResult.isSuccess()) {
+            try {
+                USER_DATA_SERVICE.saveUserData(new UserConfiguration(), USER_CONFIGURATION_FILE);
+				userConfigResetResult.addMessage("Succesfully deleted existing user configuration and saved new one.", ResultType.SUCCESS);
+            } catch (IOException e) {
+                userConfigResetResult.addMessage(e.toString(), ResultType.FAILED);
+            }
+        }
+
+		return userConfigResetResult;
 	}
 
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {

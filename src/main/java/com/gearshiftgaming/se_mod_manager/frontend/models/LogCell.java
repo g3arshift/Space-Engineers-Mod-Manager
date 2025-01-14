@@ -26,7 +26,6 @@ public class LogCell extends ListCell<LogMessage> {
         MESSAGE.setWrapText(true);
     }
 
-    //TODO: We're getting a weird bug that's leaving empty cells sometimes when the message is especially large and the user clicks into the rows? Could be the cell resizing too large for the view maybe?
     @Override
     protected void updateItem(LogMessage item, boolean empty) {
         super.updateItem(item, empty);

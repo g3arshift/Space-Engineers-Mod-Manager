@@ -9,8 +9,6 @@ import jakarta.xml.bind.Unmarshaller;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -36,7 +34,10 @@ public class UserDataFileRepository implements UserDataRepository {
 
     public boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) throws IOException {
         if(!userConfigurationFile.exists()) {
-            Files.createDirectory(Path.of(userConfigurationFile.getParent()));
+            if(!userConfigurationFile.getParentFile().exists()) {
+                Files.createDirectory(Path.of(userConfigurationFile.getParent()));
+            }
+            Files.createFile(userConfigurationFile.toPath());
         }
 
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(userConfigurationFile))) {
@@ -87,5 +88,21 @@ public class UserDataFileRepository implements UserDataRepository {
             modlistProfileResult.addMessage("Failed to load mod profile. Error Details: " + e, ResultType.FAILED);
 		}
 		return modlistProfileResult;
+    }
+
+    @Override
+    public Result<Void> resetUserConfiguration(File userConfigurationLocation) {
+        try {
+            Files.delete(userConfigurationLocation.toPath());
+        } catch (IOException e) {
+            Result<Void> failedResult = new Result<>();
+            failedResult.addMessage(e.toString(), ResultType.FAILED);
+            return failedResult;
+        }
+
+        Result<Void> successfulResult = new Result<>();
+        successfulResult.addMessage("Successfully deleted user configuration file.", ResultType.SUCCESS);
+
+        return successfulResult;
     }
 }

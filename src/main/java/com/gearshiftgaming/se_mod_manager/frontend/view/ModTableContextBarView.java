@@ -8,6 +8,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItem
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -21,7 +22,6 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -58,6 +58,9 @@ public class ModTableContextBarView {
 
 	@FXML
 	private MenuItem updateMods;
+
+	@FXML
+	private MenuItem resetConfig;
 
 	@FXML
 	private MenuItem about;
@@ -151,10 +154,9 @@ public class ModTableContextBarView {
 		else
 			saveProfileDropdown.getSelectionModel().selectFirst();
 
-		String themeName = UI_SERVICE.getUSER_CONFIGURATION().getUserTheme();
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(themeName));
-		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName));
-		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(themeName)));
+		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(UI_SERVICE));
+		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
+		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
 
 		modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
 		Optional<ModlistProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
@@ -164,9 +166,9 @@ public class ModTableContextBarView {
 			modProfileDropdown.getSelectionModel().selectFirst();
 
 
-		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(themeName));
-		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName));
-		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(themeName)));
+		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(UI_SERVICE));
+		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE));
+		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE)));
 
 		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 
@@ -322,13 +324,31 @@ public class ModTableContextBarView {
 		updateMods(UI_SERVICE.getCurrentModList()).start();
 	}
 
+	@FXML
+	private void resetConfig() {
+		int resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", STAGE, MessageType.INFO);
+
+		if(resetChoice == 1) {
+			resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
+			if(resetChoice == 1) {
+				Result<Void> configResetResult = UI_SERVICE.resetUserConfig();
+				if(configResetResult.isSuccess()) {
+					Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
+					Platform.exit();
+				} else {
+					Popup.displaySimpleAlert(configResetResult, STAGE);
+				}
+			}
+		}
+	}
+
 	private Thread updateMods(List<Mod> initialModList) {
 		final Task<Void> TASK;
 		List<Mod> modList = new ArrayList<>(initialModList);
 
 		TASK = new Task<>() {
 			@Override
-			protected Void call() throws Exception {
+			protected Void call() {
 				UI_SERVICE.getCurrentModList().clear();
 				MODLIST_MANAGER_VIEW.importModlist(modList).start();
 				return null;

@@ -35,4 +35,6 @@ public interface StorageController {
     Result<ModlistProfile> importModlist(File saveLocation);
 
     public Result<Void> createTestUserData(Theme theme);
+
+    Result<Void> resetUserConfig();
 }

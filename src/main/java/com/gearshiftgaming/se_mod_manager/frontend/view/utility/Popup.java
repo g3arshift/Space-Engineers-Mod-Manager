@@ -359,18 +359,21 @@ public class Popup {
 		leftButton.setOnAction((ActionEvent event) -> {
 			choice.set(2);
 			childStage.close();
+			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
 		centerButton.setOnAction((ActionEvent event) -> {
 			choice.set(1);
 			childStage.close();
+			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
 		rightButton.setOnAction((ActionEvent event) -> {
 			choice.set(0);
 			childStage.close();
+			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
@@ -409,12 +412,14 @@ public class Popup {
 		noButton.setOnAction((ActionEvent event) -> {
 			choice.set(0);
 			childStage.close();
+			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
 		yesButton.setOnAction((ActionEvent event) -> {
 			choice.set(1);
 			childStage.close();
+			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
@@ -443,6 +448,7 @@ public class Popup {
 		quitButton.setText("OK");
 		quitButton.setOnAction((ActionEvent event) -> {
 			childStage.close();
+			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
@@ -650,26 +656,6 @@ public class Popup {
 		}
 	}
 
-	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
-		prepareStage(childStage, dialogBox, buttonBar);
-
-		centerStage(childStage, parentStage);
-
-		childStage.show();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
-		Platform.enterNestedEventLoop(childStage);
-	}
-
-	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
-		prepareStage(childStage, dialogBox, buttonBar);
-
-		centerStage(childStage);
-
-		childStage.show();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
-		Platform.enterNestedEventLoop(childStage);
-	}
-
 	private static void prepareStage(Stage childStage, HBox dialogBox, HBox buttonBar) {
 		VBox contents = new VBox(dialogBox, buttonBar);
 		Color borderColor;
@@ -690,5 +676,27 @@ public class Popup {
 		childStage.setResizable(false);
 
 		childStage.setScene(scene);
+	}
+
+	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
+		prepareStage(childStage, dialogBox, buttonBar);
+
+		centerStage(childStage, parentStage);
+
+		childStage.show();
+		buttonBar.getChildren().getLast().requestFocus();
+		NativeWindowUtility.SetWindowsTitleBar(childStage);
+		Platform.enterNestedEventLoop(childStage);
+	}
+
+	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
+		prepareStage(childStage, dialogBox, buttonBar);
+
+		centerStage(childStage);
+
+		childStage.show();
+		buttonBar.getChildren().getLast().requestFocus();
+		NativeWindowUtility.SetWindowsTitleBar(childStage);
+		Platform.enterNestedEventLoop(childStage);
 	}
 }

@@ -1,6 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
+import javafx.scene.control.Tooltip;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -11,11 +15,44 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
  */
 public class SaveProfileManagerCell extends SaveProfileCell {
 
-	private String style;
+	private final UiService UI_SERVICE;
 
-	private UiService uiService;
+	public SaveProfileManagerCell(final UiService UI_SERVICE) {
+		super("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;", UI_SERVICE);
+		this.UI_SERVICE = UI_SERVICE;
+	}
 
-	public SaveProfileManagerCell(String themeName) {
-		super("-fx-border-color: transparent transparent -color-border-muted transparent; -fx-border-width: 1px; -fx-border-insets: 0 5 0 5;", themeName);
+	@Override
+	protected void updateItem(SaveProfile item, boolean empty) {
+		super.updateItem(item, empty);
+		if (empty || item == null) {
+			setStyle(null);
+			setGraphic(null);
+		} else {
+			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
+			getSAVE_NAME().setText("Save name: " + item.getSaveName());
+			getPROFILE_NAME().setText(item.getProfileName());
+
+			if (!item.isSaveExists()) {
+				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
+				getPROFILE_NAME().setStrikethrough(true);
+			}
+
+			Tooltip.install(getREGION(), getSAVE_NAME());
+			setGraphic(getLAYOUT());
+
+			StringBuilder styleBuilder = new StringBuilder(getCellStyle());
+			if(item.equals(UI_SERVICE.getCurrentSaveProfile())) {
+				styleBuilder.append("-fx-border-color: -color-accent-emphasis;")
+						.append("-fx-border-width: 2px 0px 2px 0px;");
+			}
+
+			if (this.isSelected()) {
+				styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
+						.append("-color-cell-fg-selected-focused: -color-fg-default;")
+						.append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
+			}
+			setStyle(styleBuilder.toString());
+		}
 	}
 }

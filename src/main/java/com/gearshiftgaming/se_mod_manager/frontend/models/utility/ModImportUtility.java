@@ -111,6 +111,6 @@ public class ModImportUtility {
 
 	private static boolean profileNameExists(String profileName, final UiService UI_SERVICE) {
 		return UI_SERVICE.getMODLIST_PROFILES().stream()
-				.anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));
+				.anyMatch(modProfile -> modProfile.getProfileName().toLowerCase().trim().equals(profileName));
 	}
 }

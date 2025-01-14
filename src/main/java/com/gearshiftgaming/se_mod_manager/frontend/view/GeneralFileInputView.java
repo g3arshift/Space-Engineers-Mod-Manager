@@ -121,6 +121,7 @@ public class GeneralFileInputView {
 			Popup.displaySimpleAlert("You must select a file!", stage, MessageType.ERROR);
 		} else {
 			stage.close();
+			stage.setHeight(stage.getHeight() - 1);
 			fileName.setText(noSaveSelectedMessage);
 			Platform.exitNestedEventLoop(stage, null);
 		}
@@ -128,6 +129,7 @@ public class GeneralFileInputView {
 
 	private void cancel() {
 		stage.close();
+		stage.setHeight(stage.getHeight() - 1);
 		fileName.setText(noSaveSelectedMessage);
 		selectedFile = null;
 		Platform.exitNestedEventLoop(stage, null);

@@ -23,4 +23,6 @@ public interface UserDataRepository {
     Result<Void> exportModlist(ModlistProfile modlistProfile, File modlistLocation);
 
     Result<ModlistProfile> importModlist(File modlistLocation);
+
+    Result<Void> resetUserConfiguration(File userConfigurationLocation);
 }
