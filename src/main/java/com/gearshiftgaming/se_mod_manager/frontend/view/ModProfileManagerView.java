@@ -145,7 +145,7 @@ public class ModProfileManagerView {
                         PROFILE_INPUT_VIEW.getInput().setText(copyProfileName);
                         PROFILE_INPUT_VIEW.getInput().requestFocus();
                         PROFILE_INPUT_VIEW.getInput().selectAll();
-                        PROFILE_INPUT_VIEW.show();
+                        PROFILE_INPUT_VIEW.show(stage);
 
                         copyProfileName = PROFILE_INPUT_VIEW.getInput().getText();
                         duplicateProfileName = profileNameExists(copyProfileName);
@@ -210,7 +210,7 @@ public class ModProfileManagerView {
                 PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getProfileName());
                 PROFILE_INPUT_VIEW.getInput().requestFocus();
                 PROFILE_INPUT_VIEW.getInput().selectAll();
-                PROFILE_INPUT_VIEW.show();
+                PROFILE_INPUT_VIEW.show(stage);
 
                 String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
                 duplicateProfileName = profileNameExists(newProfileName);

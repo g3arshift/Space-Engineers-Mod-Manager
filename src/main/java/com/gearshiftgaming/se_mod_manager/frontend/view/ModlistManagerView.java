@@ -559,7 +559,7 @@ public class ModlistManagerView {
         // Popup the same save chooser we use for save profiles for this and get the file path that way. Look at how the save manager handles it.
         MOD_FILE_SELECTION_VIEW.setSaveProfileInputTitle("Import Save Modlist");
         MOD_FILE_SELECTION_VIEW.setAddSaveButtonText("Import Mods");
-        MOD_FILE_SELECTION_VIEW.show();
+        MOD_FILE_SELECTION_VIEW.show(STAGE);
         File selectedSave = MOD_FILE_SELECTION_VIEW.getSelectedSave();
         if (selectedSave != null && MOD_FILE_SELECTION_VIEW.getLastPressedButtonId().equals("addSave")) {
             Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, STAGE);
@@ -578,7 +578,7 @@ public class ModlistManagerView {
             GENERAL_FILE_SELECT_VIEW.setSaveProfileInputTitle("Import Modlist from File");
             GENERAL_FILE_SELECT_VIEW.setNextButtonText("Import Mods");
             GENERAL_FILE_SELECT_VIEW.setExtensionFilter(new FileChooser.ExtensionFilter("Modlist Files", "*.txt", "*.doc"));
-            GENERAL_FILE_SELECT_VIEW.show();
+            GENERAL_FILE_SELECT_VIEW.show(STAGE);
             File selectedModlistFile = GENERAL_FILE_SELECT_VIEW.getSelectedFile();
             if (selectedModlistFile != null && GENERAL_FILE_SELECT_VIEW.getLastPressedButtonId().equals("next")) {
                 List<String> modIds = new ArrayList<>();
@@ -1053,7 +1053,7 @@ public class ModlistManagerView {
     }
 
     private String getUserModIdInput() {
-        ID_AND_URL_MOD_IMPORT_INPUT.show();
+        ID_AND_URL_MOD_IMPORT_INPUT.show(STAGE);
         return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText();
     }
 

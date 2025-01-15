@@ -4,11 +4,9 @@ import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -18,7 +16,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.commons.lang3.StringUtils;
@@ -466,48 +463,6 @@ public class Popup {
 		return buttonBar;
 	}
 
-	private static void centerStage(Stage childStage, Stage parentStage) {
-		//Center the alert in the middle of the provided stage by using listeners that will fire off when the window is created.
-		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-			double stageWidth = newValue.doubleValue();
-			childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
-		};
-		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-			double stageHeight = newValue.doubleValue();
-			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
-		};
-
-		childStage.widthProperty().addListener(widthListener);
-		childStage.heightProperty().addListener(heightListener);
-
-		//Once the window is visible, remove the listeners.
-		childStage.setOnShown(e -> {
-			childStage.widthProperty().removeListener(widthListener);
-			childStage.heightProperty().removeListener(heightListener);
-		});
-	}
-
-	private static void centerStage(Stage stage) {
-		//Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
-		Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-
-		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-			stage.setX((screenBounds.getWidth() - stage.getWidth()) / 2);
-		};
-		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-			stage.setY((screenBounds.getHeight() - stage.getHeight()) / 2);
-		};
-
-		stage.widthProperty().addListener(widthListener);
-		stage.heightProperty().addListener(heightListener);
-
-		//Once the window is visible, remove the listeners.
-		stage.setOnShown(e -> {
-			stage.widthProperty().removeListener(widthListener);
-			stage.heightProperty().removeListener(heightListener);
-		});
-	}
-
 	//Creates a dialog box message
 	private static HBox makeDialog(Label label, FontIcon messageIcon) {
 		VBox contentBox = new VBox(makeTitleBar(messageIcon), getDialogBox(label, messageIcon));
@@ -681,7 +636,7 @@ public class Popup {
 	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
 		prepareStage(childStage, dialogBox, buttonBar);
 
-		centerStage(childStage, parentStage);
+		WindowPositionUtility.centerStageOnStage(childStage, parentStage);
 
 		childStage.show();
 		buttonBar.getChildren().getLast().requestFocus();
@@ -692,7 +647,7 @@ public class Popup {
 	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
 		prepareStage(childStage, dialogBox, buttonBar);
 
-		centerStage(childStage);
+		WindowPositionUtility.centerStageOnScreen(childStage);
 
 		childStage.show();
 		buttonBar.getChildren().getLast().requestFocus();

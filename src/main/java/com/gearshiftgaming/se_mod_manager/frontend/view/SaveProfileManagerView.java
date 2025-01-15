@@ -145,7 +145,7 @@ public class SaveProfileManagerView {
         do {
             SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
             SAVE_INPUT_VIEW.setAddSaveButtonText("Next");
-            SAVE_INPUT_VIEW.show();
+            SAVE_INPUT_VIEW.show(stage);
             File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
             if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
                 saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
@@ -166,7 +166,7 @@ public class SaveProfileManagerView {
                     do {
                         PROFILE_INPUT_VIEW.getInput().clear();
                         PROFILE_INPUT_VIEW.getInput().requestFocus();
-                        PROFILE_INPUT_VIEW.show();
+                        PROFILE_INPUT_VIEW.show(stage);
                         duplicateProfileName = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
 
                         if (duplicateProfileName) {
@@ -347,7 +347,7 @@ public class SaveProfileManagerView {
                 PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getProfileName());
                 PROFILE_INPUT_VIEW.getInput().requestFocus();
                 PROFILE_INPUT_VIEW.getInput().selectAll();
-                PROFILE_INPUT_VIEW.show();
+                PROFILE_INPUT_VIEW.show(stage);
 
                 String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
                 duplicateProfileName = isDuplicateProfileName(newProfileName);

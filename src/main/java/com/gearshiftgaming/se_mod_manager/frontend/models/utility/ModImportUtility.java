@@ -90,7 +90,7 @@ public class ModImportUtility {
 		do {
 			PROFILE_INPUT_VIEW.getInput().clear();
 			PROFILE_INPUT_VIEW.getInput().requestFocus();
-			PROFILE_INPUT_VIEW.show();
+			PROFILE_INPUT_VIEW.show(STAGE);
 			ModlistProfile newModlistProfile = new ModlistProfile(PROFILE_INPUT_VIEW.getInput().getText());
 			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText().toLowerCase().trim(), UI_SERVICE);
 
