@@ -117,11 +117,11 @@ public class ModInfoService {
 
         String gameName = collectionPage.select(STEAM_COLLECTION_GAME_NAME_SELECTOR).getFirst().childNodes().getFirst().toString().trim();
         String foundBreadcrumbName = collectionPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString();
-        if (!gameName.equals("Space Engineers")) {
+        if (!gameName.equals("Space Engineers")) { //Game name check
             Result<String> wrongGameResult = new Result<>();
             wrongGameResult.addMessage("The collection must be a Space Engineers collection!", ResultType.FAILED);
             modIdScrapeResults.add(wrongGameResult);
-        } else if (!foundBreadcrumbName.equals("Collections")) {
+        } else if (!foundBreadcrumbName.equals("Collections")) { //Steam item check (makes sure it's a collection)
             Result<String> notACollectionResult = new Result<>();
             notACollectionResult.addMessage("You must provide a link or ID of a collection!", ResultType.FAILED);
             modIdScrapeResults.add(notACollectionResult);
@@ -129,21 +129,27 @@ public class ModInfoService {
             Elements elements = collectionPage.select(STEAM_COLLECTION_MOD_ID_SELECTOR);
             List<Node> nodes = elements.getFirst().childNodes();
 
-            for (Node node : nodes) {
-                Result<String> modIdResult = new Result<>();
-                if (node.hasAttr("data-panel")) {
-                    try {
-                        String modId = STEAM_MOD_ID_PATTERN.matcher(node.childNodes().get(1).toString())
-                                .results()
-                                .map(MatchResult::group)
-                                .collect(Collectors.joining())
-                                .substring(3);
-                        modIdResult.addMessage("Successfully grabbed mod ID.", ResultType.SUCCESS);
-                        modIdResult.setPayload(modId);
-                    } catch (RuntimeException e) {
-                        modIdResult.addMessage(e.toString(), ResultType.FAILED);
+            if (nodes.get(1).attributes().get("class").equals("collectionNoChildren")) { //Empty collection check
+                Result<String> emptyCollectionResult = new Result<>();
+                emptyCollectionResult.addMessage("No items in this collection.", ResultType.FAILED);
+                modIdScrapeResults.add(emptyCollectionResult);
+            } else {
+                for (Node node : nodes) {
+                    Result<String> modIdResult = new Result<>();
+                    if (node.hasAttr("data-panel")) {
+                        try {
+                            String modId = STEAM_MOD_ID_PATTERN.matcher(node.childNodes().get(1).toString())
+                                    .results()
+                                    .map(MatchResult::group)
+                                    .collect(Collectors.joining())
+                                    .substring(3);
+                            modIdResult.addMessage("Successfully grabbed mod ID.", ResultType.SUCCESS);
+                            modIdResult.setPayload(modId);
+                        } catch (RuntimeException e) {
+                            modIdResult.addMessage(e.toString(), ResultType.FAILED);
+                        }
+                        modIdScrapeResults.add(modIdResult);
                     }
-					modIdScrapeResults.add(modIdResult);
                 }
             }
         }
