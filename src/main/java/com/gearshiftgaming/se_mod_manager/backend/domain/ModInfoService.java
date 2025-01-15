@@ -324,6 +324,7 @@ public class ModInfoService {
 
                     modInfo[1] = concatenatedModTags.toString();
 
+                    //TODO: Probably breaks for SEModder4 stuff since he has no description. Need to check it.
                     modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
 
                     String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
