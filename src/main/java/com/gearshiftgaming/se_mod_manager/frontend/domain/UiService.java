@@ -235,6 +235,8 @@ public class UiService {
                         .filter(mod -> modIdResult.getPayload().equals(mod.getId()))
                         .findFirst();
                 duplicateMod.ifPresent(mod -> modIdResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in modlist.", ResultType.INVALID));
+            } else {
+                log(modIdResult);
             }
         }
 
