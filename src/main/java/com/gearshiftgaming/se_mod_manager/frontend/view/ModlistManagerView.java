@@ -505,7 +505,7 @@ public class ModlistManagerView {
             //This is a bit hacky, but it makes a LOT less code we need to maintain.
             final Mod[] modList = new Mod[1];
             modList[0] = mod;
-            importModlist(List.of(modList)).start();
+            importModsFromList(List.of(modList)).start();
         }
 
     }
@@ -546,7 +546,7 @@ public class ModlistManagerView {
                     //This is a bit hacky, but it makes a LOT less code we need to maintain.
                     final Mod[] modList = new Mod[1];
                     modList[0] = mod;
-                    importModlist(List.of(modList)).start();
+                    importModsFromList(List.of(modList)).start();
                 } else {
                     UI_SERVICE.log(duplicateModResult);
                     Popup.displaySimpleAlert(duplicateModResult, STAGE);
@@ -565,7 +565,7 @@ public class ModlistManagerView {
             Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, STAGE);
 
             if (existingModlistResult.isSuccess()) {
-                importModlist(existingModlistResult.getPayload()).start();
+                importModsFromList(existingModlistResult.getPayload()).start();
             }
         }
     }
@@ -627,7 +627,7 @@ public class ModlistManagerView {
                         for (String s : modIds) {
                             modList.add(new SteamMod(s));
                         }
-                        importModlist(modList).start();
+                        importModsFromList(modList).start();
                     } else {
                         importModIoListFile(modIds).start();
                     }
@@ -673,7 +673,7 @@ public class ModlistManagerView {
                 if (duplicateMods > 0) {
                     Popup.displaySimpleAlert(duplicateMods + " mods already in the modlist were found.", MessageType.INFO);
                 }
-                importModlist(modList).start();
+                importModsFromList(modList).start();
             } else {
                 if (duplicateMods > 0) {
                     Popup.displaySimpleAlert("All the mods in the modlist file are already in the modlist!", STAGE, MessageType.INFO);
@@ -1130,7 +1130,7 @@ public class ModlistManagerView {
                     int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
                     if (userChoice == 1) {
-                        importModlist(successfullyFoundMods).start();
+                        importModsFromList(successfullyFoundMods).start();
                     }
 
                     Platform.runLater(() -> {
@@ -1196,21 +1196,20 @@ public class ModlistManagerView {
             });
 
             Result<String> modIdResult = TASK.getValue();
-            Result<Void> duplicateModResult = new Result<>();
-            //TODO: This order of if statements is bad and resulting in showing messages we shouldn't.
             if (modIdResult.isSuccess()) {
+                Result<Void> duplicateModResult = new Result<>();
                 duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modIdResult.getPayload(), UI_SERVICE);
                 if (duplicateModResult.isSuccess()) {
                     ModIoMod mod = new ModIoMod(modIdResult.getPayload());
                     final Mod[] modList = new Mod[1];
                     modList[0] = mod;
-                    importModlist(List.of(modList)).start();
+                    importModsFromList(List.of(modList)).start();
                 } else {
-                    Popup.displaySimpleAlert(duplicateModResult, STAGE);
+                    modIdResult.addMessage(duplicateModResult.getMESSAGES().getLast(), duplicateModResult.getType());
                 }
             }
 
-            if (!modIdResult.isSuccess() || !duplicateModResult.isSuccess()) {
+            if (!modIdResult.isSuccess()) {
                 //This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
                 Platform.runLater(() -> {
                     modImportProgressWheel.setVisible(false);
@@ -1239,7 +1238,11 @@ public class ModlistManagerView {
         return thread;
     }
 
-    public @NotNull Thread importModlist(List<Mod> modList) {
+    /**
+     * This is the main function called to import mods into SEMM.
+     * @param modList The list of mods to import
+     */
+    public @NotNull Thread importModsFromList(List<Mod> modList) {
         final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
 
         TASK.setOnRunning(workerStateEvent -> {

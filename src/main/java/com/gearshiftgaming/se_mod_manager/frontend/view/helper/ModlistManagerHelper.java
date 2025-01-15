@@ -10,6 +10,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -60,7 +61,8 @@ public class ModlistManagerHelper {
 		};
 	}
 
-	public static Result<Void> checkForDuplicateModIoMod(String modId, UiService uiService) {
+	@NotNull
+	public static Result<Void> checkForDuplicateModIoMod(String modId, @NotNull UiService uiService) {
 		Result<Void> duplicateModResult = new Result<>();
 		for (Mod mod : uiService.getCurrentModList()) {
 			if (mod instanceof ModIoMod) {

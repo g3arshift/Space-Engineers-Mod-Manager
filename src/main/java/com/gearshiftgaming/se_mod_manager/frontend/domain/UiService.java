@@ -460,6 +460,7 @@ public class UiService {
                             } else {
                                 idResult = getModIoModIdFromUrlName(modUrl);
                             }
+
                             if (idResult.isSuccess()) {
                                 Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(idResult.getPayload(), UiService.this);
                                 if (!duplicateIdResult.isSuccess()) {

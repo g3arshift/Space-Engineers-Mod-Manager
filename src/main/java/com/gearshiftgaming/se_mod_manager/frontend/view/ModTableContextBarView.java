@@ -350,7 +350,7 @@ public class ModTableContextBarView {
 			@Override
 			protected Void call() {
 				UI_SERVICE.getCurrentModList().clear();
-				MODLIST_MANAGER_VIEW.importModlist(modList).start();
+				MODLIST_MANAGER_VIEW.importModsFromList(modList).start();
 				return null;
 			}
 		};
