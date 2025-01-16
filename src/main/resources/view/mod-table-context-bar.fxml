@@ -49,6 +49,7 @@
                          <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
                          <MenuItem fx:id="guide" mnemonicParsing="false" text="How to use" />
                          <MenuItem fx:id="faq" mnemonicParsing="false" text="FAQ" />
+                  <MenuItem fx:id="reportBug" mnemonicParsing="false" onAction="#reportBug" text="Report a bug" />
                      </items>
                  </Menu>
              </menus>
@@ -58,7 +59,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                          <Label minWidth="-Infinity" text="Mod List" />
-                         <ComboBox fx:id="modProfileDropdown" maxWidth="165.0" minWidth="165.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="modProfileDropdown" maxWidth="235.0" minWidth="165.0" onAction="#selectModProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />
@@ -67,7 +68,7 @@
                  <HBox alignment="CENTER_LEFT" spacing="5.0">
                      <children>
                          <Label minWidth="-Infinity" text="SE Save" HBox.hgrow="ALWAYS" />
-                         <ComboBox fx:id="saveProfileDropdown" maxWidth="165.0" minWidth="165.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
+                         <ComboBox fx:id="saveProfileDropdown" maxWidth="235.0" minWidth="165.0" onAction="#selectSaveProfile" HBox.hgrow="ALWAYS" />
                      </children>
                      <opaqueInsets>
                          <Insets />

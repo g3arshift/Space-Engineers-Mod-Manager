@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Tooltip;
 
 /**
@@ -13,7 +14,6 @@ import javafx.scene.control.Tooltip;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class SaveProfileDropdownButtonCell extends SaveProfileCell {
-
 
 	public SaveProfileDropdownButtonCell(UiService uiService) {
 		super("", uiService);

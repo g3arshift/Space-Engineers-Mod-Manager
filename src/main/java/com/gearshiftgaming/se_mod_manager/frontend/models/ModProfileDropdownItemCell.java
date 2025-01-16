@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
@@ -31,6 +32,8 @@ public class ModProfileDropdownItemCell extends ModProfileCell {
 			setGraphic(null);
 			setStyle(null);
 		} else {
+			//TODO: Minor bug where this gets scrollbars on the dropdown when the button cell truncates.
+			// They go away after you change profile names though and don't come back.
 			final Region REGION = new Region();
 			final Tooltip EXTENDED_PROFILE_NAME = new Tooltip();
 			StackPane STACK_PANE = new StackPane(new Text(TextTruncationUtility.truncateWithEllipsis(item.getProfileName(), 240)), REGION);

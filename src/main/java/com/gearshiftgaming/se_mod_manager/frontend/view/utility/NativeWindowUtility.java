@@ -18,6 +18,10 @@ import java.util.Locale;
  */
 public class NativeWindowUtility {
 
+	/**
+	 * Sets the Windows title bar appearance based on the application's stylesheet.
+	 * @param stage The JavaFX Stage whose title bar appearance is to be modified.
+	 */
 	public static void SetWindowsTitleBar(Stage stage) {
 		if (Platform.isWindows()) {
 			val dwmapi = Dwmapi.INSTANCE;
@@ -36,7 +40,11 @@ public class NativeWindowUtility {
 		}
 	}
 
-	//We can't actually set the stage back to its original size or the refresh doesn't actually set in.
+	/**
+	 * Forces a redraw of the window by slightly adjusting its height.
+	 * This is necessary to ensure the appearance changes take effect.
+	 * @param stage The JavaFX Stage to be redrawn.
+	 */
 	private static void forceRedrawOfWindow(Stage stage) {
 		stage.setHeight(stage.getHeight() + 1);
 	}

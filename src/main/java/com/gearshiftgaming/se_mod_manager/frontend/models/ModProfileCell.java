@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.text.Text;
 import lombok.Getter;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -18,7 +19,7 @@ import lombok.Getter;
 
 @Getter
 public abstract class ModProfileCell extends ListCell<ModlistProfile> {
-    private final Label PROFILE_NAME = new Label();
+    private final Text PROFILE_NAME = new Text();
 
     private final String cellStyle;
 
@@ -26,7 +27,6 @@ public abstract class ModProfileCell extends ListCell<ModlistProfile> {
 
     public ModProfileCell(String cellStyle, UiService uiService) {
         super();
-        PROFILE_NAME.setAlignment(Pos.CENTER_LEFT);
         this.cellStyle = cellStyle;
         this.UI_SERVICE = uiService;
     }

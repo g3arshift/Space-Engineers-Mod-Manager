@@ -7,14 +7,20 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButt
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -23,7 +29,11 @@ import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.awt.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,338 +48,362 @@ import java.util.Optional;
  */
 public class ModTableContextBarView {
 
-	//FXML Items
-	@FXML
-	private VBox modTableContextBarRoot;
+    //FXML Items
+    @FXML
+    private VBox modTableContextBarRoot;
 
-	@FXML
-	@Getter
-	private CheckMenuItem logToggle;
+    @FXML
+    @Getter
+    private CheckMenuItem logToggle;
 
-	@FXML
-	@Getter
-	private CheckMenuItem modDescriptionToggle;
+    @FXML
+    @Getter
+    private CheckMenuItem modDescriptionToggle;
 
-	@FXML
-	private MenuItem themes;
+    @FXML
+    private MenuItem themes;
 
-	@FXML
-	private MenuItem close;
+    @FXML
+    private MenuItem close;
 
-	@FXML
-	private MenuItem updateMods;
+    @FXML
+    private MenuItem updateMods;
 
-	@FXML
-	private MenuItem resetConfig;
+    @FXML
+    private MenuItem resetConfig;
 
-	@FXML
-	private MenuItem about;
+    @FXML
+    private MenuItem about;
 
-	@FXML
-	private MenuItem guide;
+    @FXML
+    private MenuItem guide;
 
-	@FXML
-	private MenuItem faq;
+    @FXML
+    private MenuItem faq;
 
-	@FXML
-	@Getter
-	private ComboBox<ModlistProfile> modProfileDropdown;
+    @FXML
+    private MenuItem reportBug;
 
-	@FXML
-	@Getter
-	private ComboBox<SaveProfile> saveProfileDropdown;
+    @FXML
+    @Getter
+    private ComboBox<ModlistProfile> modProfileDropdown;
 
-	@FXML
-	private Rectangle activeModCountBox;
+    @FXML
+    @Getter
+    private ComboBox<SaveProfile> saveProfileDropdown;
 
-	@FXML
-	@Getter
-	private Label activeModCount;
+    @FXML
+    private Rectangle activeModCountBox;
 
-	@FXML
-	private Rectangle modConflictBox;
+    @FXML
+    @Getter
+    private Label activeModCount;
 
-	@FXML
-	@Getter
-	private Label modConflicts;
+    @FXML
+    private Rectangle modConflictBox;
 
-	@FXML
-	@Getter
-	private TextField modTableSearchField;
+    @FXML
+    @Getter
+    private Label modConflicts;
 
-	@FXML
-	private Label modTableSearchFieldPromptText;
+    @FXML
+    @Getter
+    private TextField modTableSearchField;
 
-	@FXML
-	private Button clearSearchBox;
+    @FXML
+    private Label modTableSearchFieldPromptText;
 
-	@FXML
-	private CheckMenuItem primerLightTheme;
+    @FXML
+    private Button clearSearchBox;
 
-	@FXML
-	private CheckMenuItem primerDarkTheme;
+    @FXML
+    private CheckMenuItem primerLightTheme;
 
-	@FXML
-	private CheckMenuItem nordLightTheme;
+    @FXML
+    private CheckMenuItem primerDarkTheme;
 
-	@FXML
-	private CheckMenuItem nordDarkTheme;
+    @FXML
+    private CheckMenuItem nordLightTheme;
 
-	@FXML
-	private CheckMenuItem cupertinoLightTheme;
+    @FXML
+    private CheckMenuItem nordDarkTheme;
 
-	@FXML
-	private CheckMenuItem cupertinoDarkTheme;
+    @FXML
+    private CheckMenuItem cupertinoLightTheme;
 
-	@FXML
-	private CheckMenuItem draculaTheme;
-
-	private final ModlistManagerView MODLIST_MANAGER_VIEW;
+    @FXML
+    private CheckMenuItem cupertinoDarkTheme;
 
-	private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
-
-	private final UiService UI_SERVICE;
+    @FXML
+    private CheckMenuItem draculaTheme;
 
-	private final Stage STAGE;
-
-	public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) {
-		this.UI_SERVICE = uiService;
-		this.MODLIST_MANAGER_VIEW = modlistManagerView;
-		this.STAGE = stage;
-	}
-
-	public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-		THEME_LIST.add(primerLightTheme);
-		THEME_LIST.add(primerDarkTheme);
-		THEME_LIST.add(nordLightTheme);
-		THEME_LIST.add(nordDarkTheme);
-		THEME_LIST.add(cupertinoLightTheme);
-		THEME_LIST.add(cupertinoDarkTheme);
-		THEME_LIST.add(draculaTheme);
-
-		saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
-		Optional<SaveProfile> lastActiveSaveProfile = UI_SERVICE.getLastActiveSaveProfile();
-		if (lastActiveSaveProfile.isPresent())
-			saveProfileDropdown.getSelectionModel().select(lastActiveSaveProfile.get());
-		else
-			saveProfileDropdown.getSelectionModel().selectFirst();
-
-		saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(UI_SERVICE));
-		saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
-		saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
-
-		modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
-		Optional<ModlistProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
-		if (lastActiveModlistProfile.isPresent())
-			modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
-		else
-			modProfileDropdown.getSelectionModel().selectFirst();
-
-
-		modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(UI_SERVICE));
-		modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE));
-		modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE)));
-
-		UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
-
-		//Makes it so the combo boxes will properly return strings in their menus instead of the objects
-		saveProfileDropdown.setConverter(new StringConverter<>() {
-			@Override
-			public String toString(SaveProfile saveProfile) {
-				return saveProfile.getProfileName();
-			}
-
-			@Override
-			public SaveProfile fromString(String s) {
-				return null;
-			}
-		});
-		modProfileDropdown.setConverter(new StringConverter<>() {
-			@Override
-			public String toString(ModlistProfile modlistProfile) {
-				return modlistProfile.getProfileName();
-			}
-
-			@Override
-			public ModlistProfile fromString(String s) {
-				return null;
-			}
-		});
-
-		modTableSearchField.textProperty().addListener(observable -> {
-			String filter = modTableSearchField.getText();
-			if (filter == null || filter.isBlank()) {
-				MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> true);
-			} else {
-				MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
-			}
-		});
-
-		activeModCount.textProperty().bind(UI_SERVICE.getActiveModCount().asString());
-
-		activeModCountBox.setStroke(getThemeBoxColor());
-		modConflictBox.setStroke(getThemeBoxColor());
-
-		modTableSearchField.setOnMouseClicked(mouseEvent -> modTableSearchFieldPromptText.setVisible(false));
-		modTableSearchField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
-			if (!newValue && modTableSearchField.getText().isBlank()) {
-				modTableSearchFieldPromptText.setVisible(true);
-			}
-		});
-
-		UI_SERVICE.logPrivate("Successfully initialized context bar.", MessageType.INFO);
-	}
-
-	@FXML
-	private void toggleLog() {
-		TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
-		Tab logTab = MODLIST_MANAGER_VIEW.getLogTab();
-
-		if (!logToggle.isSelected()) {
-			informationPane.getTabs().remove(logTab);
-		} else informationPane.getTabs().add(logTab);
-
-		if (informationPane.getTabs().isEmpty()) {
-			MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
-		} else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
-			MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
-		}
-	}
-
-	@FXML
-	private void toggleModDescription() {
-		TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
-		Tab modDescriptionTab = MODLIST_MANAGER_VIEW.getModDescriptionTab();
-
-		if (!modDescriptionToggle.isSelected()) {
-			informationPane.getTabs().remove(modDescriptionTab);
-		} else informationPane.getTabs().add(modDescriptionTab);
-
-		if (informationPane.getTabs().isEmpty()) {
-			MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
-		} else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
-			MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
-		}
-	}
-
-	/**
-	 * Using reflection, set the theme of the application and check/uncheck the appropriate menu boxes for themes.
-	 */
-	@FXML
-	private void setTheme(ActionEvent event) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-
-		//Remove the "Theme" end tag from our caller and capitalize the first letter
-		final CheckMenuItem SOURCE = (CheckMenuItem) event.getSource();
-		String caller = StringUtils.removeEnd(SOURCE.getId(), "Theme");
-		String selectedTheme = caller.substring(0, 1).toUpperCase() + caller.substring(1);
-
-		for (CheckMenuItem c : THEME_LIST) {
-			String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
-			String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
-			if (!themeName.equals(selectedTheme)) {
-				c.setSelected(false);
-			} else {
-				//Use reflection to get a theme class from our string
-				c.setSelected(true);
-				Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
-				Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
-				Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-				UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
-				activeModCountBox.setStroke(getThemeBoxColor());
-				modConflictBox.setStroke(getThemeBoxColor());
-
-				String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-				MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
-
-				NativeWindowUtility.SetWindowsTitleBar(STAGE);
-			}
-		}
-
-		Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
-		//This fixes the selected row being the wrong color until we change selection
-		MODLIST_MANAGER_VIEW.getModTable().refresh();
-		if (savedUserTheme.isSuccess()) {
-			UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
-		} else {
-			UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
-		}
-	}
-
-	@FXML
-	private void selectModProfile() {
-		clearSearchBox();
-
-		UI_SERVICE.setCurrentModlistProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
-		MODLIST_MANAGER_VIEW.updateModTableContents();
-	}
-
-	@FXML
-	private void selectSaveProfile() {
-		UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
-	}
-
-	@FXML
-	private void clearSearchBox() {
-		modTableSearchField.clear();
-		modTableSearchFieldPromptText.setVisible(true);
-	}
-
-	@FXML
-	private void exit() {
-		Platform.exit();
-	}
-
-	@FXML
-	private void updateModInformation() {
-		updateMods(UI_SERVICE.getCurrentModList()).start();
-	}
-
-	@FXML
-	private void resetConfig() {
-		int resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", STAGE, MessageType.INFO);
-
-		if(resetChoice == 1) {
-			resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
-			if(resetChoice == 1) {
-				Result<Void> configResetResult = UI_SERVICE.resetUserConfig();
-				if(configResetResult.isSuccess()) {
-					Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
-					Platform.exit();
-				} else {
-					Popup.displaySimpleAlert(configResetResult, STAGE);
-				}
-			}
-		}
-	}
-
-	private Thread updateMods(List<Mod> initialModList) {
-		final Task<Void> TASK;
-		List<Mod> modList = new ArrayList<>(initialModList);
-
-		TASK = new Task<>() {
-			@Override
-			protected Void call() {
-				UI_SERVICE.getCurrentModList().clear();
-				MODLIST_MANAGER_VIEW.importModsFromList(modList).start();
-				return null;
-			}
+    private final ModlistManagerView MODLIST_MANAGER_VIEW;
+
+    private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
+
+    private final UiService UI_SERVICE;
+
+    private final Stage STAGE;
+
+    public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) {
+        this.UI_SERVICE = uiService;
+        this.MODLIST_MANAGER_VIEW = modlistManagerView;
+        this.STAGE = stage;
+    }
+
+    public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        THEME_LIST.add(primerLightTheme);
+        THEME_LIST.add(primerDarkTheme);
+        THEME_LIST.add(nordLightTheme);
+        THEME_LIST.add(nordDarkTheme);
+        THEME_LIST.add(cupertinoLightTheme);
+        THEME_LIST.add(cupertinoDarkTheme);
+        THEME_LIST.add(draculaTheme);
+
+        saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
+        Optional<SaveProfile> lastActiveSaveProfile = UI_SERVICE.getLastActiveSaveProfile();
+        if (lastActiveSaveProfile.isPresent())
+            saveProfileDropdown.getSelectionModel().select(lastActiveSaveProfile.get());
+        else
+            saveProfileDropdown.getSelectionModel().selectFirst();
+
+        saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(UI_SERVICE));
+        saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
+        saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
+
+        //TODO: do the same for the modprofile
+        ChangeListener<Number> saveProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
+			String profileName = UI_SERVICE.getCurrentSaveProfile().getProfileName();
+            double cellWidth = saveProfileDropdown.getButtonCell().getWidth() - 5;
+            ((SaveProfileDropdownButtonCell) saveProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
+        };
+
+		ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
+			String profileName = UI_SERVICE.getCurrentModlistProfile().getProfileName();
+			double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
+			((ModProfileDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
 		};
 
-		Thread thread = Thread.ofVirtual().unstarted(TASK);
-		thread.setDaemon(true);
-		return thread;
-	}
+        STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
+		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
-	private Color getThemeBoxColor() {
-		return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
-			case "PrimerLight", "NordLight", "CupertinoLight":
-				yield Color.web("#000000");
-			case "PrimerDark", "CupertinoDark":
-				yield Color.web("#748393");
-			case "NordDark":
-				yield Color.web("#5e6675");
-			default:
-				yield Color.web("#685ab3");
-		};
-	}
+        modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
+        Optional<ModlistProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+        if (lastActiveModlistProfile.isPresent())
+            modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
+        else
+            modProfileDropdown.getSelectionModel().selectFirst();
+
+
+        modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(UI_SERVICE));
+        modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE));
+        modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE)));
+
+        UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
+
+        //Makes it so the combo boxes will properly return strings in their menus instead of the objects
+        saveProfileDropdown.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(SaveProfile saveProfile) {
+                return saveProfile.getProfileName();
+            }
+
+            @Override
+            public SaveProfile fromString(String s) {
+                return null;
+            }
+        });
+        modProfileDropdown.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(ModlistProfile modlistProfile) {
+                return modlistProfile.getProfileName();
+            }
+
+            @Override
+            public ModlistProfile fromString(String s) {
+                return null;
+            }
+        });
+
+        modTableSearchField.textProperty().addListener(observable -> {
+            String filter = modTableSearchField.getText();
+            if (filter == null || filter.isBlank()) {
+                MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> true);
+            } else {
+                MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
+            }
+        });
+
+        activeModCount.textProperty().bind(UI_SERVICE.getActiveModCount().asString());
+
+        activeModCountBox.setStroke(getThemeBoxColor());
+        modConflictBox.setStroke(getThemeBoxColor());
+
+        modTableSearchField.setOnMouseClicked(mouseEvent -> modTableSearchFieldPromptText.setVisible(false));
+        modTableSearchField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (!newValue && modTableSearchField.getText().isBlank()) {
+                modTableSearchFieldPromptText.setVisible(true);
+            }
+        });
+
+        UI_SERVICE.logPrivate("Successfully initialized context bar.", MessageType.INFO);
+    }
+
+    @FXML
+    private void toggleLog() {
+        TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
+        Tab logTab = MODLIST_MANAGER_VIEW.getLogTab();
+
+        if (!logToggle.isSelected()) {
+            informationPane.getTabs().remove(logTab);
+        } else informationPane.getTabs().add(logTab);
+
+        if (informationPane.getTabs().isEmpty()) {
+            MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
+        } else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+            MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
+        }
+    }
+
+    @FXML
+    private void toggleModDescription() {
+        TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
+        Tab modDescriptionTab = MODLIST_MANAGER_VIEW.getModDescriptionTab();
+
+        if (!modDescriptionToggle.isSelected()) {
+            informationPane.getTabs().remove(modDescriptionTab);
+        } else informationPane.getTabs().add(modDescriptionTab);
+
+        if (informationPane.getTabs().isEmpty()) {
+            MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
+        } else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+            MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
+        }
+    }
+
+    /**
+     * Using reflection, set the theme of the application and check/uncheck the appropriate menu boxes for themes.
+     */
+    @FXML
+    private void setTheme(ActionEvent event) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+
+        //Remove the "Theme" end tag from our caller and capitalize the first letter
+        final CheckMenuItem SOURCE = (CheckMenuItem) event.getSource();
+        String caller = StringUtils.removeEnd(SOURCE.getId(), "Theme");
+        String selectedTheme = caller.substring(0, 1).toUpperCase() + caller.substring(1);
+
+        for (CheckMenuItem c : THEME_LIST) {
+            String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
+            String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
+            if (!themeName.equals(selectedTheme)) {
+                c.setSelected(false);
+            } else {
+                //Use reflection to get a theme class from our string
+                c.setSelected(true);
+                Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
+                Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
+                Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
+                UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
+                activeModCountBox.setStroke(getThemeBoxColor());
+                modConflictBox.setStroke(getThemeBoxColor());
+
+                String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
+                MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
+
+                NativeWindowUtility.SetWindowsTitleBar(STAGE);
+            }
+        }
+
+        Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
+        //This fixes the selected row being the wrong color until we change selection
+        MODLIST_MANAGER_VIEW.getModTable().refresh();
+        if (savedUserTheme.isSuccess()) {
+            UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
+        } else {
+            UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
+        }
+    }
+
+    @FXML
+    private void selectModProfile() {
+        clearSearchBox();
+
+        UI_SERVICE.setCurrentModlistProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+        MODLIST_MANAGER_VIEW.updateModTableContents();
+    }
+
+    @FXML
+    private void selectSaveProfile() {
+        UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    private void clearSearchBox() {
+        modTableSearchField.clear();
+        modTableSearchFieldPromptText.setVisible(true);
+    }
+
+    @FXML
+    private void exit() {
+        Platform.exit();
+    }
+
+    @FXML
+    private void updateModInformation() {
+        updateMods(UI_SERVICE.getCurrentModList()).start();
+    }
+
+    @FXML
+    private void resetConfig() {
+        int resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", STAGE, MessageType.INFO);
+
+        if (resetChoice == 1) {
+            resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
+            if (resetChoice == 1) {
+                Result<Void> configResetResult = UI_SERVICE.resetUserConfig();
+                if (configResetResult.isSuccess()) {
+                    Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
+                    Platform.exit();
+                } else {
+                    Popup.displaySimpleAlert(configResetResult, STAGE);
+                }
+            }
+        }
+    }
+
+    @FXML
+    private void reportBug() throws URISyntaxException, IOException {
+        Desktop.getDesktop().browse(new URI("https://bugreport.spaceengineersmodmanager.com"));
+    }
+
+    private Thread updateMods(List<Mod> initialModList) {
+        final Task<Void> TASK;
+        List<Mod> modList = new ArrayList<>(initialModList);
+
+        TASK = new Task<>() {
+            @Override
+            protected Void call() {
+                UI_SERVICE.getCurrentModList().clear();
+                MODLIST_MANAGER_VIEW.importModsFromList(modList).start();
+                return null;
+            }
+        };
+
+        Thread thread = Thread.ofVirtual().unstarted(TASK);
+        thread.setDaemon(true);
+        return thread;
+    }
+
+    private Color getThemeBoxColor() {
+        return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+            case "PrimerLight", "NordLight", "CupertinoLight":
+                yield Color.web("#000000");
+            case "PrimerDark", "CupertinoDark":
+                yield Color.web("#748393");
+            case "NordDark":
+                yield Color.web("#5e6675");
+            default:
+                yield Color.web("#685ab3");
+        };
+    }
 }
