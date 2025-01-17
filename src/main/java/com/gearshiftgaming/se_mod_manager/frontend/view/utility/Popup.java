@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -636,11 +637,27 @@ public class Popup {
 	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
 		prepareStage(childStage, dialogBox, buttonBar);
 
-		WindowPositionUtility.centerStageOnStage(childStage, parentStage);
+		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+			double stageWidth = newValue.doubleValue();
+			childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
+		};
+
+		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
+			double stageHeight = newValue.doubleValue();
+			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
+		};
+
+		childStage.widthProperty().addListener(widthListener);
+		childStage.heightProperty().addListener(heightListener);
+		//Once the window is visible, remove the listeners.
+		childStage.setOnShown(e -> {
+			childStage.widthProperty().removeListener(widthListener);
+			childStage.heightProperty().removeListener(heightListener);
+		});
 
 		childStage.show();
 		buttonBar.getChildren().getLast().requestFocus();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
+		WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
 		Platform.enterNestedEventLoop(childStage);
 	}
 
@@ -651,7 +668,7 @@ public class Popup {
 
 		childStage.show();
 		buttonBar.getChildren().getLast().requestFocus();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
+		WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
 		Platform.enterNestedEventLoop(childStage);
 	}
 }

@@ -1,10 +1,15 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
 import com.sun.jna.Platform;
+import com.sun.jna.platform.unix.X11;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
+import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.util.Locale;
@@ -16,7 +21,8 @@ import java.util.Locale;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class NativeWindowUtility {
+@Slf4j
+public class WindowTitleBarColorUtility {
 
 	/**
 	 * Sets the Windows title bar appearance based on the application's stylesheet.
@@ -37,14 +43,15 @@ public class NativeWindowUtility {
 			forceRedrawOfWindow(stage);
 		} else if(Platform.isLinux()) {
 			//TODO: The linux equivalent
+			System.out.println("Linux title bar recoloring is not currently supported.");
 		}
 	}
 
-	/**
-	 * Forces a redraw of the window by slightly adjusting its height.
-	 * This is necessary to ensure the appearance changes take effect.
-	 * @param stage The JavaFX Stage to be redrawn.
-	 */
+		/**
+         * Forces a redraw of the window by slightly adjusting its height.
+         * This is necessary to ensure the appearance changes take effect.
+         * @param stage The JavaFX Stage to be redrawn.
+         */
 	private static void forceRedrawOfWindow(Stage stage) {
 		stage.setHeight(stage.getHeight() + 1);
 	}

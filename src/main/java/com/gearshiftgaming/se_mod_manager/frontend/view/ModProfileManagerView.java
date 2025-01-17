@@ -1,7 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
@@ -9,9 +8,9 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
-import javafx.application.Platform;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowPositionUtility;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -23,11 +22,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -308,11 +304,11 @@ public class ModProfileManagerView {
                 .anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));
     }
 
-    public void show() {
+    public void show(Stage parentStage) {
         profileList.refresh();
         stage.show();
-        NativeWindowUtility.SetWindowsTitleBar(stage);
+        WindowPositionUtility.centerStageOnStage(stage, parentStage);
+        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentModlistProfile().getProfileName());
-        //Platform.enterNestedEventLoop(stage);
     }
 }

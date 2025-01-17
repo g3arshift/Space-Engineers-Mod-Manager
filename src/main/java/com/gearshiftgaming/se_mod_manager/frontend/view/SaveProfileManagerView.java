@@ -5,8 +5,9 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowPositionUtility;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -415,12 +416,12 @@ public class SaveProfileManagerView {
                 .anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equals(profileName.toLowerCase().trim()));
     }
 
-    public void show() {
+    public void show(Stage parentStage) {
         saveList.refresh();
         stage.show();
-        NativeWindowUtility.SetWindowsTitleBar(stage);
+        WindowPositionUtility.centerStageOnStage(stage, parentStage);
+        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
-        //Platform.enterNestedEventLoop(stage);
     }
 
     private void disableModImportBar(boolean shouldDisable) {

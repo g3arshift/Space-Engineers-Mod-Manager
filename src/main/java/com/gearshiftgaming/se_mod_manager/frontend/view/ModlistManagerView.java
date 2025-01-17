@@ -702,59 +702,108 @@ public class ModlistManagerView {
         return thread;
     }
 
+    //ORIGINAL
+    //    private String getSteamModLocationFromUser(boolean steamCollection) {
+//        boolean goodModId = false;
+//        String chosenModId = "";
+//
+//        //This starts a loop that will continuously get user input until they choose any option that isn't accept.
+//        do {
+//            String userInputModId = getUserModIdInput();
+//            String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
+//            //Checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
+//            if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
+//                if (!StringUtils.isAlpha(userInputModId)) {
+//                    String modId;
+//                    if (StringUtils.isNumeric(userInputModId)) {
+//                        modId = userInputModId;
+//                    } else {
+//                        modId = STEAM_WORKSHOP_MOD_ID.matcher(userInputModId)
+//                                .results()
+//                                .map(MatchResult::group)
+//                                .collect(Collectors.joining(""));
+//
+//                        //Certain strings will sometimes return empty strings after the regex.
+//                        if (!modId.isBlank()) {
+//                            modId = modId.substring(3);
+//                        }
+//                    }
+//
+//                    //It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
+//                    if (!modId.isEmpty()) {
+//                        Optional<Mod> duplicateMod = Optional.empty();
+//                        //We have this check so we don't try and compare single mod ID's to a collection URL.
+//                        if (!steamCollection) {
+//                            String finalModId = modId;
+//                            duplicateMod = UI_SERVICE.getCurrentModList().stream()
+//                                    .filter(mod -> finalModId.equals(mod.getId()))
+//                                    .findFirst();
+//                        }
+//                        //Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
+//                        if (duplicateMod.isPresent()) {
+//                            Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
+//                        } else {
+//                            chosenModId = modId;
+//                            goodModId = true;
+//                        }
+//                    } else {
+//                        Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", STAGE, MessageType.WARN);
+//                    }
+//                } else {
+//                    Popup.displaySimpleAlert("Mod ID must contain a number!", STAGE, MessageType.WARN);
+//                }
+//            } else {
+//                goodModId = true;
+//            }
+//        } while (!goodModId);
+//
+//        ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
+//
+//        return chosenModId;
+//    }
+
     private String getSteamModLocationFromUser(boolean steamCollection) {
-        boolean goodModId = false;
         String chosenModId = "";
 
-        //This starts a loop that will continuously get user input until they choose any option that isn't accept.
         do {
             String userInputModId = getUserModIdInput();
             String lastPressedButtonId = ID_AND_URL_MOD_IMPORT_INPUT.getLastPressedButtonId();
-            //Checks to make sure the button pressed was accept, then it checks to make sure it is NOT only letters. URL's will pass this.
-            if (lastPressedButtonId != null && lastPressedButtonId.equals("accept")) {
-                if (!StringUtils.isAlpha(userInputModId)) {
-                    String modId;
-                    if (StringUtils.isNumeric(userInputModId)) {
-                        modId = userInputModId;
-                    } else {
-                        modId = STEAM_WORKSHOP_MOD_ID.matcher(userInputModId)
-                                .results()
-                                .map(MatchResult::group)
-                                .collect(Collectors.joining(""));
-
-                        //Certain strings will sometimes return empty strings after the regex.
-                        if (!modId.isBlank()) {
-                            modId = modId.substring(3);
-                        }
-                    }
-
-                    //It next checks the input, after passing it through a regex that will strip anything but numbers, to make sure it isn't empty. URL's with only letters or no ID will not pass this.
-                    if (!modId.isEmpty()) {
-                        Optional<Mod> duplicateMod = Optional.empty();
-                        //We have this check so we don't try and compare single mod ID's to a collection URL.
-                        if (!steamCollection) {
-                            String finalModId = modId;
-                            duplicateMod = UI_SERVICE.getCurrentModList().stream()
-                                    .filter(mod -> finalModId.equals(mod.getId()))
-                                    .findFirst();
-                        }
-                        //Last it checks to make sure the provided ID doesn't match a mod ID already in the list.
-                        if (duplicateMod.isPresent()) {
-                            Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
-                        } else {
-                            chosenModId = modId;
-                            goodModId = true;
-                        }
-                    } else {
-                        Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", STAGE, MessageType.WARN);
-                    }
-                } else {
-                    Popup.displaySimpleAlert("Mod ID must contain a number!", STAGE, MessageType.WARN);
-                }
-            } else {
-                goodModId = true;
+            if (lastPressedButtonId == null || !lastPressedButtonId.equals("accept")) {
+                break;
             }
-        } while (!goodModId);
+
+            if (StringUtils.isAlpha(userInputModId)) {
+                Popup.displaySimpleAlert("Mod ID must contain a number!", STAGE, MessageType.WARN);
+                continue;
+            }
+
+            String modId = StringUtils.isNumeric(userInputModId) ? userInputModId :
+                    STEAM_WORKSHOP_MOD_ID.matcher(userInputModId)
+                            .results()
+                            .map(MatchResult::group)
+                            .collect(Collectors.joining(""));
+
+            if (modId.isBlank()) {
+                Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", STAGE, MessageType.WARN);
+                continue;
+            }
+
+            modId = modId.substring(3);
+
+            if (!steamCollection) {
+                String finalModId = modId;
+                Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
+                        .filter(mod -> finalModId.equals(mod.getId()))
+                        .findFirst();
+                if (duplicateMod.isPresent()) {
+                    Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
+                    continue;
+                }
+            }
+
+            chosenModId = modId;
+            break;
+        } while (true);
 
         ID_AND_URL_MOD_IMPORT_INPUT.getInput().clear();
 
@@ -800,12 +849,12 @@ public class ModlistManagerView {
 
     @FXML
     private void manageModProfiles() {
-        MOD_PROFILE_MANAGER_VIEW.show();
+        MOD_PROFILE_MANAGER_VIEW.show(STAGE);
     }
 
     @FXML
     private void manageSaveProfiles() {
-        SAVE_MANAGER_VIEW.show();
+        SAVE_MANAGER_VIEW.show(STAGE);
         modTable.sort();
     }
 

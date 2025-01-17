@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.NativeWindowUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowPositionUtility;
@@ -137,9 +137,9 @@ public class GeneralFileInputView {
 	}
 
 	public void show(Stage parentStage) {
-		WindowPositionUtility.centerStageOnStage(stage, parentStage);
 		stage.show();
-		NativeWindowUtility.SetWindowsTitleBar(stage);
+		WindowPositionUtility.centerStageOnStage(stage, parentStage);
+		WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
 		Platform.enterNestedEventLoop(stage);
 	}
 

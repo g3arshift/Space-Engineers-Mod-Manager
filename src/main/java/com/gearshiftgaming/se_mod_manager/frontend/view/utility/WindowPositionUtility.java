@@ -7,26 +7,14 @@ import javafx.stage.Stage;
 
 public class WindowPositionUtility {
 
+    /**
+     * Centers a JavaFX stage on another stage and returns the listeners used to do so.
+     * @param childStage The stage to be centered.
+     * @param parentStage The stage to center the child stage on.
+     */
     public static void centerStageOnStage(Stage childStage, Stage parentStage) {
-        //Center the alert in the middle of the provided stage by using listeners that will fire off when the window is created.
-        ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-            double stageWidth = newValue.doubleValue();
-            childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
-        };
-
-        ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-            double stageHeight = newValue.doubleValue();
-            childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
-        };
-
-        childStage.widthProperty().addListener(widthListener);
-        childStage.heightProperty().addListener(heightListener);
-
-        //Once the window is visible, remove the listeners.
-        childStage.setOnShown(e -> {
-            childStage.widthProperty().removeListener(widthListener);
-            childStage.heightProperty().removeListener(heightListener);
-        });
+        childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - childStage.getWidth() / 2);
+        childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - childStage.getHeight() / 2);
     }
 
     public static void centerStageOnScreen(Stage stage) {

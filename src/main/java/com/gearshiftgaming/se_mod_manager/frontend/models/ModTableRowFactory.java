@@ -16,6 +16,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
     }
 
     @Override
-    public ModTableRow call(TableView<Mod> modTable) {
+    public ModTableRow call(@NotNull TableView<Mod> modTable) {
         modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
         final ModTableRow row = new ModTableRow(UI_SERVICE);
 
@@ -186,7 +187,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
             if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
                 if (!row.isEmpty()) {
-                    addBorderToRow(RowBorderType.TOP, modTable, row);
+                    addBorderToRow(RowBorderType.TOP, row);
                 }
             }
             dragEvent.consume();
@@ -197,7 +198,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
             if (!row.isEmpty() && previousRow.getItem().equals(UI_SERVICE.getCurrentModList().getLast())) {
                 //We don't want to add a border if the table isn't big enough to display all mods at once since we'll end up with a double border
                 if (!modTableVerticalScrollBar.isVisible()) {
-                    addBorderToRow(RowBorderType.BOTTOM, modTable, row);
+                    addBorderToRow(RowBorderType.BOTTOM, row);
                 } else {
                     row.setBorder(null);
                 }
@@ -287,7 +288,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         return row;
     }
 
-    private void addBorderToRow(RowBorderType rowBorderType, TableView<Mod> modTable, ModTableRow row) {
+    private void addBorderToRow(RowBorderType rowBorderType, @NotNull ModTableRow row) {
         if (!row.isEmpty() || (row.getIndex() <= UI_SERVICE.getCurrentModList().size() && UI_SERVICE.getCurrentModList().get(row.getIndex() - 1) != null)) {
             Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
             Border dropIndicator;

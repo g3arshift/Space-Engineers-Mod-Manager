@@ -136,7 +136,7 @@ public class ModInfoService {
             } else {
                 for (Node node : nodes) {
                     Result<String> modIdResult = new Result<>();
-                    if (node.hasAttr("data-panel")) {
+                    if (node.hasAttr("data-panel")) { //All the nodes that have the actual info we need have this attribute
                         try {
                             String modId = STEAM_MOD_ID_PATTERN.matcher(node.childNodes().get(1).toString())
                                     .results()
@@ -157,9 +157,9 @@ public class ModInfoService {
         return modIdScrapeResults;
     }
 
-    /*
-    Give a mod IO url, we get the actual ID of the mod. This is done by grabbing the resource ID contained within the URL of the mod primary image.
-    Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
+    /**
+     * Given a mod IO url, we get the actual ID of the mod. This is done by grabbing the resource ID contained within the URL of the mod primary image.
+     * Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
         scraping process which opens a full headless, embedded web browser.
      */
     public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
@@ -323,14 +323,11 @@ public class ModInfoService {
                     }
 
                     modInfo[1] = concatenatedModTags.toString();
-
-                    //TODO: Probably breaks for SEModder4 stuff since he has no description. Need to check it.
                     modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
 
                     String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
                     String lastUpdatedQuantifier = lastUpdatedRaw.substring(lastUpdatedRaw.length() - 1);
                     int duration = Integer.parseInt(lastUpdatedRaw.substring(0, lastUpdatedRaw.length() - 1));
-
                     switch (lastUpdatedQuantifier) {
                         case "h" -> {//Mod IO year + month + day + hour
                             modInfo[3] = Year.now().toString();
