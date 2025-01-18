@@ -13,7 +13,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -162,12 +161,12 @@ public class ModInfoService {
      * Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
         scraping process which opens a full headless, embedded web browser.
      */
-    public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
+    public Result<String> getModIoIdFromUrl(String url) throws IOException {
         Result<String> modIdResult = new Result<>();
         final String MOD_IO_NAME_URL = "https://mod.io/g/spaceengineers/m/";
         final Pattern MOD_ID_FROM_IMAGE_URL = Pattern.compile("(?<=/)\\d+(?=/)");
 
-        Document doc = Jsoup.connect(MOD_IO_NAME_URL + modName).get();
+        Document doc = Jsoup.connect(MOD_IO_NAME_URL + url).get();
 
         try {
             String modId = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR).toString())
@@ -186,13 +185,8 @@ public class ModInfoService {
         return modIdResult;
     }
 
-
-    public Result<String[]> generateModInformation(@NotNull Mod mod) throws IOException {
-        return scrapeModInformation(mod);
-    }
-
     //Scrape the web pages of the mods we want the information from
-    private Result<String[]> scrapeModInformation(Mod mod) throws IOException {
+    public Result<String[]> scrapeModInformation(Mod mod) throws IOException {
         Result<String[]> modScrapeResult;
         if (mod instanceof SteamMod) {
             modScrapeResult = scrapeSteamMod(mod.getId());
@@ -216,7 +210,7 @@ public class ModInfoService {
                 //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
                 String[] modInfo = new String[4];
                 String modName = modPage.title().split("Workshop::")[1];
-                if (checkIfModIsMod(ModType.STEAM, modPage)) {
+                if (checkIfPageContainsMod(ModType.STEAM, modPage)) {
                     modInfo[0] = modName;
 
                     Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
@@ -307,7 +301,7 @@ public class ModInfoService {
                 String[] modInfo = new String[6];
                 Document modPage = Jsoup.parse(pageSource);
 
-                if (checkIfModIsMod(ModType.MOD_IO, modPage)) {
+                if (checkIfPageContainsMod(ModType.MOD_IO, modPage)) {
                     String modName = modPage.title().split(" for Space Engineers - mod.io")[0];
                     modInfo[0] = modName;
 
@@ -335,7 +329,7 @@ public class ModInfoService {
                             modInfo[5] = LocalTime.now().minusHours(duration).toString();
                         }
                         case "d" -> {//Mod IO year + month + day
-                            modInfo[3] = Year.now().toString();
+                            modInfo[3] = Year.of(LocalDate.now().minusDays(duration).getYear()).toString();
                             modInfo[4] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
                         }
                         case "y" -> //Mod IO year only
@@ -367,7 +361,7 @@ public class ModInfoService {
 
     //Check if the mod we're scraping is actually a workshop mod.
     //Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-    private boolean checkIfModIsMod(ModType modType, Document modPage) {
+    private boolean checkIfPageContainsMod(ModType modType, Document modPage) {
         if (modType == ModType.STEAM) {
             if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
                 return (modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Mod"));

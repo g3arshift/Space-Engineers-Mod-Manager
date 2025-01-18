@@ -30,7 +30,7 @@ public class ModInfoController {
 
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
 	public Result<String[]> fillOutModInformation(Mod mod) throws IOException {
-		return MOD_INFO_SERVICE.generateModInformation(mod);
+		return MOD_INFO_SERVICE.scrapeModInformation(mod);
 	}
 
 	public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
@@ -38,7 +38,7 @@ public class ModInfoController {
 	}
 
 	public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
-		return MOD_INFO_SERVICE.getModIoIdFromUrlName(modName);
+		return MOD_INFO_SERVICE.getModIoIdFromUrl(modName);
 	}
 
 	public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
