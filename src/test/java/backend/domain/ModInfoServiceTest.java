@@ -2,7 +2,9 @@ package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ModInfoService;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +16,7 @@ import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,7 +27,7 @@ public class ModInfoServiceTest {
 
     Properties properties;
 
-    List<String> modlistUrls;
+    List<String> modListIds;
 
     ModInfoService modInfoService;
 
@@ -40,11 +43,11 @@ public class ModInfoServiceTest {
 
         modInfoService = new ModInfoService(modlistRepository, properties);
 
-        modlistUrls = new ArrayList<>();
-        modlistUrls.add("https://steamcommunity.com/workshop/filedetails/?id=3329381499"); //Cross Barred Windows (Large Grid Update)
-        modlistUrls.add("https://steamcommunity.com/workshop/filedetails/?id=2777644246"); //Binoculars
-        modlistUrls.add("https://steamcommunity.com/workshop/filedetails/?id=2668820525"); //TouchScreenAPI
-        modlistUrls.add("https://steamcommunity.com/workshop/filedetails/?id=1902970975"); //Assertive Combat Systems
+        modListIds = new ArrayList<>();
+        modListIds.add("3329381499"); //Cross Barred Windows (Large Grid Update)
+        modListIds.add("2777644246"); //Binoculars
+        modListIds.add("2668820525"); //TouchScreenAPI
+        modListIds.add("1902970975"); //Assertive Combat Systems
     }
 
     //TODO: These need to go into the repository.
@@ -117,9 +120,9 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetModIoId() throws IOException {
+    void shouldGetModIoIdFromName() throws IOException {
         String modIoUrl = "assault-weapons-pack1"; //Assault Weapons Pack
-        Result<String> goodResult = modInfoService.getModIoIdFromUrl(modIoUrl);
+        Result<String> goodResult = modInfoService.getModIoIdFromName(modIoUrl);
         assertTrue(goodResult.isSuccess());
         assertEquals("451208", goodResult.getPayload());
     }
@@ -127,57 +130,136 @@ public class ModInfoServiceTest {
     @Test
     void shouldNotGetModIoId() throws IOException {
         String badModIoUrl = "Wqyk3rJ";
-        Result<String> badResult = modInfoService.getModIoIdFromUrl(badModIoUrl);
+        Result<String> badResult = modInfoService.getModIoIdFromName(badModIoUrl);
         assertFalse(badResult.isSuccess());
         assertEquals("Invalid Mod.io URL entered!", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetSteamNotFoundError() {
-        String badModUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=340sdasdsadasds";
+    void shouldGetSteamNotFoundError() throws IOException {
+        String badModId = "122121213232";
+        Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(badModId));
+        assertFalse(badResult.isSuccess());
+        assertEquals("Mod with ID \"122121213232\" cannot be found.", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetSteamNotModItemError() {
-        String screenShotUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=2396152929";
+    void shouldGetSteamNotModItemError() throws IOException {
+        String screenShotId = "2396152929";
+        Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(screenShotId));
+        assertFalse(badResult.isSuccess());
+        assertEquals("Item with ID \"2396152929\" is not a mod.", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetSteamCollectionError() {
-        String steamCollectionUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=3408899159";
+    void shouldGetSteamCollectionError() throws IOException {
+        String steamCollectionId = "3408899159";
+        Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(steamCollectionId));
+        assertFalse(badResult.isSuccess());
+        assertEquals("\"SEMM Test Collection\" is a collection, not a mod!", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetSteamNotIsAScriptNotAModError() {
-        String scriptItemUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=479678389";
+    void shouldGetSteamItemIsAScriptNotAModError() throws IOException {
+        String scriptItemId = "479678389";
+        Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod("479678389"));
+        assertFalse(badResult.isSuccess());
+        assertEquals("\"Battery Monitor With LCD Images\" is not a mod, it is a IngameScript.", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetValidSteamModWithNoTags() {
-        String noTagsModUrl = "https://steamcommunity.com/workshop/filedetails/?id=1100741659";
+    void shouldGetValidSteamModWithNoTags() throws IOException {
+        String noTagsModId = "1100741659";
+        Result<String[]> noTagsResult = modInfoService.scrapeModInformation(new SteamMod(noTagsModId));
+        assertTrue(noTagsResult.isSuccess());
+        assertEquals("Azimuth Power ST Adaption", noTagsResult.getPayload()[0]);
+        assertEquals("None", noTagsResult.getPayload()[1]);
+        assertEquals("<div class=\"workshopItemDescription\" id=\"highlightContent\">\n" +
+                " Azimuth Power Systems adapted to Firstofficered Star Trek Mod.\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " Fusion reactors burn Liquid Deuterium.\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " V8 burns Liquid Hydrogen\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " Azimuth batteries function more like capacitors... Less capacity, Higher powerlevels.\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " Duranium Plates replace Steel plates in construction.\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " Thanks to SEModder4 who's support made this possible.\n" +
+                "</div>", noTagsResult.getPayload()[2]);
+        assertEquals("Aug 4, 2017 @ 6:44pm", noTagsResult.getPayload()[3]);
     }
 
     @Test
-    void shouldGetValidSteamMod() {
+    void shouldGetValidSteamMod() throws IOException {
         //The steam mod should have the following traits:
         // Tags: NoScripts
         // Name: Cross Barred Windows (Large Grid Update)
-        // Description (in base 64 because it's big): SSBtYWRlIHRoaXMgbW9kIGJlY2F1c2UgSSBsb3ZlIHRoZSBjb21iaW5hdGlvbiBvZiBwbGFjaW5nIGEgYmFycmVkIHdpbmRvdyB3aXRoIGEgOTAgZGVncmVlIG9mZnNldCBvbnRvIGFub3RoZXIgYmFycmVkIHdpbmRvdy4gTXkgb25seSBwcm9ibGVtIHdpdGggaXQgaXMgdGhhdCBpdCB0YWtlcyB1cCAyIGJsb2NrIHNwYWNlcywgc28gSSBtYWRlIHRoaXMuIEl0J3MgcHVyZWx5IGNvc21ldGljIGFuZCBwcmFjdGljYWxseSBpZGVudGljYWwgdG8gdGhlIGJhcnJlZCB3aW5kb3dzLiBUaGUgYmxvY2tzIGFyZSBpbnRlZ3JhdGVkIGludG8gdGhlIHByb2dyZXNzaW9uIGFuZCBibG9jayB2YXJpYXRpb24gZ3JvdXBzLgoKQmVjYXVzZSBhc3NldHMgZnJvbSBpdCBhcmUgdXNlZCwgdGhlIFdhc3RlbGFuZCBETEMgaXMgcmVxdWlyZWQgdG8gdXNlIGl0LgoKCkFueXdheSBJIGhvcGUgeW91IGhhdmUgZnVuIHdpdGggbXkgZmlyc3QgbW9kZWxpbmcgZXhwZXJpZW5jZSBpbiBibGVuZGVyIDopCgpGb3IgYW55IGJ1Z3MgaGl0IG1lIHVwIGluIHRoZSBjb21tZW50cwoKLSBHcmViYW50b24xMjM0
+        // Description (in base 64 because it's big):
         // Last Updated: Just check it's not null
-        String steamModUrl = modlistUrls.getFirst();
+        String steamModId = modListIds.getFirst();
+        Result<String[]> goodModResult = modInfoService.scrapeModInformation(new SteamMod(steamModId));
+        assertTrue(goodModResult.isSuccess());
+        assertEquals("Cross Barred Windows (Large Grid Update)", goodModResult.getPayload()[0]);
+        assertEquals("Block", goodModResult.getPayload()[1]);
+        assertEquals("<div class=\"workshopItemDescription\" id=\"highlightContent\">\n" +
+                " I made this mod because I love the combination of placing a barred window with a 90 degree offset onto another barred window. My only problem with it is that it takes up 2 block spaces, so I made this. It's purely cosmetic and practically identical to the barred windows. The blocks are integrated into the progression and block variation groups.\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " Because assets from it are used, the Wasteland DLC is required to use it.\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " <hr>\n" +
+                " <br>\n" +
+                " Anyway I hope you have fun with my first modeling experience in blender :)\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " For any bugs hit me up in the comments\n" +
+                " <br>\n" +
+                " <br>\n" +
+                " - Grebanton1234\n" +
+                "</div>", goodModResult.getPayload()[2]);
+        assertNotEquals("Unknown", goodModResult.getPayload()[3]);
     }
 
     @Test
-    void shouldGetModIoTimeoutError() {
-
+    void shouldGetModIoTimeoutError() throws IOException {
+        String badModIoId = "3123nj121";
+        Result<String[]> badResult = modInfoService.scrapeModInformation(new ModIoMod(badModIoId));
+        assertFalse(badResult.isSuccess());
+        assertEquals("Mod with ID \"" + badModIoId + "\" cannot be found.", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetModIoValidMod() {
+    void shouldGetModIoValidMod() throws IOException {
         //The Mod.io Mod should have the following traits:
         // Name: Multi-Function Survival Kit with Sifter
         // Tags: Block, NoScripts
         // Description: A survival kit that has many other function like full assembler, refining (via assembling function) and sifting function too.
         // Last Updated: Jun, 24, 2024
+        String goodModIoId = "4108543";
+        Result<String[]> goodResult = modInfoService.scrapeModInformation(new ModIoMod(goodModIoId));
+        assertTrue(goodResult.isSuccess());
+        assertEquals("Multi-Function Survival Kit with Sifter", goodResult.getPayload()[0]);
+        assertEquals("Block,NoScripts", goodResult.getPayload()[1]);
+        assertEquals("<div class=\"tw-w-full tw-global--border-radius tw-relative tw-rounded-tr-none tw-border-transparent\">\n" +
+                " <div class=\"\">\n" +
+                "  <!----><!---->\n" +
+                "  <div class=\"tw-flex tw-flex-col\">\n" +
+                "   <!---->\n" +
+                "   <div class=\"tw-content tw-view-text\">\n" +
+                "    <p>A survival kit that has many other function like full assembler, refining (via assembling function) and sifting function too.</p>\n" +
+                "   </div><!---->\n" +
+                "  </div>\n" +
+                " </div><!---->\n" +
+                "</div>", goodResult.getPayload()[2]);
+        assertEquals("2024", goodResult.getPayload()[3]);
+        assertEquals("--06-25", goodResult.getPayload()[4]);
+        assertNull(goodResult.getPayload()[5]);
     }
 }

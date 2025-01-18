@@ -161,12 +161,12 @@ public class ModInfoService {
      * Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
         scraping process which opens a full headless, embedded web browser.
      */
-    public Result<String> getModIoIdFromUrl(String url) throws IOException {
+    public Result<String> getModIoIdFromName(String name) throws IOException {
         Result<String> modIdResult = new Result<>();
         final String MOD_IO_NAME_URL = "https://mod.io/g/spaceengineers/m/";
         final Pattern MOD_ID_FROM_IMAGE_URL = Pattern.compile("(?<=/)\\d+(?=/)");
 
-        Document doc = Jsoup.connect(MOD_IO_NAME_URL + url).get();
+        Document doc = Jsoup.connect(MOD_IO_NAME_URL + name).get();
 
         try {
             String modId = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR).toString())

@@ -38,7 +38,7 @@ public class ModInfoController {
 	}
 
 	public Result<String> getModIoIdFromUrlName(String modName) throws IOException {
-		return MOD_INFO_SERVICE.getModIoIdFromUrl(modName);
+		return MOD_INFO_SERVICE.getModIoIdFromName(modName);
 	}
 
 	public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
