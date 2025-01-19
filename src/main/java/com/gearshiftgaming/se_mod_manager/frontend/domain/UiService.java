@@ -175,10 +175,6 @@ public class UiService {
         return STORAGE_CONTROLLER.getSaveName(sandboxConfigFile);
     }
 
-    public void firstTimeSetup() {
-        //TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
-    }
-
     /**
      * Sets the theme for our application based on the users preferred theme using reflection.
      * It expects to receive a list of CheckMenuItems that represent the UI dropdown list for all the available system themes in the MenuBar. Not the *best* way to do this, but it works.

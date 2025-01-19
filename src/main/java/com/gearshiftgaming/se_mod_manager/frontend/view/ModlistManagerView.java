@@ -75,9 +75,11 @@ public class ModlistManagerView {
     private ComboBox<String> modImportDropdown;
 
     @FXML
+    @Getter
     private Button manageModProfiles;
 
     @FXML
+    @Getter
     private Button manageSaveProfiles;
 
     @FXML

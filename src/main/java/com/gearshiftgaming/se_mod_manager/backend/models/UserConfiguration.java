@@ -36,6 +36,8 @@ public class UserConfiguration {
 
     private UUID lastActiveSaveProfileId;
 
+    private boolean runFirstTimeSetup;
+
     /**
      * Creates an entirely new XML configuration file to store user information with.
      */
@@ -49,6 +51,7 @@ public class UserConfiguration {
         ModlistProfile modlistProfile = new ModlistProfile("Default");
         modlistProfiles.add(modlistProfile);
         lastActiveModProfileId = modlistProfile.getID();
+        runFirstTimeSetup = true;
     }
 
     public UserConfiguration(UserConfiguration userConfiguration) {
@@ -58,6 +61,7 @@ public class UserConfiguration {
         this.modlistProfiles = userConfiguration.getModlistProfiles();
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
+        this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
     }
 
     @XmlElement(name = "userTheme")
