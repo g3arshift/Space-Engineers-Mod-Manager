@@ -1,10 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileManagerCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
@@ -38,10 +38,10 @@ import java.util.regex.Pattern;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ModProfileManagerView {
+public class ModListManager {
 
     @FXML
-    private ListView<ModlistProfile> profileList;
+    private ListView<ModList> profileList;
 
     @FXML
     private Button createNewProfile;
@@ -75,21 +75,21 @@ public class ModProfileManagerView {
 
     private final UiService UI_SERVICE;
 
-    private final SimpleInputView PROFILE_INPUT_VIEW;
+    private final SimpleInput PROFILE_INPUT_VIEW;
 
-    private ModTableContextBarView modTableContextBarView;
+    private ModTableContextBar modTableContextBar;
 
-    private final ObservableList<ModlistProfile> MOD_PROFILES;
+    private final ObservableList<ModList> MOD_PROFILES;
 
-    public ModProfileManagerView(UiService UI_SERVICE, SimpleInputView PROFILE_INPUT_VIEW) {
+    public ModListManager(UiService UI_SERVICE, SimpleInput PROFILE_INPUT_VIEW) {
         this.UI_SERVICE = UI_SERVICE;
         MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILES();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
     }
 
-    public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
+    public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
         Scene scene = new Scene(root);
-        this.modTableContextBarView = modTableContextBarView;
+        this.modTableContextBar = modTableContextBar;
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
@@ -100,7 +100,7 @@ public class ModProfileManagerView {
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
         profileList.setItems(MOD_PROFILES);
-        profileList.setCellFactory(param -> new ModProfileManagerCell(UI_SERVICE));
+        profileList.setCellFactory(param -> new ModListManagerCell(UI_SERVICE));
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
         stage.setScene(scene);
@@ -117,7 +117,7 @@ public class ModProfileManagerView {
 
     @FXML
     private void copyProfile() {
-        ModlistProfile profileToCopy = profileList.getSelectionModel().getSelectedItem();
+        ModList profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
             int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
             if (copyChoice == 1) {
@@ -165,7 +165,7 @@ public class ModProfileManagerView {
                 }
 
                 if(!copyProfileName.isBlank()) {
-                    ModlistProfile copyProfile = new ModlistProfile(profileList.getSelectionModel().getSelectedItem());
+                    ModList copyProfile = new ModList(profileList.getSelectionModel().getSelectedItem());
                     copyProfile.setProfileName(copyProfileName);
 
                     MOD_PROFILES.add(copyProfile);
@@ -182,7 +182,7 @@ public class ModProfileManagerView {
     @FXML
     private void removeProfile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            if (UI_SERVICE.getCurrentModlistProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+            if (UI_SERVICE.getCurrentModList().equals(profileList.getSelectionModel().getSelectedItem())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
@@ -205,7 +205,7 @@ public class ModProfileManagerView {
         boolean duplicateProfileName;
 
         do {
-            ModlistProfile selectedProfile = profileList.getSelectionModel().getSelectedItem();
+            ModList selectedProfile = profileList.getSelectionModel().getSelectedItem();
             if (selectedProfile != null) {
                 PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getProfileName());
                 PROFILE_INPUT_VIEW.getInput().requestFocus();
@@ -221,28 +221,28 @@ public class ModProfileManagerView {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                     String originalProfileName = MOD_PROFILES.get(profileIndex).getProfileName();
-                    ModlistProfile profileToModify = MOD_PROFILES.get(profileIndex);
+                    ModList profileToModify = MOD_PROFILES.get(profileIndex);
                     profileToModify.setProfileName(newProfileName);
 
                     //We manually refresh here because the original profile won't update its name while it's selected in the list
                     profileList.refresh();
 
                     //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
-                    int modProfileDropdownSelectedIndex = modTableContextBarView.getModProfileDropdown().getSelectionModel().getSelectedIndex();
+                    int modProfileDropdownSelectedIndex = modTableContextBar.getModProfileDropdown().getSelectionModel().getSelectedIndex();
                     if (modProfileDropdownSelectedIndex != MOD_PROFILES.size() - 1) {
-                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
-                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                        modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (MOD_PROFILES.size() == 1) {
-                        MOD_PROFILES.add(new ModlistProfile());
-                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
-                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
+                        MOD_PROFILES.add(new ModList());
+                        modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                         MOD_PROFILES.removeLast();
                     } else {
-                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectPrevious();
-                        modTableContextBarView.getModProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
+                        modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.equals(UI_SERVICE.getCurrentModlistProfile())) {
+                    if (profileToModify.equals(UI_SERVICE.getCurrentModList())) {
                         activeProfileName.setText(profileToModify.getProfileName());
                     }
 
@@ -259,11 +259,11 @@ public class ModProfileManagerView {
     @FXML
     private void setActive() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            ModlistProfile modlistProfile = profileList.getSelectionModel().getSelectedItem();
-            UI_SERVICE.setCurrentModlistProfile(modlistProfile);
-            modTableContextBarView.getModProfileDropdown().getSelectionModel().select(modlistProfile);
-            UI_SERVICE.setLastActiveModlistProfile(modlistProfile.getID());
-            activeProfileName.setText(modlistProfile.getProfileName());
+            ModList modList = profileList.getSelectionModel().getSelectedItem();
+            UI_SERVICE.setCurrentModListProfile(modList);
+            modTableContextBar.getModProfileDropdown().getSelectionModel().select(modList);
+            UI_SERVICE.setLastActiveModlistProfile(modList.getID());
+            activeProfileName.setText(modList.getProfileName());
             profileList.refresh();
         }
     }
@@ -286,9 +286,9 @@ public class ModProfileManagerView {
         File savePath = importChooser.showOpenDialog(stage);
 
         if (savePath != null) {
-            Result<ModlistProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<ModList> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
-                modTableContextBarView.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
+                modTableContextBar.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
                 UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
                 profileList.refresh();
             }
@@ -313,7 +313,7 @@ public class ModProfileManagerView {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModlistProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
     }
 
     public void displayTutorial() {
@@ -326,6 +326,7 @@ public class ModProfileManagerView {
             tutorialMessage.add("The currently active mod list will have a pair of bars surrounding it in the Mod List Manager. You cannot remove the active mod list, but you can rename or copy it.");
             tutorialMessage.add("SEMM will start with a mod list named \"Default\", but for this tutorial let's create a new one. Press the \"Create New\" button.");
             Popup.displayNavigationDialog(tutorialMessage, stage, MessageType.INFO, "Managing Mod Lists");
+            UI_SERVICE.tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), createNewProfile);
         });
     }
 }

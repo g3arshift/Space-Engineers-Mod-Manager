@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 //TODO: At some point a bunch of logic needs to be rewritten with guard clause format. Especially for the mod scraping.
-public class ModlistManagerView {
+public class MasterManager {
     @FXML
     private ComboBox<String> modImportDropdown;
 
@@ -207,7 +207,7 @@ public class ModlistManagerView {
     private CheckMenuItem modDescriptionToggle;
 
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
-    private final StatusBarView STATUS_BAR_VIEW;
+    private final StatusBar STATUS_BAR_VIEW;
 
     private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
 
@@ -216,9 +216,9 @@ public class ModlistManagerView {
 
     private TableHeaderRow headerRow;
 
-    private final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW;
+    private final ModListManager MOD_PROFILE_MANAGER_VIEW;
 
-    private final SaveProfileManagerView SAVE_MANAGER_VIEW;
+    private final SaveProfileManager SAVE_MANAGER_VIEW;
 
     @Getter
     private FilteredList<Mod> filteredModList;
@@ -226,11 +226,11 @@ public class ModlistManagerView {
     @Getter
     private final Stage STAGE;
 
-    private final SimpleInputView ID_AND_URL_MOD_IMPORT_INPUT;
+    private final SimpleInput ID_AND_URL_MOD_IMPORT_INPUT;
 
-    private final SaveInputView MOD_FILE_SELECTION_VIEW;
+    private final SaveInput MOD_FILE_SELECTION_VIEW;
 
-    private final GeneralFileInputView GENERAL_FILE_SELECT_VIEW;
+    private final GeneralFileInput GENERAL_FILE_SELECT_VIEW;
 
     private final String STEAM_MOD_DATE_FORMAT;
 
@@ -239,25 +239,25 @@ public class ModlistManagerView {
     private final Pattern MOD_IO_URL;
 
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
-    private ComboBox<ModlistProfile> modProfileDropdown;
+    private ComboBox<ModList> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
 
-    public ModlistManagerView(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBarView statusBarView,
-                              ModProfileManagerView modProfileManagerView, SaveProfileManagerView saveProfileManagerView, SimpleInputView modImportInputView, SaveInputView saveInputView,
-                              GeneralFileInputView generalFileInputView) {
+    public MasterManager(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBar statusBar,
+                         ModListManager modListManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
+                         GeneralFileInput generalFileInput) {
         this.UI_SERVICE = uiService;
         this.STAGE = stage;
         this.USER_LOG = uiService.getUSER_LOG();
-        this.STATUS_BAR_VIEW = statusBarView;
+        this.STATUS_BAR_VIEW = statusBar;
         this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
         this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
-        this.MOD_FILE_SELECTION_VIEW = saveInputView;
-        this.GENERAL_FILE_SELECT_VIEW = generalFileInputView;
+        this.MOD_FILE_SELECTION_VIEW = saveInput;
+        this.GENERAL_FILE_SELECT_VIEW = generalFileInput;
 
-        this.MOD_PROFILE_MANAGER_VIEW = modProfileManagerView;
-        this.SAVE_MANAGER_VIEW = saveProfileManagerView;
+        this.MOD_PROFILE_MANAGER_VIEW = modListManager;
+        this.SAVE_MANAGER_VIEW = saveProfileManager;
 
         this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
@@ -272,7 +272,7 @@ public class ModlistManagerView {
     }
 
     public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-                         ComboBox<ModlistProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+                         ComboBox<ModList> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
 
@@ -810,7 +810,7 @@ public class ModlistManagerView {
         File savePath = importChooser.showOpenDialog(STAGE);
 
         if (savePath != null) {
-            Result<ModlistProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<ModList> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
                 UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
@@ -853,7 +853,7 @@ public class ModlistManagerView {
                 else
                     UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
 
-                STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModlistProfile());
+                STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
             }
         } else {
             Popup.displaySimpleAlert("The current save cannot be found on the disk.", STAGE, MessageType.ERROR);
@@ -1008,7 +1008,7 @@ public class ModlistManagerView {
 				but for whatever reason the changes aren't propagating without this.
 			*/
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-                UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
+                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
                 UI_SERVICE.saveUserData();
             }
 
@@ -1256,7 +1256,7 @@ public class ModlistManagerView {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
-            UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
+            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
             UI_SERVICE.saveUserData();
 
             //Reset our UI settings for the mod progress

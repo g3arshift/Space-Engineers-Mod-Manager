@@ -2,7 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models.utility;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.SimpleInputView;
+import com.gearshiftgaming.se_mod_manager.frontend.view.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.stage.Stage;
 
@@ -83,7 +83,7 @@ public class ModImportUtility {
 		return existingModlistResult;
 	}
 
-	public static String createNewModProfile(final UiService UI_SERVICE, final Stage STAGE, final SimpleInputView PROFILE_INPUT_VIEW) {
+	public static String createNewModProfile(final UiService UI_SERVICE, final Stage STAGE, final SimpleInput PROFILE_INPUT_VIEW) {
 		boolean duplicateProfileName;
 		String newProfileName = "";
 
@@ -91,14 +91,14 @@ public class ModImportUtility {
 			PROFILE_INPUT_VIEW.getInput().clear();
 			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			PROFILE_INPUT_VIEW.show(STAGE);
-			ModlistProfile newModlistProfile = new ModlistProfile(PROFILE_INPUT_VIEW.getInput().getText());
+			ModList newModList = new ModList(PROFILE_INPUT_VIEW.getInput().getText());
 			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText().toLowerCase().trim(), UI_SERVICE);
 
 			if (duplicateProfileName) {
 				Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
 			} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-				UI_SERVICE.getMODLIST_PROFILES().add(newModlistProfile);
-				UI_SERVICE.setCurrentModlistProfile(newModlistProfile);
+				UI_SERVICE.getMODLIST_PROFILES().add(newModList);
+				UI_SERVICE.setCurrentModListProfile(newModList);
 				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
 				newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
 				PROFILE_INPUT_VIEW.getInput().clear();

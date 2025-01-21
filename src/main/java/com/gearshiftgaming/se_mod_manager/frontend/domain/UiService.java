@@ -63,7 +63,7 @@ public class UiService {
     private final ObservableList<LogMessage> USER_LOG;
 
     @Getter
-    private final ObservableList<ModlistProfile> MODLIST_PROFILES;
+    private final ObservableList<ModList> MODLIST_PROFILES;
 
     @Getter
     private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -75,7 +75,7 @@ public class UiService {
     private SaveProfile currentSaveProfile;
 
     @Getter
-    private ModlistProfile currentModlistProfile;
+    private ModList currentModListProfile;
 
     @Getter
     private ObservableList<Mod> currentModList;
@@ -95,7 +95,7 @@ public class UiService {
     private final String MOD_DATE_FORMAT;
 
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-                     @NotNull ObservableList<ModlistProfile> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+                     @NotNull ObservableList<ModList> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
@@ -108,9 +108,9 @@ public class UiService {
 
         this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
-        getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModlistProfile = modlistProfile, () -> {
+        getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModListProfile = modlistProfile, () -> {
             log("No previously chosen modlist detected.", MessageType.INFO);
-            currentModlistProfile = MODLIST_PROFILES.getFirst();
+            currentModListProfile = MODLIST_PROFILES.getFirst();
         });
         getLastActiveSaveProfile().ifPresentOrElse(saveProfile -> currentSaveProfile = saveProfile, () -> {
             log("No previously chosen save profile detected.", MessageType.INFO);
@@ -118,7 +118,7 @@ public class UiService {
         });
 
         //A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
-        currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
+        currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
     }
 
@@ -197,11 +197,11 @@ public class UiService {
         }
     }
 
-    public void setCurrentModlistProfile(ModlistProfile modlistProfile) {
-        currentModlistProfile = modlistProfile;
-        currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
+    public void setCurrentModListProfile(ModList modList) {
+        currentModListProfile = modList;
+        currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-        setLastActiveModlistProfile(modlistProfile.getID());
+        setLastActiveModlistProfile(modList.getID());
         saveUserData();
     }
 
@@ -533,20 +533,20 @@ public class UiService {
         return MOD_INFO_CONTROLLER.getModIdsFromFile(modlistFile, modType);
     }
 
-    public Result<Void> exportModlist(ModlistProfile modlistProfile, File exportLocation) {
-        return STORAGE_CONTROLLER.exportModlist(modlistProfile, exportLocation);
+    public Result<Void> exportModlist(ModList modList, File exportLocation) {
+        return STORAGE_CONTROLLER.exportModlist(modList, exportLocation);
     }
 
-    public Result<ModlistProfile> importModlist(File saveLocation) {
-        Result<ModlistProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
+    public Result<ModList> importModlist(File saveLocation) {
+        Result<ModList> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
         if (modlistProfileResult.isSuccess()) {
-            ModlistProfile importModlistProfile = modlistProfileResult.getPayload();
+            ModList importModList = modlistProfileResult.getPayload();
             boolean duplicateProfileExists = MODLIST_PROFILES
                     .stream()
-                    .anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModlistProfile.getProfileName().toLowerCase().trim()));
+                    .anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModList.getProfileName().toLowerCase().trim()));
             if (!duplicateProfileExists) {
-                for (int i = 0; i < importModlistProfile.getModList().size(); i++) {
-                    importModlistProfile.getModList().get(i).setLoadPriority(i + 1);
+                for (int i = 0; i < importModList.getModList().size(); i++) {
+                    importModList.getModList().get(i).setLoadPriority(i + 1);
                 }
                 MODLIST_PROFILES.add(modlistProfileResult.getPayload());
             } else
@@ -563,7 +563,7 @@ public class UiService {
         USER_CONFIGURATION.setLastActiveSaveProfileId(saveProfileId);
     }
 
-    public Optional<ModlistProfile> getLastActiveModlistProfile() {
+    public Optional<ModList> getLastActiveModlistProfile() {
         return MODLIST_PROFILES.stream()
                 .filter(modlistProfile -> modlistProfile.getID().equals(USER_CONFIGURATION.getLastActiveModProfileId()))
                 .findAny();
@@ -576,7 +576,7 @@ public class UiService {
     }
 
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
-        currentSaveProfile.setLastUsedModProfileId(currentModlistProfile.getID());
+        currentSaveProfile.setLastUsedModProfileId(currentModListProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
         saveUserData();
@@ -586,28 +586,24 @@ public class UiService {
         return STORAGE_CONTROLLER.resetUserConfig();
     }
 
-    public void displayTutorial(Stage stage, Pane rootPane, ModlistManagerView modlistManagerView, SaveProfileManagerView saveProfileManagerView, ModProfileManagerView modProfileManagerView) {
+    public void displayTutorial(Stage stage, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager) {
         stage.setResizable(false);
 
         //TODO: Create mod profile first.
-        List<String> tutorialMessages = new ArrayList<>();
-        tutorialMessages.add("Welcome to the Space Engineers Mod Manager, or \"SEMM\" for short. " +
-                "This tutorial will guide you through how to setup a save to manage the mods of, how to setup a modlist, how to add mods to that modlist, and how to apply them to a save.");
-        //tutorialMessages.add("To start, let's create a save profile for you to add mods to. Press the \"Manage Save Profiles\" button.");
-        tutorialMessages.add("To start, let's create a new modlist for you to add mods to. Press the \"Manage Mod Profiles\" button.");
-        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome");
+        List<String> tutorialMessages = getTutorialMessages();
+        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM");
 
         Pane[] panes = getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
-        tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), modlistManagerView.getManageModProfiles());
+        tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
 
-        //TODO: Instead of the other crap, call discrete displayTutorial functions on the other classes! That way we don't need a ton of fucking stuff in here.
-        modProfileManagerView.displayTutorial();
+        modListManager.displayTutorial();
         //saveProfileManagerView.displayTutorial();
-        modlistManagerView.getManageSaveProfiles().setOnAction(event -> {
+        masterManager.getManageSaveProfiles().setOnAction(event -> {
             //TODO: Move the panes to next selection
-            saveProfileManagerView.show(stage);
-            modlistManagerView.getModTable().sort();
+//            saveProfileManager.show(stage);
+//            masterManager.getModTable().sort();
+            modListManager.show(stage);
             //TODO: Popup next tutorial steps.
             //TODO: We need to move the button over.
         });
@@ -616,6 +612,16 @@ public class UiService {
         saveUserData();
         stage.setResizable(true);
         //TODO: Call a cleanup function to fix our setOnAction stuff.
+    }
+
+    @NotNull
+    private static List<String> getTutorialMessages() {
+        List<String> tutorialMessages = new ArrayList<>();
+        tutorialMessages.add("Welcome to the Space Engineers Mod Manager, or \"SEMM\" for short. " +
+                "This tutorial will guide you through how to setup a save to manage the mods of, how to setup a modlist, how to add mods to that modlist, and how to apply them to a save.");
+        //tutorialMessages.add("To start, let's create a save profile for you to add mods to. Press the \"Manage Save Profiles\" button.");
+        tutorialMessages.add("To start, let's create a new modlist for you to add mods to. Press the \"Manage Mod Profiles\" button.");
+        return tutorialMessages;
     }
 
     /**

@@ -3,8 +3,8 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownButtonCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModProfileDropdownItemCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModListDropdownButtonCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.ModListDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
@@ -46,7 +46,7 @@ import java.util.Optional;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ModTableContextBarView {
+public class ModTableContextBar {
 
     //FXML Items
     @FXML
@@ -86,7 +86,7 @@ public class ModTableContextBarView {
 
     @FXML
     @Getter
-    private ComboBox<ModlistProfile> modProfileDropdown;
+    private ComboBox<ModList> modProfileDropdown;
 
     @FXML
     @Getter
@@ -137,7 +137,7 @@ public class ModTableContextBarView {
     @FXML
     private CheckMenuItem draculaTheme;
 
-    private final ModlistManagerView MODLIST_MANAGER_VIEW;
+    private final MasterManager MODLIST_MANAGER_VIEW;
 
     private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
 
@@ -145,9 +145,9 @@ public class ModTableContextBarView {
 
     private final Stage STAGE;
 
-    public ModTableContextBarView(UiService uiService, ModlistManagerView modlistManagerView, Stage stage) {
+    public ModTableContextBar(UiService uiService, MasterManager masterManager, Stage stage) {
         this.UI_SERVICE = uiService;
-        this.MODLIST_MANAGER_VIEW = modlistManagerView;
+        this.MODLIST_MANAGER_VIEW = masterManager;
         this.STAGE = stage;
     }
 
@@ -179,25 +179,25 @@ public class ModTableContextBarView {
         };
 
 		ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-			String profileName = UI_SERVICE.getCurrentModlistProfile().getProfileName();
+			String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
 			double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
-			((ModProfileDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
+			((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
 		};
 
         STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
         modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
-        Optional<ModlistProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+        Optional<ModList> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isPresent())
             modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
         else
             modProfileDropdown.getSelectionModel().selectFirst();
 
 
-        modProfileDropdown.setCellFactory(param -> new ModProfileDropdownItemCell(UI_SERVICE));
-        modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE));
-        modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModProfileDropdownButtonCell(UI_SERVICE)));
+        modProfileDropdown.setCellFactory(param -> new ModListDropdownItemCell(UI_SERVICE));
+        modProfileDropdown.setButtonCell(new ModListDropdownButtonCell(UI_SERVICE));
+        modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModListDropdownButtonCell(UI_SERVICE)));
 
         UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
 
@@ -215,12 +215,12 @@ public class ModTableContextBarView {
         });
         modProfileDropdown.setConverter(new StringConverter<>() {
             @Override
-            public String toString(ModlistProfile modlistProfile) {
-                return modlistProfile.getProfileName();
+            public String toString(ModList modList) {
+                return modList.getProfileName();
             }
 
             @Override
-            public ModlistProfile fromString(String s) {
+            public ModList fromString(String s) {
                 return null;
             }
         });
@@ -328,7 +328,7 @@ public class ModTableContextBarView {
     private void selectModProfile() {
         clearSearchBox();
 
-        UI_SERVICE.setCurrentModlistProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
         MODLIST_MANAGER_VIEW.updateModTableContents();
     }
 

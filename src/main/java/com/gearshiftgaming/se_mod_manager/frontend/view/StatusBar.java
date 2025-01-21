@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
@@ -23,7 +23,7 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public class StatusBarView {
+public class StatusBar {
 
 	@FXML
 	private Label lastInjected;
@@ -46,7 +46,7 @@ public class StatusBarView {
 	 * Sets the initial values for the toolbar located at the bottom of the UI.
 	 */
 
-	public StatusBarView(UiService UI_SERVICE) {
+	public StatusBar(UiService UI_SERVICE) {
 		this.UI_SERVICE = UI_SERVICE;
 	}
 
@@ -63,7 +63,7 @@ public class StatusBarView {
 			}
 
 			lastSaveModifiedName.setText(lastUsedSaveProfile.get().getProfileName());
-			Optional<ModlistProfile> lastAppliedModlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
+			Optional<ModList> lastAppliedModlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
 							.filter(modlistProfile -> modlistProfile.getID().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
 									.findFirst();
 
@@ -125,10 +125,10 @@ public class StatusBarView {
 		return lastUsedSaveProfile;
 	}
 
-	public void update(SaveProfile saveProfile, ModlistProfile modlistProfile) {
+	public void update(SaveProfile saveProfile, ModList modList) {
 		updateSaveStatus(saveProfile);
 		updateLastInjected();
-		lastModlistAppliedName.setText(modlistProfile.getProfileName());
+		lastModlistAppliedName.setText(modList.getProfileName());
 		lastSaveModifiedName.setText(saveProfile.getProfileName());
 	}
 }

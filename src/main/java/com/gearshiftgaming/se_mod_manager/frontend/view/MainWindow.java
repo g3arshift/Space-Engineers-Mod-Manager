@@ -8,25 +8,18 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Bounds;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.Getter;
-import org.checkerframework.checker.guieffect.qual.UI;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -40,7 +33,7 @@ import java.util.Properties;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 @Getter
-public class MainWindowView {
+public class MainWindow {
 
     //TODO: Remove all menu options under file, except for "Close"
 
@@ -64,26 +57,26 @@ public class MainWindowView {
     private final UserConfiguration USER_CONFIGURATION;
 
     //This is the reference to the controller for the bar located in the top section of the main borderpane
-    private final ModTableContextBarView CONTEXT_BAR_VIEW;
+    private final ModTableContextBar CONTEXT_BAR_VIEW;
 
     //This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
-    private final ModlistManagerView MODLIST_MANAGER_VIEW;
+    private final MasterManager MODLIST_MANAGER_VIEW;
 
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane
-    private final StatusBarView STATUS_BAR_VIEW;
+    private final StatusBar STATUS_BAR_VIEW;
 
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public MainWindowView(Properties properties, Stage stage, ModTableContextBarView modTableContextBarView, ModlistManagerView modlistManagerView, StatusBarView statusBarView, UiService uiService) {
+    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, UiService uiService) {
         this.STAGE = stage;
         this.PROPERTIES = properties;
         this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
         this.UI_SERVICE = uiService;
-        this.CONTEXT_BAR_VIEW = modTableContextBarView;
-        this.MODLIST_MANAGER_VIEW = modlistManagerView;
-        this.STATUS_BAR_VIEW = statusBarView;
+        this.CONTEXT_BAR_VIEW = modTableContextBar;
+        this.MODLIST_MANAGER_VIEW = masterManager;
+        this.STATUS_BAR_VIEW = statusBar;
     }
 
-    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManagerView saveProfileManagerView, ModProfileManagerView modProfileManagerView) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManager saveProfileManager, ModListManager modListManager) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         //Prepare the UI
         setupWindow(mainViewRoot);
         CONTEXT_BAR_VIEW.initView();
@@ -152,7 +145,7 @@ public class MainWindowView {
                     //TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
                     //TODO: To highlight specific areas during setup, use four semi-opaque panes to create a clickable area and hide the rest.
                     //TODO: Disable resizing before first time setup and re-enable after.
-                    UI_SERVICE.displayTutorial(STAGE, mainWindowRoot, MODLIST_MANAGER_VIEW, saveProfileManagerView, modProfileManagerView);
+                    UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW, saveProfileManager, modListManager);
                 } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
                     UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
                     UI_SERVICE.saveUserData();

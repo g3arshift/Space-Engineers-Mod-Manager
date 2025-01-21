@@ -55,13 +55,13 @@ public class UserDataFileRepository implements UserDataRepository {
     }
 
     @Override
-    public Result<Void> exportModlist(ModlistProfile modlistProfile, File modlistLocation) {
-        ModlistProfile copiedProfile = new ModlistProfile(modlistProfile);
+    public Result<Void> exportModlist(ModList modList, File modlistLocation) {
+        ModList copiedProfile = new ModList(modList);
 
         Result<Void> result = new Result<>();
 
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
-            JAXBContext context = JAXBContext.newInstance(ModlistProfile.class);
+            JAXBContext context = JAXBContext.newInstance(ModList.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
@@ -76,14 +76,14 @@ public class UserDataFileRepository implements UserDataRepository {
     }
 
     @Override
-    public Result<ModlistProfile> importModlist(File modlistLocation) {
-        Result<ModlistProfile> modlistProfileResult = new Result<>();
+    public Result<ModList> importModlist(File modlistLocation) {
+        Result<ModList> modlistProfileResult = new Result<>();
         try {
-            JAXBContext context = JAXBContext.newInstance(ModlistProfile.class);
+            JAXBContext context = JAXBContext.newInstance(ModList.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            ModlistProfile modlistProfile = (ModlistProfile) unmarshaller.unmarshal(modlistLocation);
+            ModList modList = (ModList) unmarshaller.unmarshal(modlistLocation);
             modlistProfileResult.addMessage("Successfully loaded mod profile.", ResultType.SUCCESS);
-            modlistProfileResult.setPayload(modlistProfile);
+            modlistProfileResult.setPayload(modList);
         } catch (JAXBException e) {
             modlistProfileResult.addMessage("Failed to load mod profile. Error Details: " + e, ResultType.FAILED);
 		}

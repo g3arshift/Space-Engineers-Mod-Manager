@@ -17,7 +17,7 @@ import java.util.UUID;
  */
 @Getter
 @XmlRootElement(name = "modlistProfile")
-public class ModlistProfile {
+public class ModList {
 
     @XmlElement
     private final UUID ID;
@@ -26,28 +26,28 @@ public class ModlistProfile {
 
     private List<Mod> modList;
 
-    public ModlistProfile() {
+    public ModList() {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         profileName = "New Mod Profile";
     }
 
-    public ModlistProfile(String profileName) {
+    public ModList(String profileName) {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
     }
 
-    public ModlistProfile(ModlistProfile modlistProfile) {
+    public ModList(ModList modList) {
         this.ID = UUID.randomUUID();
-        this.profileName = modlistProfile.getProfileName();
+        this.profileName = modList.getProfileName();
         this.modList = new ArrayList<>();
-        if(modlistProfile.getModList() != null){
-            for(Mod m : modlistProfile.getModList()) {
+        if(modList.getModList() != null){
+            for(Mod m : modList.getModList()) {
                 if(m instanceof SteamMod) {
-                    modList.add(new SteamMod((SteamMod) m));
+                    this.modList.add(new SteamMod((SteamMod) m));
                 } else {
-                    modList.add(new ModIoMod((ModIoMod) m));
+                    this.modList.add(new ModIoMod((ModIoMod) m));
                 }
             }
         }
@@ -67,7 +67,7 @@ public class ModlistProfile {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ModlistProfile that)) return false;
+        if (!(o instanceof ModList that)) return false;
 		return Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
     }
 

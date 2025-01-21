@@ -1,8 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowPositionUtility;
 import javafx.application.Platform;
@@ -15,10 +17,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -27,39 +29,38 @@ import java.io.File;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class GeneralFileInputView {
+public class SaveInput {
 
 	@FXML
 	@Getter
-	private Label fileName;
+	private Label saveName;
 
 	@Getter
 	@FXML
-	private Button chooseFile;
+	private Button chooseSave;
 
 	@FXML
-	private Button next;
+	private Button addSave;
 
 	@FXML
-	private Button cancel;
+	private Button cancelAddSave;
 
 	private Stage stage;
 
-	private final String BASE_DIR = System.getProperty("user.home");
+	private final String APP_DATA_PATH = System.getenv("APPDATA") + "/SpaceEngineers/Saves";
 
-	String noSaveSelectedMessage = "No file selected";
+	String noSaveSelectedMessage = "No save selected";
 
 	@Getter
-	private File selectedFile;
+	private File selectedSave;
 
 	@Getter
 	private String lastPressedButtonId;
 
-	@Setter
-	private FileChooser.ExtensionFilter extensionFilter;
+	private final UiService UI_SERVICE;
 
-	public GeneralFileInputView() {
-		extensionFilter = new FileChooser.ExtensionFilter("Files", "*.*");
+	public SaveInput(UiService UI_SERVICE) {
+		this.UI_SERVICE = UI_SERVICE;
 	}
 
 	public void initView(Parent root) {
@@ -70,27 +71,27 @@ public class GeneralFileInputView {
 		stage.setScene(scene);
 
 		//Just a default. Usually gets overriden.
-		stage.setTitle("File Select");
+		stage.setTitle("Save Selection");
 		WindowDressingUtility.appendStageIcon(stage);
 
-		fileName.setText(noSaveSelectedMessage);
+		saveName.setText(noSaveSelectedMessage);
 
-		next.setOnAction(actionEvent -> {
+		addSave.setOnAction(actionEvent -> {
 			Button btn = (Button) actionEvent.getSource();
 			lastPressedButtonId = btn.getId();
-			next();
+			addSave();
 		});
 
-		cancel.setOnAction(actionEvent -> {
+		cancelAddSave.setOnAction(actionEvent -> {
 			Button btn = (Button) actionEvent.getSource();
 			lastPressedButtonId = btn.getId();
-			cancel();
+			cancelAddSave();
 		});
 
 		stage.setOnCloseRequest(windowEvent -> {
 			Platform.exitNestedEventLoop(stage, null);
-			fileName.setText(noSaveSelectedMessage);
-			selectedFile = null;
+			saveName.setText(noSaveSelectedMessage);
+			selectedSave = null;
 		});
 
 		stage.setResizable(false);
@@ -98,41 +99,57 @@ public class GeneralFileInputView {
 
 
 	@FXML
-	private void chooseFile() {
+	private void chooseSave() {
 		FileChooser fileChooser = getFileChooser();
-		fileChooser.getExtensionFilters().add(extensionFilter);
-		selectedFile = fileChooser.showOpenDialog(stage);
-		if (selectedFile != null) {
-			fileName.setText(selectedFile.getName());
+		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Sandbox_config Files", "*_config.sbc"));
+		selectedSave = fileChooser.showOpenDialog(stage);
+		if(selectedSave != null) {
+			try {
+				Result<String> sandboxNameResult = UI_SERVICE.getSaveName(selectedSave);
+				if (sandboxNameResult.isSuccess()) {
+					saveName.setText(sandboxNameResult.getPayload());
+				} else {
+					UI_SERVICE.log(sandboxNameResult);
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		} else {
-			fileName.setText(noSaveSelectedMessage);
+			saveName.setText(noSaveSelectedMessage);
 		}
 	}
 
-	private @NotNull FileChooser getFileChooser() {;
+	private @NotNull FileChooser getFileChooser() {
+		String[] directoryContents = new File(APP_DATA_PATH).list();
 		FileChooser fileChooser = new FileChooser();
 
-		fileChooser.setInitialDirectory(new File(BASE_DIR));
+		//If there's only one save folder in our save directory, which there should be, set the path to that folder.
+		if (directoryContents != null && directoryContents.length == 1) {
+			fileChooser.setInitialDirectory(new File(APP_DATA_PATH + "/" + directoryContents[0]));
+		} else {
+			fileChooser.setInitialDirectory(new File(APP_DATA_PATH));
+		}
 
+		fileChooser.setTitle("Save Selection");
 		return fileChooser;
 	}
 
-	private void next() {
-		if (selectedFile == null) {
-			Popup.displaySimpleAlert("You must select a file!", stage, MessageType.ERROR);
+	private void addSave() {
+		if (selectedSave == null) {
+			Popup.displaySimpleAlert("You must select a save!", stage, MessageType.ERROR);
 		} else {
 			stage.close();
 			stage.setHeight(stage.getHeight() - 1);
-			fileName.setText(noSaveSelectedMessage);
+			saveName.setText(noSaveSelectedMessage);
 			Platform.exitNestedEventLoop(stage, null);
 		}
 	}
 
-	private void cancel() {
+	private void cancelAddSave() {
 		stage.close();
 		stage.setHeight(stage.getHeight() - 1);
-		fileName.setText(noSaveSelectedMessage);
-		selectedFile = null;
+		saveName.setText(noSaveSelectedMessage);
+		selectedSave = null;
 		Platform.exitNestedEventLoop(stage, null);
 	}
 
@@ -147,11 +164,11 @@ public class GeneralFileInputView {
 		this.stage.setTitle(title);
 	}
 
-	public void setNextButtonText(String text) {
-		this.next.setText(text);
+	public void setAddSaveButtonText(String text) {
+		this.addSave.setText(text);
 	}
 
 	public void resetSelectedSave() {
-		this.selectedFile = null;
+		this.selectedSave = null;
 	}
 }

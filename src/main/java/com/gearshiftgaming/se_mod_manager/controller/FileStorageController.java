@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -45,9 +44,9 @@ public class FileStorageController implements StorageController {
 		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
 
 		if (userConfigurationResult.isSuccess()) {
-			for (ModlistProfile modlistProfile : userConfigurationResult.getPayload().getModlistProfiles()) {
-				for (int i = 0; i < modlistProfile.getModList().size(); i++) {
-					modlistProfile.getModList().get(i).setLoadPriority(i + 1);
+			for (ModList modList : userConfigurationResult.getPayload().getModLists()) {
+				for (int i = 0; i < modList.getModList().size(); i++) {
+					modList.getModList().get(i).setLoadPriority(i + 1);
 				}
 			}
 		}
@@ -123,12 +122,12 @@ public class FileStorageController implements StorageController {
 	}
 
 	@Override
-	public Result<Void> exportModlist(ModlistProfile modlistProfile, File saveLocation) {
-		return USER_DATA_SERVICE.exportModlist(modlistProfile, saveLocation);
+	public Result<Void> exportModlist(ModList modList, File saveLocation) {
+		return USER_DATA_SERVICE.exportModlist(modList, saveLocation);
 	}
 
 	@Override
-	public Result<ModlistProfile> importModlist(File saveLocation) {
+	public Result<ModList> importModlist(File saveLocation) {
 		return USER_DATA_SERVICE.importModlist(saveLocation);
 	}
 
@@ -137,7 +136,7 @@ public class FileStorageController implements StorageController {
 
 		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc");
 		testSaveProfile.setSaveName("Test save");
-		ModlistProfile testModlistProfile = new ModlistProfile("Test Profile");
+		ModList testModList = new ModList("Test Profile");
 
 		SteamMod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();
@@ -145,24 +144,24 @@ public class FileStorageController implements StorageController {
 		testCategories.add("Three Category test");
 		testMod.setFriendlyName("Test Mod");
 		testMod.setCategories(testCategories);
-		testModlistProfile.getModList().add(testMod);
+		testModList.getModList().add(testMod);
 
 		SteamMod secondTestMod = new SteamMod("0987654321");
 		secondTestMod.setFriendlyName("Second test mod");
 		secondTestMod.setCategories(testCategories);
-		testModlistProfile.getModList().add(secondTestMod);
+		testModList.getModList().add(secondTestMod);
 
 		ModIoMod thirdTestMod = new ModIoMod("122122");
 		thirdTestMod.setFriendlyName("Third test mod");
 		thirdTestMod.setCategories(testCategories);
-		testModlistProfile.getModList().add(thirdTestMod);
+		testModList.getModList().add(thirdTestMod);
 
-		testSaveProfile.setLastUsedModProfileId(testModlistProfile.getID());
+		testSaveProfile.setLastUsedModProfileId(testModList.getID());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();
 		userConfiguration.getSaveProfiles().add(testSaveProfile);
-		userConfiguration.getModlistProfiles().add(testModlistProfile);
+		userConfiguration.getModLists().add(testModList);
 		userConfiguration.setUserTheme(theme.getName());
 
 		System.out.println("Created test user data.");
@@ -189,7 +188,7 @@ public class FileStorageController implements StorageController {
 
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
 		UserConfiguration sortedUserConfiguration = new UserConfiguration(userConfiguration);
-		for (ModlistProfile m : sortedUserConfiguration.getModlistProfiles()) {
+		for (ModList m : sortedUserConfiguration.getModLists()) {
 			List<Mod> sortedModList = m.getModList().stream()
 					.sorted(Comparator.comparing(Mod::getLoadPriority))
 					.toList();

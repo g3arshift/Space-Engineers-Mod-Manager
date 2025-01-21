@@ -24,7 +24,7 @@ import lombok.Setter;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-public class SimpleInputView {
+public class SimpleInput {
 
     @Getter
     @FXML

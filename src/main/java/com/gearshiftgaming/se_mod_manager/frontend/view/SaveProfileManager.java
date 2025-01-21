@@ -41,7 +41,7 @@ import java.util.Properties;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-public class SaveProfileManagerView {
+public class SaveProfileManager {
     @FXML
     private ListView<SaveProfile> saveList;
 
@@ -96,21 +96,21 @@ public class SaveProfileManagerView {
 
     private final UiService UI_SERVICE;
 
-    private final SaveInputView SAVE_INPUT_VIEW;
+    private final SaveInput SAVE_INPUT_VIEW;
 
-    private final SimpleInputView PROFILE_INPUT_VIEW;
+    private final SimpleInput PROFILE_INPUT_VIEW;
 
-    private ModTableContextBarView modTableContextBarView;
+    private ModTableContextBar modTableContextBar;
 
-    public SaveProfileManagerView(UiService UI_SERVICE, SaveInputView saveInputView, SimpleInputView simpleInputView) {
+    public SaveProfileManager(UiService UI_SERVICE, SaveInput saveInput, SimpleInput simpleInput) {
         this.UI_SERVICE = UI_SERVICE;
         SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
-        this.SAVE_INPUT_VIEW = saveInputView;
-        this.PROFILE_INPUT_VIEW = simpleInputView;
+        this.SAVE_INPUT_VIEW = saveInput;
+        this.PROFILE_INPUT_VIEW = simpleInput;
     }
 
-    public void initView(Parent root, Properties properties, ModTableContextBarView modTableContextBarView) {
-        this.modTableContextBarView = modTableContextBarView;
+    public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
+        this.modTableContextBar = modTableContextBar;
         Scene scene = new Scene(root);
 
         stage = new Stage();
@@ -201,8 +201,8 @@ public class SaveProfileManagerView {
                         displayAddExistingModsDialog(selectedSave);
 
                         saveList.refresh();
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
-                        modTableContextBarView.getSaveProfileDropdown().fireEvent(new ActionEvent());
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
+                        modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
 
                         UI_SERVICE.saveUserData();
                     }
@@ -221,10 +221,10 @@ public class SaveProfileManagerView {
                 if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
-                        Optional<ModlistProfile> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
+                        Optional<ModList> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
                                 .filter(modlistProfile1 -> modlistProfile1.getProfileName().equals(newProfileName))
                                 .findFirst();
-                        modlistProfile.ifPresent(profile -> modTableContextBarView.getModProfileDropdown().getSelectionModel().select(profile));
+                        modlistProfile.ifPresent(profile -> modTableContextBar.getModProfileDropdown().getSelectionModel().select(profile));
                         importExistingModlist(selectedSave);
                     }
                 } else {
@@ -251,7 +251,7 @@ public class SaveProfileManagerView {
 
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
-            UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
+            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
             UI_SERVICE.saveUserData();
 
             Platform.runLater(() -> {
@@ -373,18 +373,18 @@ public class SaveProfileManagerView {
                     profileToModify.setProfileName(newProfileName);
                     saveList.refresh();
 
-                    int saveProfileDropdownSelectedIndex = modTableContextBarView.getSaveProfileDropdown().getSelectionModel().getSelectedIndex();
+                    int saveProfileDropdownSelectedIndex = modTableContextBar.getSaveProfileDropdown().getSelectionModel().getSelectedIndex();
                     if (saveProfileDropdownSelectedIndex != SAVE_PROFILES.size() - 1) {
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (SAVE_PROFILES.size() == 1) {
                         SAVE_PROFILES.add(new SaveProfile());
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         SAVE_PROFILES.removeLast();
                     } else {
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectPrevious();
-                        modTableContextBarView.getSaveProfileDropdown().getSelectionModel().selectNext();
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
+                        modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                     }
 
                     if(profileToModify.equals(UI_SERVICE.getCurrentSaveProfile())) {
@@ -405,7 +405,7 @@ public class SaveProfileManagerView {
     private void setActive() {
         if (saveList.getSelectionModel().getSelectedItem() != null) {
             UI_SERVICE.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
-            modTableContextBarView.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
+            modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
             activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
             saveList.refresh();
         }

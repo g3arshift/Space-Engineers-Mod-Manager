@@ -30,7 +30,7 @@ public class UserConfiguration {
 
     private List<SaveProfile> saveProfiles;
 
-    private List<ModlistProfile> modlistProfiles;
+    private List<ModList> modLists;
 
     private UUID lastActiveModProfileId;
 
@@ -43,14 +43,14 @@ public class UserConfiguration {
      */
     public UserConfiguration() {
         saveProfiles = new ArrayList<>();
-        modlistProfiles = new ArrayList<>();
+        modLists = new ArrayList<>();
         userTheme = new PrimerLight().getName();
 
         //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
-        ModlistProfile modlistProfile = new ModlistProfile("Default");
-        modlistProfiles.add(modlistProfile);
-        lastActiveModProfileId = modlistProfile.getID();
+        ModList modList = new ModList("Default");
+        modLists.add(modList);
+        lastActiveModProfileId = modList.getID();
         runFirstTimeSetup = true;
     }
 
@@ -58,7 +58,7 @@ public class UserConfiguration {
         this.userTheme = userConfiguration.getUserTheme();
         this.lastModifiedSaveProfileId = userConfiguration.getLastModifiedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
-        this.modlistProfiles = userConfiguration.getModlistProfiles();
+        this.modLists = userConfiguration.getModLists();
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
         this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
@@ -77,19 +77,19 @@ public class UserConfiguration {
 
     @XmlElementWrapper(name = "modlistProfiles")
     @XmlElement(name = "modlistProfile")
-    public void setModlistProfiles(List<ModlistProfile> modlistProfiles) {
-        this.modlistProfiles = modlistProfiles;
+    public void setModLists(List<ModList> modLists) {
+        this.modLists = modLists;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modLists, that.modLists);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modlistProfiles);
+        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modLists);
     }
 }

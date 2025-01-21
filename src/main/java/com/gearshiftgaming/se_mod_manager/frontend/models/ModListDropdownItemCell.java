@@ -1,9 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
@@ -19,14 +18,14 @@ import javafx.scene.text.Text;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ModProfileDropdownItemCell extends ModProfileCell {
+public class ModListDropdownItemCell extends ModListCell {
 
-	public ModProfileDropdownItemCell(UiService uiService) {
+	public ModListDropdownItemCell(UiService uiService) {
 		super("", uiService);
 	}
 
 	@Override
-	protected void updateItem(ModlistProfile item, boolean empty) {
+	protected void updateItem(ModList item, boolean empty) {
 		super.updateItem(item, empty);
 		if(empty || item == null) {
 			setGraphic(null);

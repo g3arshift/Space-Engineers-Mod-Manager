@@ -1,10 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -18,21 +16,21 @@ import lombok.Getter;
  */
 
 @Getter
-public abstract class ModProfileCell extends ListCell<ModlistProfile> {
+public abstract class ModListCell extends ListCell<ModList> {
     private final Text PROFILE_NAME = new Text();
 
     private final String cellStyle;
 
     private final UiService UI_SERVICE;
 
-    public ModProfileCell(String cellStyle, UiService uiService) {
+    public ModListCell(String cellStyle, UiService uiService) {
         super();
         this.cellStyle = cellStyle;
         this.UI_SERVICE = uiService;
     }
 
     @Override
-    protected void updateItem(ModlistProfile item, boolean empty) {
+    protected void updateItem(ModList item, boolean empty) {
         super.updateItem(item, empty);
         if(empty || item == null) {
             setGraphic(null);
