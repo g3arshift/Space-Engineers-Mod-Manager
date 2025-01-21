@@ -4,19 +4,18 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowPositionUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
@@ -469,32 +468,32 @@ public class SaveProfileManager {
         UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
     }
 
-    public void displayTutorial() {
+    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
         stage.initStyle(StageStyle.UNDECORATED);
-        //TODO: In here we should do this:
-        // 1. Explain things to the user
-        // 2. Highlight add save
-        //     2a. Make sure to run a loop so the user is required to import a save
-        // 3. After a save is selected, explain to the user what is happening as we force them to import the modlist. Something like:
-        // "Since this is your first time we'll go ahead and automatically import your existing mods.
-        // In the future you'll be prompted when adding a save if you want to import the modlist already in place for the save, or you can do it manually at any time from the mod import menu."
-        // 4. Once done, explain the next steps
-        // 5. Highlight the close button
-        // 6. Cleanup the changes we made
         Pane[] panes = UI_SERVICE.getHighlightPanes();
+        ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
+        addSave.requestFocus();
+
         stage.setOnShown(event -> {
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), saveList);
             List<String> tutorialMessages = new ArrayList<>();
             tutorialMessages.add("This is the SEMM Save Profile Manager. Here you manage the actual Space Engineers saves you apply modlists to.");
             tutorialMessages.add("SEMM uses Save Profiles to store the information of a save you want to manage the modlist of. " +
-                    "A save profile has two names. The name of the profile, and the name of the actual save it contains. The name of the profile is what is displayed in SEMM, but the save name can be shown by hovering your cursor over a save profile in the manager.");
+                    "A save profile has two names. The name of the profile, and the name of the actual save it contains. The name of the profile is what is displayed in SEMM, but the save name can be shown by hovering your cursor over a save profile in the manager. ");
+            tutorialMessages.add("Like with mod lists, the currently active save profile will have a pair of bars surrounding the active save profile.");
+            tutorialMessages.add("If a save no longer exists on your computer however, such as the default \"None\" profile that you can see here, its text will change to red and have a line through it.");
+            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Saves");
+
+
+            tutorialMessages.clear();
             tutorialMessages.add("Let's start by adding an existing save to SEMM. Press the \"Add Save\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Saves");
 
-            ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
-            UI_SERVICE.tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), addSave);
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), addSave);
+            stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
         });
 
-        addSave.setOnAction(event1 -> {
+        addSave.setOnAction(event -> {
             Result<SaveProfile> saveProfileResult;
             do {
                 boolean duplicateSavePath = false;
@@ -517,22 +516,27 @@ public class SaveProfileManager {
 
                     //TODO: Break out the "import existing mods" stuff. We want a message before saying we'll import the existing mods for now.
                     duplicateSavePath = addSave(duplicateSavePath, saveProfileResult, selectedSave);
+                    if(UI_SERVICE.getCurrentSaveProfile().getProfileName().equals("None")) {
+                        Popup.displaySimpleAlert("You HAVE to add a save or you cannot apply mod lists!", stage, MessageType.WARN);
+                        duplicateSavePath = true;
+                    }
                 } while (saveProfileResult.isSuccess() && duplicateSavePath);
 
                 //Cleanup our UI actions.
                 PROFILE_INPUT_VIEW.getInput().clear();
             } while(saveProfileResult.getType() == ResultType.NOT_INITIALIZED);
 
-            Popup.displaySimpleAlert("Now that you've added a save profile let's head back to the mod list manager.", stage, MessageType.INFO);
-            UI_SERVICE.tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), closeSaveWindow);
+            Popup.displaySimpleAlert("Now that you've added a save profile let's head back to the mod list manager. Press the \"Close\" button.", stage, MessageType.INFO);
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), closeSaveWindow);
+            closeSaveWindow.requestFocus();
         });
 
         stage.setOnCloseRequest(event -> {
             stage.initStyle(StageStyle.DECORATED);
+            stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
             //Clean up the tutorial actions
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(panes);
             stage.setOnShown(event1 -> {});
-            //TODO: Call a reset function. It'll both set our stage on shown to empty, and also reset our setOnCloseRequest and our setOnAction buttons.
             addSave.setOnAction(event1 -> {
                 try {
                     addSave();

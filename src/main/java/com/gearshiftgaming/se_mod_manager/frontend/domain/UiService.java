@@ -7,8 +7,10 @@ import com.gearshiftgaming.se_mod_manager.controller.StorageController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.NamedArg;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -17,8 +19,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Bounds;
-import javafx.scene.control.Button;
+import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -587,31 +590,47 @@ public class UiService {
     }
 
     public void displayTutorial(Stage stage, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager) {
+        log("Starting tutorial...", MessageType.INFO);
+        final javafx.event.EventHandler<KeyEvent> arrowKeyDisabler = arrowKeyEvent -> {
+            switch (arrowKeyEvent.getCode()) {
+                case UP, DOWN, LEFT, RIGHT, TAB:
+                    arrowKeyEvent.consume();
+                    break;
+            }
+        };
         stage.setResizable(false);
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
 
-        //TODO: Create mod profile first.
         List<String> tutorialMessages = getTutorialMessages();
-        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM");
+        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM!");
+        masterManager.getManageModProfiles().requestFocus();
 
         Pane[] panes = getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
-        tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
+        TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
 
-        modListManager.displayTutorial();
-        //saveProfileManagerView.displayTutorial();
-        masterManager.getManageSaveProfiles().setOnAction(event -> {
-            //TODO: Move the panes to next selection
-//            saveProfileManager.show(stage);
-//            masterManager.getModTable().sort();
+        masterManager.getManageModProfiles().setOnAction(event -> {
+            modListManager.displayTutorial(arrowKeyDisabler);
             modListManager.show(stage);
-            //TODO: Popup next tutorial steps.
-            //TODO: We need to move the button over.
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageSaveProfiles());
+            masterManager.getManageSaveProfiles().requestFocus();
         });
 
-        USER_CONFIGURATION.setRunFirstTimeSetup(false);
-        saveUserData();
-        stage.setResizable(true);
+        masterManager.getManageSaveProfiles().setOnAction(event -> {
+            saveProfileManager.displayTutorial(arrowKeyDisabler);
+            saveProfileManager.show(stage);
+            masterManager.getModTable().sort();
+//            tutorialMessages.clear();
+//            tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods");
+//            tutorialMessages.add("SEMM supports adding mods five different ways.");
+        });
+
+        //TODO: This stuff needs to go in the final step of whatever we do.
+//        USER_CONFIGURATION.setRunFirstTimeSetup(false);
+//        saveUserData();
+//        stage.setResizable(true);
         //TODO: Call a cleanup function to fix our setOnAction stuff.
+        //TODO: REmove the arrow key disabler
     }
 
     @NotNull
@@ -639,44 +658,10 @@ public class UiService {
         panes[2] = bottomPane;
         panes[3] = leftPane;
 
-        for(Pane p : panes) {
+        for (Pane p : panes) {
             p.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
         }
 
         return panes;
-    }
-
-    public void tutorialButtonHighlight(Pane[] panes, double stageWidth, double stageHeight, Button button) {
-        final double MARGIN = 5.0;
-
-        Bounds buttonBounds = button.localToScene(button.getBoundsInLocal());
-        double buttonX = buttonBounds.getMinX();
-        double buttonY = buttonBounds.getMinY();
-        double buttonWidth = buttonBounds.getWidth();
-        double buttonHeight = buttonBounds.getHeight();
-
-        //Top Pane
-        panes[0].setLayoutX(0);
-        panes[0].setLayoutY(0);
-        panes[0].setPrefWidth(stageWidth);
-        panes[0].setPrefHeight(buttonY - MARGIN);
-
-        //Right Pane
-        panes[1].setLayoutX(buttonX + buttonWidth + MARGIN);
-        panes[1].setLayoutY(buttonY - MARGIN);
-        panes[1].setPrefWidth(stageWidth- (buttonX + buttonWidth + MARGIN));
-        panes[1].setPrefHeight(buttonHeight + 2 * MARGIN);
-
-        //Bottom Pane
-        panes[2].setLayoutX(0);
-        panes[2].setLayoutY(buttonY + buttonHeight + MARGIN);
-        panes[2].setPrefWidth(stageWidth);
-        panes[2].setPrefHeight(stageHeight - (buttonY + buttonHeight + MARGIN));
-
-        //Left Pane
-        panes[3].setLayoutX(0);
-        panes[3].setLayoutY(buttonY - MARGIN);
-        panes[3].setPrefWidth(buttonX - MARGIN);
-        panes[3].setPrefHeight(buttonHeight + 2 * MARGIN);
     }
 }

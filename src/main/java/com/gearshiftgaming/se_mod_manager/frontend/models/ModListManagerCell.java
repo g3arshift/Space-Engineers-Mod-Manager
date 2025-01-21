@@ -31,7 +31,7 @@ public class ModListManagerCell extends ModListCell {
 			setGraphic(getPROFILE_NAME());
 
 			StringBuilder styleBuilder = new StringBuilder(getCellStyle());
-			if(item.equals(UI_SERVICE.getCurrentModList())) {
+			if(item.equals(UI_SERVICE.getCurrentModListProfile())) {
 				styleBuilder.append("-fx-border-color: -color-accent-emphasis;")
 						.append("-fx-border-width: 2px 0px 2px 0px;");
 			}

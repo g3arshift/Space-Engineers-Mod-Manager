@@ -7,17 +7,16 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowPositionUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -39,7 +38,6 @@ import java.util.regex.Pattern;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ModListManager {
-
     @FXML
     private ListView<ModList> profileList;
 
@@ -85,6 +83,9 @@ public class ModListManager {
         this.UI_SERVICE = UI_SERVICE;
         MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILES();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
+        PROFILE_INPUT_VIEW.setTitle("Create Mod List");
+        PROFILE_INPUT_VIEW.setInputInstructions("Mod list name");
+        PROFILE_INPUT_VIEW.setEmptyTextMessage("Mod list name cannot be empty!");
     }
 
     public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
@@ -164,7 +165,7 @@ public class ModListManager {
                     } while (duplicateProfileName);
                 }
 
-                if(!copyProfileName.isBlank()) {
+                if (!copyProfileName.isBlank()) {
                     ModList copyProfile = new ModList(profileList.getSelectionModel().getSelectedItem());
                     copyProfile.setProfileName(copyProfileName);
 
@@ -316,17 +317,64 @@ public class ModListManager {
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
     }
 
-    public void displayTutorial() {
+    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
         stage.initStyle(StageStyle.UNDECORATED);
         Pane[] panes = UI_SERVICE.getHighlightPanes();
+        ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
+        createNewProfile.requestFocus();
+
         stage.setOnShown(event -> {
-            List<String> tutorialMessage = new ArrayList<>();
-            tutorialMessage.add("This is the SEMM Mod List Manager. Here you manage Mod Lists that you can apply to different saves. Mod Lists have a name to identify the name of the list, and hold your list of mods.");
-            tutorialMessage.add("You can copy mod lists, rename them, and both import and export mod lists to share with other people or save them as a backup.");
-            tutorialMessage.add("The currently active mod list will have a pair of bars surrounding it in the Mod List Manager. You cannot remove the active mod list, but you can rename or copy it.");
-            tutorialMessage.add("SEMM will start with a mod list named \"Default\", but for this tutorial let's create a new one. Press the \"Create New\" button.");
-            Popup.displayNavigationDialog(tutorialMessage, stage, MessageType.INFO, "Managing Mod Lists");
-            UI_SERVICE.tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), createNewProfile);
+            List<String> tutorialMessages = new ArrayList<>();
+            tutorialMessages.add("This is the SEMM Mod List Manager. Here you manage Mod Lists that you can apply to different saves. Mod Lists have a name to identify the name of the list, and hold your list of mods.");
+            tutorialMessages.add("You can copy mod lists, rename them, and both import and export mod lists to share with other people or save them as a backup.");
+            tutorialMessages.add("The currently active mod list will have a pair of bars surrounding it in the Mod List Manager. You cannot remove the active mod list, but you can rename or copy it.");
+            tutorialMessages.add("SEMM will start with a mod list named \"Default\", but for this tutorial let's create a new one. Press the \"Create New\" button.");
+            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), createNewProfile);
+
+            //Disable arrow key navigation of controls
+            stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
+        });
+
+        createNewProfile.setOnAction(event -> {
+            String newProfileName;
+            do {
+                newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
+                if (newProfileName.isBlank()) {
+                    Popup.displaySimpleAlert("You have to create a new mod list for the tutorial!", stage, MessageType.WARN);
+                }
+            } while (newProfileName.isBlank());
+            List<String> tutorialMessages = new ArrayList<>();
+            profileList.getSelectionModel().selectLast();
+            tutorialMessages.add("Now that you have a new mod list let's make it the mod list we're currently working with." +
+                    "In normal use you will have to select the profile yourself from the list on the left before pressing \"Set Active\", but here we've already done that for you. Now press the \"Set Active\" button.");
+            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), selectProfile);
+            selectProfile.requestFocus();
+        });
+
+        selectProfile.setOnAction(event -> {
+            setActive();
+            List<String> tutorialMessages = new ArrayList<>();
+            profileList.getSelectionModel().selectFirst();
+            tutorialMessages.add("Great! Now you have a mod list to add mods to and you've set it to the active profile. You can rename it in the future if you want, or export it if you want to share it with your friends or make a backup.");
+            tutorialMessages.add("Let's head back so you can add a save profile. Press the \"Close\" button, then press the highlighted \"Manage SE Saves\" button.");
+            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
+            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), closeProfileWindow);
+            closeProfileWindow.requestFocus();
+        });
+
+        stage.setOnCloseRequest(event -> {
+            //Clean up the tutorial actions.
+            stage.initStyle(StageStyle.DECORATED);
+            stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
+            ((Pane) stage.getScene().getRoot()).getChildren().removeAll(panes);
+            stage.setOnShown(event1 -> {
+            });
+            createNewProfile.setOnAction(event1 -> createNewProfile());
+            selectProfile.setOnAction(event1 -> setActive());
+            stage.setOnCloseRequest(event1 -> {
+            });
         });
     }
 }

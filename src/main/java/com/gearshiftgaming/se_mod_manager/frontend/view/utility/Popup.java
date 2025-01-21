@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
+//TODO: It might be a good idea to put the dialog boxes in a scroll pane with a fixed max size. That way if we have to log a massive message it doesn't get TOO big.
 public class Popup {
 
 	private static final int FONT_SIZE = 16;
@@ -235,8 +236,13 @@ public class Popup {
 	private static HBox makeNavigationBar(Stage childStage, List<String> messages, AtomicInteger currentStep, Label label) {
 		Button backButton = new Button("Back");
 		Button nextButton = new Button("Next");
+		backButton.setDisable(true);
 
 		backButton.setOnAction((ActionEvent event) -> {
+			if(currentStep.get() - 1 <= 0) {
+				backButton.setDisable(true);
+			}
+
 			if (currentStep.get() > 0) {
 				currentStep.getAndDecrement();
 				label.setText(messages.get(currentStep.get()));
@@ -246,6 +252,7 @@ public class Popup {
 
 		nextButton.setOnAction((ActionEvent event) -> {
 			if (currentStep.get() < messages.size() - 1) {
+				backButton.setDisable(false);
 				currentStep.getAndIncrement();
 				label.setText(messages.get(currentStep.get()));
 				childStage.sizeToScene();
