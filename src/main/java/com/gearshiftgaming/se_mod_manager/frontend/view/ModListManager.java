@@ -358,7 +358,7 @@ public class ModListManager {
             List<String> tutorialMessages = new ArrayList<>();
             profileList.getSelectionModel().selectFirst();
             tutorialMessages.add("Great! Now you have a mod list to add mods to and you've set it to the active profile. You can rename it in the future if you want, or export it if you want to share it with your friends or make a backup.");
-            tutorialMessages.add("Let's head back so you can add a save profile. Press the \"Close\" button, then press the highlighted \"Manage SE Saves\" button.");
+            tutorialMessages.add("Let's head back so you can add a save profile. Press the \"Close\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
             TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), closeProfileWindow);
             closeProfileWindow.requestFocus();
@@ -375,6 +375,11 @@ public class ModListManager {
             selectProfile.setOnAction(event1 -> setActive());
             stage.setOnCloseRequest(event1 -> {
             });
+        });
+
+        stage.setOnHidden(event -> {
+            Popup.displaySimpleAlert("Let's add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", stage, MessageType.INFO);
+            stage.setOnHidden(event1 -> {});
         });
     }
 }

@@ -18,9 +18,14 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -32,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -598,6 +604,7 @@ public class UiService {
                     break;
             }
         };
+
         stage.setResizable(false);
         stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
 
@@ -607,7 +614,7 @@ public class UiService {
 
         Pane[] panes = getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
-        TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
+        //TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
 
         masterManager.getManageModProfiles().setOnAction(event -> {
             modListManager.displayTutorial(arrowKeyDisabler);
@@ -617,13 +624,28 @@ public class UiService {
         });
 
         masterManager.getManageSaveProfiles().setOnAction(event -> {
-            saveProfileManager.displayTutorial(arrowKeyDisabler);
+            //TODO: Fix this. This is a truly awful solution but it's the only one I can figure out right now to get the timing right.
+            Stage saveProfileManagerStage = saveProfileManager.displayTutorial(arrowKeyDisabler);
             saveProfileManager.show(stage);
             masterManager.getModTable().sort();
-//            tutorialMessages.clear();
-//            tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods");
-//            tutorialMessages.add("SEMM supports adding mods five different ways.");
+
+            saveProfileManagerStage.setOnHidden(event1 -> {
+                masterManager.displayTutorial(arrowKeyDisabler);
+                saveProfileManagerStage.setOnHidden(event2 -> {});
+            });
         });
+
+//        masterManager.getModImportDropdown().setOnAction(event -> {
+//            originalModImportAction.handle(new ActionEvent());
+//            masterManager.getModImportDropdown().layout();
+//            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getApplyModlist());
+//            Popup.displaySimpleAlert("Some message about what the user should do here.", stage, MessageType.INFO);
+//            event.consume();
+//        });
+//
+//        masterManager.getModImportDropdown().showingProperty().addListener((observable, wasShowing, isNowShowing) -> {
+//
+//        });
 
         //TODO: This stuff needs to go in the final step of whatever we do.
 //        USER_CONFIGURATION.setRunFirstTimeSetup(false);

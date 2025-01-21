@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtili
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -184,19 +185,7 @@ public class SaveProfileManager {
                     if (duplicateProfileName) {
                         Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
                     } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                        saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-                        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
-                            saveProfile.setSaveExists(true);
-                            SAVE_PROFILES.set(0, saveProfile);
-                        } else {
-                            SAVE_PROFILES.add(saveProfile);
-                            saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
-                            UI_SERVICE.log(saveProfileResult);
-
-                            PROFILE_INPUT_VIEW.getInput().clear();
-                            //TODO: Switch active profile to the new profile
-                        }
-
+                        addSaveProfileToList(saveProfileResult, saveProfile);
                         displayAddExistingModsDialog(selectedSave);
 
                         saveList.refresh();
@@ -209,6 +198,21 @@ public class SaveProfileManager {
             }
         }
         return duplicateSavePath;
+    }
+
+    private void addSaveProfileToList(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
+        saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
+        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
+            saveProfile.setSaveExists(true);
+            SAVE_PROFILES.set(0, saveProfile);
+        } else {
+            SAVE_PROFILES.add(saveProfile);
+            saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
+            UI_SERVICE.log(saveProfileResult);
+
+            PROFILE_INPUT_VIEW.getInput().clear();
+            //TODO: Switch active profile to the new profile
+        }
     }
 
     private void displayAddExistingModsDialog(File selectedSave) {
@@ -468,7 +472,7 @@ public class SaveProfileManager {
         UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
     }
 
-    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
+    public Stage displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
         stage.initStyle(StageStyle.UNDECORATED);
         Pane[] panes = UI_SERVICE.getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
@@ -484,10 +488,12 @@ public class SaveProfileManager {
             tutorialMessages.add("If a save no longer exists on your computer however, such as the default \"None\" profile that you can see here, its text will change to red and have a line through it.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Saves");
 
-
             tutorialMessages.clear();
-            tutorialMessages.add("Let's start by adding an existing save to SEMM. Press the \"Add Save\" button.");
-            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Saves");
+
+            tutorialMessages.add("Let's start by adding an existing save to SEMM. " +
+                    "When you press the \"Add Save\" button, SEMM will automatically take you to your Space Engineers Save folder.");
+            tutorialMessages.add("Only Sandbox_config.sbc files, which store the mod list for a save, are valid. Press the \"Add Save\" button and select a Sandbox_config.sbc file inside a save folder");
+            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
 
             TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), addSave);
             stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
@@ -515,7 +521,36 @@ public class SaveProfileManager {
                     }
 
                     //TODO: Break out the "import existing mods" stuff. We want a message before saying we'll import the existing mods for now.
-                    duplicateSavePath = addSave(duplicateSavePath, saveProfileResult, selectedSave);
+                    if (saveProfileResult.isSuccess()) {
+                        SaveProfile saveProfile = saveProfileResult.getPayload();
+                        duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
+
+                        if (duplicateSavePath) {
+                            Popup.displaySimpleAlert("Save is already being managed!", stage, MessageType.WARN);
+                            SAVE_INPUT_VIEW.resetSelectedSave();
+                        } else {
+                            //Remove the default save profile that isn't actually a profile if it's all that we have in the list.
+                            boolean duplicateProfileName;
+                            do {
+                                PROFILE_INPUT_VIEW.getInput().clear();
+                                PROFILE_INPUT_VIEW.getInput().requestFocus();
+                                PROFILE_INPUT_VIEW.show(stage);
+                                duplicateProfileName = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
+
+                                if (duplicateProfileName) {
+                                    Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+                                } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
+                                    addSaveProfileToList(saveProfileResult, saveProfile);
+
+                                    saveList.refresh();
+                                    modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
+                                    modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
+
+                                    UI_SERVICE.saveUserData();
+                                }
+                            } while (duplicateProfileName);
+                        }
+                    }
                     if(UI_SERVICE.getCurrentSaveProfile().getProfileName().equals("None")) {
                         Popup.displaySimpleAlert("You HAVE to add a save or you cannot apply mod lists!", stage, MessageType.WARN);
                         duplicateSavePath = true;
@@ -526,7 +561,11 @@ public class SaveProfileManager {
                 PROFILE_INPUT_VIEW.getInput().clear();
             } while(saveProfileResult.getType() == ResultType.NOT_INITIALIZED);
 
-            Popup.displaySimpleAlert("Now that you've added a save profile let's head back to the mod list manager. Press the \"Close\" button.", stage, MessageType.INFO);
+            List<String> tutorialMessages = new ArrayList<>();
+            tutorialMessages.add("When you're adding a save profile to SEMM you can actually automatically import the mods contained in that save to your current mod list or a new mod list. " +
+                    "For now we will skip this step so you can see how to manually add mods.");
+            tutorialMessages.add("Now that you've added a save profile let's head back to the mod list manager. Press the \"Close\" button.");
+            Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
             TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), closeSaveWindow);
             closeSaveWindow.requestFocus();
         });
@@ -544,6 +583,10 @@ public class SaveProfileManager {
                     throw new RuntimeException(e);
                 }
             });
+            stage.setOnCloseRequest(event1 -> {});
         });
+
+        //This is fucking awful
+        return stage;
     }
 }

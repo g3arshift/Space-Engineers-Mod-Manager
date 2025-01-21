@@ -8,6 +8,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -17,6 +18,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.commons.lang3.StringUtils;
@@ -699,7 +701,7 @@ public class Popup {
 
 		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
 			double stageHeight = newValue.doubleValue();
-			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
+			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - newValue.doubleValue() / 2);
 		};
 
 		childStage.widthProperty().addListener(widthListener);
@@ -719,7 +721,24 @@ public class Popup {
 	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
 		prepareStage(childStage, dialogBox, buttonBar);
 
-		WindowPositionUtility.centerStageOnScreen(childStage);
+		//Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
+		Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+			childStage.setX((screenBounds.getWidth() - childStage.getWidth()) / 2);
+		};
+		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
+			childStage.setY((screenBounds.getHeight() - childStage.getHeight()) / 2);
+		};
+
+		childStage.widthProperty().addListener(widthListener);
+		childStage.heightProperty().addListener(heightListener);
+
+		//Once the window is visible, remove the listeners.
+		childStage.setOnShown(e -> {
+			childStage.widthProperty().removeListener(widthListener);
+			childStage.heightProperty().removeListener(heightListener);
+		});
 
 		childStage.show();
 		buttonBar.getChildren().getLast().requestFocus();

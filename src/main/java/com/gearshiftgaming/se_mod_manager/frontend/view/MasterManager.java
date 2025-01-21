@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
@@ -24,6 +25,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -89,6 +91,7 @@ public class MasterManager {
     private Button exportModlist;
 
     @FXML
+    @Getter
     private Button applyModlist;
 
     @FXML
@@ -458,7 +461,6 @@ public class MasterManager {
                 yield LocalDateTime.parse(dateString, formatter);
         };
     }
-
 
     //TODO: Make it so that when we change the modlist but don't inject it, the status becomes "Modified since last injection". Will have to happen in the modnamecell and row factory.
     public void setupMainViewItems() {
@@ -1306,5 +1308,37 @@ public class MasterManager {
         UI_SERVICE.getModImportProgressDenominatorProperty().setValue(0);
         UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
         modImportProgressWheel.setVisible(true);
+    }
+
+    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
+        STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
+
+        if (modImportDropdown.getItems().size() > 2) {
+            modImportDropdown.getItems().subList(2, modImportDropdown.getItems().size()).clear();
+        }
+
+        modImportDropdown.layout();
+
+        Pane[] panes = UI_SERVICE.getHighlightPanes();
+        ((Pane) STAGE.getScene().getRoot()).getChildren().addAll(panes);
+        modImportDropdown.requestFocus();
+
+        TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
+        List<String> tutorialMessages = new ArrayList<>();
+        tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods.");
+        tutorialMessages.add("""
+                        SEMM supports five different ways of adding mods.
+                            1. Pasting in a Steam Workshop URL or ID.
+                            2. Pasting in a Steam Workshop Collection URL or ID.
+                            3. Pasting in a Mod.io URL or item ID.
+                            4. Selecting a text file that contains a list of URL's or ID's for either the Steam Workshop or Mod.io. \
+                        Do note, however, that the file can only contain either URL's for the Steam Workshop or Mod.io. The same file cannot contain both, and it cannot contain Steam Collections.
+                            5. Selecting a Space Engineers save and importing the list of mods in use on that save.""");
+        tutorialMessages.add("For now, let's import a mod from a Steam Workshop URL. Open the \"Mod Import\" drop down and press the \"Steam Workshop\" button.");
+        Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Adding Mods");
+        modImportDropdown.setOnAction(event -> {
+            addModFromSteamId();
+            Popup.displaySimpleAlert("test", STAGE, MessageType.INFO);
+        });
     }
 }
