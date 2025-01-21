@@ -18,12 +18,16 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.Getter;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -89,7 +93,7 @@ public class ModProfileManagerView {
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        stage.setTitle("Mod Profile Manager");
+        stage.setTitle("Mod List Manager");
         WindowDressingUtility.appendStageIcon(stage);
 
         stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
@@ -310,5 +314,18 @@ public class ModProfileManagerView {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentModlistProfile().getProfileName());
+    }
+
+    public void displayTutorial() {
+        stage.initStyle(StageStyle.UNDECORATED);
+        Pane[] panes = UI_SERVICE.getHighlightPanes();
+        stage.setOnShown(event -> {
+            List<String> tutorialMessage = new ArrayList<>();
+            tutorialMessage.add("This is the SEMM Mod List Manager. Here you manage Mod Lists that you can apply to different saves. Mod Lists have a name to identify the name of the list, and hold your list of mods.");
+            tutorialMessage.add("You can copy mod lists, rename them, and both import and export mod lists to share with other people or save them as a backup.");
+            tutorialMessage.add("The currently active mod list will have a pair of bars surrounding it in the Mod List Manager. You cannot remove the active mod list, but you can rename or copy it.");
+            tutorialMessage.add("SEMM will start with a mod list named \"Default\", but for this tutorial let's create a new one. Press the \"Create New\" button.");
+            Popup.displayNavigationDialog(tutorialMessage, stage, MessageType.INFO, "Managing Mod Lists");
+        });
     }
 }

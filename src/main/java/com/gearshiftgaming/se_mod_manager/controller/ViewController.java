@@ -45,7 +45,7 @@ public class ViewController {
 
 	private final Properties PROPERTIES;
 
-	private final UiService UI_SERVICE;
+	private UiService uiService;
 
 	//TODO: Check for file locks to prevent two copies of the app from running simultaneously
 	public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -80,6 +80,7 @@ public class ViewController {
 			}
 			else {
 				Platform.exit();
+				return;
 			}
 		}
 
@@ -95,8 +96,8 @@ public class ViewController {
 
 		ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-		UI_SERVICE = new UiService(logger, userLog, modlistProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
-		UI_SERVICE.log(userConfigurationResult);
+		uiService = new UiService(logger, userLog, modlistProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+		uiService.log(userConfigurationResult);
 
 		setupInterface(stage);
 	}
@@ -110,7 +111,7 @@ public class ViewController {
 
 		//View for adding a new Save Profile
 		final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
-		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(UI_SERVICE);
+		final SaveInputView SAVE_INPUT_VIEW = new SaveInputView(uiService);
 		SAVE_LIST_INPUT_LOADER.setController(SAVE_INPUT_VIEW);
 		final Parent SAVE_LIST_INPUT_ROOT = SAVE_LIST_INPUT_LOADER.load();
 		SAVE_INPUT_VIEW.initView(SAVE_LIST_INPUT_ROOT);
@@ -131,19 +132,19 @@ public class ViewController {
 
 		//View for managing Save Profiles
 		final FXMLLoader SAVE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
-		final SaveProfileManagerView SAVE_MANAGER_VIEW = new SaveProfileManagerView(UI_SERVICE, SAVE_INPUT_VIEW, SAVE_PROFILE_INPUT_VIEW);
+		final SaveProfileManagerView SAVE_MANAGER_VIEW = new SaveProfileManagerView(uiService, SAVE_INPUT_VIEW, SAVE_PROFILE_INPUT_VIEW);
 		SAVE_MANAGER_LOADER.setController(SAVE_MANAGER_VIEW);
 		final Parent SAVE_MANAGER_ROOT = SAVE_MANAGER_LOADER.load();
 
 		//View for managing Mod Profiles
 		final FXMLLoader MOD_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/mod-profile-manager.fxml"));
-		final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW = new ModProfileManagerView(UI_SERVICE, MOD_PROFILE_INPUT_VIEW);
+		final ModProfileManagerView MOD_PROFILE_MANAGER_VIEW = new ModProfileManagerView(uiService, MOD_PROFILE_INPUT_VIEW);
 		MOD_PROFILE_MANAGER_LOADER.setController(MOD_PROFILE_MANAGER_VIEW);
 		final Parent MOD_PROFILE_MANAGER_ROOT = MOD_PROFILE_MANAGER_LOADER.load();
 
 		//View for the statusbar section of the main window
 		final FXMLLoader STATUS_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
-		final StatusBarView STATUS_BAR_VIEW = new StatusBarView(UI_SERVICE);
+		final StatusBarView STATUS_BAR_VIEW = new StatusBarView(uiService);
 		STATUS_BAR_LOADER.setController(STATUS_BAR_VIEW);
 		final Parent STATUS_BAR_ROOT = STATUS_BAR_LOADER.load();
 
@@ -163,13 +164,13 @@ public class ViewController {
 
 		//View for managing the actual mod lists. This is the center section of the main window
 		final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/modlist-manager.fxml"));
-		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(UI_SERVICE, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW, GENERAL_FILE_INPUT_VIEW);
+		final ModlistManagerView MODLIST_MANAGER_VIEW = new ModlistManagerView(uiService, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW, GENERAL_FILE_INPUT_VIEW);
 		MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
 		final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
 
 		//View for the menubar section of the main window
 		final FXMLLoader MOD_TABLE_CONTEXT_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
-		final ModTableContextBarView MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBarView(UI_SERVICE, MODLIST_MANAGER_VIEW, stage);
+		final ModTableContextBarView MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBarView(uiService, MODLIST_MANAGER_VIEW, stage);
 		MOD_TABLE_CONTEXT_BAR_LOADER.setController(MOD_TABLE_CONTEXT_BAR_VIEW);
 		final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
 
@@ -180,9 +181,9 @@ public class ViewController {
 		//View for the primary application window
 		final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
 		final MainWindowView MAIN_WINDOW_VIEW = new MainWindowView(PROPERTIES, stage,
-				MOD_TABLE_CONTEXT_BAR_VIEW, MODLIST_MANAGER_VIEW, STATUS_BAR_VIEW, UI_SERVICE);
+				MOD_TABLE_CONTEXT_BAR_VIEW, MODLIST_MANAGER_VIEW, STATUS_BAR_VIEW, uiService);
 		MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
 		final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
-		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT);
+		MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_PROFILE_MANAGER_VIEW);
 	}
 }

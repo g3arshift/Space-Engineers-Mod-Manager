@@ -83,7 +83,7 @@ public class MainWindowView {
         this.STATUS_BAR_VIEW = statusBarView;
     }
 
-    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManagerView saveProfileManagerView, ModProfileManagerView modProfileManagerView) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         //Prepare the UI
         setupWindow(mainViewRoot);
         CONTEXT_BAR_VIEW.initView();
@@ -132,63 +132,31 @@ public class MainWindowView {
                 "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", MessageType.INFO);
 
         STAGE.setOnShown(event -> {
+            //Add title and icon to the stage
+            Properties versionProperties = new Properties();
+            try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("version.properties")) {
+                versionProperties.load(input);
+            } catch (IOException | NullPointerException e) {
+                UI_SERVICE.log(e);
+            }
+
+            STAGE.setTitle("SEMM v" + versionProperties.getProperty("version"));
+
+            WindowDressingUtility.appendStageIcon(STAGE);
             if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
-                int firstTimeSetupChoice = 0;
-                firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
+                int firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
                 if (firstTimeSetupChoice == 1) {
-                    STAGE.setResizable(false);
+                    //TODO: I think we need to implement this by passing all our relevant stuff into a UI Service function.
+                    // It'll do its thing, and end up attaching a LOT of different onACtion events, but at the end of the tutorial function it's going to have to reset to the base setup. Which means making a bunch of our existing on action stuff discrete functions.
                     //TODO: Actually implement this. Function is empty at the moment.
                     //TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
                     //TODO: To highlight specific areas during setup, use four semi-opaque panes to create a clickable area and hide the rest.
                     //TODO: Disable resizing before first time setup and re-enable after.
-
-                    //Create the first
-                    Pane topPane = new Pane();
-                    Pane bottomPane = new Pane();
-                    Pane leftPane = new Pane();
-                    Pane rightPane = new Pane();
-
-                    topPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
-                    bottomPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
-                    leftPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
-                    rightPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
-
-                    final double MARGIN = 5.0;
-
-                    Bounds buttonBounds = MODLIST_MANAGER_VIEW.getManageSaveProfiles().localToScene(MODLIST_MANAGER_VIEW.getManageSaveProfiles().getBoundsInLocal());
-                    double buttonX = buttonBounds.getMinX();
-                    double buttonY = buttonBounds.getMinY();
-                    double buttonWidth = buttonBounds.getWidth();
-                    double buttonHeight = buttonBounds.getHeight();
-
-                    topPane.setLayoutX(0);
-                    topPane.setLayoutY(0);
-                    topPane.setPrefWidth(STAGE.getWidth());
-                    topPane.setPrefHeight(buttonY - MARGIN);
-
-                    bottomPane.setLayoutX(0);
-                    bottomPane.setLayoutY(buttonY + buttonHeight + MARGIN);
-                    bottomPane.setPrefWidth(STAGE.getWidth());
-                    bottomPane.setPrefHeight(STAGE.getHeight() - (buttonY + buttonHeight + MARGIN));
-
-                    leftPane.setLayoutX(0);
-                    leftPane.setLayoutY(buttonY - MARGIN);
-                    leftPane.setPrefWidth(buttonX - MARGIN);
-                    leftPane.setPrefHeight(buttonHeight + 2 * MARGIN);
-
-                    rightPane.setLayoutX(buttonX + buttonWidth + MARGIN);
-                    rightPane.setLayoutY(buttonY - MARGIN);
-                    rightPane.setPrefWidth(STAGE.getWidth() - (buttonX + buttonWidth + MARGIN));
-                    rightPane.setPrefHeight(buttonHeight + 2 * MARGIN);
-
-                    // Add panes to the stage
-                    ((Pane) scene.getRoot()).getChildren().addAll(topPane, bottomPane, leftPane, rightPane);
-
-                    STAGE.setResizable(true);
+                    UI_SERVICE.displayTutorial(STAGE, mainWindowRoot, MODLIST_MANAGER_VIEW, saveProfileManagerView, modProfileManagerView);
+                } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
+                    UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+                    UI_SERVICE.saveUserData();
                 }
-
-                UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
-                UI_SERVICE.saveUserData();
             }
         });
     }
@@ -210,18 +178,6 @@ public class MainWindowView {
         STAGE.setMinHeight(minHeight);
         STAGE.setWidth(prefWidth);
         STAGE.setHeight(prefHeight);
-
-        //Add title and icon to the stage
-        Properties versionProperties = new Properties();
-        try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("version.properties")) {
-            versionProperties.load(input);
-        } catch (IOException | NullPointerException e) {
-            UI_SERVICE.log(e);
-        }
-
-        STAGE.setTitle("SEMM v" + versionProperties.getProperty("version"));
-
-        WindowDressingUtility.appendStageIcon(STAGE);
 
         //Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
         STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {

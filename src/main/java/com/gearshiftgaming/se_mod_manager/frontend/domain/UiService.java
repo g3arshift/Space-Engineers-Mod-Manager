@@ -1,11 +1,12 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
-import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
+import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -15,7 +16,11 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.geometry.Bounds;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -577,27 +582,95 @@ public class UiService {
         saveUserData();
     }
 
-    //TODO: Instead of this BS, do it way more simply by deleting the file, popping up to the user it was deleted, logging the operation, and telling them torelaunch semm.
-    // Then, close semm with Platform.exit.
     public Result<Void> resetUserConfig() {
         return STORAGE_CONTROLLER.resetUserConfig();
-//        ModlistProfile newModlistProfile = new ModlistProfile("Default");
-//        MODLIST_PROFILES.add(newModlistProfile);
-//        setCurrentModlistProfile(newModlistProfile);
-//        MODLIST_PROFILES.removeIf(modlistProfile -> !modlistProfile.equals(newModlistProfile));
-//
-//        //TODO: Check the rest of these work, and properly do the current save profile setting
-//
-//        SAVE_PROFILES.clear();
-//        SAVE_PROFILES.add(new SaveProfile());
-//
-//        setLastActiveModlistProfile(null);
-//        setLastActiveSaveProfile(null);
-//
-//        USER_CONFIGURATION.setLastModifiedSaveProfileId(null);
-//
-//        USER_CONFIGURATION.setUserTheme(new PrimerLight().getName());
-//        log("Successfully reset user data.", MessageType.INFO);
-//        saveUserData();
+    }
+
+    public void displayTutorial(Stage stage, Pane rootPane, ModlistManagerView modlistManagerView, SaveProfileManagerView saveProfileManagerView, ModProfileManagerView modProfileManagerView) {
+        stage.setResizable(false);
+
+        //TODO: Create mod profile first.
+        List<String> tutorialMessages = new ArrayList<>();
+        tutorialMessages.add("Welcome to the Space Engineers Mod Manager, or \"SEMM\" for short. " +
+                "This tutorial will guide you through how to setup a save to manage the mods of, how to setup a modlist, how to add mods to that modlist, and how to apply them to a save.");
+        //tutorialMessages.add("To start, let's create a save profile for you to add mods to. Press the \"Manage Save Profiles\" button.");
+        tutorialMessages.add("To start, let's create a new modlist for you to add mods to. Press the \"Manage Mod Profiles\" button.");
+        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome");
+
+        Pane[] panes = getHighlightPanes();
+        ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
+        tutorialButtonHighlight(panes, stage.getWidth(), stage.getHeight(), modlistManagerView.getManageModProfiles());
+
+        //TODO: Instead of the other crap, call discrete displayTutorial functions on the other classes! That way we don't need a ton of fucking stuff in here.
+        modProfileManagerView.displayTutorial();
+        //saveProfileManagerView.displayTutorial();
+        modlistManagerView.getManageSaveProfiles().setOnAction(event -> {
+            //TODO: Move the panes to next selection
+            saveProfileManagerView.show(stage);
+            modlistManagerView.getModTable().sort();
+            //TODO: Popup next tutorial steps.
+            //TODO: We need to move the button over.
+        });
+
+        USER_CONFIGURATION.setRunFirstTimeSetup(false);
+        saveUserData();
+        stage.setResizable(true);
+        //TODO: Call a cleanup function to fix our setOnAction stuff.
+    }
+
+    /**
+     * This returns an array of panes to be used for highlighting parts of the UI.
+     * The panes are returned in top, right, bottom, left order
+     */
+    public Pane[] getHighlightPanes() {
+        Pane[] panes = new Pane[4];
+        Pane topPane = new Pane();
+        Pane rightPane = new Pane();
+        Pane bottomPane = new Pane();
+        Pane leftPane = new Pane();
+        panes[0] = topPane;
+        panes[1] = rightPane;
+        panes[2] = bottomPane;
+        panes[3] = leftPane;
+
+        for(Pane p : panes) {
+            p.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
+        }
+
+        return panes;
+    }
+
+    public void tutorialButtonHighlight(Pane[] panes, double stageWidth, double stageHeight, Button button) {
+        final double MARGIN = 5.0;
+
+        Bounds buttonBounds = button.localToScene(button.getBoundsInLocal());
+        double buttonX = buttonBounds.getMinX();
+        double buttonY = buttonBounds.getMinY();
+        double buttonWidth = buttonBounds.getWidth();
+        double buttonHeight = buttonBounds.getHeight();
+
+        //Top Pane
+        panes[0].setLayoutX(0);
+        panes[0].setLayoutY(0);
+        panes[0].setPrefWidth(stageWidth);
+        panes[0].setPrefHeight(buttonY - MARGIN);
+
+        //Right Pane
+        panes[1].setLayoutX(buttonX + buttonWidth + MARGIN);
+        panes[1].setLayoutY(buttonY - MARGIN);
+        panes[1].setPrefWidth(stageWidth- (buttonX + buttonWidth + MARGIN));
+        panes[1].setPrefHeight(buttonHeight + 2 * MARGIN);
+
+        //Bottom Pane
+        panes[2].setLayoutX(0);
+        panes[2].setLayoutY(buttonY + buttonHeight + MARGIN);
+        panes[2].setPrefWidth(stageWidth);
+        panes[2].setPrefHeight(stageHeight - (buttonY + buttonHeight + MARGIN));
+
+        //Left Pane
+        panes[3].setLayoutX(0);
+        panes[3].setLayoutY(buttonY - MARGIN);
+        panes[3].setPrefWidth(buttonX - MARGIN);
+        panes[3].setPrefHeight(buttonHeight + 2 * MARGIN);
     }
 }
