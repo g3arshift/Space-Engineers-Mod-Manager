@@ -485,7 +485,7 @@ public class SaveProfileManager {
             tutorialMessages.add("SEMM uses Save Profiles to store the information of a save you want to manage the modlist of. " +
                     "A save profile has two names. The name of the profile, and the name of the actual save it contains. The name of the profile is what is displayed in SEMM, but the save name can be shown by hovering your cursor over a save profile in the manager. ");
             tutorialMessages.add("Like with mod lists, the currently active save profile will have a pair of bars surrounding the active save profile.");
-            tutorialMessages.add("If a save no longer exists on your computer however, such as the default \"None\" profile that you can see here, its text will change to red and have a line through it.");
+            tutorialMessages.add("If a save no longer exists on your computer however, such as the default \"None\" profile that you will see here if it is your first time running this tutorial, its text will change to red and have a line through it.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Saves");
 
             tutorialMessages.clear();

@@ -478,6 +478,7 @@ public class MasterManager {
         //TODO: Setup a function in ModList service to track conflicts.
     }
 
+    //TODO: This gets called twice every single time because of the .selectFirst stuff, but it's the only way to actually reset the damn selection.
     @FXML
     private void addMod() {
         ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
@@ -501,7 +502,6 @@ public class MasterManager {
                 "Workshop URL/Mod ID"
         );
 
-
         String modId = getSteamModLocationFromUser(false);
         if (!modId.isBlank()) {
             SteamMod mod = new SteamMod(modId);
@@ -511,7 +511,6 @@ public class MasterManager {
             modList[0] = mod;
             importModsFromList(List.of(modList)).start();
         }
-
     }
 
     private void addModsFromSteamCollection() {
@@ -834,32 +833,36 @@ public class MasterManager {
         if (currentSaveProfile.isSaveExists()) {
             int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
             if (overwriteChoice == 1) {
-                // Deep copy list and sort by priority.
-                List<Mod> copiedModList = UI_SERVICE.getCurrentModList().stream()
-                        .filter(Mod::isActive)
-                        .sorted(Comparator.comparing(Mod::getLoadPriority))
-                        .collect(Collectors.toList());
-
-                if (copiedModList.isEmpty()) {
-                    int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
-                    if (emptyWriteChoice != 1) {
-                        return;
-                    }
-                }
-
-                Result<Void> modApplyResult = UI_SERVICE.applyModlist(copiedModList, UI_SERVICE.getCurrentSaveProfile());
-                Popup.displaySimpleAlert(modApplyResult, STAGE);
-
-                if (modApplyResult.isSuccess())
-                    UI_SERVICE.setSaveProfileInformationAfterSuccessfullyApplyingModlist();
-                else
-                    UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
-
-                STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
+                sortAndApplyModList();
             }
         } else {
-            Popup.displaySimpleAlert("The current save cannot be found on the disk.", STAGE, MessageType.ERROR);
+            Popup.displaySimpleAlert("The current save cannot be found.", STAGE, MessageType.ERROR);
         }
+    }
+
+    // Deep copy list and sort by priority.
+    private void sortAndApplyModList() throws IOException {
+        List<Mod> copiedModList = UI_SERVICE.getCurrentModList().stream()
+                .filter(Mod::isActive)
+                .sorted(Comparator.comparing(Mod::getLoadPriority))
+                .collect(Collectors.toList());
+
+        if (copiedModList.isEmpty()) {
+            int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
+            if (emptyWriteChoice != 1) {
+                return;
+            }
+        }
+
+        Result<Void> modApplyResult = UI_SERVICE.applyModlist(copiedModList, UI_SERVICE.getCurrentSaveProfile());
+        Popup.displaySimpleAlert(modApplyResult, STAGE);
+
+        if (modApplyResult.isSuccess())
+            UI_SERVICE.setSaveProfileInformationAfterSuccessfullyApplyingModlist();
+        else
+            UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
+
+        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
     }
 
     @FXML
@@ -1233,6 +1236,7 @@ public class MasterManager {
 
     /**
      * This is the main function called to import mods into SEMM.
+     *
      * @param modList The list of mods to import
      */
     public @NotNull Thread importModsFromList(List<Mod> modList) {
@@ -1310,35 +1314,104 @@ public class MasterManager {
         modImportProgressWheel.setVisible(true);
     }
 
-    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
+    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler, Pane[] panes) {
         STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
 
         if (modImportDropdown.getItems().size() > 2) {
             modImportDropdown.getItems().subList(2, modImportDropdown.getItems().size()).clear();
         }
 
-        modImportDropdown.layout();
-
-        Pane[] panes = UI_SERVICE.getHighlightPanes();
-        ((Pane) STAGE.getScene().getRoot()).getChildren().addAll(panes);
         modImportDropdown.requestFocus();
 
         TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods.");
         tutorialMessages.add("""
-                        SEMM supports five different ways of adding mods.
-                            1. Pasting in a Steam Workshop URL or ID.
-                            2. Pasting in a Steam Workshop Collection URL or ID.
-                            3. Pasting in a Mod.io URL or item ID.
-                            4. Selecting a text file that contains a list of URL's or ID's for either the Steam Workshop or Mod.io. \
-                        Do note, however, that the file can only contain either URL's for the Steam Workshop or Mod.io. The same file cannot contain both, and it cannot contain Steam Collections.
-                            5. Selecting a Space Engineers save and importing the list of mods in use on that save.""");
-        tutorialMessages.add("For now, let's import a mod from a Steam Workshop URL. Open the \"Mod Import\" drop down and press the \"Steam Workshop\" button.");
+                SEMM supports five different ways of adding mods.
+                    1. Pasting in a Steam Workshop URL or ID.
+                    2. Pasting in a Steam Workshop Collection URL or ID.
+                    3. Pasting in a Mod.io URL or item ID.
+                    4. Selecting a text file that contains a list of URL's or ID's for either the Steam Workshop or Mod.io. \
+                Do note, however, that the file can only contain either URL's for the Steam Workshop or Mod.io. The same file cannot contain both, and it cannot contain Steam Collections.
+                    5. Selecting a Space Engineers save and importing the list of mods in use on that save.""");
+        tutorialMessages.add("Only mods will be accepted by SEMM, however. Blueprints, worlds, scripts, and other such things are not mods and SEMM will reject them.");
+        tutorialMessages.add("For now, let's import a mod from a Steam Workshop URL. " +
+                "Open the \"Mod Import\" drop down and press the \"Steam Workshop\" button.");
         Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Adding Mods");
-        modImportDropdown.setOnAction(event -> {
-            addModFromSteamId();
-            Popup.displaySimpleAlert("test", STAGE, MessageType.INFO);
+
+        modImportDropdown.setOnAction(event -> tutorialAddMod(panes));
+
+        applyModlist.setOnAction(event -> {
+            try {
+                sortAndApplyModList();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            tutorialMessages.clear();
+            tutorialMessages.add("Congratulations! Now you're managing your mods in Space Engineers with SEMM! " +
+                    "You can launch Space Engineers through SEMM with the button \"Launch SE\" if you want now, but it isn't necessary.");
+            tutorialMessages.add("Now get out there and start modding, Engineers.");
+            Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
+
+            UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+            UI_SERVICE.saveUserData();
+
+            //Reset everything we changed just for tutorial usage
+            STAGE.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
+            modImportDropdown.getItems().addAll(
+                    ModImportType.STEAM_COLLECTION.getName(),
+                    ModImportType.MOD_IO.getName(),
+                    ModImportType.EXISTING_SAVE.getName(),
+                    ModImportType.FILE.getName());
+            modImportDropdown.setOnAction(event1 -> addMod());
+            applyModlist.setOnAction(event1 -> {
+                try {
+                    applyModlist();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            ((Pane) STAGE.getScene().getRoot()).getChildren().removeAll(panes);
+            manageModProfiles.setOnAction(event1 -> manageModProfiles());
+            manageSaveProfiles.setOnAction(event1 -> manageSaveProfiles());
         });
+    }
+
+
+    private void tutorialAddMod(Pane[] panes) {
+        ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
+        modImportDropdown.getSelectionModel().selectFirst();
+        modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
+        if (selectedImportOption != null) {
+            setModAddingInputViewText("Steam Workshop Mod URL/ID",
+                    "Enter the Steam Workshop URL/ID",
+                    "Workshop URL/Mod ID"
+            );
+
+            String modId = getSteamModLocationFromUser(false);
+            if (!modId.isBlank()) {
+                SteamMod mod = new SteamMod(modId);
+
+                //This is a bit hacky, but it makes a LOT less code we need to maintain.
+                final Mod[] modList = new Mod[1];
+                modList[0] = mod;
+                importModsFromList(List.of(modList)).start();
+                //TODO: The timing isn't perfect here because it WILL show this under the successful mod add message.
+                Platform.runLater(() -> {
+                    List<String> tutorialMessages = new ArrayList<>();
+                    TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), modTable);
+                    tutorialMessages.add("Great! Now that a mod has been added notice the blue check mark next to it. " +
+                            "This indicates the mod is active, and when you press \"Apply Mod List\" this mod will be added to the save. " +
+                            "If you want to make it so a mod is not added to a save when you press the apply button, uncheck the mod.");
+                    tutorialMessages.add("It is important to note that you can apply an empty mod list to a save. When you do this it will remove all mods on a save.");
+                    tutorialMessages.add("Now let's apply the mod list to your save. " +
+                            "Be aware, if you do not press the \"Apply Mod List\" button then the changes will not be applied to the save.");
+                    Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
+                    TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
+                    STAGE.setResizable(true);
+                });
+            }
+        }
     }
 }

@@ -38,6 +38,8 @@ public class ModImportUtility {
 				if (shouldAddMod) {
 					Mod mod = currentModInfoFillOutResult.getPayload();
 					currentModInfoFillOutResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
+					mod.setActive(true);
+					UI_SERVICE.modifyActiveModCount(mod);
 					mod.setLoadPriority(UI_SERVICE.getCurrentModList().size() + 1);
 					UI_SERVICE.getCurrentModList().add(mod);
 					successfulScrapes++;

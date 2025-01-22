@@ -614,7 +614,7 @@ public class UiService {
 
         Pane[] panes = getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
-        //TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
+        TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
 
         masterManager.getManageModProfiles().setOnAction(event -> {
             modListManager.displayTutorial(arrowKeyDisabler);
@@ -630,29 +630,10 @@ public class UiService {
             masterManager.getModTable().sort();
 
             saveProfileManagerStage.setOnHidden(event1 -> {
-                masterManager.displayTutorial(arrowKeyDisabler);
+                masterManager.displayTutorial(arrowKeyDisabler, panes);
                 saveProfileManagerStage.setOnHidden(event2 -> {});
             });
         });
-
-//        masterManager.getModImportDropdown().setOnAction(event -> {
-//            originalModImportAction.handle(new ActionEvent());
-//            masterManager.getModImportDropdown().layout();
-//            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getApplyModlist());
-//            Popup.displaySimpleAlert("Some message about what the user should do here.", stage, MessageType.INFO);
-//            event.consume();
-//        });
-//
-//        masterManager.getModImportDropdown().showingProperty().addListener((observable, wasShowing, isNowShowing) -> {
-//
-//        });
-
-        //TODO: This stuff needs to go in the final step of whatever we do.
-//        USER_CONFIGURATION.setRunFirstTimeSetup(false);
-//        saveUserData();
-//        stage.setResizable(true);
-        //TODO: Call a cleanup function to fix our setOnAction stuff.
-        //TODO: REmove the arrow key disabler
     }
 
     @NotNull

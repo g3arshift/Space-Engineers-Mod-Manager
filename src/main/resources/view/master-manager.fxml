@@ -92,9 +92,9 @@
                 <buttons>
                     <Button fx:id="manageModProfiles" mnemonicParsing="false" onAction="#manageModProfiles" text="Manage Mod Lists" />
                     <Button fx:id="manageSaveProfiles" mnemonicParsing="false" onAction="#manageSaveProfiles" text="Manage SE Saves" />
-                    <Button fx:id="importModlist" mnemonicParsing="false" onAction="#importModlistFile" text="Import Modlist" />
-                    <Button fx:id="exportModlist" mnemonicParsing="false" onAction="#exportModlistFile" text="Export Modlist" />
-                    <Button fx:id="applyModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Modlist" />
+                    <Button fx:id="importModlist" mnemonicParsing="false" onAction="#importModlistFile" text="Import Mod List" />
+                    <Button fx:id="exportModlist" mnemonicParsing="false" onAction="#exportModlistFile" text="Export Mod List" />
+                    <Button fx:id="applyModlist" mnemonicParsing="false" onAction="#applyModlist" text="Apply Mod List" />
                     <Button fx:id="launchSpaceEngineers" mnemonicParsing="false" onAction="#launchSpaceEngineers" text="Launch SE" />
                 </buttons>
             </ButtonBar>

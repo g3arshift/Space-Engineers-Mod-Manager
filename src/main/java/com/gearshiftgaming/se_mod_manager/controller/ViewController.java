@@ -141,10 +141,10 @@ public class ViewController {
         final Parent SAVE_MANAGER_ROOT = SAVE_MANAGER_LOADER.load();
 
         //View for managing Mod Profiles
-        final FXMLLoader MOD_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/mod-list-manager.fxml"));
-        final ModListManager MOD_PROFILE_MANAGER_VIEW = new ModListManager(uiService, MOD_PROFILE_INPUT_VIEW);
-        MOD_PROFILE_MANAGER_LOADER.setController(MOD_PROFILE_MANAGER_VIEW);
-        final Parent MOD_PROFILE_MANAGER_ROOT = MOD_PROFILE_MANAGER_LOADER.load();
+        final FXMLLoader MOD_LIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/mod-list-manager.fxml"));
+        final ModListManager MOD_LIST_MANAGER_VIEW = new ModListManager(uiService, MOD_PROFILE_INPUT_VIEW);
+        MOD_LIST_MANAGER_LOADER.setController(MOD_LIST_MANAGER_VIEW);
+        final Parent MOD_LIST_MANAGER_ROOT = MOD_LIST_MANAGER_LOADER.load();
 
         //View for the statusbar section of the main window
         final FXMLLoader STATUS_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
@@ -167,27 +167,27 @@ public class ViewController {
         GENERAL_FILE_INPUT_VIEW.initView(GENERAL_FILE_LOADER_ROOT);
 
         //View for managing the actual mod lists. This is the center section of the main window
-        final FXMLLoader MODLIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/master-manager.fxml"));
-        final MasterManager MODLIST_MANAGER_VIEW = new MasterManager(uiService, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_PROFILE_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW, GENERAL_FILE_INPUT_VIEW);
-        MODLIST_MANAGER_LOADER.setController(MODLIST_MANAGER_VIEW);
-        final Parent MODLIST_MANAGER_ROOT = MODLIST_MANAGER_LOADER.load();
+        final FXMLLoader MASTER_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/master-manager.fxml"));
+        final MasterManager MASTER_MANAGER_VIEW = new MasterManager(uiService, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_LIST_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW, GENERAL_FILE_INPUT_VIEW);
+        MASTER_MANAGER_LOADER.setController(MASTER_MANAGER_VIEW);
+        final Parent MASTER_MANAGER_ROOT = MASTER_MANAGER_LOADER.load();
 
         //View for the menubar section of the main window
         final FXMLLoader MOD_TABLE_CONTEXT_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
-        final ModTableContextBar MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBar(uiService, MODLIST_MANAGER_VIEW, stage);
+        final ModTableContextBar MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBar(uiService, MASTER_MANAGER_VIEW, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW, stage);
         MOD_TABLE_CONTEXT_BAR_LOADER.setController(MOD_TABLE_CONTEXT_BAR_VIEW);
         final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
 
         //The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-        MOD_PROFILE_MANAGER_VIEW.initView(MOD_PROFILE_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
+        MOD_LIST_MANAGER_VIEW.initView(MOD_LIST_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
         SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
 
         //View for the primary application window
         final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
         final MainWindow MAIN_WINDOW_VIEW = new MainWindow(PROPERTIES, stage,
-                MOD_TABLE_CONTEXT_BAR_VIEW, MODLIST_MANAGER_VIEW, STATUS_BAR_VIEW, uiService);
+                MOD_TABLE_CONTEXT_BAR_VIEW, MASTER_MANAGER_VIEW, STATUS_BAR_VIEW, uiService);
         MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
         final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
-        MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MODLIST_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_PROFILE_MANAGER_VIEW);
+        MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MASTER_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
     }
 }

@@ -85,6 +85,9 @@ public class ModTableContextBar {
     private MenuItem reportBug;
 
     @FXML
+    private MenuItem runTutorial;
+
+    @FXML
     @Getter
     private ComboBox<ModList> modProfileDropdown;
 
@@ -137,7 +140,11 @@ public class ModTableContextBar {
     @FXML
     private CheckMenuItem draculaTheme;
 
-    private final MasterManager MODLIST_MANAGER_VIEW;
+    private final MasterManager MASTER_MANAGER_VIEW;
+
+    private final SaveProfileManager SAVE_PROFILE_MANAGER_VIEW;
+
+    private final ModListManager MOD_LIST_MANAGER_VIEW;
 
     private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
 
@@ -145,10 +152,12 @@ public class ModTableContextBar {
 
     private final Stage STAGE;
 
-    public ModTableContextBar(UiService uiService, MasterManager masterManager, Stage stage) {
+    public ModTableContextBar(UiService uiService, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager, Stage stage) {
         this.UI_SERVICE = uiService;
-        this.MODLIST_MANAGER_VIEW = masterManager;
+        this.MASTER_MANAGER_VIEW = masterManager;
         this.STAGE = stage;
+        this.SAVE_PROFILE_MANAGER_VIEW = saveProfileManager;
+        this.MOD_LIST_MANAGER_VIEW = modListManager;
     }
 
     public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -228,9 +237,9 @@ public class ModTableContextBar {
         modTableSearchField.textProperty().addListener(observable -> {
             String filter = modTableSearchField.getText();
             if (filter == null || filter.isBlank()) {
-                MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> true);
+                MASTER_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> true);
             } else {
-                MODLIST_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
+                MASTER_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
             }
         });
 
@@ -251,33 +260,33 @@ public class ModTableContextBar {
 
     @FXML
     private void toggleLog() {
-        TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
-        Tab logTab = MODLIST_MANAGER_VIEW.getLogTab();
+        TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
+        Tab logTab = MASTER_MANAGER_VIEW.getLogTab();
 
         if (!logToggle.isSelected()) {
             informationPane.getTabs().remove(logTab);
         } else informationPane.getTabs().add(logTab);
 
         if (informationPane.getTabs().isEmpty()) {
-            MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
-        } else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
-            MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
+            MASTER_MANAGER_VIEW.disableSplitPaneDivider();
+        } else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+            MASTER_MANAGER_VIEW.enableSplitPaneDivider();
         }
     }
 
     @FXML
     private void toggleModDescription() {
-        TabPane informationPane = MODLIST_MANAGER_VIEW.getInformationPane();
-        Tab modDescriptionTab = MODLIST_MANAGER_VIEW.getModDescriptionTab();
+        TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
+        Tab modDescriptionTab = MASTER_MANAGER_VIEW.getModDescriptionTab();
 
         if (!modDescriptionToggle.isSelected()) {
             informationPane.getTabs().remove(modDescriptionTab);
         } else informationPane.getTabs().add(modDescriptionTab);
 
         if (informationPane.getTabs().isEmpty()) {
-            MODLIST_MANAGER_VIEW.disableSplitPaneDivider();
-        } else if (!MODLIST_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
-            MODLIST_MANAGER_VIEW.enableSplitPaneDivider();
+            MASTER_MANAGER_VIEW.disableSplitPaneDivider();
+        } else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+            MASTER_MANAGER_VIEW.enableSplitPaneDivider();
         }
     }
 
@@ -308,7 +317,7 @@ public class ModTableContextBar {
                 modConflictBox.setStroke(getThemeBoxColor());
 
                 String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-                MODLIST_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
+                MASTER_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
                 WindowTitleBarColorUtility.SetWindowsTitleBar(STAGE);
             }
@@ -316,7 +325,7 @@ public class ModTableContextBar {
 
         Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
         //This fixes the selected row being the wrong color until we change selection
-        MODLIST_MANAGER_VIEW.getModTable().refresh();
+        MASTER_MANAGER_VIEW.getModTable().refresh();
         if (savedUserTheme.isSuccess()) {
             UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
         } else {
@@ -329,7 +338,7 @@ public class ModTableContextBar {
         clearSearchBox();
 
         UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
-        MODLIST_MANAGER_VIEW.updateModTableContents();
+        MASTER_MANAGER_VIEW.updateModTableContents();
     }
 
     @FXML
@@ -376,6 +385,11 @@ public class ModTableContextBar {
         Desktop.getDesktop().browse(new URI("https://bugreport.spaceengineersmodmanager.com"));
     }
 
+    @FXML
+    private void runTutorial() {
+        UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW, SAVE_PROFILE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
+    }
+
     private Thread updateMods(List<Mod> initialModList) {
         final Task<Void> TASK;
         List<Mod> modList = new ArrayList<>(initialModList);
@@ -384,7 +398,7 @@ public class ModTableContextBar {
             @Override
             protected Void call() {
                 UI_SERVICE.getCurrentModList().clear();
-                MODLIST_MANAGER_VIEW.importModsFromList(modList).start();
+                MASTER_MANAGER_VIEW.importModsFromList(modList).start();
                 return null;
             }
         };

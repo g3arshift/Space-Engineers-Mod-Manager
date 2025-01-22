@@ -146,6 +146,7 @@ public class MainWindow {
                     //TODO: To highlight specific areas during setup, use four semi-opaque panes to create a clickable area and hide the rest.
                     //TODO: Disable resizing before first time setup and re-enable after.
                     UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW, saveProfileManager, modListManager);
+                    //TODO: In the final end of the tutorial stuff we need to set firstRun to false and save.
                 } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
                     UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
                     UI_SERVICE.saveUserData();
