@@ -32,6 +32,9 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      - name: Build with Gradle
+        run: gradle build
+
       - name: Read app version
         uses: kurt-code/gha-properties@v0.0.1
         id: read-properties
