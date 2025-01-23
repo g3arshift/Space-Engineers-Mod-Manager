@@ -791,12 +791,12 @@ public class MasterManager {
     }
 
     @FXML
-    private void manageModProfiles() {
+    public void manageModProfiles() {
         MOD_PROFILE_MANAGER_VIEW.show(STAGE);
     }
 
     @FXML
-    private void manageSaveProfiles() {
+    public void manageSaveProfiles() {
         SAVE_MANAGER_VIEW.show(STAGE);
         modTable.sort();
     }
@@ -1315,6 +1315,7 @@ public class MasterManager {
     }
 
     public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler, Pane[] panes) {
+        manageSaveProfiles.setOnAction(event -> manageSaveProfiles());
         STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
 
         if (modImportDropdown.getItems().size() > 2) {
@@ -1373,12 +1374,10 @@ public class MasterManager {
                 }
             });
             ((Pane) STAGE.getScene().getRoot()).getChildren().removeAll(panes);
-            manageModProfiles.setOnAction(event1 -> manageModProfiles());
-            manageSaveProfiles.setOnAction(event1 -> manageSaveProfiles());
         });
     }
 
-
+    //Special function to apply a modlist for the tutorial that bypasses some prompts
     private void tutorialAddMod(Pane[] panes) {
         ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
         modImportDropdown.getSelectionModel().selectFirst();

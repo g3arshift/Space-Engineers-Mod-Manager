@@ -387,7 +387,10 @@ public class ModTableContextBar {
 
     @FXML
     private void runTutorial() {
-        UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW, SAVE_PROFILE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
+        int runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", STAGE, MessageType.INFO);
+        if (runTutorialChoice == 1) {
+            UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW, SAVE_PROFILE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
+        }
     }
 
     private Thread updateMods(List<Mod> initialModList) {

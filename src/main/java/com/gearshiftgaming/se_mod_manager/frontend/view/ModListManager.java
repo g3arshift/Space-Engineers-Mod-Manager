@@ -11,6 +11,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -317,11 +318,22 @@ public class ModListManager {
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
     }
 
-    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
+    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler, Stage parentStage) {
+        //Reset the scene so we can undecorate the stage.
+        Parent root = stage.getScene().getRoot();
+        stage.getScene().setRoot(new Group());
+        stage = new Stage();
+        stage.setScene(new Scene(root));
         stage.initStyle(StageStyle.UNDECORATED);
+
         Pane[] panes = UI_SERVICE.getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
         createNewProfile.requestFocus();
+
+        stage.setOnHidden(event1 -> {
+            Popup.displaySimpleAlert("Let's add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", parentStage, MessageType.INFO);
+            stage.setOnHidden(event2 -> {});
+        });
 
         stage.setOnShown(event -> {
             List<String> tutorialMessages = new ArrayList<>();
@@ -364,9 +376,10 @@ public class ModListManager {
             closeProfileWindow.requestFocus();
         });
 
-        stage.setOnCloseRequest(event -> {
-            //Clean up the tutorial actions.
-            stage.initStyle(StageStyle.DECORATED);
+        stage.setOnHiding(event -> {
+            stage.getScene().setRoot(new Group());
+            stage = new Stage();
+            stage.setScene(new Scene(root));
             stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(panes);
             stage.setOnShown(event1 -> {
@@ -377,9 +390,5 @@ public class ModListManager {
             });
         });
 
-        stage.setOnHidden(event -> {
-            Popup.displaySimpleAlert("Let's add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", stage, MessageType.INFO);
-            stage.setOnHidden(event1 -> {});
-        });
     }
 }

@@ -7,12 +7,12 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtili
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -135,7 +135,7 @@ public class SaveProfileManager {
 
         saveCopyMessage.setVisible(false);
 
-        //stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
 
         UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
     }
@@ -419,7 +419,7 @@ public class SaveProfileManager {
         stage.close();
         stage.setHeight(stage.getHeight() - 1);
         saveList.getSelectionModel().clearSelection();
-        //Platform.exitNestedEventLoop(stage, null);
+        Platform.exitNestedEventLoop(stage, null);
     }
 
     private boolean saveAlreadyExists(String savePath) {
@@ -438,6 +438,7 @@ public class SaveProfileManager {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
+        Platform.enterNestedEventLoop(stage);
     }
 
     private void disableModImportBar(boolean shouldDisable) {
@@ -472,8 +473,13 @@ public class SaveProfileManager {
         UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
     }
 
-    public Stage displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
+    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler) {
+        Parent root = stage.getScene().getRoot();
+        stage.getScene().setRoot(new Group());
+        stage = new Stage();
+        stage.setScene(new Scene(root));
         stage.initStyle(StageStyle.UNDECORATED);
+
         Pane[] panes = UI_SERVICE.getHighlightPanes();
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
         addSave.requestFocus();
@@ -571,7 +577,8 @@ public class SaveProfileManager {
         });
 
         stage.setOnCloseRequest(event -> {
-            stage.initStyle(StageStyle.DECORATED);
+            stage = new Stage();
+            stage.setScene(new Scene(root));
             stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
             //Clean up the tutorial actions
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(panes);
@@ -585,8 +592,5 @@ public class SaveProfileManager {
             });
             stage.setOnCloseRequest(event1 -> {});
         });
-
-        //This is fucking awful
-        return stage;
     }
 }

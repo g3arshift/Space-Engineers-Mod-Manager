@@ -595,6 +595,7 @@ public class UiService {
         return STORAGE_CONTROLLER.resetUserConfig();
     }
 
+    //This is truly a monstrosity of a function. It's... Just terrible. Shotgun surgery indeed. Please be kind and forgive me.
     public void displayTutorial(Stage stage, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager) {
         log("Starting tutorial...", MessageType.INFO);
         final javafx.event.EventHandler<KeyEvent> arrowKeyDisabler = arrowKeyEvent -> {
@@ -616,23 +617,24 @@ public class UiService {
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
         TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
 
+        //TODO: The entire flow needs rewritten. We shouldn't do this constant reassigning of shit, we should instead use the
+        // shouldrunTutorial flag in user config as a check in the existing on action actions instead of... This monstrosity.
         masterManager.getManageModProfiles().setOnAction(event -> {
-            modListManager.displayTutorial(arrowKeyDisabler);
+            modListManager.displayTutorial(arrowKeyDisabler, stage);
             modListManager.show(stage);
             TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageSaveProfiles());
             masterManager.getManageSaveProfiles().requestFocus();
+            masterManager.getManageModProfiles().setOnAction(event1 -> {masterManager.manageModProfiles();});
         });
 
         masterManager.getManageSaveProfiles().setOnAction(event -> {
             //TODO: Fix this. This is a truly awful solution but it's the only one I can figure out right now to get the timing right.
-            Stage saveProfileManagerStage = saveProfileManager.displayTutorial(arrowKeyDisabler);
+            saveProfileManager.displayTutorial(arrowKeyDisabler);
             saveProfileManager.show(stage);
             masterManager.getModTable().sort();
 
-            saveProfileManagerStage.setOnHidden(event1 -> {
-                masterManager.displayTutorial(arrowKeyDisabler, panes);
-                saveProfileManagerStage.setOnHidden(event2 -> {});
-            });
+            masterManager.displayTutorial(arrowKeyDisabler, panes);
+            masterManager.getManageSaveProfiles().setOnAction(event2 -> masterManager.manageSaveProfiles());
         });
     }
 
@@ -641,7 +643,6 @@ public class UiService {
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Welcome to the Space Engineers Mod Manager, or \"SEMM\" for short. " +
                 "This tutorial will guide you through how to setup a save to manage the mods of, how to setup a modlist, how to add mods to that modlist, and how to apply them to a save.");
-        //tutorialMessages.add("To start, let's create a save profile for you to add mods to. Press the \"Manage Save Profiles\" button.");
         tutorialMessages.add("To start, let's create a new modlist for you to add mods to. Press the \"Manage Mod Profiles\" button.");
         return tutorialMessages;
     }

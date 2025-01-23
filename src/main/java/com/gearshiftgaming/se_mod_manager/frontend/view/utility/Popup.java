@@ -635,7 +635,7 @@ public class Popup {
 		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
 
 		Label title = new Label(switch(messageIcon.getIconLiteral()) {
-			case "ci-information-square" -> "Success";
+			case "ci-information-square" -> "Info";
 			case "ci-warning-alt" -> "Warning";
 			case "ci-warning-square" -> "Error";
 			default -> "Unknown";

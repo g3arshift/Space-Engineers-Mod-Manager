@@ -139,14 +139,7 @@ public class MainWindow {
             if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
                 int firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
                 if (firstTimeSetupChoice == 1) {
-                    //TODO: I think we need to implement this by passing all our relevant stuff into a UI Service function.
-                    // It'll do its thing, and end up attaching a LOT of different onACtion events, but at the end of the tutorial function it's going to have to reset to the base setup. Which means making a bunch of our existing on action stuff discrete functions.
-                    //TODO: Actually implement this. Function is empty at the moment.
-                    //TODO: When we launch the app for the first time, walk the user through first making a save profile, then renaming the default mod profile, then IMMEDIATELY save to file.
-                    //TODO: To highlight specific areas during setup, use four semi-opaque panes to create a clickable area and hide the rest.
-                    //TODO: Disable resizing before first time setup and re-enable after.
                     UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW, saveProfileManager, modListManager);
-                    //TODO: In the final end of the tutorial stuff we need to set firstRun to false and save.
                 } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
                     UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
                     UI_SERVICE.saveUserData();
