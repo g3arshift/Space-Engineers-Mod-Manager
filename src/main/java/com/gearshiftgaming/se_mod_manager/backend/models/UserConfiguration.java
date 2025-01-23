@@ -19,21 +19,26 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-@Getter
 @Setter
 @XmlRootElement(name = "userConfiguration")
 public class UserConfiguration {
 
+    @Getter
     private String userTheme;
 
+    @Getter
     private UUID lastModifiedSaveProfileId;
 
+    @Getter
     private List<SaveProfile> saveProfiles;
 
+    @Getter
     private List<ModList> modLists;
 
+    @Getter
     private UUID lastActiveModProfileId;
 
+    @Getter
     private UUID lastActiveSaveProfileId;
 
     private boolean runFirstTimeSetup;
@@ -61,7 +66,7 @@ public class UserConfiguration {
         this.modLists = userConfiguration.getModLists();
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
-        this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
+        this.runFirstTimeSetup = userConfiguration.shouldRunFirstTimeSetup();
     }
 
     @XmlElement(name = "userTheme")
@@ -91,5 +96,13 @@ public class UserConfiguration {
     @Override
     public int hashCode() {
         return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modLists);
+    }
+
+    public boolean shouldRunFirstTimeSetup() {
+        return runFirstTimeSetup;
+    }
+
+    public void shouldRunFirstTimeSetup(boolean runFirstTimeSetup) {
+        this.runFirstTimeSetup = runFirstTimeSetup;
     }
 }

@@ -10,7 +10,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.NamedArg;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -18,14 +17,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -37,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -103,6 +94,9 @@ public class UiService {
 
     private final String MOD_DATE_FORMAT;
 
+    @Getter
+    final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
+
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
                      @NotNull ObservableList<ModList> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
@@ -129,6 +123,14 @@ public class UiService {
         //A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
+
+        KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
+            switch (arrowKeyEvent.getCode()) {
+                case UP, DOWN, LEFT, RIGHT, TAB:
+                    arrowKeyEvent.consume();
+                    break;
+            }
+        };
     }
 
     public void log(String message, MessageType messageType) {
@@ -598,53 +600,17 @@ public class UiService {
     //This is truly a monstrosity of a function. It's... Just terrible. Shotgun surgery indeed. Please be kind and forgive me.
     public void displayTutorial(Stage stage, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager) {
         log("Starting tutorial...", MessageType.INFO);
-        final javafx.event.EventHandler<KeyEvent> arrowKeyDisabler = arrowKeyEvent -> {
-            switch (arrowKeyEvent.getCode()) {
-                case UP, DOWN, LEFT, RIGHT, TAB:
-                    arrowKeyEvent.consume();
-                    break;
-            }
-        };
 
         stage.setResizable(false);
-        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, KEYBOARD_BUTTON_NAVIGATION_DISABLER);
 
-        List<String> tutorialMessages = getTutorialMessages();
-        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM!");
-        masterManager.getManageModProfiles().requestFocus();
-
-        Pane[] panes = getHighlightPanes();
-        ((Pane) stage.getScene().getRoot()).getChildren().addAll(panes);
-        TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageModProfiles());
-
-        //TODO: The entire flow needs rewritten. We shouldn't do this constant reassigning of shit, we should instead use the
-        // shouldrunTutorial flag in user config as a check in the existing on action actions instead of... This monstrosity.
-        masterManager.getManageModProfiles().setOnAction(event -> {
-            modListManager.displayTutorial(arrowKeyDisabler, stage);
-            modListManager.show(stage);
-            TutorialUtility.tutorialElementHighlight(panes, stage.getWidth(), stage.getHeight(), masterManager.getManageSaveProfiles());
-            masterManager.getManageSaveProfiles().requestFocus();
-            masterManager.getManageModProfiles().setOnAction(event1 -> {masterManager.manageModProfiles();});
-        });
-
-        masterManager.getManageSaveProfiles().setOnAction(event -> {
-            //TODO: Fix this. This is a truly awful solution but it's the only one I can figure out right now to get the timing right.
-            saveProfileManager.displayTutorial(arrowKeyDisabler);
-            saveProfileManager.show(stage);
-            masterManager.getModTable().sort();
-
-            masterManager.displayTutorial(arrowKeyDisabler, panes);
-            masterManager.getManageSaveProfiles().setOnAction(event2 -> masterManager.manageSaveProfiles());
-        });
-    }
-
-    @NotNull
-    private static List<String> getTutorialMessages() {
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Welcome to the Space Engineers Mod Manager, or \"SEMM\" for short. " +
                 "This tutorial will guide you through how to setup a save to manage the mods of, how to setup a modlist, how to add mods to that modlist, and how to apply them to a save.");
         tutorialMessages.add("To start, let's create a new modlist for you to add mods to. Press the \"Manage Mod Profiles\" button.");
-        return tutorialMessages;
+        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM!");
+
+        masterManager.runTutorialModListManagementStep();
     }
 
     /**

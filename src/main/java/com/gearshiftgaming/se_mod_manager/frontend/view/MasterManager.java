@@ -77,11 +77,9 @@ public class MasterManager {
     private ComboBox<String> modImportDropdown;
 
     @FXML
-    @Getter
     private Button manageModProfiles;
 
     @FXML
-    @Getter
     private Button manageSaveProfiles;
 
     @FXML
@@ -91,7 +89,6 @@ public class MasterManager {
     private Button exportModlist;
 
     @FXML
-    @Getter
     private Button applyModlist;
 
     @FXML
@@ -241,6 +238,8 @@ public class MasterManager {
 
     private final Pattern MOD_IO_URL;
 
+    private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
+
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
     private ComboBox<ModList> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
@@ -271,7 +270,7 @@ public class MasterManager {
 
         this.STEAM_WORKSHOP_MOD_ID = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
         this.MOD_IO_URL = Pattern.compile(properties.getProperty("semm.modio.mod.name.pattern"));
-
+        TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
     }
 
     public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
@@ -792,13 +791,30 @@ public class MasterManager {
 
     @FXML
     public void manageModProfiles() {
-        MOD_PROFILE_MANAGER_VIEW.show(STAGE);
+        if (!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+            MOD_PROFILE_MANAGER_VIEW.show(STAGE);
+        } else {
+            MOD_PROFILE_MANAGER_VIEW.runTutorial(STAGE);
+            Popup.displaySimpleAlert("You need to add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", STAGE, MessageType.INFO);
+            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageSaveProfiles);
+            manageSaveProfiles.requestFocus();
+        }
     }
 
     @FXML
     public void manageSaveProfiles() {
-        SAVE_MANAGER_VIEW.show(STAGE);
-        modTable.sort();
+        if(!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+            SAVE_MANAGER_VIEW.show(STAGE);
+            modTable.sort();
+        } else {
+            //TODO: Reorg as with modmanager.
+//            saveProfileManager.displayTutorial(KEYBOARD_BUTTON_NAVIGATION_DISABLER);
+//            saveProfileManager.show(stage);
+//            masterManager.getModTable().sort();
+//
+//            masterManager.displayTutorial(KEYBOARD_BUTTON_NAVIGATION_DISABLER, panes);
+//            masterManager.getManageSaveProfiles().setOnAction(event2 -> masterManager.manageSaveProfiles());
+        }
     }
 
     @FXML
@@ -1314,6 +1330,12 @@ public class MasterManager {
         modImportProgressWheel.setVisible(true);
     }
 
+    public void runTutorialModListManagementStep() {
+        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageModProfiles);
+        ((Pane) STAGE.getScene().getRoot()).getChildren().addAll(TUTORIAL_HIGHLIGHT_PANES);
+        manageModProfiles.requestFocus();
+    }
+
     public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler, Pane[] panes) {
         manageSaveProfiles.setOnAction(event -> manageSaveProfiles());
         STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
@@ -1355,7 +1377,7 @@ public class MasterManager {
             tutorialMessages.add("Now get out there and start modding, Engineers.");
             Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
 
-            UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+            UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup(false);
             UI_SERVICE.saveUserData();
 
             //Reset everything we changed just for tutorial usage
@@ -1378,6 +1400,7 @@ public class MasterManager {
     }
 
     //Special function to apply a modlist for the tutorial that bypasses some prompts
+    //TODO: MOVE DIS SHIT
     private void tutorialAddMod(Pane[] panes) {
         ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
         modImportDropdown.getSelectionModel().selectFirst();
