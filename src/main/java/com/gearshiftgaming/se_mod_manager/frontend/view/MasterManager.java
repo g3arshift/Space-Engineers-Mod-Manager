@@ -25,7 +25,6 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -483,7 +482,6 @@ public class MasterManager {
         ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
         modImportDropdown.getSelectionModel().selectFirst();
         modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
-
         if (selectedImportOption != null) {
             switch (selectedImportOption) {
                 case STEAM_ID -> addModFromSteamId();
@@ -791,30 +789,25 @@ public class MasterManager {
 
     @FXML
     public void manageModProfiles() {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             MOD_PROFILE_MANAGER_VIEW.show(STAGE);
         } else {
+            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageSaveProfiles);
             MOD_PROFILE_MANAGER_VIEW.runTutorial(STAGE);
             Popup.displaySimpleAlert("You need to add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", STAGE, MessageType.INFO);
-            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageSaveProfiles);
             manageSaveProfiles.requestFocus();
         }
     }
 
     @FXML
     public void manageSaveProfiles() {
-        if(!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             SAVE_MANAGER_VIEW.show(STAGE);
-            modTable.sort();
         } else {
-            //TODO: Reorg as with modmanager.
-//            saveProfileManager.displayTutorial(KEYBOARD_BUTTON_NAVIGATION_DISABLER);
-//            saveProfileManager.show(stage);
-//            masterManager.getModTable().sort();
-//
-//            masterManager.displayTutorial(KEYBOARD_BUTTON_NAVIGATION_DISABLER, panes);
-//            masterManager.getManageSaveProfiles().setOnAction(event2 -> masterManager.manageSaveProfiles());
+            SAVE_MANAGER_VIEW.runTutorial(STAGE);
+            runTutorialAddModStep();
         }
+        modTable.sort();
     }
 
     @FXML
@@ -845,14 +838,27 @@ public class MasterManager {
     //Apply the modlist the user is currently using to the save profile they're currently using.
     @FXML
     private void applyModlist() throws IOException {
-        SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
-        if (currentSaveProfile.isSaveExists()) {
-            int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
-            if (overwriteChoice == 1) {
-                sortAndApplyModList();
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+            SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
+            if (currentSaveProfile.isSaveExists()) {
+                int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
+                if (overwriteChoice == 1) {
+                    sortAndApplyModList();
+                }
+            } else {
+                Popup.displaySimpleAlert("The current save cannot be found.", STAGE, MessageType.ERROR);
             }
         } else {
-            Popup.displaySimpleAlert("The current save cannot be found.", STAGE, MessageType.ERROR);
+            sortAndApplyModList();
+            List<String> tutorialMessages = new ArrayList<>();
+            tutorialMessages.add("Congratulations! Now you're managing your mods in Space Engineers with SEMM! " +
+                    "You can launch Space Engineers through SEMM with the button \"Launch SE\" if you want now, but it isn't necessary.");
+            tutorialMessages.add("Now get out there and start modding, Engineers.");
+            Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
+
+            UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+            UI_SERVICE.saveUserData();
+            runTutorialCleanup();
         }
     }
 
@@ -871,7 +877,11 @@ public class MasterManager {
         }
 
         Result<Void> modApplyResult = UI_SERVICE.applyModlist(copiedModList, UI_SERVICE.getCurrentSaveProfile());
-        Popup.displaySimpleAlert(modApplyResult, STAGE);
+        if (modApplyResult.isSuccess()) {
+            Popup.displaySimpleAlert("Mod list successfully applied!", STAGE, MessageType.INFO);
+        } else {
+            Popup.displaySimpleAlert(modApplyResult, STAGE);
+        }
 
         if (modApplyResult.isSuccess())
             UI_SERVICE.setSaveProfileInformationAfterSuccessfullyApplyingModlist();
@@ -1289,6 +1299,20 @@ public class MasterManager {
             fadeTransition.setOnFinished(actionEvent -> {
                 disableUserInputElements(false);
                 resetModImportProgressUi();
+                Platform.runLater(() -> {
+                    if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                        List<String> tutorialMessages = new ArrayList<>();
+                        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
+                        tutorialMessages.add("Great! Now that a mod has been added notice the blue check mark next to it. " +
+                                "This indicates the mod is active, and when you press \"Apply Mod List\" this mod will be added to the save. " +
+                                "If you want to make it so a mod is not added to a save when you press the apply button, uncheck the mod.");
+                        tutorialMessages.add("It is important to note that you can apply an empty mod list to a save. When you do this it will remove all mods on a save.");
+                        tutorialMessages.add("Now let's apply the mod list to your save. " +
+                                "Be aware, if you do not press the \"Apply Mod List\" button then the changes will not be applied to the save.");
+                        Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
+                        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
+                    }
+                });
             });
 
             fadeTransition.play();
@@ -1331,22 +1355,23 @@ public class MasterManager {
     }
 
     public void runTutorialModListManagementStep() {
+        STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageModProfiles);
         ((Pane) STAGE.getScene().getRoot()).getChildren().addAll(TUTORIAL_HIGHLIGHT_PANES);
         manageModProfiles.requestFocus();
     }
 
-    public void displayTutorial(EventHandler<KeyEvent> arrowKeyDisabler, Pane[] panes) {
-        manageSaveProfiles.setOnAction(event -> manageSaveProfiles());
-        STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
+    public void runTutorialAddModStep() {
+        STAGE.getScene().addEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
 
         if (modImportDropdown.getItems().size() > 2) {
             modImportDropdown.getItems().subList(2, modImportDropdown.getItems().size()).clear();
         }
 
         modImportDropdown.requestFocus();
+        modImportDropdown.layout();
 
-        TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
+        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods.");
         tutorialMessages.add("""
@@ -1361,79 +1386,16 @@ public class MasterManager {
         tutorialMessages.add("For now, let's import a mod from a Steam Workshop URL. " +
                 "Open the \"Mod Import\" drop down and press the \"Steam Workshop\" button.");
         Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Adding Mods");
-
-        modImportDropdown.setOnAction(event -> tutorialAddMod(panes));
-
-        applyModlist.setOnAction(event -> {
-            try {
-                sortAndApplyModList();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            tutorialMessages.clear();
-            tutorialMessages.add("Congratulations! Now you're managing your mods in Space Engineers with SEMM! " +
-                    "You can launch Space Engineers through SEMM with the button \"Launch SE\" if you want now, but it isn't necessary.");
-            tutorialMessages.add("Now get out there and start modding, Engineers.");
-            Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
-
-            UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup(false);
-            UI_SERVICE.saveUserData();
-
-            //Reset everything we changed just for tutorial usage
-            STAGE.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, arrowKeyDisabler);
-            modImportDropdown.getItems().addAll(
-                    ModImportType.STEAM_COLLECTION.getName(),
-                    ModImportType.MOD_IO.getName(),
-                    ModImportType.EXISTING_SAVE.getName(),
-                    ModImportType.FILE.getName());
-            modImportDropdown.setOnAction(event1 -> addMod());
-            applyModlist.setOnAction(event1 -> {
-                try {
-                    applyModlist();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            ((Pane) STAGE.getScene().getRoot()).getChildren().removeAll(panes);
-        });
     }
 
-    //Special function to apply a modlist for the tutorial that bypasses some prompts
-    //TODO: MOVE DIS SHIT
-    private void tutorialAddMod(Pane[] panes) {
-        ModImportType selectedImportOption = ModImportType.fromString(modImportDropdown.getSelectionModel().getSelectedItem());
-        modImportDropdown.getSelectionModel().selectFirst();
-        modImportDropdown.setValue(modImportDropdown.getSelectionModel().getSelectedItem());
-        if (selectedImportOption != null) {
-            setModAddingInputViewText("Steam Workshop Mod URL/ID",
-                    "Enter the Steam Workshop URL/ID",
-                    "Workshop URL/Mod ID"
-            );
-
-            String modId = getSteamModLocationFromUser(false);
-            if (!modId.isBlank()) {
-                SteamMod mod = new SteamMod(modId);
-
-                //This is a bit hacky, but it makes a LOT less code we need to maintain.
-                final Mod[] modList = new Mod[1];
-                modList[0] = mod;
-                importModsFromList(List.of(modList)).start();
-                //TODO: The timing isn't perfect here because it WILL show this under the successful mod add message.
-                Platform.runLater(() -> {
-                    List<String> tutorialMessages = new ArrayList<>();
-                    TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), modTable);
-                    tutorialMessages.add("Great! Now that a mod has been added notice the blue check mark next to it. " +
-                            "This indicates the mod is active, and when you press \"Apply Mod List\" this mod will be added to the save. " +
-                            "If you want to make it so a mod is not added to a save when you press the apply button, uncheck the mod.");
-                    tutorialMessages.add("It is important to note that you can apply an empty mod list to a save. When you do this it will remove all mods on a save.");
-                    tutorialMessages.add("Now let's apply the mod list to your save. " +
-                            "Be aware, if you do not press the \"Apply Mod List\" button then the changes will not be applied to the save.");
-                    Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
-                    TutorialUtility.tutorialElementHighlight(panes, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
-                    STAGE.setResizable(true);
-                });
-            }
-        }
+    public void runTutorialCleanup() {
+        STAGE.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+        ((Pane) STAGE.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
+        modImportDropdown.getItems().addAll(
+                ModImportType.STEAM_COLLECTION.getName(),
+                ModImportType.MOD_IO.getName(),
+                ModImportType.EXISTING_SAVE.getName(),
+                ModImportType.FILE.getName());
+        STAGE.setResizable(true);
     }
 }

@@ -136,12 +136,12 @@ public class MainWindow {
             STAGE.setTitle("SEMM v" + versionProperties.getProperty("version"));
 
             WindowDressingUtility.appendStageIcon(STAGE);
-            if (UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+            if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
                 int firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
                 if (firstTimeSetupChoice == 1) {
-                    UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW, saveProfileManager, modListManager);
+                    UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW);
                 } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
-                    UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup(false);
+                    UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
                     UI_SERVICE.saveUserData();
                 }
             }

@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
+//TODO: This needs refactored to share a common class with the save profile manager. They really share a LOT of stuff.
 public class ModListManager {
     @FXML
     private ListView<ModList> profileList;
@@ -115,7 +116,7 @@ public class ModListManager {
 
     @FXML
     private void createNewProfile() {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
         } else {
             String newProfileName;
@@ -127,7 +128,7 @@ public class ModListManager {
             } while (newProfileName.isBlank());
             List<String> tutorialMessages = new ArrayList<>();
             profileList.getSelectionModel().selectLast();
-            tutorialMessages.add("Now that you have a new mod list let's make it the mod list we're currently working with." +
+            tutorialMessages.add("Now that you have a new mod list let's make it the mod list we're currently working with. " +
                     "In normal use you will have to select the profile yourself from the list on the left before pressing \"Set Active\", but here we've already done that for you. Now press the \"Set Active\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), selectProfile);
@@ -280,7 +281,7 @@ public class ModListManager {
 
     @FXML
     private void setActive() {
-        if(!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+        if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             setModListActive();
         } else {
             setModListActive();
@@ -307,7 +308,7 @@ public class ModListManager {
 
     @FXML
     private void closeProfileWindow() {
-        if(!UI_SERVICE.getUSER_CONFIGURATION().shouldRunFirstTimeSetup()) {
+        if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             stage.close();
             stage.setHeight(stage.getHeight() - 1);
             profileList.getSelectionModel().clearSelection();

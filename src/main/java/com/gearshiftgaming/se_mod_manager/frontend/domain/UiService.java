@@ -597,8 +597,7 @@ public class UiService {
         return STORAGE_CONTROLLER.resetUserConfig();
     }
 
-    //This is truly a monstrosity of a function. It's... Just terrible. Shotgun surgery indeed. Please be kind and forgive me.
-    public void displayTutorial(Stage stage, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager) {
+    public void displayTutorial(Stage stage, MasterManager masterManager) {
         log("Starting tutorial...", MessageType.INFO);
 
         stage.setResizable(false);
