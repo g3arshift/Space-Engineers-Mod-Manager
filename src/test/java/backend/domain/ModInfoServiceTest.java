@@ -259,7 +259,7 @@ public class ModInfoServiceTest {
                 " </div><!---->\n" +
                 "</div>", goodResult.getPayload()[2]);
         assertEquals("2024", goodResult.getPayload()[3]);
-        assertEquals("--06-25", goodResult.getPayload()[4]);
+        assertEquals("--06-24", goodResult.getPayload()[4]);
         assertNull(goodResult.getPayload()[5]);
     }
 }

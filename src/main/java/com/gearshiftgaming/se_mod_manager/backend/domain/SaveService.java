@@ -35,6 +35,7 @@ public class SaveService {
 		this.SANDBOX_SERVICE = SANDBOX_SERVICE;
 	}
 
+	//TODO: Rewrite with guard clauses
 	public Result<SaveProfile> copySaveFiles(SaveProfile sourceSaveProfile) throws IOException {
 		Result<SaveProfile> result = new Result<>();
 
@@ -42,7 +43,6 @@ public class SaveService {
 		String sourceSavePath = sourceSaveProfile.getSavePath().substring(0, sourceSaveProfile.getSavePath().length() - 19);
 
 		//Checks if our intended save path already exists, and if it does, create a new name.
-
 		boolean pathHasDuplicate;
 		int copyIndex = 1;
 		String copyProfilePath;
