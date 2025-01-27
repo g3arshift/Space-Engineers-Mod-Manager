@@ -205,7 +205,7 @@ public class ModListManager {
     @FXML
     private void removeProfile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            if (UI_SERVICE.getCurrentModList().equals(profileList.getSelectionModel().getSelectedItem())) {
+            if (UI_SERVICE.getCurrentModListProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
