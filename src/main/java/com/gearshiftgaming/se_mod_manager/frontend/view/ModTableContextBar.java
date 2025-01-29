@@ -389,6 +389,7 @@ public class ModTableContextBar {
     private void runTutorial() {
         int runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", STAGE, MessageType.INFO);
         if (runTutorialChoice == 1) {
+            UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(true);
             UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
         }
     }
