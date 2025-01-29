@@ -792,9 +792,10 @@ public class MasterManager {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             MOD_PROFILE_MANAGER_VIEW.show(STAGE);
         } else {
-            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageSaveProfiles);
+            TutorialUtility.tutorialCoverStage(TUTORIAL_HIGHLIGHT_PANES, STAGE);
             MOD_PROFILE_MANAGER_VIEW.runTutorial(STAGE);
             Popup.displaySimpleAlert("You need to add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", STAGE, MessageType.INFO);
+            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageSaveProfiles);
             manageSaveProfiles.requestFocus();
         }
     }
@@ -804,6 +805,7 @@ public class MasterManager {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             SAVE_MANAGER_VIEW.show(STAGE);
         } else {
+            TutorialUtility.tutorialCoverStage(TUTORIAL_HIGHLIGHT_PANES, STAGE);
             SAVE_MANAGER_VIEW.runTutorial(STAGE);
             runTutorialAddModStep();
         }

@@ -160,7 +160,7 @@ public class SaveProfileManager {
                     saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
 
                     if (saveProfileResult.isSuccess()) {
-                        duplicateSavePath = validateUniqueProfileNameAndAddWithMods(saveProfileResult, selectedSave);
+                        duplicateSavePath = validateUniqueProfileName(saveProfileResult, selectedSave);
                     } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
                         Popup.displaySimpleAlert(saveProfileResult);
                         UI_SERVICE.log(saveProfileResult);
@@ -178,7 +178,7 @@ public class SaveProfileManager {
                         saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
 
                         if (saveProfileResult.isSuccess()) {
-                            duplicateSavePath = validateUniqueProfileNameAndAddWithoutMods(saveProfileResult);
+                            duplicateSavePath = validateUniqueProfileName(saveProfileResult, selectedSave);
                             List<String> tutorialMessages = new ArrayList<>();
                             tutorialMessages.add("When you're adding a save profile to SEMM you can actually automatically import the mods contained in that save to your current mod list or a new mod list. " +
                                     "For now we will skip this step so you can see how to manually add mods.");
@@ -204,7 +204,7 @@ public class SaveProfileManager {
         PROFILE_INPUT_VIEW.getInput().clear();
     }
 
-    private boolean validateUniqueProfileNameAndAddWithMods(Result<SaveProfile> saveProfileResult, File selectedSave) {
+    private boolean validateUniqueProfileName(Result<SaveProfile> saveProfileResult, File selectedSave) {
         SaveProfile saveProfile = saveProfileResult.getPayload();
         boolean duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
 
@@ -225,7 +225,11 @@ public class SaveProfileManager {
             if (duplicateProfileName) {
                 Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
             } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                addSaveProfileToListWithExistingModsPrompt(saveProfileResult, saveProfile, selectedSave);
+                if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                    addSaveProfileToListWithExistingModsPrompt(saveProfileResult, saveProfile, selectedSave);
+                } else {
+                    addSaveProfileToListWithoutMods(saveProfileResult, saveProfile);
+                }
             }
         } while (duplicateProfileName);
 
@@ -234,74 +238,36 @@ public class SaveProfileManager {
 
     private void addSaveProfileToListWithExistingModsPrompt(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile, File selectedSave) {
         saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
-            saveProfile.setSaveExists(true);
+        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null)
             SAVE_PROFILES.set(0, saveProfile);
-        } else {
+        else
             SAVE_PROFILES.add(saveProfile);
-            saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
-            UI_SERVICE.log(saveProfileResult);
-
-            PROFILE_INPUT_VIEW.getInput().clear();
-
-            displayAddExistingModsDialog(selectedSave);
-
-            saveList.refresh();
-            modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
-            modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
-
-            UI_SERVICE.saveUserData();
-            //TODO: Switch active profile to the new profile
-        }
-    }
-
-    private boolean validateUniqueProfileNameAndAddWithoutMods(Result<SaveProfile> saveProfileResult) {
-        SaveProfile saveProfile = saveProfileResult.getPayload();
-        boolean duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
-
-        if (duplicateSavePath) {
-            Popup.displaySimpleAlert("Save is already being managed!", stage, MessageType.WARN);
-            SAVE_INPUT_VIEW.resetSelectedSave();
-            return true;
-        }
-
-        //Remove the default save profile that isn't actually a profile if it's all that we have in the list.
-        boolean duplicateProfileName;
-        do {
-            PROFILE_INPUT_VIEW.getInput().clear();
-            PROFILE_INPUT_VIEW.getInput().requestFocus();
-            PROFILE_INPUT_VIEW.show(stage);
-            duplicateProfileName = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-
-            if (duplicateProfileName) {
-                Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-            } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                addSaveProfileToListWithoutMods(saveProfileResult, saveProfile);
-            }
-        } while (duplicateProfileName);
-
-        return false;
+        displayAddExistingModsDialog(selectedSave);
+        finalizeSaveProfile(saveProfileResult, saveProfile);
     }
 
     private void addSaveProfileToListWithoutMods(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
         saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
-            saveProfile.setSaveExists(true);
+        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null)
             SAVE_PROFILES.set(0, saveProfile);
-        } else {
+        else
             SAVE_PROFILES.add(saveProfile);
-            saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
-            UI_SERVICE.log(saveProfileResult);
+        finalizeSaveProfile(saveProfileResult, saveProfile);
+        //TODO: Switch active profile to the new profile
+    }
 
-            PROFILE_INPUT_VIEW.getInput().clear();
+    private void finalizeSaveProfile(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
+        saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
+        UI_SERVICE.log(saveProfileResult);
 
-            saveList.refresh();
-            modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
-            modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
+        PROFILE_INPUT_VIEW.getInput().clear();
 
-            UI_SERVICE.saveUserData();
-            //TODO: Switch active profile to the new profile
-        }
+        saveList.refresh();
+        modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
+        modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
+
+        UI_SERVICE.saveUserData();
+        //TODO: Switch active profile to the new profile
     }
 
     private void displayAddExistingModsDialog(File selectedSave) {
@@ -505,7 +471,7 @@ public class SaveProfileManager {
 
     @FXML
     private void closeSaveWindow() {
-        if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             stage.close();
             stage.setHeight(stage.getHeight() - 1);
             saveList.getSelectionModel().clearSelection();

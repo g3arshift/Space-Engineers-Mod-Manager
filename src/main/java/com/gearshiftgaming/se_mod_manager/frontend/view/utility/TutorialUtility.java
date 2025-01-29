@@ -4,6 +4,7 @@ import javafx.beans.NamedArg;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 
 public class TutorialUtility {
 
@@ -39,5 +40,27 @@ public class TutorialUtility {
         panes[3].setLayoutY(buttonY - MARGIN);
         panes[3].setPrefWidth(buttonX - MARGIN);
         panes[3].setPrefHeight(buttonHeight + 2 * MARGIN);
+    }
+
+    public static void tutorialCoverStage(@NamedArg("panes") Pane[] panes, @NamedArg("stage") Stage stage) {
+        panes[0].setLayoutX(0);
+        panes[0].setLayoutY(0);
+        panes[0].setPrefWidth(stage.getWidth());
+        panes[0].setPrefHeight(stage.getHeight());
+
+        panes[1].setLayoutX(0);
+        panes[1].setLayoutY(0);
+        panes[1].setPrefWidth(0);
+        panes[1].setPrefHeight(0);
+
+        panes[2].setLayoutX(0);
+        panes[2].setLayoutY(0);
+        panes[2].setPrefWidth(0);
+        panes[2].setPrefHeight(0);
+
+        panes[3].setLayoutX(0);
+        panes[3].setLayoutY(0);
+        panes[3].setPrefWidth(0);
+        panes[3].setPrefHeight(0);
     }
 }
