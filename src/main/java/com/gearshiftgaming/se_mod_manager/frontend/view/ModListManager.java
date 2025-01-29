@@ -118,12 +118,17 @@ public class ModListManager {
     private void createNewProfile() {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
+            profileList.getSelectionModel().selectLast();
+            setActive();
         } else {
             String newProfileName;
             do {
                 newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                 if (newProfileName.isBlank()) {
                     Popup.displaySimpleAlert("You have to create a new mod list for the tutorial!", stage, MessageType.WARN);
+                } else {
+                    profileList.getSelectionModel().selectLast();
+                    setActive();
                 }
             } while (newProfileName.isBlank());
             List<String> tutorialMessages = new ArrayList<>();
@@ -265,7 +270,7 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.equals(UI_SERVICE.getCurrentModList())) {
+                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfile())) {
                         activeProfileName.setText(profileToModify.getProfileName());
                     }
 
@@ -355,6 +360,7 @@ public class ModListManager {
         }
     }
 
+    //TODO: Modify this to exclude the profile we're renaming.
     private boolean profileNameExists(String profileName) {
         return MOD_PROFILES.stream()
                 .anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));

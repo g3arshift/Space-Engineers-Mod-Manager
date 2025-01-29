@@ -263,13 +263,16 @@ public class SaveProfileManager {
         PROFILE_INPUT_VIEW.getInput().clear();
 
         saveList.refresh();
-        modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
-        modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
+        saveList.getSelectionModel().selectLast();
+        setActive();
+//        modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
+//        modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
 
         UI_SERVICE.saveUserData();
         //TODO: Switch active profile to the new profile
     }
 
+    //TODO: This is badly organized.
     private void displayAddExistingModsDialog(File selectedSave) {
         int addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
         if (addExistingModsChoice == 1) {

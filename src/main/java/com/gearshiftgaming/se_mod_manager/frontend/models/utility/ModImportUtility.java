@@ -100,7 +100,6 @@ public class ModImportUtility {
 				Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
 			} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
 				UI_SERVICE.getMODLIST_PROFILES().add(newModList);
-				UI_SERVICE.setCurrentModListProfile(newModList);
 				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
 				newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
 				PROFILE_INPUT_VIEW.getInput().clear();
