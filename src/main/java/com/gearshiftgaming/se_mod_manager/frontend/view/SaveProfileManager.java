@@ -147,12 +147,13 @@ public class SaveProfileManager {
     private void addSave() throws IOException {
         SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
         SAVE_INPUT_VIEW.setAddSaveButtonText("Next");
-        boolean duplicateSavePath = false;
+        boolean duplicateSavePath;
         Result<SaveProfile> saveProfileResult = new Result<>();
 
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
             do {
+                duplicateSavePath = false;
                 SAVE_INPUT_VIEW.show(stage);
                 File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
                 if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
@@ -170,6 +171,7 @@ public class SaveProfileManager {
             do {
                 //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
                 do {
+                    duplicateSavePath = false;
                     SAVE_INPUT_VIEW.show(stage);
                     File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
                     if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
