@@ -9,7 +9,6 @@ import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -158,9 +157,8 @@ public class SaveProfileManager {
                 File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
                 if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
                     saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
-
                     if (saveProfileResult.isSuccess()) {
-                        duplicateSavePath = validateUniqueProfileName(saveProfileResult, selectedSave);
+                        duplicateSavePath = addProfileWithUniqueName(saveProfileResult, selectedSave);
                     } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
                         Popup.displaySimpleAlert(saveProfileResult);
                         UI_SERVICE.log(saveProfileResult);
@@ -168,17 +166,17 @@ public class SaveProfileManager {
                 }
             } while (saveProfileResult.isSuccess() && duplicateSavePath);
         } else {
+            //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
             do {
-                //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
-                do {
-                    duplicateSavePath = false;
-                    SAVE_INPUT_VIEW.show(stage);
-                    File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
-                    if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
-                        saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
+                duplicateSavePath = false;
+                SAVE_INPUT_VIEW.show(stage);
+                File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
+                if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
+                    saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
 
-                        if (saveProfileResult.isSuccess()) {
-                            duplicateSavePath = validateUniqueProfileName(saveProfileResult, selectedSave);
+                    if (saveProfileResult.isSuccess()) {
+                        duplicateSavePath = addProfileWithUniqueName(saveProfileResult, selectedSave);
+                        if (!duplicateSavePath) {
                             List<String> tutorialMessages = new ArrayList<>();
                             tutorialMessages.add("When you're adding a save profile to SEMM you can actually automatically import the mods contained in that save to your current mod list or a new mod list. " +
                                     "For now we will skip this step so you can see how to manually add mods.");
@@ -186,25 +184,21 @@ public class SaveProfileManager {
                             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
                             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeSaveWindow);
                             closeSaveWindow.requestFocus();
-                        } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
-                            Popup.displaySimpleAlert(saveProfileResult);
-                            UI_SERVICE.log(saveProfileResult);
                         }
-                    } else {
-                        Popup.displaySimpleAlert("You HAVE to add a save or you cannot apply mod lists!", stage, MessageType.WARN);
+                    } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
+                        Popup.displaySimpleAlert(saveProfileResult);
+                        UI_SERVICE.log(saveProfileResult);
                     }
-
-                } while (saveProfileResult.isSuccess() && duplicateSavePath);
-
-                //Cleanup our UI actions.
-                PROFILE_INPUT_VIEW.getInput().clear();
-            } while (saveProfileResult.getType() == ResultType.NOT_INITIALIZED);
+                } else {
+                    Popup.displaySimpleAlert("You HAVE to add a save or you cannot apply mod lists!", stage, MessageType.WARN);
+                }
+            } while (saveProfileResult.isSuccess() && duplicateSavePath);
         }
         //Cleanup our UI actions.
         PROFILE_INPUT_VIEW.getInput().clear();
     }
 
-    private boolean validateUniqueProfileName(Result<SaveProfile> saveProfileResult, File selectedSave) {
+    private boolean addProfileWithUniqueName(Result<SaveProfile> saveProfileResult, File selectedSave) {
         SaveProfile saveProfile = saveProfileResult.getPayload();
         boolean duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
 
@@ -215,23 +209,30 @@ public class SaveProfileManager {
         }
 
         //Remove the default save profile that isn't actually a profile if it's all that we have in the list.
-        boolean duplicateProfileName;
+        //TODO: Bad var naming.
+        boolean profileNameAlreadyExists;
         do {
+            profileNameAlreadyExists = false;
             PROFILE_INPUT_VIEW.getInput().clear();
             PROFILE_INPUT_VIEW.getInput().requestFocus();
             PROFILE_INPUT_VIEW.show(stage);
-            duplicateProfileName = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-
-            if (duplicateProfileName) {
-                Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-            } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+            String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
+            if (newProfileName.isBlank()) {
+                if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                    Popup.displaySimpleAlert("You have to add a profile with a name!", stage, MessageType.WARN);
+                    profileNameAlreadyExists = true;
+                }
+            } else {
+                profileNameAlreadyExists = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
+                if (profileNameAlreadyExists) {
+                    Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
+                } else if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
                     addSaveProfileToListWithExistingModsPrompt(saveProfileResult, saveProfile, selectedSave);
                 } else {
                     addSaveProfileToListWithoutMods(saveProfileResult, saveProfile);
                 }
             }
-        } while (duplicateProfileName);
+        } while (profileNameAlreadyExists);
 
         return false;
     }
