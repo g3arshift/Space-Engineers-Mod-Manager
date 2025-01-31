@@ -244,7 +244,7 @@ public class MasterManager {
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
-
+    //TODO: Complete and re-enable mod.io functionality
     public MasterManager(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBar statusBar,
                          ModListManager modListManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
                          GeneralFileInput generalFileInput) {
@@ -469,7 +469,7 @@ public class MasterManager {
         modImportDropdown.getItems().addAll("Add mods from...",
                 ModImportType.STEAM_ID.getName(),
                 ModImportType.STEAM_COLLECTION.getName(),
-                ModImportType.MOD_IO.getName(),
+                //ModImportType.MOD_IO.getName(),
                 ModImportType.EXISTING_SAVE.getName(),
                 ModImportType.FILE.getName());
 
@@ -571,9 +571,13 @@ public class MasterManager {
     }
 
     private void addModsFromFile() {
-        int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
-                "Steam", "Mod.io", "Cancel");
+        //int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
+                //"Steam", "Mod.io", "Cancel");
+        //Temporarily disables mod.io functionality while we rewrite the web scraping.
+        int choice = 2;
         if (choice != 0) {
+            //TODO: Remove this once we add back mod.io functionality.
+            Popup.displaySimpleAlert("Select a file containing Steam Workshop mod ID's or URL's. Make sure each ID or URL is on its own line by itself.", STAGE, MessageType.INFO);
             GENERAL_FILE_SELECT_VIEW.resetSelectedSave();
             GENERAL_FILE_SELECT_VIEW.setSaveProfileInputTitle("Import Modlist from File");
             GENERAL_FILE_SELECT_VIEW.setNextButtonText("Import Mods");
@@ -1376,14 +1380,14 @@ public class MasterManager {
         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods.");
+        //3. Pasting in a Mod.io URL or item ID.
         tutorialMessages.add("""
-                SEMM supports five different ways of adding mods.
+                SEMM supports four different ways of adding mods.
                     1. Pasting in a Steam Workshop URL or ID.
                     2. Pasting in a Steam Workshop Collection URL or ID.
-                    3. Pasting in a Mod.io URL or item ID.
-                    4. Selecting a text file that contains a list of URL's or ID's for either the Steam Workshop or Mod.io. \
+                    3. Selecting a text file that contains a list of URL's or ID's for either the Steam Workshop or Mod.io. \
                 Do note, however, that the file can only contain either URL's for the Steam Workshop or Mod.io. The same file cannot contain both, and it cannot contain Steam Collections.
-                    5. Selecting a Space Engineers save and importing the list of mods in use on that save.""");
+                    4. Selecting a Space Engineers save and importing the list of mods in use on that save.""");
         tutorialMessages.add("Only mods will be accepted by SEMM, however. Blueprints, worlds, scripts, and other such things are not mods and SEMM will reject them.");
         tutorialMessages.add("For now, let's import a mod from a Steam Workshop URL. " +
                 "Open the \"Mod Import\" drop down and press the \"Steam Workshop\" button.");
@@ -1395,7 +1399,7 @@ public class MasterManager {
         ((Pane) STAGE.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
         modImportDropdown.getItems().addAll(
                 ModImportType.STEAM_COLLECTION.getName(),
-                ModImportType.MOD_IO.getName(),
+                //ModImportType.MOD_IO.getName(),
                 ModImportType.EXISTING_SAVE.getName(),
                 ModImportType.FILE.getName());
         STAGE.setResizable(true);

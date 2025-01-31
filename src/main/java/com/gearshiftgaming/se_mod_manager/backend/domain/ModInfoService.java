@@ -196,7 +196,7 @@ public class ModInfoService {
         return modScrapeResult;
     }
 
-    private Result<String[]> scrapeSteamMod(String modId) throws IOException {
+    private Result<String[]> scrapeSteamMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
         try {
             Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
