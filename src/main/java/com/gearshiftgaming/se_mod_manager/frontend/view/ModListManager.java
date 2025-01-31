@@ -303,9 +303,7 @@ public class ModListManager {
     private void setModListActive() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
             ModList modList = profileList.getSelectionModel().getSelectedItem();
-            UI_SERVICE.setCurrentModListProfile(modList);
             modTableContextBar.getModProfileDropdown().getSelectionModel().select(modList);
-            UI_SERVICE.setLastActiveModlistProfile(modList.getID());
             activeProfileName.setText(modList.getProfileName());
             profileList.refresh();
         }

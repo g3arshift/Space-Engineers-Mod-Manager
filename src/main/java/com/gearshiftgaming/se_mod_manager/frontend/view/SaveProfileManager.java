@@ -466,7 +466,6 @@ public class SaveProfileManager {
     @FXML
     private void setActive() {
         if (saveList.getSelectionModel().getSelectedItem() != null) {
-            UI_SERVICE.setCurrentSaveProfile(saveList.getSelectionModel().getSelectedItem());
             modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveList.getSelectionModel().getSelectedItem());
             activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
             saveList.refresh();
