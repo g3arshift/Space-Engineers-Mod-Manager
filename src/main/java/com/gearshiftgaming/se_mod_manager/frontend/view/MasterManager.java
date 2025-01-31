@@ -730,9 +730,9 @@ public class MasterManager {
             if (modId.isBlank()) {
                 Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", STAGE, MessageType.WARN);
                 continue;
+            } if(!StringUtils.isNumeric(modId)) {
+                modId = modId.substring(3);
             }
-
-            modId = modId.substring(3);
 
             if (!steamCollection) {
                 String finalModId = modId;
