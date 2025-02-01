@@ -2,10 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserType;
-import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -354,7 +351,7 @@ public class ModInfoService {
             }
         } catch (Exception e) {
             //This really isn't how I want to do the flow control, but Selenium immediately throws this as an exception if it times out so there's not a lot I can do.
-            if (e.getMessage().startsWith("Expected condition failed: waiting for presence of element")) {
+            if (e instanceof TimeoutError) {
                 modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
             } else {
                 modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
