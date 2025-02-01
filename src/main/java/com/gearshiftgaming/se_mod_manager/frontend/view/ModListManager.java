@@ -292,8 +292,9 @@ public class ModListManager {
             setModListActive();
             List<String> tutorialMessages = new ArrayList<>();
             profileList.getSelectionModel().selectFirst();
-            tutorialMessages.add("Great! Now you have a mod list to add mods to and you've set it to the active profile. You can rename it in the future if you want, or export it if you want to share it with your friends or make a backup.");
-            tutorialMessages.add("Let's head back so you can add a save profile. Press the \"Close\" button.");
+            tutorialMessages.add("When a profile is created it's automatically set as the active profile. " +
+                    "In the future you can change the active profile by clicking on the profile you want to activate and pressing \"Set Active\". " +
+                    "Now that we have a new mod list profile let's close the mod list manager so we can add a save profile. Press the \"Close\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeProfileWindow);
             closeProfileWindow.requestFocus();
@@ -392,10 +393,10 @@ public class ModListManager {
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();
-        tutorialMessages.add("This is the SEMM Mod List Manager. Here you manage Mod Lists that you can apply to different saves. Mod Lists have a name to identify the name of the list, and hold your list of mods.");
-        tutorialMessages.add("You can copy mod lists, rename them, and both import and export mod lists to share with other people or save them as a backup.");
-        tutorialMessages.add("The currently active mod list will have a pair of bars surrounding it in the Mod List Manager. You cannot remove the active mod list, but you can rename or copy it.");
-        tutorialMessages.add("SEMM will start with a mod list named \"Default\", but for this tutorial let's create a new one. Press the \"Create New\" button.");
+        tutorialMessages.add("This is the Mod List Manager. Here you can manage the mod lists that you can apply to saves.");
+        tutorialMessages.add("You can copy, rename, and remove mod lists here. You can also export mod lists to a file for backup or sharing purposes and import those files here.");
+        tutorialMessages.add("The mod list that is currently active will be highlighted by blue bars above and below it. While a mod list is active it cannot be removed.");
+        tutorialMessages.add("Let's create a new mod list. Press the \"Create New\" button then put in any profile name you'd like.");
         Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), createNewProfile);
 

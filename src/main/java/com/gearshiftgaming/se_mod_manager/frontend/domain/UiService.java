@@ -604,9 +604,9 @@ public class UiService {
         stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, KEYBOARD_BUTTON_NAVIGATION_DISABLER);
 
         List<String> tutorialMessages = new ArrayList<>();
-        tutorialMessages.add("Welcome to the Space Engineers Mod Manager, or \"SEMM\" for short. " +
-                "This tutorial will guide you through how to setup a save to manage the mods of, how to setup a modlist, how to add mods to that modlist, and how to apply them to a save.");
-        tutorialMessages.add("To start, let's create a new modlist for you to add mods to. Press the \"Manage Mod Profiles\" button.");
+        tutorialMessages.add("Welcome to Space Engineers Mod Manager (SEMM). " +
+                "This tutorial will guide you through managing the mods of an existing save, how to create a mod list, how to add mods to a mod list, and how to apply a mod list to a save.");
+        tutorialMessages.add("Let's start by creating a new mod list by pressing the \"Manage Mod Profiles\" button.");
         Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM!");
 
         masterManager.runTutorialModListManagementStep();

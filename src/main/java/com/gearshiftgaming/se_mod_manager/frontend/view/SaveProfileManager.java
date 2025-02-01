@@ -178,9 +178,9 @@ public class SaveProfileManager {
                         duplicateSavePath = addProfileWithUniqueName(saveProfileResult, selectedSave);
                         if (!duplicateSavePath) {
                             List<String> tutorialMessages = new ArrayList<>();
-                            tutorialMessages.add("When you're adding a save profile to SEMM you can actually automatically import the mods contained in that save to your current mod list or a new mod list. " +
-                                    "For now we will skip this step so you can see how to manually add mods.");
-                            tutorialMessages.add("Now that you've added a save profile let's head back to the mod list manager. Press the \"Close\" button.");
+                            tutorialMessages.add("When creating a save profile you can optionally import the mods in the selected save to the currently active mod list or a new mod list. " +
+                                    "For this tutorial we'll skip that step and manually add mods instead.");
+                            tutorialMessages.add("Let's head back to the mod list manager. Press the \"Close\" button.");
                             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
                             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeSaveWindow);
                             closeSaveWindow.requestFocus();
@@ -563,14 +563,11 @@ public class SaveProfileManager {
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();
-        tutorialMessages.add("This is the SEMM Save Profile Manager. Here you manage the actual Space Engineers saves you apply modlists to.");
-        tutorialMessages.add("SEMM uses Save Profiles to store the information of a save you want to manage the modlist of. " +
-                "A save profile has two names. The name of the profile, and the name of the actual save it contains. The name of the profile is what is displayed in SEMM, but the save name can be shown by hovering your cursor over a save profile in the manager. ");
-        tutorialMessages.add("Like with mod lists, the currently active save profile will have a pair of bars surrounding the active save profile.");
-        tutorialMessages.add("If a save no longer exists on your computer however, such as the default \"None\" profile that you will see here if it is your first time running this tutorial, its text will change to red and have a line through it.");
-        tutorialMessages.add("Let's start by adding an existing save to SEMM. " +
-                "When you press the \"Add Save\" button, SEMM will automatically take you to your Space Engineers Save folder.");
-        tutorialMessages.add("Only Sandbox_config.sbc files, which store the mod list for a save, are valid. Press the \"Add Save\" button and select a Sandbox_config.sbc file inside a save folder.");
+        tutorialMessages.add("This is the Save Profile Manager. Here you can manage the save files that you can apply mod lists to.");
+        tutorialMessages.add("Save Profiles store the mod information for a save you're managing. You can see the name of the save file a profile is tied to by hovering your cursor over it.");
+        tutorialMessages.add("Like mod lists, the currently active save profile will be highlighted by blue bars above and below it. If a save is no longer in the same folder it was when you added it the name will be struck through and turn red.");
+        tutorialMessages.add("Let's add an existing save to SEMM by pressing the \"Add Save\" button, which will open the default save location for space engineers in a new window. " +
+                "Once open go into the folder for the save you want to add and select the \"Sandbox_config.sbc\" file within to add the save.");
         Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), addSave);
 

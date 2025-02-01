@@ -798,7 +798,7 @@ public class MasterManager {
         } else {
             TutorialUtility.tutorialCoverStage(TUTORIAL_HIGHLIGHT_PANES, STAGE);
             MOD_PROFILE_MANAGER_VIEW.runTutorial(STAGE);
-            Popup.displaySimpleAlert("You need to add a Space Engineers save so we have something to apply the mod list to. Press the \"Manage SE Saves\" button.", STAGE, MessageType.INFO);
+            Popup.displaySimpleAlert("Now let's select a Space Engineers save file by pressing the \"Manage SE Saves\" button.", STAGE, MessageType.INFO);
             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), manageSaveProfiles);
             manageSaveProfiles.requestFocus();
         }
@@ -857,9 +857,9 @@ public class MasterManager {
         } else {
             sortAndApplyModList();
             List<String> tutorialMessages = new ArrayList<>();
-            tutorialMessages.add("Congratulations! Now you're managing your mods in Space Engineers with SEMM! " +
-                    "You can launch Space Engineers through SEMM with the button \"Launch SE\" if you want now, but it isn't necessary.");
-            tutorialMessages.add("Now get out there and start modding, Engineers.");
+            tutorialMessages.add("You have successfully applied your mod list to a save. " +
+                    "You can optionally launch Space Engineers from SEMM by clicking on the \"Launch SE\" button however the mods you've added will still be loaded if you launch the game through steam.");
+            tutorialMessages.add("Now get out there and start modding, Engineers!");
             Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
 
             UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
@@ -1309,12 +1309,10 @@ public class MasterManager {
                     if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
                         List<String> tutorialMessages = new ArrayList<>();
                         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
-                        tutorialMessages.add("Great! Now that a mod has been added notice the blue check mark next to it. " +
-                                "This indicates the mod is active, and when you press \"Apply Mod List\" this mod will be added to the save. " +
-                                "If you want to make it so a mod is not added to a save when you press the apply button, uncheck the mod.");
-                        tutorialMessages.add("It is important to note that you can apply an empty mod list to a save. When you do this it will remove all mods on a save.");
-                        tutorialMessages.add("Now let's apply the mod list to your save. " +
-                                "Be aware, if you do not press the \"Apply Mod List\" button then the changes will not be applied to the save.");
+                        tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
+                                "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
+                        tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
+                                "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
                         Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
                         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
                     }
@@ -1379,18 +1377,18 @@ public class MasterManager {
 
         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
         List<String> tutorialMessages = new ArrayList<>();
-        tutorialMessages.add("Now that you have both a mod list and save profile we can add some new mods.");
+        tutorialMessages.add("Now that we have a mod list and a save profile we can add some new mods.");
         //3. Pasting in a Mod.io URL or item ID.
+        //3. Via a text file containing a list of URLs or IDs for items either on the Steam Workshop or on Mod.io, however you cannot include the URLs for Steam Workshop collections and/or mix URLs from the Steam Workshop and Mod.io in the same text file.
         tutorialMessages.add("""
-                SEMM supports four different ways of adding mods.
-                    1. Pasting in a Steam Workshop URL or ID.
-                    2. Pasting in a Steam Workshop Collection URL or ID.
-                    3. Selecting a text file that contains a list of URL's or ID's for either the Steam Workshop or Mod.io. \
-                Do note, however, that the file can only contain either URL's for the Steam Workshop or Mod.io. The same file cannot contain both, and it cannot contain Steam Collections.
-                    4. Selecting a Space Engineers save and importing the list of mods in use on that save.""");
-        tutorialMessages.add("Only mods will be accepted by SEMM, however. Blueprints, worlds, scripts, and other such things are not mods and SEMM will reject them.");
-        tutorialMessages.add("For now, let's import a mod from a Steam Workshop URL. " +
-                "Open the \"Mod Import\" drop down and press the \"Steam Workshop\" button.");
+                SEMM supports four different ways of adding mods:
+                    1. Via Steam Workshop URL or ID.
+                    2. Via Steam Workshop collection URL or ID.
+                    3. Via a text file containing a list of URLs or IDs for items on the Steam Workshop, however you cannot include the URLs for collections.
+                    4. Via importing the list of mods by selecting an existing Space Engineers save file.""");
+        tutorialMessages.add("SEMM can only import and manage mods. Blueprints, worlds, scripts, and similar items are not mods and cannot be imported.");
+        tutorialMessages.add("For this tutorial let's import a mod from the Steam Workshop using a URL. " +
+                "Browse the workshop for a mod you want to import and copy the URL to your clipboard (if using the steam desktop app after you open the item right click anywhere on the page and select \"Copy Page URL\"). Once you've done that click on the button that says \"Add mod from...\" to open the Import Mods drop-down menu and select the \"Steam Workshop\" option");
         Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Adding Mods");
     }
 
