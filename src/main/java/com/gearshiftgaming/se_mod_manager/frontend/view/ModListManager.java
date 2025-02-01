@@ -133,8 +133,7 @@ public class ModListManager {
             } while (newProfileName.isBlank());
             List<String> tutorialMessages = new ArrayList<>();
             profileList.getSelectionModel().selectLast();
-            tutorialMessages.add("Now that you have a new mod list let's make it the mod list we're currently working with. " +
-                    "In normal use you will have to select the profile yourself from the list on the left before pressing \"Set Active\", but here we've already done that for you. Now press the \"Set Active\" button.");
+            tutorialMessages.add("When a profile is created it's automatically set as the active profile, but if you need to change the active profile click the \"Set Active\" button. Try this now.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), selectProfile);
             selectProfile.requestFocus();
@@ -292,9 +291,7 @@ public class ModListManager {
             setModListActive();
             List<String> tutorialMessages = new ArrayList<>();
             profileList.getSelectionModel().selectFirst();
-            tutorialMessages.add("When a profile is created it's automatically set as the active profile. " +
-                    "In the future you can change the active profile by clicking on the profile you want to activate and pressing \"Set Active\". " +
-                    "Now that we have a new mod list profile let's close the mod list manager so we can add a save profile. Press the \"Close\" button.");
+            tutorialMessages.add("Now that we have a new mod list profile let's close the mod list manager so we can add a save profile. Press the \"Close\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeProfileWindow);
             closeProfileWindow.requestFocus();

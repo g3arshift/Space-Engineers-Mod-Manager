@@ -244,7 +244,6 @@ public class MasterManager {
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
-    //TODO: Complete and re-enable mod.io functionality
     public MasterManager(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBar statusBar,
                          ModListManager modListManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
                          GeneralFileInput generalFileInput) {
@@ -469,7 +468,7 @@ public class MasterManager {
         modImportDropdown.getItems().addAll("Add mods from...",
                 ModImportType.STEAM_ID.getName(),
                 ModImportType.STEAM_COLLECTION.getName(),
-                //ModImportType.MOD_IO.getName(),
+                ModImportType.MOD_IO.getName(),
                 ModImportType.EXISTING_SAVE.getName(),
                 ModImportType.FILE.getName());
 
@@ -571,13 +570,11 @@ public class MasterManager {
     }
 
     private void addModsFromFile() {
-        //int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
-                //"Steam", "Mod.io", "Cancel");
-        //Temporarily disables mod.io functionality while we rewrite the web scraping.
-        int choice = 2;
+        int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
+                "Steam", "Mod.io", "Cancel");
         if (choice != 0) {
             //TODO: Remove this once we add back mod.io functionality.
-            Popup.displaySimpleAlert("Select a file containing Steam Workshop mod ID's or URL's. Make sure each ID or URL is on its own line by itself.", STAGE, MessageType.INFO);
+            //Popup.displaySimpleAlert("Select a file containing Steam Workshop mod ID's or URL's. Make sure each ID or URL is on its own line by itself.", STAGE, MessageType.INFO);
             GENERAL_FILE_SELECT_VIEW.resetSelectedSave();
             GENERAL_FILE_SELECT_VIEW.setSaveProfileInputTitle("Import Modlist from File");
             GENERAL_FILE_SELECT_VIEW.setNextButtonText("Import Mods");
@@ -1378,14 +1375,13 @@ public class MasterManager {
         TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modImportDropdown);
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Now that we have a mod list and a save profile we can add some new mods.");
-        //3. Pasting in a Mod.io URL or item ID.
-        //3. Via a text file containing a list of URLs or IDs for items either on the Steam Workshop or on Mod.io, however you cannot include the URLs for Steam Workshop collections and/or mix URLs from the Steam Workshop and Mod.io in the same text file.
         tutorialMessages.add("""
                 SEMM supports four different ways of adding mods:
                     1. Via Steam Workshop URL or ID.
-                    2. Via Steam Workshop collection URL or ID.
-                    3. Via a text file containing a list of URLs or IDs for items on the Steam Workshop, however you cannot include the URLs for collections.
-                    4. Via importing the list of mods by selecting an existing Space Engineers save file.""");
+                    2. Via a Mod.io URL or ID.
+                    3. Via Steam Workshop collection URL or ID.
+                    4. Via a text file containing a list of URLs or IDs for items either on the Steam Workshop or on Mod.io, however you cannot include the URLs for Steam Workshop collections and/or mix URLs from the Steam Workshop and Mod.io in the same text file.
+                    5. Via importing the list of mods by selecting an existing Space Engineers save file.""");
         tutorialMessages.add("SEMM can only import and manage mods. Blueprints, worlds, scripts, and similar items are not mods and cannot be imported.");
         tutorialMessages.add("For this tutorial let's import a mod from the Steam Workshop using a URL. " +
                 "Browse the workshop for a mod you want to import and copy the URL to your clipboard (if using the steam desktop app after you open the item right click anywhere on the page and select \"Copy Page URL\"). Once you've done that click on the button that says \"Add mod from...\" to open the Import Mods drop-down menu and select the \"Steam Workshop\" option");
@@ -1397,7 +1393,7 @@ public class MasterManager {
         ((Pane) STAGE.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
         modImportDropdown.getItems().addAll(
                 ModImportType.STEAM_COLLECTION.getName(),
-                //ModImportType.MOD_IO.getName(),
+                ModImportType.MOD_IO.getName(),
                 ModImportType.EXISTING_SAVE.getName(),
                 ModImportType.FILE.getName());
         STAGE.setResizable(true);

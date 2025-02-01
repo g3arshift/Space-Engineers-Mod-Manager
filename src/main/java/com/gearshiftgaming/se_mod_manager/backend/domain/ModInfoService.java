@@ -2,6 +2,11 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.options.LoadState;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
@@ -9,12 +14,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+//import org.openqa.selenium.By;
+//import org.openqa.selenium.WebDriver;
+//import org.openqa.selenium.chrome.ChromeDriver;
+//import org.openqa.selenium.chrome.ChromeOptions;
+//import org.openqa.selenium.support.ui.ExpectedConditions;
+//import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
@@ -159,7 +164,7 @@ public class ModInfoService {
     /**
      * Given a mod IO url, we get the actual ID of the mod. This is done by grabbing the resource ID contained within the URL of the mod primary image.
      * Images are required for Mod.io mods, and the URL displays even without the JS running, so this is a more efficient way to get the ID before the more costly
-        scraping process which opens a full headless, embedded web browser.
+     * scraping process which opens a full headless, embedded web browser.
      */
     public Result<String> getModIoIdFromName(String name) throws IOException {
         Result<String> modIdResult = new Result<>();
@@ -281,15 +286,12 @@ public class ModInfoService {
 
     private Result<String[]> scrapeModIoMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
-        //By this point we should have a valid ModIO ID to lookup the mods by for the correct game. Need to verify tags and that it is a mod, however.
-        WebDriver driver = getChromeWebDriver();
-
-        try {
-            driver.get(MOD_IO_URL + modId);
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(MOD_IO_SCRAPING_TIMEOUT));
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR)));
-
-            String pageSource = driver.getPageSource();
+        //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
+        try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
+            final Page webPage = browser.newContext().newPage();
+            webPage.navigate(MOD_IO_URL + modId);
+            webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
+            String pageSource = webPage.content();
             if (pageSource != null) {
                 //modInfo:
                 // 0. Name
@@ -340,9 +342,14 @@ public class ModInfoService {
                     modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
                     modScrapeResult.setPayload(modInfo);
                 } else {
-                    modScrapeResult.addMessage(modPage.title().split(" for Space Engineers - mod.io")[0] + " is not a mod, it is a " +
-                            StringUtils.substringBetween(Objects.requireNonNull(modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR)).childNodes().getFirst().toString(),
-                                    "<span>", "</span>") + ".", ResultType.FAILED);
+                    try {
+                        modScrapeResult.addMessage(modPage.title().split(" for Space Engineers - mod.io")[0] + " is not a mod, it is a " +
+                                StringUtils.substringBetween(Objects.requireNonNull(modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR)).childNodes().getFirst().toString(),
+                                        "<span>", "</span>") + ".", ResultType.FAILED);
+                    } catch (NullPointerException e) { //This is here because if we load a VERY wrong page we can have this throw a null.
+                        modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+                        return modScrapeResult;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -352,8 +359,6 @@ public class ModInfoService {
             } else {
                 modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
             }
-        } finally {
-            driver.quit();
         }
 
         return modScrapeResult;
@@ -376,22 +381,6 @@ public class ModInfoService {
                 return false;
             }
         }
-    }
-
-    @NotNull
-    private WebDriver getChromeWebDriver() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-gpu");
-        //options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
-
-        Map<String, Object> prefs = new HashMap<>();
-        prefs.put("profile.default_content_setting_values.images", 2); // 2 means block images
-        options.setExperimentalOption("prefs", prefs);
-
-        return new ChromeDriver(options);
     }
 }
 

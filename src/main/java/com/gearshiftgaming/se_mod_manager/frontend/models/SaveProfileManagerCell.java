@@ -4,7 +4,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.scene.control.Tooltip;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved

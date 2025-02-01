@@ -31,7 +31,9 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.24.3'
     api libs.org.jsoup.jsoup
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
-    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.28.0'
+    //implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.28.0'
+    // https://mvnrepository.com/artifact/com.microsoft.playwright/playwright
+    implementation group: 'com.microsoft.playwright', name: 'playwright', version: '1.49.0'
     api libs.org.mockito.mockito.core
     api libs.org.openjfx.javafx.controls
     api libs.org.openjfx.javafx.fxml

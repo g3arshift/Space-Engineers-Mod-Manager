@@ -564,7 +564,7 @@ public class SaveProfileManager {
 
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("This is the Save Profile Manager. Here you can manage the save files that you can apply mod lists to.");
-        tutorialMessages.add("Save Profiles store the mod information for a save you're managing. You can see the name of the save file a profile is tied to by hovering your cursor over it.");
+        tutorialMessages.add("Save Profiles represent an actual Space Engineers save, but the profiles have their own name. You can see the name of the save file a profile is tied to by hovering your cursor over it.");
         tutorialMessages.add("Like mod lists, the currently active save profile will be highlighted by blue bars above and below it. If a save is no longer in the same folder it was when you added it the name will be struck through and turn red.");
         tutorialMessages.add("Let's add an existing save to SEMM by pressing the \"Add Save\" button, which will open the default save location for space engineers in a new window. " +
                 "Once open go into the folder for the save you want to add and select the \"Sandbox_config.sbc\" file within to add the save.");
