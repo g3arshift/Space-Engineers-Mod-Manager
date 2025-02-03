@@ -240,7 +240,7 @@ public class MasterManager {
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
-    private ComboBox<ModList> modProfileDropdown;
+    private ComboBox<ModListProfile> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
@@ -272,7 +272,7 @@ public class MasterManager {
     }
 
     public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-                         ComboBox<ModList> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+                         ComboBox<ModListProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
 
@@ -823,7 +823,7 @@ public class MasterManager {
         File savePath = importChooser.showOpenDialog(STAGE);
 
         if (savePath != null) {
-            Result<ModList> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<ModListProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
                 UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
@@ -891,7 +891,7 @@ public class MasterManager {
         else
             UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
 
-        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
+        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfileProfile());
     }
 
     @FXML
@@ -1042,7 +1042,7 @@ public class MasterManager {
 				but for whatever reason the changes aren't propagating without this.
 			*/
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+                UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
                 UI_SERVICE.saveUserData();
             }
 
@@ -1291,7 +1291,7 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
-            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+            UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
             UI_SERVICE.saveUserData();
 
             //Reset our UI settings for the mod progress

@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataRepository;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
@@ -41,11 +41,11 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
 		return result;
 	}
 
-	public Result<Void> exportModlist(ModList modList, File saveLocation) {
-		return userDataFileRepository.exportModlist(modList, saveLocation);
+	public Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation) {
+		return userDataFileRepository.exportModlist(modListProfile, saveLocation);
 	}
 
-	public Result<ModList> importModlist(File saveLocation) {
+	public Result<ModListProfile> importModlist(File saveLocation) {
 		return userDataFileRepository.importModlist(saveLocation);
 	}
 

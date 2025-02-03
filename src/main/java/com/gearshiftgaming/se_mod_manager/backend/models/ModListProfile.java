@@ -1,6 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -17,7 +20,7 @@ import java.util.UUID;
  */
 @Getter
 @XmlRootElement(name = "modlistProfile")
-public class ModList {
+public class ModListProfile {
 
     @XmlElement
     private final UUID ID;
@@ -26,24 +29,24 @@ public class ModList {
 
     private List<Mod> modList;
 
-    public ModList() {
+    public ModListProfile() {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         profileName = "New Mod Profile";
     }
 
-    public ModList(String profileName) {
+    public ModListProfile(String profileName) {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
     }
 
-    public ModList(ModList modList) {
+    public ModListProfile(ModListProfile modListProfile) {
         this.ID = UUID.randomUUID();
-        this.profileName = modList.getProfileName();
+        this.profileName = modListProfile.getProfileName();
         this.modList = new ArrayList<>();
-        if(modList.getModList() != null){
-            for(Mod m : modList.getModList()) {
+        if(modListProfile.getModList() != null){
+            for(Mod m : modListProfile.getModList()) {
                 if(m instanceof SteamMod) {
                     this.modList.add(new SteamMod((SteamMod) m));
                 } else {
@@ -67,7 +70,7 @@ public class ModList {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ModList that)) return false;
+        if (!(o instanceof ModListProfile that)) return false;
 		return Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
     }
 

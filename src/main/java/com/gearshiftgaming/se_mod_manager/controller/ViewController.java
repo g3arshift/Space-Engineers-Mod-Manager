@@ -88,7 +88,7 @@ public class ViewController {
             }
         }
 
-        ObservableList<ModList> modLists = FXCollections.observableList(userConfiguration.getModLists());
+        ObservableList<ModListProfile> modListProfiles = FXCollections.observableList(userConfiguration.getModListProfiles());
         ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 
         //Initialize the list we use to store log messages shown to the user
@@ -100,7 +100,7 @@ public class ViewController {
 
         ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-        uiService = new UiService(logger, userLog, modLists, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+        uiService = new UiService(logger, userLog, modListProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
         uiService.log(userConfigurationResult);
 
         setupInterface(stage);

@@ -30,9 +30,9 @@ public interface StorageController {
 
     Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) throws IOException;
 
-    Result<Void> exportModlist(ModList modList, File saveLocation);
+    Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation);
 
-    Result<ModList> importModlist(File saveLocation);
+    Result<ModListProfile> importModlist(File saveLocation);
 
     public Result<Void> createTestUserData(Theme theme);
 

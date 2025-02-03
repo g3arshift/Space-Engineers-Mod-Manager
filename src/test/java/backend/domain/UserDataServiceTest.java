@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
  * @author Gear Shift
  */
 
-//TODO: Make sure these are still valid
+//TODO: We need more
 public class UserDataServiceTest {
 	UserDataService userDataService;
 	UserDataFileRepository userDataFileRepository;
@@ -47,8 +47,8 @@ public class UserDataServiceTest {
 		assertEquals("User data was not found. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
 		assertEquals("Primer Light", userData.getUserTheme());
 		assertNull(userData.getLastModifiedSaveProfileId());
-		assertEquals(1, userData.getModLists().size());
-		assertEquals("Default", userData.getModLists().getFirst().getProfileName());
+		assertEquals(1, userData.getModListProfiles().size());
+		assertEquals("Default", userData.getModListProfiles().getFirst().getProfileName());
 		assertEquals("None", userData.getSaveProfiles().getFirst().getProfileName());
 	}
 
@@ -72,8 +72,8 @@ public class UserDataServiceTest {
 
 		assertEquals("Primer Dark", userConfiguration.getUserTheme());
 		assertNull(userConfiguration.getLastModifiedSaveProfileId());
-		assertEquals(1, userConfiguration.getModLists().size());
-		assertEquals("Default", userConfiguration.getModLists().getFirst().getProfileName());
+		assertEquals(1, userConfiguration.getModListProfiles().size());
+		assertEquals("Default", userConfiguration.getModListProfiles().getFirst().getProfileName());
 		assertEquals("None", userConfiguration.getSaveProfiles().getFirst().getProfileName());
 	}
 

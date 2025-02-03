@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 
@@ -21,7 +21,7 @@ public class ModListManagerCell extends ModListCell {
 	}
 
 	@Override
-	protected void updateItem(ModList item, boolean empty) {
+	protected void updateItem(ModListProfile item, boolean empty) {
 		super.updateItem(item, empty);
 		if (empty || item == null) {
 			setGraphic(null);
@@ -31,7 +31,7 @@ public class ModListManagerCell extends ModListCell {
 			setGraphic(getPROFILE_NAME());
 
 			StringBuilder styleBuilder = new StringBuilder(getCellStyle());
-			if(item.equals(UI_SERVICE.getCurrentModListProfile())) {
+			if(item.equals(UI_SERVICE.getCurrentModListProfileProfile())) {
 				styleBuilder.append("-fx-border-color: -color-accent-emphasis;")
 						.append("-fx-border-width: 2px 0px 2px 0px;");
 			}

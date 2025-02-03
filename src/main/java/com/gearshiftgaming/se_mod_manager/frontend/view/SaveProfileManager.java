@@ -283,7 +283,7 @@ public class SaveProfileManager {
                 if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
-                        Optional<ModList> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
+                        Optional<ModListProfile> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
                                 .filter(modlistProfile1 -> modlistProfile1.getProfileName().equals(newProfileName))
                                 .findFirst();
                         modlistProfile.ifPresent(profile -> modTableContextBar.getModProfileDropdown().getSelectionModel().select(profile));
@@ -313,7 +313,7 @@ public class SaveProfileManager {
 
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
-            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+            UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
             UI_SERVICE.saveUserData();
 
             Platform.runLater(() -> {

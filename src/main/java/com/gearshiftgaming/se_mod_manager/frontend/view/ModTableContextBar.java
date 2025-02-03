@@ -8,19 +8,19 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModListDropdownItemCel
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownButtonCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -89,7 +89,7 @@ public class ModTableContextBar {
 
     @FXML
     @Getter
-    private ComboBox<ModList> modProfileDropdown;
+    private ComboBox<ModListProfile> modProfileDropdown;
 
     @FXML
     @Getter
@@ -188,7 +188,7 @@ public class ModTableContextBar {
         };
 
 		ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-			String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
+			String profileName = UI_SERVICE.getCurrentModListProfileProfile().getProfileName();
 			double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
 			((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
 		};
@@ -197,7 +197,7 @@ public class ModTableContextBar {
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
         modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
-        Optional<ModList> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+        Optional<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isPresent())
             modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
         else
@@ -224,12 +224,12 @@ public class ModTableContextBar {
         });
         modProfileDropdown.setConverter(new StringConverter<>() {
             @Override
-            public String toString(ModList modList) {
-                return modList.getProfileName();
+            public String toString(ModListProfile modListProfile) {
+                return modListProfile.getProfileName();
             }
 
             @Override
-            public ModList fromString(String s) {
+            public ModListProfile fromString(String s) {
                 return null;
             }
         });
@@ -337,7 +337,7 @@ public class ModTableContextBar {
     private void selectModProfile() {
         clearSearchBox();
 
-        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+        UI_SERVICE.setCurrentModListProfileProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
         MASTER_MANAGER_VIEW.updateModTableContents();
     }
 

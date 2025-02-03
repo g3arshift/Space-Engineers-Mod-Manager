@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
@@ -22,7 +22,7 @@ public class ModListDropdownButtonCell extends ModListCell {
 	}
 
 	@Override
-	protected void updateItem(ModList item, boolean empty) {
+	protected void updateItem(ModListProfile item, boolean empty) {
 		super.updateItem(item, empty);
 		if(empty || item == null) {
 			setGraphic(null);

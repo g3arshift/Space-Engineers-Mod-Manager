@@ -1,14 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
 import com.sun.jna.Platform;
-import com.sun.jna.platform.unix.X11;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.PointerByReference;
 import javafx.application.Application;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 

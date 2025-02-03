@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
@@ -63,7 +63,7 @@ public class StatusBar {
 			}
 
 			lastSaveModifiedName.setText(lastUsedSaveProfile.get().getProfileName());
-			Optional<ModList> lastAppliedModlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
+			Optional<ModListProfile> lastAppliedModlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
 							.filter(modlistProfile -> modlistProfile.getID().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
 									.findFirst();
 
@@ -125,10 +125,10 @@ public class StatusBar {
 		return lastUsedSaveProfile;
 	}
 
-	public void update(SaveProfile saveProfile, ModList modList) {
+	public void update(SaveProfile saveProfile, ModListProfile modListProfile) {
 		updateSaveStatus(saveProfile);
 		updateLastInjected();
-		lastModlistAppliedName.setText(modList.getProfileName());
+		lastModlistAppliedName.setText(modListProfile.getProfileName());
 		lastSaveModifiedName.setText(saveProfile.getProfileName());
 	}
 }

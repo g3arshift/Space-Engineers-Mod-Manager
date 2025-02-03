@@ -44,9 +44,9 @@ public class FileStorageController implements StorageController {
 		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
 
 		if (userConfigurationResult.isSuccess()) {
-			for (ModList modList : userConfigurationResult.getPayload().getModLists()) {
-				for (int i = 0; i < modList.getModList().size(); i++) {
-					modList.getModList().get(i).setLoadPriority(i + 1);
+			for (ModListProfile modListProfile : userConfigurationResult.getPayload().getModListProfiles()) {
+				for (int i = 0; i < modListProfile.getModList().size(); i++) {
+					modListProfile.getModList().get(i).setLoadPriority(i + 1);
 				}
 			}
 		}
@@ -89,7 +89,7 @@ public class FileStorageController implements StorageController {
 		String sandboxConfig = sandboxFileResult.getPayload();
 
 		//Technically, the name of the save the game reads is in Sandbox.sbc, not Sandbox_config.sbc.
-		// But when you rename a save in the game it changes both files, so this is probably fine.
+		// But when you rename a save in the game it changes both files, so this is probably fine since you can't rename it any other way than through manual modification.
 		SaveProfile saveProfile = new SaveProfile(sandboxConfigFile);
 		saveProfile.setSaveName(SAVE_SERVICE.getSessionName(sandboxConfig, sandboxConfigFile.getPath()));
 
@@ -122,12 +122,12 @@ public class FileStorageController implements StorageController {
 	}
 
 	@Override
-	public Result<Void> exportModlist(ModList modList, File saveLocation) {
-		return USER_DATA_SERVICE.exportModlist(modList, saveLocation);
+	public Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation) {
+		return USER_DATA_SERVICE.exportModlist(modListProfile, saveLocation);
 	}
 
 	@Override
-	public Result<ModList> importModlist(File saveLocation) {
+	public Result<ModListProfile> importModlist(File saveLocation) {
 		return USER_DATA_SERVICE.importModlist(saveLocation);
 	}
 
@@ -136,7 +136,7 @@ public class FileStorageController implements StorageController {
 
 		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc");
 		testSaveProfile.setSaveName("Test save");
-		ModList testModList = new ModList("Test Profile");
+		ModListProfile testModListProfile = new ModListProfile("Test Profile");
 
 		SteamMod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();
@@ -144,24 +144,24 @@ public class FileStorageController implements StorageController {
 		testCategories.add("Three Category test");
 		testMod.setFriendlyName("Test Mod");
 		testMod.setCategories(testCategories);
-		testModList.getModList().add(testMod);
+		testModListProfile.getModList().add(testMod);
 
 		SteamMod secondTestMod = new SteamMod("0987654321");
 		secondTestMod.setFriendlyName("Second test mod");
 		secondTestMod.setCategories(testCategories);
-		testModList.getModList().add(secondTestMod);
+		testModListProfile.getModList().add(secondTestMod);
 
 		ModIoMod thirdTestMod = new ModIoMod("122122");
 		thirdTestMod.setFriendlyName("Third test mod");
 		thirdTestMod.setCategories(testCategories);
-		testModList.getModList().add(thirdTestMod);
+		testModListProfile.getModList().add(thirdTestMod);
 
-		testSaveProfile.setLastUsedModProfileId(testModList.getID());
+		testSaveProfile.setLastUsedModProfileId(testModListProfile.getID());
 
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();
 		userConfiguration.getSaveProfiles().add(testSaveProfile);
-		userConfiguration.getModLists().add(testModList);
+		userConfiguration.getModListProfiles().add(testModListProfile);
 		userConfiguration.setUserTheme(theme.getName());
 
 		System.out.println("Created test user data.");
@@ -177,7 +177,7 @@ public class FileStorageController implements StorageController {
 		if(userConfigResetResult.isSuccess()) {
             try {
                 USER_DATA_SERVICE.saveUserData(new UserConfiguration(), USER_CONFIGURATION_FILE);
-				userConfigResetResult.addMessage("Succesfully deleted existing user configuration and saved new one.", ResultType.SUCCESS);
+				userConfigResetResult.addMessage("Successfully deleted existing user configuration and saved new one.", ResultType.SUCCESS);
             } catch (IOException e) {
                 userConfigResetResult.addMessage(e.toString(), ResultType.FAILED);
             }
@@ -188,7 +188,7 @@ public class FileStorageController implements StorageController {
 
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
 		UserConfiguration sortedUserConfiguration = new UserConfiguration(userConfiguration);
-		for (ModList m : sortedUserConfiguration.getModLists()) {
+		for (ModListProfile m : sortedUserConfiguration.getModListProfiles()) {
 			List<Mod> sortedModList = m.getModList().stream()
 					.sorted(Comparator.comparing(Mod::getLoadPriority))
 					.toList();

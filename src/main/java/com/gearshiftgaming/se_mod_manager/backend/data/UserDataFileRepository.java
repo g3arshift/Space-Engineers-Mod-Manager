@@ -1,6 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -55,13 +58,13 @@ public class UserDataFileRepository implements UserDataRepository {
     }
 
     @Override
-    public Result<Void> exportModlist(ModList modList, File modlistLocation) {
-        ModList copiedProfile = new ModList(modList);
+    public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation) {
+        ModListProfile copiedProfile = new ModListProfile(modListProfile);
 
         Result<Void> result = new Result<>();
 
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
-            JAXBContext context = JAXBContext.newInstance(ModList.class);
+            JAXBContext context = JAXBContext.newInstance(ModListProfile.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
@@ -76,14 +79,14 @@ public class UserDataFileRepository implements UserDataRepository {
     }
 
     @Override
-    public Result<ModList> importModlist(File modlistLocation) {
-        Result<ModList> modlistProfileResult = new Result<>();
+    public Result<ModListProfile> importModlist(File modlistLocation) {
+        Result<ModListProfile> modlistProfileResult = new Result<>();
         try {
-            JAXBContext context = JAXBContext.newInstance(ModList.class);
+            JAXBContext context = JAXBContext.newInstance(ModListProfile.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            ModList modList = (ModList) unmarshaller.unmarshal(modlistLocation);
+            ModListProfile modListProfile = (ModListProfile) unmarshaller.unmarshal(modlistLocation);
             modlistProfileResult.addMessage("Successfully loaded mod profile.", ResultType.SUCCESS);
-            modlistProfileResult.setPayload(modList);
+            modlistProfileResult.setPayload(modListProfile);
         } catch (JAXBException e) {
             modlistProfileResult.addMessage("Failed to load mod profile. Error Details: " + e, ResultType.FAILED);
 		}

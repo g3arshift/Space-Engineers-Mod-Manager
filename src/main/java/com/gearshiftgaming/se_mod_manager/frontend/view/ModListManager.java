@@ -1,14 +1,13 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -20,7 +19,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
-import javafx.stage.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.Getter;
 
 import java.io.File;
@@ -39,7 +41,7 @@ import java.util.regex.Pattern;
 //TODO: This needs refactored to share a common class with the save profile manager. They really share a LOT of stuff.
 public class ModListManager {
     @FXML
-    private ListView<ModList> profileList;
+    private ListView<ModListProfile> profileList;
 
     @FXML
     private Button createNewProfile;
@@ -77,7 +79,7 @@ public class ModListManager {
 
     private ModTableContextBar modTableContextBar;
 
-    private final ObservableList<ModList> MOD_PROFILES;
+    private final ObservableList<ModListProfile> MOD_PROFILES;
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
@@ -144,7 +146,7 @@ public class ModListManager {
 
     @FXML
     private void copyProfile() {
-        ModList profileToCopy = profileList.getSelectionModel().getSelectedItem();
+        ModListProfile profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
             int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
             if (copyChoice == 1) {
@@ -192,7 +194,7 @@ public class ModListManager {
                 }
 
                 if (!copyProfileName.isBlank()) {
-                    ModList copyProfile = new ModList(profileList.getSelectionModel().getSelectedItem());
+                    ModListProfile copyProfile = new ModListProfile(profileList.getSelectionModel().getSelectedItem());
                     copyProfile.setProfileName(copyProfileName);
 
                     MOD_PROFILES.add(copyProfile);
@@ -209,7 +211,7 @@ public class ModListManager {
     @FXML
     private void removeProfile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            if (UI_SERVICE.getCurrentModListProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+            if (UI_SERVICE.getCurrentModListProfileProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
@@ -232,7 +234,7 @@ public class ModListManager {
         boolean duplicateProfileName;
 
         do {
-            ModList selectedProfile = profileList.getSelectionModel().getSelectedItem();
+            ModListProfile selectedProfile = profileList.getSelectionModel().getSelectedItem();
             if (selectedProfile != null) {
                 PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getProfileName());
                 PROFILE_INPUT_VIEW.getInput().requestFocus();
@@ -248,7 +250,7 @@ public class ModListManager {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                     String originalProfileName = MOD_PROFILES.get(profileIndex).getProfileName();
-                    ModList profileToModify = MOD_PROFILES.get(profileIndex);
+                    ModListProfile profileToModify = MOD_PROFILES.get(profileIndex);
                     profileToModify.setProfileName(newProfileName);
 
                     //We manually refresh here because the original profile won't update its name while it's selected in the list
@@ -260,7 +262,7 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (MOD_PROFILES.size() == 1) {
-                        MOD_PROFILES.add(new ModList());
+                        MOD_PROFILES.add(new ModListProfile());
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                         MOD_PROFILES.removeLast();
@@ -269,7 +271,7 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfile())) {
+                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfileProfile())) {
                         activeProfileName.setText(profileToModify.getProfileName());
                     }
 
@@ -300,9 +302,9 @@ public class ModListManager {
 
     private void setModListActive() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            ModList modList = profileList.getSelectionModel().getSelectedItem();
-            modTableContextBar.getModProfileDropdown().getSelectionModel().select(modList);
-            activeProfileName.setText(modList.getProfileName());
+            ModListProfile modListProfile = profileList.getSelectionModel().getSelectedItem();
+            modTableContextBar.getModProfileDropdown().getSelectionModel().select(modListProfile);
+            activeProfileName.setText(modListProfile.getProfileName());
             profileList.refresh();
         }
     }
@@ -339,7 +341,7 @@ public class ModListManager {
         File savePath = importChooser.showOpenDialog(stage);
 
         if (savePath != null) {
-            Result<ModList> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<ModListProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modTableContextBar.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
                 UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
@@ -367,7 +369,7 @@ public class ModListManager {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfileProfile().getProfileName());
         Platform.enterNestedEventLoop(stage);
     }
 
@@ -387,7 +389,7 @@ public class ModListManager {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfileProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("This is the Mod List Manager. Here you can manage the mod lists that you can apply to saves.");

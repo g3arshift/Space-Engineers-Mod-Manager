@@ -4,7 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileReposito
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModList;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
@@ -212,12 +212,12 @@ public class SaveServiceTest {
 	}
 
 	private SaveProfile createTestSaveProfile () {
-		ModList testModList = new ModList();
+		ModListProfile testModListProfile = new ModListProfile();
 
 		SaveProfile testSaveProfile = new SaveProfile();
 		testSaveProfile.setSaveName("Test Save");
 		testSaveProfile.setSavePath(testDir.toString() + "\\Sandbox_config.sbc");
-		testSaveProfile.setLastUsedModProfileId(testModList.getID());
+		testSaveProfile.setLastUsedModProfileId(testModListProfile.getID());
 
 		return testSaveProfile;
 	}

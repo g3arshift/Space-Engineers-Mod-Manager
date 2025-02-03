@@ -93,13 +93,13 @@ public class ModImportUtility {
 			PROFILE_INPUT_VIEW.getInput().clear();
 			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			PROFILE_INPUT_VIEW.show(STAGE);
-			ModList newModList = new ModList(PROFILE_INPUT_VIEW.getInput().getText());
+			ModListProfile newModListProfile = new ModListProfile(PROFILE_INPUT_VIEW.getInput().getText());
 			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText().toLowerCase().trim(), UI_SERVICE);
 
 			if (duplicateProfileName) {
 				Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
 			} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-				UI_SERVICE.getMODLIST_PROFILES().add(newModList);
+				UI_SERVICE.getMODLIST_PROFILES().add(newModListProfile);
 				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
 				newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
 				PROFILE_INPUT_VIEW.getInput().clear();

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 //TODO: Replace real paths with mocks
 
-//TODO: Make sure these are still valid after refactor
+//TODO: Check entire class. It's missing some cases.
 
 public class SandboxServiceTest {
     SandboxService service;

@@ -4,10 +4,9 @@ import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.*;
+import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -63,7 +62,7 @@ public class UiService {
     private final ObservableList<LogMessage> USER_LOG;
 
     @Getter
-    private final ObservableList<ModList> MODLIST_PROFILES;
+    private final ObservableList<ModListProfile> MODLIST_PROFILES;
 
     @Getter
     private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -75,7 +74,7 @@ public class UiService {
     private SaveProfile currentSaveProfile;
 
     @Getter
-    private ModList currentModListProfile;
+    private ModListProfile currentModListProfileProfile;
 
     @Getter
     private ObservableList<Mod> currentModList;
@@ -98,7 +97,7 @@ public class UiService {
     final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
 
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-                     @NotNull ObservableList<ModList> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+                     @NotNull ObservableList<ModListProfile> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
@@ -111,9 +110,9 @@ public class UiService {
 
         this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
-        getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModListProfile = modlistProfile, () -> {
+        getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModListProfileProfile = modlistProfile, () -> {
             log("No previously chosen modlist detected.", MessageType.INFO);
-            currentModListProfile = MODLIST_PROFILES.getFirst();
+            currentModListProfileProfile = MODLIST_PROFILES.getFirst();
         });
         getLastActiveSaveProfile().ifPresentOrElse(saveProfile -> currentSaveProfile = saveProfile, () -> {
             log("No previously chosen save profile detected.", MessageType.INFO);
@@ -121,7 +120,7 @@ public class UiService {
         });
 
         //A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
-        currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
+        currentModList = FXCollections.observableArrayList(currentModListProfileProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
 
         KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
@@ -208,11 +207,11 @@ public class UiService {
         }
     }
 
-    public void setCurrentModListProfile(ModList modList) {
-        currentModListProfile = modList;
-        currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
+    public void setCurrentModListProfileProfile(ModListProfile modListProfile) {
+        currentModListProfileProfile = modListProfile;
+        currentModList = FXCollections.observableArrayList(currentModListProfileProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-        setLastActiveModlistProfile(modList.getID());
+        setLastActiveModlistProfile(modListProfile.getID());
         saveUserData();
     }
 
@@ -544,20 +543,20 @@ public class UiService {
         return MOD_INFO_CONTROLLER.getModIdsFromFile(modlistFile, modType);
     }
 
-    public Result<Void> exportModlist(ModList modList, File exportLocation) {
-        return STORAGE_CONTROLLER.exportModlist(modList, exportLocation);
+    public Result<Void> exportModlist(ModListProfile modListProfile, File exportLocation) {
+        return STORAGE_CONTROLLER.exportModlist(modListProfile, exportLocation);
     }
 
-    public Result<ModList> importModlist(File saveLocation) {
-        Result<ModList> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
+    public Result<ModListProfile> importModlist(File saveLocation) {
+        Result<ModListProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
         if (modlistProfileResult.isSuccess()) {
-            ModList importModList = modlistProfileResult.getPayload();
+            ModListProfile importModListProfile = modlistProfileResult.getPayload();
             boolean duplicateProfileExists = MODLIST_PROFILES
                     .stream()
-                    .anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModList.getProfileName().toLowerCase().trim()));
+                    .anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModListProfile.getProfileName().toLowerCase().trim()));
             if (!duplicateProfileExists) {
-                for (int i = 0; i < importModList.getModList().size(); i++) {
-                    importModList.getModList().get(i).setLoadPriority(i + 1);
+                for (int i = 0; i < importModListProfile.getModList().size(); i++) {
+                    importModListProfile.getModList().get(i).setLoadPriority(i + 1);
                 }
                 MODLIST_PROFILES.add(modlistProfileResult.getPayload());
             } else
@@ -574,7 +573,7 @@ public class UiService {
         USER_CONFIGURATION.setLastActiveSaveProfileId(saveProfileId);
     }
 
-    public Optional<ModList> getLastActiveModlistProfile() {
+    public Optional<ModListProfile> getLastActiveModlistProfile() {
         return MODLIST_PROFILES.stream()
                 .filter(modlistProfile -> modlistProfile.getID().equals(USER_CONFIGURATION.getLastActiveModProfileId()))
                 .findAny();
@@ -587,7 +586,7 @@ public class UiService {
     }
 
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
-        currentSaveProfile.setLastUsedModProfileId(currentModListProfile.getID());
+        currentSaveProfile.setLastUsedModProfileId(currentModListProfileProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
         saveUserData();

@@ -267,7 +267,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					but for whatever reason the changes aren't propagating without this.
 				 */
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+                UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
                 UI_SERVICE.saveUserData();
 
                 dragEvent.consume();
@@ -312,7 +312,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
 			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
-			UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
 
 			int previouslyActiveModCount = 0;
 

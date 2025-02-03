@@ -3,7 +3,6 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 import com.gearshiftgaming.se_mod_manager.backend.models.adapters.ModDescriptionCompacterAdapter;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import lombok.Generated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
