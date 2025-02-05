@@ -277,7 +277,7 @@ public class UiService {
         return modListResult;
     }
 
-    public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
+    public Result<Mod> fillOutModInformation(Mod mod) throws IOException, InterruptedException {
         Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
         Result<Mod> modInfoResult = new Result<>();
 
@@ -392,10 +392,14 @@ public class UiService {
                 Platform.runLater(() -> modImportProgressDenominator.setValue(modList.size()));
                 List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
                 try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+                    Random random = new Random();
                     for (Mod m : modList) {
                         // Submit the task without waiting for it to finish
                         Future<Result<Mod>> future = executorService.submit(() -> {
                             try {
+                                if(m instanceof ModIoMod && modList.size() > 1) {
+                                    Thread.sleep(random.nextInt(400, 800));
+                                }
                                 return fillOutModInformation(m);
                             } catch (IOException e) {
                                 Result<Mod> failedResult = new Result<>();

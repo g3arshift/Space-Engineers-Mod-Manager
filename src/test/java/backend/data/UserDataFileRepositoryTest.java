@@ -1,7 +1,6 @@
 package backend.data;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,12 +26,12 @@ public class UserDataFileRepositoryTest {
 	private File tempDir;
 
 	@BeforeEach
-	void setup() throws IOException {
+	void setup() {
 		userDataFileRepository = new UserDataFileRepository();
 	}
 
 	@Test
-	void shouldGetValidConfig() throws JAXBException {
+	void shouldGetValidConfig() {
 		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml"));
 		assertTrue(userConfigurationResult.isSuccess());
 		UserConfiguration validUserConfig = userConfigurationResult.getPayload();
@@ -44,7 +43,7 @@ public class UserDataFileRepositoryTest {
 	}
 
 	@Test
-	void shouldFailOnInvalidUserConfig() throws JAXBException {
+	void shouldFailOnInvalidUserConfig() {
 		Result<UserConfiguration> userConfigurationResult = (userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
 		UserConfiguration badUserConfiguration = new UserConfiguration();
 		badUserConfiguration.setUserTheme("Primer Light");
@@ -63,5 +62,36 @@ public class UserDataFileRepositoryTest {
 		UserConfiguration freshUserConfig = new UserConfiguration();
 		Path tempFile = Files.createFile(tempDir.toPath().resolve("test_user_data.xml"));
 		assertTrue(userDataFileRepository.saveUserData(freshUserConfig, new File(String.valueOf(tempFile))));
+	}
+
+	@Test
+	void shouldExportAndImportModList() {
+		ModListProfile modListProfile = new ModListProfile();
+		modListProfile.setProfileName("Test Profile");
+		modListProfile.getModList().add(new SteamMod("12345"));
+		modListProfile.getModList().add(new ModIoMod("56789"));
+
+		File testFile = new File(tempDir.getPath() + "/test_dir.semm");
+
+		assertFalse(Files.exists(testFile.toPath()));
+		Result<Void> result = userDataFileRepository.exportModlist(modListProfile, testFile);
+		assertTrue(result.isSuccess());
+		assertEquals("Successfully exported modlist.", result.getCurrentMessage());
+		assertTrue(Files.exists(testFile.toPath()));
+
+		Result<ModListProfile> exportContents = userDataFileRepository.importModlist(testFile);
+		assertTrue(exportContents.isSuccess());
+		ModListProfile testModListProfile = exportContents.getPayload();
+		assertEquals(2, testModListProfile.getModList().size());
+		assertEquals("Test Profile", testModListProfile.getProfileName());
+	}
+
+	@Test
+	void shouldResetUserData() throws IOException {
+		File testFile = new File(tempDir.getPath() + "/SEMM_TEST_Data.xml");
+		Files.copy(Path.of("src/test/resources/TestUserData/SEMM_TEST_Data.xml"), testFile.toPath());
+		assertTrue(Files.exists(testFile.toPath()));
+		userDataFileRepository.resetUserConfiguration(testFile);
+		assertFalse(Files.exists(testFile.toPath()));
 	}
 }

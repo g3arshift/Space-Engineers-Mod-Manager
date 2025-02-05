@@ -136,7 +136,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamNotFoundError() throws IOException {
+    void shouldGetSteamNotFoundError()throws InterruptedException {
         String badModId = "122121213232";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(badModId));
         assertFalse(badResult.isSuccess());
@@ -144,7 +144,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamNotModItemError() throws IOException {
+    void shouldGetSteamNotModItemError()throws InterruptedException {
         String screenShotId = "2396152929";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(screenShotId));
         assertFalse(badResult.isSuccess());
@@ -152,7 +152,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamCollectionError() throws IOException {
+    void shouldGetSteamCollectionError()throws InterruptedException {
         String steamCollectionId = "3408899159";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(steamCollectionId));
         assertFalse(badResult.isSuccess());
@@ -160,7 +160,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamItemIsAScriptNotAModError() throws IOException {
+    void shouldGetSteamItemIsAScriptNotAModError()throws InterruptedException {
         String scriptItemId = "479678389";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod("479678389"));
         assertFalse(badResult.isSuccess());
@@ -168,7 +168,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetValidSteamModWithNoTags() throws IOException {
+    void shouldGetValidSteamModWithNoTags() throws InterruptedException {
         String noTagsModId = "1100741659";
         Result<String[]> noTagsResult = modInfoService.scrapeModInformation(new SteamMod(noTagsModId));
         assertTrue(noTagsResult.isSuccess());
@@ -196,7 +196,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetValidSteamMod() throws IOException {
+    void shouldGetValidSteamMod() throws InterruptedException {
         //The steam mod should have the following traits:
         // Tags: NoScripts
         // Name: Cross Barred Windows (Large Grid Update)
@@ -228,7 +228,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetModIoTimeoutError() throws IOException {
+    void shouldGetModIoTimeoutError() throws InterruptedException {
         String badModIoId = "3123nj121";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new ModIoMod(badModIoId));
         assertFalse(badResult.isSuccess());
@@ -236,7 +236,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetModIoValidMod() throws IOException {
+    void shouldGetModIoValidMod() throws InterruptedException {
         //The Mod.io Mod should have the following traits:
         // Name: Multi-Function Survival Kit with Sifter
         // Tags: Block, NoScripts

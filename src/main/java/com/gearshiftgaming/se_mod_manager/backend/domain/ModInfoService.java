@@ -183,7 +183,7 @@ public class ModInfoService {
     }
 
     //Scrape the web pages of the mods we want the information from
-    public Result<String[]> scrapeModInformation(Mod mod) throws IOException {
+    public Result<String[]> scrapeModInformation(Mod mod) throws InterruptedException {
         Result<String[]> modScrapeResult;
         if (mod instanceof SteamMod) {
             modScrapeResult = scrapeSteamMod(mod.getId());
@@ -276,15 +276,40 @@ public class ModInfoService {
         return modScrapeResult;
     }
 
-    private Result<String[]> scrapeModIoMod(String modId) {
+    private Result<String[]> scrapeModIoMod(String modId) throws InterruptedException {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
         try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
-            final Page webPage = browser.newContext().newPage();
+            int retries = 0;
+            final int MAX_RETRIES = 3;
+            int baseDelay = 1000;
+            Random random = new Random();
+            Page webPage;
+            webPage = browser.newContext().newPage();
             webPage.navigate(MOD_IO_URL + modId);
-            webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
-            String pageSource = webPage.content();
-            if (pageSource != null) {
+            String pageSource = "";
+            while (retries < MAX_RETRIES && StringUtils.countMatches(pageSource, "\n") < 1) {
+                try {
+                    if(StringUtils.countMatches(webPage.content(), "\n") < 1) {
+                        //TODO: REplace with custom exception
+                        throw new TimeoutError("");
+                    }
+                    webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
+                    pageSource = webPage.content();
+                } catch (TimeoutError e) {
+                    retries++;
+                    if (retries < MAX_RETRIES) {
+                        int delay = baseDelay + random.nextInt(3000); // Exponential backoff with jitter
+                        Thread.sleep(delay);
+                        baseDelay = delay;
+                        webPage.reload();
+                    } else {
+                        modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
+                    }
+                }
+            }
+
+            if (!pageSource.isEmpty()) {
                 //modInfo:
                 // 0. Name
                 // 1. Tags
@@ -338,18 +363,12 @@ public class ModInfoService {
                         modScrapeResult.addMessage(modPage.title().split(" for Space Engineers - mod.io")[0] + " is not a mod, it is a " +
                                 StringUtils.substringBetween(Objects.requireNonNull(modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR)).childNodes().getFirst().toString(),
                                         "<span>", "</span>") + ".", ResultType.FAILED);
-                    } catch (NullPointerException e) { //This is here because if we load a VERY wrong page we can have this throw a null.
+                    } catch (
+                            NullPointerException e) { //This is here because if we load a VERY wrong page we can have this throw a null.
                         modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
                         return modScrapeResult;
                     }
                 }
-            }
-        } catch (Exception e) {
-            //This really isn't how I want to do the flow control, but Selenium immediately throws this as an exception if it times out so there's not a lot I can do.
-            if (e instanceof TimeoutError) {
-                modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
-            } else {
-                modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
             }
         }
 

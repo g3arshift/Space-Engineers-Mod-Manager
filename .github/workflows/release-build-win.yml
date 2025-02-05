@@ -52,6 +52,9 @@ jobs:
       - name: Make fat jar
         run: ./gradlew makeFatJar
 
+      - name: Remove unneeded browser binaries
+        run: ./gradlew removeForeignOsBrowsers
+
       - name: Check jpackage availability
         run: |
           jpackage --input build\libs --name "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"

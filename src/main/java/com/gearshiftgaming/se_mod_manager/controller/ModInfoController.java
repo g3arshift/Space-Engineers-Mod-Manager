@@ -29,7 +29,7 @@ public class ModInfoController {
 	}
 
 	//This is called in this roundabout manner because the UI can only be updated by a JFX thread, and the .get from futures is a blocking call.
-	public Result<String[]> fillOutModInformation(Mod mod) throws IOException {
+	public Result<String[]> fillOutModInformation(Mod mod) throws InterruptedException {
 		return MOD_INFO_SERVICE.scrapeModInformation(mod);
 	}
 

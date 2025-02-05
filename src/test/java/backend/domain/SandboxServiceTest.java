@@ -2,9 +2,7 @@ package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,12 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 
 //TODO: Replace real paths with mocks
-
-//TODO: Check entire class. It's missing some cases.
-
 public class SandboxServiceTest {
     SandboxService service;
     String fakeConfig;
@@ -39,7 +36,6 @@ public class SandboxServiceTest {
     @TempDir
     public File tempDir;
 
-    //TODO: Add ModIO Tests
     @BeforeEach
     void setup() throws IOException {
         service = new SandboxService(new SandboxConfigFileRepository());
@@ -75,6 +71,31 @@ public class SandboxServiceTest {
     }
 
     @Test
+    void shouldGetModListFromSandboxConfig() {
+        Result<List<Mod>> result = service.getModListFromSandboxConfig(new File(goodConfigPath));
+        assertTrue(result.isSuccess());
+        List<Mod> modList = result.getPayload();
+        assertEquals(153, modList.size());
+    }
+
+    @Test
+    void shouldGetEmptyModList() {
+        Result<List<Mod>> result = service.getModListFromSandboxConfig(new File(noModConfigPath));
+        assertEquals(ResultType.INVALID, result.getType());
+        assertNull(result.getPayload());
+        assertEquals("There are no mods in this save!", result.getCurrentMessage());
+    }
+
+    @Test
+    void shouldNotFindModSectionInConfig() {
+        Result<List<Mod>> result = service.getModListFromSandboxConfig(new File("src/test/resources/MissingModSection.sbc"));
+        assertFalse(result.isSuccess());
+        assertNull(result.getPayload());
+        assertEquals(ResultType.FAILED, result.getType());
+        assertEquals("No valid mod section found.", result.getCurrentMessage());
+    }
+
+    @Test
     void shouldGetFileDoesNotExist() throws IOException {
         Result<String> result = service.getSandboxFromFile(new File(fakePath));
         assertFalse(result.isSuccess());
@@ -105,14 +126,14 @@ public class SandboxServiceTest {
 
     @Test
     void shouldSuccessfullySaveConfigFile() throws IOException {
-        Result<Void> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.sbc", fakeConfig);
+        Result<Void> result = service.saveSandboxToFile(tempDir.getPath() + "/Sandbox_config.sbc", fakeConfig);
         assertTrue(result.isSuccess());
         assertEquals("Successfully saved sandbox config.", result.getCurrentMessage());
     }
 
     @Test
     void shouldAppendExtensionToSavePathWithIncorrectExtensionAndWriteCorrectly() throws IOException {
-        Result<Void> result = service.saveSandboxToFile(tempDir.getPath()+"/Sandbox_config.txt", "Save this config!");
+        Result<Void> result = service.saveSandboxToFile(tempDir.getPath() + "/Sandbox_config.txt", "Save this config!");
         assertTrue(result.isSuccess());
         assertEquals("File extension .txt not permitted. Changing to .sbc.", result.getMESSAGES().getFirst());
     }
@@ -122,5 +143,29 @@ public class SandboxServiceTest {
         Result<Void> result = service.saveSandboxToFile(illegalSavePath, "Save this config!");
         assertFalse(result.isSuccess());
         assertEquals("Save path or name contains invalid characters.", result.getCurrentMessage());
+    }
+
+    @Test
+    void shouldChangeConfigSessionName() throws IOException {
+        SaveProfile saveProfile = new SaveProfile();
+        saveProfile.setSaveName("Test");
+        saveProfile.setSavePath(tempDir.getPath() + "/Sandbox_config.sbc");
+        Result<Void> result = service.changeConfigSessionName(fakeConfig, saveProfile, new int[]{0, 4});
+        assertTrue(result.isSuccess());
+        String change = Files.readString(Path.of(tempDir.getPath() + "/Sandbox_config.sbc"));
+        assertTrue(change.startsWith("Test"));
+    }
+
+    @Test
+    void shouldChangeSandboxSessionName() throws IOException {
+        SaveProfile saveProfile = new SaveProfile();
+        saveProfile.setSaveName("Test");
+        saveProfile.setSavePath(tempDir.getPath() + "/Sandbox_config.sbc");
+        Files.createFile(Path.of(tempDir.getPath() + "/Sandbox.sbc"));
+        Result<Void> result = service.changeSandboxSessionName(fakeConfig, saveProfile, new int[]{0, 4});
+
+        assertTrue(result.isSuccess());
+        String change = Files.readString(Path.of(tempDir.getPath() + "/Sandbox.sbc"));
+        assertTrue(change.startsWith("Test"));
     }
 }

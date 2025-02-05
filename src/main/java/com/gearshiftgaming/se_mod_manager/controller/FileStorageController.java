@@ -118,7 +118,7 @@ public class FileStorageController implements StorageController {
 
 	@Override
 	public Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) {
-		return SANDBOX_SERVICE.getModlistFromSandboxConfig(sandboxConfigFile);
+		return SANDBOX_SERVICE.getModListFromSandboxConfig(sandboxConfigFile);
 	}
 
 	@Override

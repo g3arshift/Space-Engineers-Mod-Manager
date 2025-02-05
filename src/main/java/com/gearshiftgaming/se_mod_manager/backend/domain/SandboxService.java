@@ -41,7 +41,7 @@ public class SandboxService {
 		return result;
 	}
 
-	public Result<List<Mod>> getModlistFromSandboxConfig(File sandboxConfigFile) {
+	public Result<List<Mod>> getModListFromSandboxConfig(File sandboxConfigFile) {
 		Result<String> sandboxConfigResult = new Result<>();
 		try {
 			sandboxConfigResult = getSandboxFromFile(sandboxConfigFile);
@@ -101,7 +101,6 @@ public class SandboxService {
 		return result;
 	}
 
-	//TODO: Check for mod io crossfunction
 	public Result<String> injectModsIntoSandboxConfig(File sandboxConfig, List<Mod> modList) throws IOException {
 		Result<String> result = new Result<>();
 		String sandboxFileContent = Files.readString(sandboxConfig.toPath());
