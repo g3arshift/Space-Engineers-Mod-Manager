@@ -34,6 +34,7 @@ public class ModlistFileRepository implements ModlistRepository {
 		try (BufferedReader br = new BufferedReader(new FileReader(modListFile))) {
 			String modUrl;
 			while ((modUrl = br.readLine()) != null) {
+				modUrl = modUrl.trim();
 				//Grab just the ID from the full URLs
 				if(StringUtils.isNumeric(modUrl)) {
 					modIds.add(modUrl);

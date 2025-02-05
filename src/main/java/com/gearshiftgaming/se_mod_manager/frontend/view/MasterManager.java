@@ -1079,7 +1079,7 @@ public class MasterManager {
 
     private String getUserModIdInput() {
         ID_AND_URL_MOD_IMPORT_INPUT.show(STAGE);
-        return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText();
+        return ID_AND_URL_MOD_IMPORT_INPUT.getInput().getText().trim();
     }
 
     private void setModAddingInputViewText(String title, String instructions, String promptText) {

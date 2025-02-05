@@ -282,7 +282,7 @@ public class ModInfoService {
         try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
             int retries = 0;
             final int MAX_RETRIES = 3;
-            int baseDelay = 1000;
+            int delay = 1000;
             Random random = new Random();
             Page webPage;
             webPage = browser.newContext().newPage();
@@ -291,20 +291,25 @@ public class ModInfoService {
             while (retries < MAX_RETRIES && StringUtils.countMatches(pageSource, "\n") < 1) {
                 try {
                     if(StringUtils.countMatches(webPage.content(), "\n") < 1) {
-                        //TODO: REplace with custom exception
-                        throw new TimeoutError("");
+                        throw new RateLimitException("Mod.io is rate limiting you.");
                     }
                     webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
                     pageSource = webPage.content();
-                } catch (TimeoutError e) {
-                    retries++;
-                    if (retries < MAX_RETRIES) {
-                        int delay = baseDelay + random.nextInt(3000); // Exponential backoff with jitter
-                        Thread.sleep(delay);
-                        baseDelay = delay;
-                        webPage.reload();
-                    } else {
+                } catch (Exception e) {
+                    if(e instanceof RateLimitException) {
+                        retries++;
+                        if (retries < MAX_RETRIES) {
+                            //TODO: Tool around with the delay for retries AND for the separation between thread calls.
+                            Thread.sleep(delay);
+                            delay += random.nextInt(2000);
+                            webPage.reload();
+                        } else {
+                            modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found. Mod.io is rate limiting you, please wait a little and try again later.", ResultType.FAILED);
+                        }
+                    } else if (e instanceof TimeoutError) {
                         modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
+                    } else {
+                        modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
                     }
                 }
             }

@@ -398,7 +398,7 @@ public class UiService {
                         Future<Result<Mod>> future = executorService.submit(() -> {
                             try {
                                 if(m instanceof ModIoMod && modList.size() > 1) {
-                                    Thread.sleep(random.nextInt(400, 800));
+                                    Thread.sleep(random.nextInt(200, 600));
                                 }
                                 return fillOutModInformation(m);
                             } catch (IOException e) {
