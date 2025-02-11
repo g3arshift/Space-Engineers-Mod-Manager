@@ -27,6 +27,7 @@ public class ModlistFileRepository implements ModlistRepository {
 		STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
 	}
 
+	//TODO: We're losing a mod in steam and mod.io mod lists...
 	@Override
 	public List<String> getSteamModList(File modListFile) throws IOException {
 		//We use a set to prevent duplicate lines from being added
@@ -37,14 +38,14 @@ public class ModlistFileRepository implements ModlistRepository {
 				modUrl = modUrl.trim();
 				//Grab just the ID from the full URLs
 				if(StringUtils.isNumeric(modUrl)) {
-					modIds.add(modUrl);
+					modIds.add(modUrl.trim());
 				} else {
 					String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining(""));
 
 					//Don't add blanks
 					if(!modId.isBlank()) {
 						modId = modId.substring(3);
-						modIds.add(modId);
+						modIds.add(modId.trim());
 					}
 				}
 			}
@@ -52,6 +53,7 @@ public class ModlistFileRepository implements ModlistRepository {
 		return modIds.stream().toList();
 	}
 
+	//TODO: probably should mirror the regex matching in here too. Move it out of the higher function.
 	@Override
 	public List<String> getModIoModUrls(File modListFile) throws IOException {
 		//We use a set to prevent duplicate lines from being added
@@ -60,7 +62,7 @@ public class ModlistFileRepository implements ModlistRepository {
 			String modUrl;
 			while ((modUrl = br.readLine()) != null) {
 				if(!modUrl.isBlank()) {
-					modUrlSet.add(modUrl);
+					modUrlSet.add(modUrl.trim());
 				}
 			}
 		}
