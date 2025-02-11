@@ -5,7 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
@@ -47,7 +47,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
     private final MasterManager MODLIST_MANAGER_VIEW;
 
-    private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
+    private final ModListManagerHelper MODLIST_MANAGER_HELPER;
 
     private ScrollBar modTableVerticalScrollBar;
 
@@ -56,7 +56,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         BOTTOM
     }
 
-    public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, MasterManager masterManager, ModlistManagerHelper modlistManagerHelper) {
+    public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, MasterManager masterManager, ModListManagerHelper modlistManagerHelper) {
         this.UI_SERVICE = uiService;
         this.SERIALIZED_MIME_TYPE = serializedMimeType;
         this.SELECTIONS = selections;

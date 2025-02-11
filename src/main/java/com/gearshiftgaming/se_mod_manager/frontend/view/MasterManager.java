@@ -7,7 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import javafx.animation.Animation;
@@ -208,7 +208,7 @@ public class MasterManager {
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
     private final StatusBar STATUS_BAR_VIEW;
 
-    private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
+    private final ModListManagerHelper MODLIST_MANAGER_HELPER;
 
     @Getter
     private ScrollBar modTableVerticalScrollBar;
@@ -251,7 +251,7 @@ public class MasterManager {
         this.STAGE = stage;
         this.USER_LOG = uiService.getUSER_LOG();
         this.STATUS_BAR_VIEW = statusBar;
-        this.MODLIST_MANAGER_HELPER = new ModlistManagerHelper();
+        this.MODLIST_MANAGER_HELPER = new ModListManagerHelper();
         this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
         this.MOD_FILE_SELECTION_VIEW = saveInput;
         this.GENERAL_FILE_SELECT_VIEW = generalFileInput;
@@ -351,8 +351,6 @@ public class MasterManager {
         UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
     }
 
-    //TODO: If our mod profile is null but we make a save, popup mod profile UI too. And vice versa for save profile.
-    //TODO: Allow for adding/removing columns. Add a context menu to the column header.
     private void setupModTable(int modTableCellSize) {
         //Format the appearance, styling, and menu`s of our table cells, rows, and columns
         modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -492,6 +490,8 @@ public class MasterManager {
         }
     }
 
+    //TODO: To start moving duplicate check, follow the path of each option to find where they are currently. Note the location, but don't change code yet.
+    // We are trying to assemble a plan first.
     private void addModFromSteamId() {
         setModAddingInputViewText("Steam Workshop Mod URL/ID",
                 "Enter the Steam Workshop URL/ID",
@@ -536,10 +536,10 @@ public class MasterManager {
 
         if (!modId.isBlank()) {
             if (!StringUtils.isNumeric(modId)) {
-                convertModIoUrlToId(modId).start();
+                addSingleModIoModFromId(modId).start();
             } else {
-                Result<Void> duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modId, UI_SERVICE);
-                if (duplicateModResult.isSuccess()) {
+                ModIoMod duplicateModIoMod = ModListManagerHelper.findDuplicateModIoMod(modId, UI_SERVICE.getCurrentModList());
+                if (duplicateModIoMod == null) {
                     ModIoMod mod = new ModIoMod(modId);
 
                     //This is a bit hacky, but it makes a LOT less code we need to maintain.
@@ -547,8 +547,9 @@ public class MasterManager {
                     modList[0] = mod;
                     importModsFromList(List.of(modList)).start();
                 } else {
-                    UI_SERVICE.log(duplicateModResult);
-                    Popup.displaySimpleAlert(duplicateModResult, STAGE);
+                    String errorMessage = String.format("\"%s\" is already in the mod list!", duplicateModIoMod.getFriendlyName());
+                    UI_SERVICE.log(errorMessage, MessageType.WARN);
+                    Popup.displaySimpleAlert(errorMessage, STAGE, MessageType.WARN);
                 }
             }
         }
@@ -564,6 +565,7 @@ public class MasterManager {
             Result<List<Mod>> existingModlistResult = ModImportUtility.getModlistFromSandboxConfig(UI_SERVICE, selectedSave, STAGE);
 
             if (existingModlistResult.isSuccess()) {
+
                 importModsFromList(existingModlistResult.getPayload()).start();
             }
         }
@@ -625,8 +627,24 @@ public class MasterManager {
                 } else {
                     List<Mod> modList = new ArrayList<>();
                     if (selectedModType == ModType.STEAM) {
+                        int numDuplicateMods = 0;
                         for (String s : modIds) {
-                            modList.add(new SteamMod(s));
+                            SteamMod duplicateMod = ModListManagerHelper.findDuplicateSteamMod(s, UI_SERVICE.getCurrentModList());
+                            if (duplicateMod != null) {
+                                numDuplicateMods++;
+                            } else
+                                modList.add(new SteamMod(s));
+                        }
+                        if (numDuplicateMods > 0) {
+                            if (numDuplicateMods == modIds.size()) {
+                                Popup.displaySimpleAlert("All the mods in the mod list file are already in the modlist!", STAGE, MessageType.INFO);
+                                return;
+                            } else {
+                                int modFileImportChoice = Popup.displayYesNoDialog(String.format("%d mods in the file were duplicates. Add the remaining %d?", numDuplicateMods, modIds.size() - numDuplicateMods), STAGE, MessageType.INFO);
+                                if (modFileImportChoice == 0) {
+                                    return;
+                                }
+                            }
                         }
                         importModsFromList(modList).start();
                     } else {
@@ -662,7 +680,7 @@ public class MasterManager {
                     modList.add(new ModIoMod(r.getPayload()));
                 } else {
                     if (r.getCurrentMessage() != null) {
-                        if (r.getCurrentMessage().endsWith("already exists in the modlist!")) {
+                        if (r.getCurrentMessage().endsWith("already exists in the mod list!")) {
                             duplicateMods++;
                         }
                     }
@@ -727,17 +745,15 @@ public class MasterManager {
             if (modId.isBlank()) {
                 Popup.displaySimpleAlert("Invalid Mod ID or URL entered.", STAGE, MessageType.WARN);
                 continue;
-            } if(!StringUtils.isNumeric(modId)) {
+            }
+            if (!StringUtils.isNumeric(modId)) {
                 modId = modId.substring(3);
             }
 
             if (!steamCollection) {
-                String finalModId = modId;
-                Optional<Mod> duplicateMod = UI_SERVICE.getCurrentModList().stream()
-                        .filter(mod -> finalModId.equals(mod.getId()))
-                        .findFirst();
-                if (duplicateMod.isPresent()) {
-                    Popup.displaySimpleAlert("\"" + duplicateMod.get().getFriendlyName() + "\" is already in the modlist!", MessageType.WARN);
+                SteamMod duplicateSteamMod = ModListManagerHelper.findDuplicateSteamMod(modId, UI_SERVICE.getCurrentModList());
+                if (duplicateSteamMod != null) {
+                    Popup.displaySimpleAlert(String.format("\"%s\" is already in the modlist!", duplicateSteamMod.getFriendlyName()), MessageType.WARN);
                     continue;
                 }
             }
@@ -835,7 +851,7 @@ public class MasterManager {
 
     @FXML
     private void exportModlistFile() {
-        ModlistManagerHelper.exportModlistFile(STAGE, UI_SERVICE);
+        ModListManagerHelper.exportModlistFile(STAGE, UI_SERVICE);
     }
 
     //Apply the modlist the user is currently using to the save profile they're currently using.
@@ -1144,7 +1160,6 @@ public class MasterManager {
                     resetUiOnInvalidCollectionModImportCount();
                 } else if (modIdsSuccessfullyFound == 0) {
                     Popup.displaySimpleAlert("Collection contained no mods. Items like scripts, blueprints, worlds, and other non-mod objects are not able to be imported.", STAGE, MessageType.WARN);
-
                     resetUiOnInvalidCollectionModImportCount();
                 } else {
                     int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
@@ -1204,7 +1219,7 @@ public class MasterManager {
         });
     }
 
-    private @NotNull Thread convertModIoUrlToId(String modUrl) {
+    private @NotNull Thread addSingleModIoModFromId(String modUrl) {
         final Task<Result<String>> TASK = UI_SERVICE.convertModIoUrlToId(modUrl);
 
         TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
@@ -1222,19 +1237,11 @@ public class MasterManager {
 
             Result<String> modIdResult = TASK.getValue();
             if (modIdResult.isSuccess()) {
-                Result<Void> duplicateModResult = new Result<>();
-                duplicateModResult = ModlistManagerHelper.checkForDuplicateModIoMod(modIdResult.getPayload(), UI_SERVICE);
-                if (duplicateModResult.isSuccess()) {
-                    ModIoMod mod = new ModIoMod(modIdResult.getPayload());
-                    final Mod[] modList = new Mod[1];
-                    modList[0] = mod;
-                    importModsFromList(List.of(modList)).start();
-                } else {
-                    modIdResult.addMessage(duplicateModResult.getMESSAGES().getLast(), duplicateModResult.getType());
-                }
-            }
-
-            if (!modIdResult.isSuccess()) {
+                ModIoMod mod = new ModIoMod(modIdResult.getPayload());
+                final Mod[] modList = new Mod[1];
+                modList[0] = mod;
+                importModsFromList(List.of(modList)).start();
+            } else {
                 //This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
                 Platform.runLater(() -> {
                     modImportProgressWheel.setVisible(false);
@@ -1284,7 +1291,6 @@ public class MasterManager {
 
             modTable.sort();
 
-            //TODO: This might be unwanted behavior from users. Requires actual experience testing.
             if (topMostMod != null) {
                 modTable.getSelectionModel().clearSelection();
                 modTable.getSelectionModel().select(topMostMod);

@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.google.gson.*;
 import com.microsoft.playwright.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -290,13 +291,23 @@ public class ModInfoService {
             String pageSource = "";
             while (retries < MAX_RETRIES && StringUtils.countMatches(pageSource, "\n") < 1) {
                 try {
-                    if(StringUtils.countMatches(webPage.content(), "\n") < 1) {
-                        throw new RateLimitException("Mod.io is rate limiting you.");
+                    Gson gson = new Gson();
+                    JsonObject response = gson.fromJson(StringUtils.substringBetween(webPage.content(), "<pre>", "</pre>"), JsonObject.class);
+                    if (response != null) {
+                        JsonElement element = response.get("error");
+                        String errorCode = element.getAsJsonObject().get("code").toString();
+                        if (errorCode.equals("404")) {
+                            throw new ModNotFoundException("The mod could not be found.");
+                        } else if (errorCode.equals("429")) {
+                            throw new RateLimitException("Mod.io is rate limiting you.");
+                        } else {
+                            throw new Exception("Unknown Mod.io error.");
+                        }
                     }
                     webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
                     pageSource = webPage.content();
                 } catch (Exception e) {
-                    if(e instanceof RateLimitException) {
+                    if (e instanceof RateLimitException) {
                         retries++;
                         if (retries < MAX_RETRIES) {
                             //TODO: Tool around with the delay for retries AND for the separation between thread calls.
@@ -304,12 +315,16 @@ public class ModInfoService {
                             delay += random.nextInt(2000);
                             webPage.reload();
                         } else {
-                            modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found. Mod.io is rate limiting you, please wait a little and try again later.", ResultType.FAILED);
+                            modScrapeResult.addMessage("Mod.io is rate limiting you, please wait a little and try again later.", ResultType.FAILED);
                         }
-                    } else if (e instanceof TimeoutError) {
+                    } else if (e instanceof ModNotFoundException) {
                         modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
+                        return modScrapeResult;
+                    } else if (e instanceof TimeoutError) {
+                        modScrapeResult.addMessage(String.format("Connection timed out while waiting to open page for mod \"%s\".", modId), ResultType.FAILED);
                     } else {
                         modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+                        return modScrapeResult;
                     }
                 }
             }

@@ -5,7 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -242,10 +242,10 @@ public class UiService {
         //Process the returned ID's and check for duplicates in our current mod list.
         for (Result<String> modIdResult : steamCollectionModIds) {
             if (modIdResult.isSuccess()) {
-                Optional<Mod> duplicateMod = currentModList.stream()
-                        .filter(mod -> modIdResult.getPayload().equals(mod.getId()))
-                        .findFirst();
-                duplicateMod.ifPresent(mod -> modIdResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in modlist.", ResultType.INVALID));
+                SteamMod duplicateSteamMod = ModListManagerHelper.findDuplicateSteamMod(modIdResult.getPayload(), currentModList);
+                if (duplicateSteamMod != null) {
+                    modIdResult.addMessage(String.format("\"%s\" is already in the modlist!", duplicateSteamMod.getFriendlyName()), ResultType.INVALID);
+                }
             } else {
                 log(modIdResult);
             }
@@ -259,18 +259,13 @@ public class UiService {
 
         if (modListResult.isSuccess()) {
             int initialModlistSize = modListResult.getPayload().size();
-            HashMap<String, Mod> modMap = new HashMap<>();
-            for (Mod mod : currentModList) {
-                modMap.put(mod.getId(), mod);
-            }
-            modListResult.getPayload().removeIf(m -> modMap.containsKey(m.getId()));
+            ModListManagerHelper.removeDuplicateMods(modListResult.getPayload(), currentModList);
 
             if (modListResult.getPayload().size() != initialModlistSize) {
-                modListResult.addMessage(String.format("%d mods were found. %d are already in the modlist.", initialModlistSize, (initialModlistSize - modListResult.getPayload().size())), ResultType.SUCCESS);
-            }
-
-            if (modListResult.getPayload().isEmpty()) {
-                modListResult.addMessage("Every mod in the save is already in the modlist!", ResultType.INVALID);
+                if (modListResult.getPayload().isEmpty()) {
+                    modListResult.addMessage("Every mod in the save is already in the modlist!", ResultType.INVALID);
+                } else
+                    modListResult.addMessage(String.format("%d mods were found. %d are already in the modlist.", initialModlistSize, (initialModlistSize - modListResult.getPayload().size())), ResultType.SUCCESS);
             }
         }
 
@@ -293,28 +288,7 @@ public class UiService {
 
             modInfoResult.setPayload(mod);
 
-            boolean duplicateModFound = false;
-            String duplicateModName = "";
-            for (Mod m : currentModList) {
-                //We only want to do this comparison when we are comparing different mod types, as we can otherwise assume the ID check has handled duplicates.
-                if (!m.getClass().equals(mod.getClass())) {
-                    String shorterModName;
-                    String longerModName;
-                    if (m.getFriendlyName().length() < mod.getFriendlyName().length()) {
-                        shorterModName = m.getFriendlyName();
-                        longerModName = mod.getFriendlyName();
-                    } else {
-                        shorterModName = mod.getFriendlyName();
-                        longerModName = m.getFriendlyName();
-                    }
-
-                    if (longerModName.contains(shorterModName)) {
-                        duplicateModFound = true;
-                        duplicateModName = m.getFriendlyName();
-                        break;
-                    }
-                }
-            }
+            String duplicateModMessage = ModListManagerHelper.findDuplicateMod(mod, currentModList);
 
             DateTimeFormatter formatter;
             if (mod instanceof SteamMod) {
@@ -335,8 +309,8 @@ public class UiService {
                 }
             }
 
-            if (duplicateModFound) {
-                modInfoResult.addMessage(String.format("Mod \"%s\" may be the same as \"%s\". Do you still want to add it?", mod.getFriendlyName(), duplicateModName), ResultType.REQUIRES_ADJUDICATION);
+            if (!duplicateModMessage.isBlank()) {
+                modInfoResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
             } else {
                 modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
             }
@@ -397,7 +371,7 @@ public class UiService {
                         // Submit the task without waiting for it to finish
                         Future<Result<Mod>> future = executorService.submit(() -> {
                             try {
-                                if(m instanceof ModIoMod && modList.size() > 1) {
+                                if (m instanceof ModIoMod && modList.size() > 1) {
                                     Thread.sleep(random.nextInt(200, 600));
                                 }
                                 return fillOutModInformation(m);
@@ -477,9 +451,9 @@ public class UiService {
                             }
 
                             if (idResult.isSuccess()) {
-                                Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(idResult.getPayload(), UiService.this);
-                                if (!duplicateIdResult.isSuccess()) {
-                                    idResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
+                                ModIoMod duplicateModIoMod = ModListManagerHelper.findDuplicateModIoMod(idResult.getPayload(), currentModList);
+                                if (duplicateModIoMod != null) {
+                                    idResult.addMessage(String.format("Mod \"%s\" is already in the mod list!", idResult.getPayload()), ResultType.FAILED);
                                 }
                             }
                             return idResult;
@@ -513,9 +487,9 @@ public class UiService {
             protected Result<String> call() {
                 Result<String> urltoIdConversionResult = getModIoModIdFromUrlName(modUrl);
                 if (urltoIdConversionResult.isSuccess()) {
-                    Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(modUrl, UiService.this);
-                    if (!duplicateIdResult.isSuccess()) {
-                        urltoIdConversionResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
+                    ModIoMod duplicateModIoMod = ModListManagerHelper.findDuplicateModIoMod(urltoIdConversionResult.getPayload(), currentModList);
+                    if (duplicateModIoMod != null) {
+                        urltoIdConversionResult.addMessage(String.format("Mod \"%s\" is already in the mod list!", duplicateModIoMod.getFriendlyName()), ResultType.FAILED);
                     }
                 }
                 return urltoIdConversionResult;

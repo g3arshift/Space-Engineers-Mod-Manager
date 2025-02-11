@@ -6,7 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -354,7 +354,7 @@ public class ModListManager {
     @FXML
     private void exportModlistFile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            ModlistManagerHelper.exportModlistFile(stage, UI_SERVICE);
+            ModListManagerHelper.exportModlistFile(stage, UI_SERVICE);
         }
     }
 

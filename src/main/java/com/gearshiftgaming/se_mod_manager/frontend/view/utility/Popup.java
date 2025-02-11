@@ -53,6 +53,7 @@ public class Popup {
 	 * @param message     The message to display
 	 * @param parentStage The stage this will be centered on
 	 * @param messageType The type of message this is
+	 * @return Returns 1 for yes, 0 for no.
 	 */
 
 	public static int displayYesNoDialog(String message, Stage parentStage, MessageType messageType) {
