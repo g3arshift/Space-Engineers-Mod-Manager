@@ -22,7 +22,7 @@ public interface StorageController {
 
     Result<Void> saveUserData(UserConfiguration userConfiguration);
 
-    Result<SaveProfile> getSaveProfile(File sandboxConfig) throws IOException;
+    Result<SaveProfile> getSpaceEngineersOneSaveProfile(File sandboxConfig) throws IOException;
 
     Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException;
 

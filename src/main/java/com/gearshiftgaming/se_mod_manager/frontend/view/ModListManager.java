@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
@@ -262,7 +263,7 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (MOD_PROFILES.size() == 1) {
-                        MOD_PROFILES.add(new ModListProfile());
+                        MOD_PROFILES.add(new ModListProfile(SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                         MOD_PROFILES.removeLast();

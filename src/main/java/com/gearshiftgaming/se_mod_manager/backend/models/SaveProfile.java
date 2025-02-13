@@ -42,29 +42,34 @@ public class SaveProfile {
 
     private boolean saveExists;
 
+    private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
+
     //This represents our base save profile that only exists when the application is launched for the first time.
-    public SaveProfile(){
+    public SaveProfile(SpaceEngineersVersion spaceEngineersVersion){
         ID = UUID.randomUUID();
         this.profileName = "None";
         this.saveName = "None";
         this.lastSaveStatus = SaveStatus.NONE;
         saveExists = false;
+        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
-    public SaveProfile(String profileName, String savePath) {
+    public SaveProfile(String profileName, String savePath, SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
         this.profileName = profileName;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
         saveExists = true;
+        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
-    public SaveProfile(File saveFile) {
+    public SaveProfile(File saveFile, SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
         this.profileName = "Default";
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = saveFile.getPath();
         saveExists = true;
+        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
     public SaveProfile(SaveProfile saveProfile) {
@@ -76,6 +81,7 @@ public class SaveProfile {
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
         this.saveExists = saveProfile.isSaveExists();
+        this.SPACE_ENGINEERS_VERSION = saveProfile.getSPACE_ENGINEERS_VERSION();
     }
 
     public void setLastUsedModProfileId(UUID lastUsedModProfileId) {

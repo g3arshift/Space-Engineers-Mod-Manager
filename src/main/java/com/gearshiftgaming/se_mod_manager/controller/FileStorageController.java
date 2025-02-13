@@ -78,7 +78,8 @@ public class FileStorageController implements StorageController {
 	}
 
 	@Override
-	public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
+	//TODO: Space Engineers version checking. Right now "getSessionName" is setup for only SE1.
+	public Result<SaveProfile> getSpaceEngineersOneSaveProfile(File sandboxConfigFile) throws IOException {
 		Result<SaveProfile> saveProfileResult = new Result<>();
 		Result<String> sandboxFileResult = SANDBOX_SERVICE.getSandboxFromFile(sandboxConfigFile);
 		if (!sandboxFileResult.isSuccess()) {
@@ -90,7 +91,7 @@ public class FileStorageController implements StorageController {
 
 		//Technically, the name of the save the game reads is in Sandbox.sbc, not Sandbox_config.sbc.
 		// But when you rename a save in the game it changes both files, so this is probably fine since you can't rename it any other way than through manual modification.
-		SaveProfile saveProfile = new SaveProfile(sandboxConfigFile);
+		SaveProfile saveProfile = new SaveProfile(sandboxConfigFile, SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
 		saveProfile.setSaveName(SAVE_SERVICE.getSessionName(sandboxConfig, sandboxConfigFile.getPath()));
 
 		saveProfileResult.setPayload(saveProfile);
@@ -134,9 +135,9 @@ public class FileStorageController implements StorageController {
 	//Only here for development purposes
 	public Result<Void> createTestUserData(Theme theme) {
 
-		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc");
+		SaveProfile testSaveProfile = new SaveProfile("Test Profile", "./Storage/fake.sbc", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
 		testSaveProfile.setSaveName("Test save");
-		ModListProfile testModListProfile = new ModListProfile("Test Profile");
+		ModListProfile testModListProfile = new ModListProfile("Test Profile", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
 
 		SteamMod testMod = new SteamMod("123456789");
 		List<String> testCategories = new ArrayList<>();

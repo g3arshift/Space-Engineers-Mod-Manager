@@ -440,7 +440,7 @@ public class SaveProfileManager {
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (SAVE_PROFILES.size() == 1) {
-                        SAVE_PROFILES.add(new SaveProfile());
+                        SAVE_PROFILES.add(new SaveProfile(SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         SAVE_PROFILES.removeLast();

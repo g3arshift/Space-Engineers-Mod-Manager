@@ -93,7 +93,9 @@ public class ModImportUtility {
 			PROFILE_INPUT_VIEW.getInput().clear();
 			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			PROFILE_INPUT_VIEW.show(STAGE);
-			ModListProfile newModListProfile = new ModListProfile(PROFILE_INPUT_VIEW.getInput().getText());
+			//TODO: We need to prompt for SE version for this mod profile. For now it's stubbed.
+			SpaceEngineersVersion spaceEngineersVersion = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
+			ModListProfile newModListProfile = new ModListProfile(PROFILE_INPUT_VIEW.getInput().getText(), spaceEngineersVersion);
 			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText().toLowerCase().trim(), UI_SERVICE);
 
 			if (duplicateProfileName) {

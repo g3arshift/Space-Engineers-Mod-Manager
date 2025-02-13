@@ -183,7 +183,7 @@ public class UiService {
     }
 
     public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-        return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
+        return STORAGE_CONTROLLER.getSpaceEngineersOneSaveProfile(sandboxConfigFile);
     }
 
     public Result<String> getSaveName(File sandboxConfigFile) throws IOException {
@@ -574,6 +574,8 @@ public class UiService {
         return STORAGE_CONTROLLER.resetUserConfig();
     }
 
+    //TODO: Add a dialog option to choose whether you have space engineers 1 or 2
+    // Store the value in a var in this service. Reference it when creating mod + save lists.
     public void displayTutorial(Stage stage, MasterManager masterManager) {
         log("Starting tutorial...", MessageType.INFO);
 
