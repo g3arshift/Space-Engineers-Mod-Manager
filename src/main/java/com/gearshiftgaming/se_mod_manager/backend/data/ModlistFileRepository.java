@@ -27,7 +27,6 @@ public class ModlistFileRepository implements ModlistRepository {
 		STEAM_WORKSHOP_ID_REGEX_PATTERN = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
 	}
 
-	//TODO: We're losing a mod in steam and mod.io mod lists...
 	@Override
 	public List<String> getSteamModList(File modListFile) throws IOException {
 		//We use a set to prevent duplicate lines from being added
