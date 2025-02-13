@@ -29,17 +29,25 @@ public class ModListProfile {
 
     private List<Mod> modList;
 
+    @XmlElement
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
 
-    public ModListProfile(SpaceEngineersVersion spaceEngineersVersion) {
-        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+    public ModListProfile() {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         profileName = "New Mod Profile";
+        SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
+    }
+
+    public ModListProfile(SpaceEngineersVersion spaceEngineersVersion) {
+        ID = UUID.randomUUID();
+        modList = new ArrayList<>();
+        profileName = "New Mod Profile";
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
     public ModListProfile(String profileName, SpaceEngineersVersion spaceEngineersVersion) {
-        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;

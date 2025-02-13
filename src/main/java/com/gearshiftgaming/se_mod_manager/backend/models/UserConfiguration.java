@@ -47,7 +47,7 @@ public class UserConfiguration {
         userTheme = new PrimerLight().getName();
 
         //The save profile is actually useless here because it has no save path.
-        saveProfiles.add(new SaveProfile(SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
+        saveProfiles.add(new SaveProfile());
         ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
         modListProfiles.add(modListProfile);
         lastActiveModProfileId = modListProfile.getID();

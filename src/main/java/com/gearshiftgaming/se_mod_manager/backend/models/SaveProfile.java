@@ -42,16 +42,17 @@ public class SaveProfile {
 
     private boolean saveExists;
 
+    @XmlElement
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
 
     //This represents our base save profile that only exists when the application is launched for the first time.
-    public SaveProfile(SpaceEngineersVersion spaceEngineersVersion){
+    public SaveProfile(){
         ID = UUID.randomUUID();
         this.profileName = "None";
         this.saveName = "None";
         this.lastSaveStatus = SaveStatus.NONE;
         saveExists = false;
-        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
     }
 
     public SaveProfile(String profileName, String savePath, SpaceEngineersVersion spaceEngineersVersion) {
@@ -60,7 +61,7 @@ public class SaveProfile {
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
         saveExists = true;
-        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
     public SaveProfile(File saveFile, SpaceEngineersVersion spaceEngineersVersion) {
@@ -69,7 +70,7 @@ public class SaveProfile {
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = saveFile.getPath();
         saveExists = true;
-        SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
     public SaveProfile(SaveProfile saveProfile) {

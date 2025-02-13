@@ -141,8 +141,6 @@ public class ModListManager {
             TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), selectProfile);
             selectProfile.requestFocus();
         }
-
-        //TODO: Switch active profile to the new profile
     }
 
     @FXML
