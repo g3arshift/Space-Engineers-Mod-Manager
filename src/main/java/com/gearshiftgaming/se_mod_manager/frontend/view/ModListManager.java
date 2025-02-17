@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import javafx.application.Platform;
@@ -147,7 +148,7 @@ public class ModListManager {
     private void copyProfile() {
         ModListProfile profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
-            int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
+            int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", TextTruncationUtility.truncateWithEllipsis(profileToCopy.getProfileName(), 600)), stage, MessageType.WARN);
             if (copyChoice == 1) {
                 boolean duplicateProfileName;
                 int copyIndex = 1;

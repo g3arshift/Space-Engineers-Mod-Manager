@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 
 /**
@@ -27,7 +28,7 @@ public class ModListManagerCell extends ModListCell {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			getPROFILE_NAME().setText(item.getProfileName());
+			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 600));
 			setGraphic(getPROFILE_NAME());
 
 			StringBuilder styleBuilder = new StringBuilder(getCellStyle());

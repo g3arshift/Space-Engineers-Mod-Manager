@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +24,7 @@ public class LogMessage {
     private final StringProperty VIEWABLE_LOG_MESSAGE = new SimpleStringProperty();
     private final StringProperty MESSAGE_TYPE = new SimpleStringProperty();
     public LogMessage(String message, MessageType MESSAGE_TYPE, Logger logger) {
-        this.VIEWABLE_LOG_MESSAGE.setValue(new SimpleDateFormat("hh:mm:ss").format(new Date()) + " - " + message);
+        this.VIEWABLE_LOG_MESSAGE.setValue(new SimpleDateFormat("hh:mm:ss").format(new Date()) + " - " + TextTruncationUtility.truncateWithEllipsisWithRealWidth(message, 1200));
         this.MESSAGE_TYPE.setValue(MESSAGE_TYPE.toString());
 
         switch(MESSAGE_TYPE) {
