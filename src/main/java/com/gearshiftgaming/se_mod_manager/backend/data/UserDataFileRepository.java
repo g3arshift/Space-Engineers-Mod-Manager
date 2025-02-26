@@ -8,42 +8,55 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
+import lombok.Getter;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
+@Getter
 public class UserDataFileRepository implements UserDataRepository {
-    public Result<UserConfiguration> loadUserData(File userConfigurationFile) {
+    private final File USER_CONFIGURATION_FILE;
+
+    public UserDataFileRepository(File userConfigurationFile) {
+        USER_CONFIGURATION_FILE = userConfigurationFile;
+    }
+
+    public Result<UserConfiguration> loadUserData() {
         Result<UserConfiguration> userConfigurationResult = new Result<>();
-        try {
-            JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
-            UserConfiguration userConfiguration = (UserConfiguration) unmarshaller.unmarshal(userConfigurationFile);
-            userConfigurationResult.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
-            userConfigurationResult.setPayload(userConfiguration);
-        } catch (JAXBException f) {
-            userConfigurationResult.addMessage("Failed to load user configuration. Error Details: " + f, ResultType.FAILED);
+        if (!USER_CONFIGURATION_FILE.exists()) {
+            userConfigurationResult.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
+            userConfigurationResult.setPayload(new UserConfiguration());
+        } else {
+            try {
+                JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
+                Unmarshaller unmarshaller = context.createUnmarshaller();
+                UserConfiguration userConfiguration = (UserConfiguration) unmarshaller.unmarshal(USER_CONFIGURATION_FILE);
+                userConfigurationResult.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
+                userConfigurationResult.setPayload(userConfiguration);
+            } catch (JAXBException f) {
+                userConfigurationResult.addMessage("Failed to load user configuration. Error Details: " + f, ResultType.FAILED);
+            }
         }
         return userConfigurationResult;
     }
 
-    public boolean saveUserData(UserConfiguration userConfiguration, File userConfigurationFile) throws IOException {
-        if(!userConfigurationFile.exists()) {
-            if(!userConfigurationFile.getParentFile().exists()) {
-                Files.createDirectory(Path.of(userConfigurationFile.getParent()));
+    public boolean saveUserData(UserConfiguration userConfiguration) throws IOException {
+        if (!USER_CONFIGURATION_FILE.exists()) {
+            if (!USER_CONFIGURATION_FILE.getParentFile().exists()) {
+                Files.createDirectory(Path.of(USER_CONFIGURATION_FILE.getParent()));
             }
-            Files.createFile(userConfigurationFile.toPath());
+            Files.createFile(USER_CONFIGURATION_FILE.toPath());
         }
 
-        try(BufferedWriter bw = new BufferedWriter(new FileWriter(userConfigurationFile))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(USER_CONFIGURATION_FILE))) {
             JAXBContext context = JAXBContext.newInstance(UserConfiguration.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -63,7 +76,7 @@ public class UserDataFileRepository implements UserDataRepository {
 
         Result<Void> result = new Result<>();
 
-        try(BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
             JAXBContext context = JAXBContext.newInstance(ModListProfile.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -89,8 +102,8 @@ public class UserDataFileRepository implements UserDataRepository {
             modlistProfileResult.setPayload(modListProfile);
         } catch (JAXBException e) {
             modlistProfileResult.addMessage("Failed to load mod profile. Error Details: " + e, ResultType.FAILED);
-		}
-		return modlistProfileResult;
+        }
+        return modlistProfileResult;
     }
 
     @Override

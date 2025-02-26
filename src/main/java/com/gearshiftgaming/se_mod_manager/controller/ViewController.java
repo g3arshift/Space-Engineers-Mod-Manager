@@ -60,10 +60,12 @@ public class ViewController {
             throw (e);
         }
 
+        //TODO: We will need to replace this once we switch over to database. Probably gonna have to uncouple a lot of things, actually...
+        File userDataFile = new File(PROPERTIES.getProperty("semm.userData.default.location"));
         StorageController storageController = new FileStorageController(new SandboxConfigFileRepository(),
-                new UserDataFileRepository(),
+                new UserDataFileRepository(userDataFile),
                 new SaveFileRepository(),
-                new File(PROPERTIES.getProperty("semm.userData.default.location")));
+                userDataFile);
 
 
         Result<UserConfiguration> userConfigurationResult = storageController.getUserData();

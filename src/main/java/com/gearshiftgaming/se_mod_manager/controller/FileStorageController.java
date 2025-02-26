@@ -41,7 +41,7 @@ public class FileStorageController implements StorageController {
 	}
 
 	public Result<UserConfiguration> getUserData() throws JAXBException {
-		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData(USER_CONFIGURATION_FILE);
+		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData();
 
 		if (userConfigurationResult.isSuccess()) {
 			for (ModListProfile modListProfile : userConfigurationResult.getPayload().getModListProfiles()) {
@@ -70,7 +70,7 @@ public class FileStorageController implements StorageController {
 	public Result<Void> saveUserData(UserConfiguration userConfiguration) {
 		Result<Void> saveResult = new Result<>();
 		try {
-			saveResult = USER_DATA_SERVICE.saveUserData(sortUserConfigurationModLists(userConfiguration), USER_CONFIGURATION_FILE);
+			saveResult = USER_DATA_SERVICE.saveUserData(sortUserConfigurationModLists(userConfiguration));
 		} catch (IOException e) {
 			saveResult.addMessage(e.toString(), ResultType.FAILED);
 		}
@@ -167,7 +167,7 @@ public class FileStorageController implements StorageController {
 
 		System.out.println("Created test user data.");
 		try {
-			return USER_DATA_SERVICE.saveUserData(userConfiguration, new File("./Storage/SEMM_TEST_Data.xml"));
+			return USER_DATA_SERVICE.saveUserData(userConfiguration);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -177,7 +177,7 @@ public class FileStorageController implements StorageController {
 		Result<Void> userConfigResetResult = USER_DATA_SERVICE.resetUserConfig(USER_CONFIGURATION_FILE);
 		if(userConfigResetResult.isSuccess()) {
             try {
-                USER_DATA_SERVICE.saveUserData(new UserConfiguration(), USER_CONFIGURATION_FILE);
+                USER_DATA_SERVICE.saveUserData(new UserConfiguration());
 				userConfigResetResult.addMessage("Successfully deleted existing user configuration and saved new one.", ResultType.SUCCESS);
             } catch (IOException e) {
                 userConfigResetResult.addMessage(e.toString(), ResultType.FAILED);

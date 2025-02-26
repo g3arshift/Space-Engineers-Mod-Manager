@@ -20,19 +20,15 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class UserDataFileRepositoryTest {
 
-	private UserDataFileRepository userDataFileRepository;
+	UserDataFileRepository userDataFileRepository;
 
 	@TempDir
 	private File tempDir;
 
-	@BeforeEach
-	void setup() {
-		userDataFileRepository = new UserDataFileRepository();
-	}
-
 	@Test
 	void shouldGetValidConfig() {
-		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml"));
+
+		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadUserData();
 		assertTrue(userConfigurationResult.isSuccess());
 		UserConfiguration validUserConfig = userConfigurationResult.getPayload();
 		assertEquals("Primer Dark", validUserConfig.getUserTheme());
@@ -44,7 +40,8 @@ public class UserDataFileRepositoryTest {
 
 	@Test
 	void shouldFailOnInvalidUserConfig() {
-		Result<UserConfiguration> userConfigurationResult = (userDataFileRepository.loadUserData(new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
+		userDataFileRepository = new UserDataFileRepository((new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
+		Result<UserConfiguration> userConfigurationResult = (userDataFileRepository.loadUserData());
 		UserConfiguration badUserConfiguration = new UserConfiguration();
 		badUserConfiguration.setUserTheme("Primer Light");
 		userConfigurationResult.setPayload(badUserConfiguration);
@@ -61,7 +58,8 @@ public class UserDataFileRepositoryTest {
 	void shouldSaveUserData() throws IOException {
 		UserConfiguration freshUserConfig = new UserConfiguration();
 		Path tempFile = Files.createFile(tempDir.toPath().resolve("test_user_data.xml"));
-		assertTrue(userDataFileRepository.saveUserData(freshUserConfig, new File(String.valueOf(tempFile))));
+		userDataFileRepository = new UserDataFileRepository(tempFile.toFile());
+		assertTrue(userDataFileRepository.saveUserData(freshUserConfig));
 	}
 
 	@Test

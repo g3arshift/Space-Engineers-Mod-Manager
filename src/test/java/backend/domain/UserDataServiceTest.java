@@ -40,7 +40,7 @@ public class UserDataServiceTest {
 
 	@Test
 	void shouldGetNewConfigFromNonExistentUserDataFile() throws JAXBException {
-		Result<UserConfiguration> result = userDataService.getUserData(new File("src/this/file/does/not/exist"));
+		Result<UserConfiguration> result = userDataService.getUserData();
 
 		UserConfiguration userData = result.getPayload();
 		assertEquals(ResultType.FAILED, result.getType());
@@ -62,9 +62,9 @@ public class UserDataServiceTest {
 		goodResult.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
 		goodResult.setPayload(goodUserConfig);
 
-		when(userDataFileRepository.loadUserData(goodUserDataFile)).thenReturn(goodResult);
+		when(userDataFileRepository.loadUserData()).thenReturn(goodResult);
 
-		Result<UserConfiguration> result = userDataService.getUserData(goodUserDataFile);
+		Result<UserConfiguration> result = userDataService.getUserData();
 
 		UserConfiguration userConfiguration = result.getPayload();
 
@@ -82,9 +82,9 @@ public class UserDataServiceTest {
 		File goodUserDataFile = new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml");
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
-		when(userDataFileRepository.saveUserData(mockUserConfig, goodUserDataFile)).thenReturn(true);
+		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(true);
 
-		Result<Void> result = userDataService.saveUserData(mockUserConfig, goodUserDataFile);
+		Result<Void> result = userDataService.saveUserData(mockUserConfig);
 
 		assertEquals(ResultType.SUCCESS, result.getType());
 		assertEquals("Successfully saved user data.", result.getMESSAGES().getFirst());
@@ -95,9 +95,9 @@ public class UserDataServiceTest {
 		File badUserDataFile = new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml");
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
-		when(userDataFileRepository.saveUserData(mockUserConfig, badUserDataFile)).thenReturn(false);
+		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(false);
 
-		Result<Void> result = userDataService.saveUserData(mockUserConfig, badUserDataFile);
+		Result<Void> result = userDataService.saveUserData(mockUserConfig);
 		assertEquals(ResultType.FAILED, result.getType());
 		assertNull(result.getPayload());
 		assertEquals("Failed to save user data.", result.getMESSAGES().getFirst());

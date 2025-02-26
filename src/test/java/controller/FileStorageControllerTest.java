@@ -60,7 +60,7 @@ public class FileStorageControllerTest {
         Result<UserConfiguration> goodResult = new Result<>();
         goodResult.setPayload(userConfiguration);
         goodResult.addMessage("Successful.", ResultType.SUCCESS);
-        when(userDataRepository.loadUserData(tempUserConfigFile)).thenReturn(goodResult);
+        when(userDataRepository.loadUserData()).thenReturn(goodResult);
 
         Result<UserConfiguration> returnedResult = fileStorageController.getUserData();
         assertTrue(returnedResult.isSuccess());
