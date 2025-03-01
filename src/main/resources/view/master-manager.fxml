@@ -36,6 +36,7 @@
                           <TableColumn fx:id="modLastUpdated" prefWidth="115.0" text="Last Updated" />
                           <TableColumn fx:id="modSource" prefWidth="85.0" text="Import Source" visible="false" />
                           <TableColumn fx:id="modType" prefWidth="100.0" text="Source" />
+                     <TableColumn fx:id="conflicts" prefWidth="85.0" text="Conflicts" />
                           <TableColumn fx:id="modCategory" prefWidth="125.0" text="Category/Tags" />
                       </columns>
                       <columnResizePolicy>

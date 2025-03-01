@@ -11,16 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 
 @Getter
-@Setter
 @NoArgsConstructor
 @XmlSeeAlso({SteamMod.class, ModIoMod.class})
 public abstract class Mod {
@@ -33,12 +32,13 @@ public abstract class Mod {
     private int loadPriority;
 
     private List<String> categories;
+    @Setter
     private boolean active;
 
     private String description;
 
     public Mod(String id) {
-        this.id = id;
+        this.id = id.intern();
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
         categories = new ArrayList<>();
@@ -46,7 +46,7 @@ public abstract class Mod {
 
     //We are intentionally forgoing copying load priority as it is a generated field
     @SuppressWarnings("CopyConstructorMissesField")
-	public Mod(Mod mod) {
+    public Mod(Mod mod) {
         this.id = mod.getId();
         this.friendlyName = mod.getFriendlyName();
         this.categories = new ArrayList<>(mod.getCategories());
@@ -68,13 +68,20 @@ public abstract class Mod {
 
     @XmlAttribute
     public void setId(String id) {
-        this.id = id;
+        this.id = id.intern();
     }
 
     @XmlElementWrapper(name = "categories")
     @XmlElement(name = "category")
     public void setCategories(List<String> categories) {
-        this.categories = categories;
+        if (this.categories == null) {
+            this.categories = categories;
+        } else {
+            this.categories.clear();
+            for (String category : categories) {
+                this.categories.add(category.intern());
+            }
+        }
     }
 
     @XmlTransient
@@ -84,6 +91,14 @@ public abstract class Mod {
 
     @XmlJavaTypeAdapter(value = ModDescriptionCompacterAdapter.class)
     public void setDescription(String description) {
-        this.description = description;
+        this.description = description.intern();
+    }
+
+    public void setFriendlyName(String friendlyName) {
+        this.friendlyName = friendlyName.intern();
+    }
+
+    public void setPublishedServiceName(String publishedServiceName) {
+        this.publishedServiceName = publishedServiceName.intern();
     }
 }
