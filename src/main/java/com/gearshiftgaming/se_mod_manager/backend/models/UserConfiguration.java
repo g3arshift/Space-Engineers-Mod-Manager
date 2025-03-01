@@ -44,7 +44,7 @@ public class UserConfiguration {
     public UserConfiguration() {
         saveProfiles = new ArrayList<>();
         modListProfiles = new ArrayList<>();
-        userTheme = new PrimerLight().getName();
+        userTheme = "PrimerLight";
 
         //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
