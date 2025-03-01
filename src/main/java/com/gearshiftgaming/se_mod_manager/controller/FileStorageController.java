@@ -174,7 +174,7 @@ public class FileStorageController implements StorageController {
 	}
 
 	public Result<Void> resetUserConfig() {
-		Result<Void> userConfigResetResult = USER_DATA_SERVICE.resetUserConfig(USER_CONFIGURATION_FILE);
+		Result<Void> userConfigResetResult = USER_DATA_SERVICE.resetUserConfig();
 		if(userConfigResetResult.isSuccess()) {
             try {
                 USER_DATA_SERVICE.saveUserData(new UserConfiguration());

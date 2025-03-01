@@ -27,7 +27,7 @@ public class UserDataFileRepositoryTest {
 
 	@Test
 	void shouldGetValidConfig() {
-
+		userDataFileRepository = new UserDataFileRepository((new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml")));
 		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadUserData();
 		assertTrue(userConfigurationResult.isSuccess());
 		UserConfiguration validUserConfig = userConfigurationResult.getPayload();
@@ -72,6 +72,7 @@ public class UserDataFileRepositoryTest {
 		File testFile = new File(tempDir.getPath() + "/test_dir.semm");
 
 		assertFalse(Files.exists(testFile.toPath()));
+		userDataFileRepository = new UserDataFileRepository(new File("null"));
 		Result<Void> result = userDataFileRepository.exportModlist(modListProfile, testFile);
 		assertTrue(result.isSuccess());
 		assertEquals("Successfully exported modlist.", result.getCurrentMessage());
@@ -88,8 +89,9 @@ public class UserDataFileRepositoryTest {
 	void shouldResetUserData() throws IOException {
 		File testFile = new File(tempDir.getPath() + "/SEMM_TEST_Data.xml");
 		Files.copy(Path.of("src/test/resources/TestUserData/SEMM_TEST_Data.xml"), testFile.toPath());
+		userDataFileRepository = new UserDataFileRepository(testFile);
 		assertTrue(Files.exists(testFile.toPath()));
-		userDataFileRepository.resetUserConfiguration(testFile);
+		userDataFileRepository.resetUserConfiguration();
 		assertFalse(Files.exists(testFile.toPath()));
 	}
 }

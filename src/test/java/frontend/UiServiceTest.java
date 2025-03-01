@@ -22,6 +22,6 @@ public class UiServiceTest {
     void setup() {
         Logger logger = LogManager.getLogger(SpaceEngineersModManager.class);
         ObservableList<LogMessage> userLog = FXCollections.observableList(new ArrayList<>());
-        uiService = new UiService(mock(Logger.class), mock((ObservableList<LogMessage>)));
+        //uiService = new UiService(mock(Logger.class), mock((ObservableList<LogMessage>)));
     }
 }

@@ -29,6 +29,7 @@ public class UserDataFileRepository implements UserDataRepository {
         USER_CONFIGURATION_FILE = userConfigurationFile;
     }
 
+    @Override
     public Result<UserConfiguration> loadUserData() {
         Result<UserConfiguration> userConfigurationResult = new Result<>();
         if (!USER_CONFIGURATION_FILE.exists()) {
@@ -48,12 +49,17 @@ public class UserDataFileRepository implements UserDataRepository {
         return userConfigurationResult;
     }
 
-    public boolean saveUserData(UserConfiguration userConfiguration) throws IOException {
-        if (!USER_CONFIGURATION_FILE.exists()) {
-            if (!USER_CONFIGURATION_FILE.getParentFile().exists()) {
-                Files.createDirectory(Path.of(USER_CONFIGURATION_FILE.getParent()));
+    @Override
+    public boolean saveUserData(UserConfiguration userConfiguration) {
+        try {
+            if (!USER_CONFIGURATION_FILE.exists()) {
+                if (!USER_CONFIGURATION_FILE.getParentFile().exists()) {
+                    Files.createDirectory(Path.of(USER_CONFIGURATION_FILE.getParent()));
+                }
+                Files.createFile(USER_CONFIGURATION_FILE.toPath());
             }
-            Files.createFile(USER_CONFIGURATION_FILE.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(USER_CONFIGURATION_FILE))) {
@@ -107,9 +113,9 @@ public class UserDataFileRepository implements UserDataRepository {
     }
 
     @Override
-    public Result<Void> resetUserConfiguration(File userConfigurationLocation) {
+    public Result<Void> resetUserConfiguration() {
         try {
-            Files.delete(userConfigurationLocation.toPath());
+            Files.delete(USER_CONFIGURATION_FILE.toPath());
         } catch (IOException e) {
             Result<Void> failedResult = new Result<>();
             failedResult.addMessage(e.toString(), ResultType.FAILED);

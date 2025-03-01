@@ -16,13 +16,13 @@ import java.io.IOException;
 
  */
 public interface UserDataRepository {
-    Result<UserConfiguration> loadUserData() throws JAXBException;
+    Result<UserConfiguration> loadUserData();
 
-    boolean saveUserData(UserConfiguration userConfiguration) throws IOException;
+    boolean saveUserData(UserConfiguration userConfiguration);
 
     Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation);
 
     Result<ModListProfile> importModlist(File modlistLocation);
 
-    Result<Void> resetUserConfiguration(File userConfigurationLocation);
+    Result<Void> resetUserConfiguration();
 }

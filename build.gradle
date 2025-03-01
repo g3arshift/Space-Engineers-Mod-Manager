@@ -3,6 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     id 'java-library'
     id("com.gradleup.shadow") version "8.3.5"
+    id("org.liquibase.gradle") version "2.2.1"
 }
 
 repositories {
@@ -30,6 +31,18 @@ dependencies {
     api libs.org.jsoup.jsoup
     // https://mvnrepository.com/artifact/com.microsoft.playwright/playwright
     implementation group: 'com.microsoft.playwright', name: 'playwright', version: '1.49.0'
+    // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
+    implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.49.1.0'
+    // https://mvnrepository.com/artifact/org.jdbi/jdbi3-core
+    implementation group: 'org.jdbi', name: 'jdbi3-core', version: '3.48.0'
+    // https://mvnrepository.com/artifact/org.jdbi/jdbi3-testing
+    testImplementation group: 'org.jdbi', name: 'jdbi3-testing', version: '3.48.0'
+    // https://mvnrepository.com/artifact/org.jdbi/jdbi3-sqlite
+    implementation group: 'org.jdbi', name: 'jdbi3-sqlite', version: '3.48.0'
+    // https://mvnrepository.com/artifact/org.liquibase/liquibase-core
+    implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.29.2'
+    // https://mvnrepository.com/artifact/org.liquibase/liquibase-core
+    implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.31.1'
     api libs.org.mockito.mockito.core
     api libs.org.openjfx.javafx.controls
     api libs.org.openjfx.javafx.fxml
@@ -58,7 +71,7 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.6.2'
+version = '0.7.0'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
@@ -121,6 +134,7 @@ sourceSets {
         output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
     }
 }
+
 
 tasks.register('generateVersionProperties') {
     doLast {
