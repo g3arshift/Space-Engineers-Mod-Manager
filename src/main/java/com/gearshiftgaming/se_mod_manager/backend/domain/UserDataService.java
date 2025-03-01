@@ -19,7 +19,7 @@ import java.io.IOException;
  */
 public record UserDataService(UserDataRepository userDataFileRepository) {
 
-    public Result<UserConfiguration> getUserData() throws JAXBException {
+    public Result<UserConfiguration> getUserData() {
         return userDataFileRepository.loadUserData();
     }
 
