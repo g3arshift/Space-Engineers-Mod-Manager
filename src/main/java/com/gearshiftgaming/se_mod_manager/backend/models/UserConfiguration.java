@@ -28,13 +28,13 @@ public class UserConfiguration {
 
     private UUID lastModifiedSaveProfileId;
 
-    private List<SaveProfile> saveProfiles;
-
-    private List<ModListProfile> modListProfiles;
-
     private UUID lastActiveModProfileId;
 
     private UUID lastActiveSaveProfileId;
+
+    private List<SaveProfile> saveProfiles;
+
+    private List<ModListProfile> modListProfiles;
 
     private boolean runFirstTimeSetup;
 

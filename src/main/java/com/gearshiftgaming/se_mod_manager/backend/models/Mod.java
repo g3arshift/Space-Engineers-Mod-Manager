@@ -37,6 +37,8 @@ public abstract class Mod {
 
     private String description;
 
+    private List<String> modifiedPaths;
+
     public Mod(String id) {
         this.id = id.intern();
         friendlyName = "UNKNOWN_NAME";

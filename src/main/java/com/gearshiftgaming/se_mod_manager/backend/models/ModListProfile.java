@@ -6,10 +6,7 @@ import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -32,11 +29,14 @@ public class ModListProfile {
     @XmlElement
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
 
+    private final HashMap<String, List<Mod>> conflictTable;
+
     public ModListProfile() {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         profileName = "New Mod Profile";
         SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
+        conflictTable = new HashMap<>();
     }
 
     public ModListProfile(SpaceEngineersVersion spaceEngineersVersion) {
@@ -44,6 +44,7 @@ public class ModListProfile {
         modList = new ArrayList<>();
         profileName = "New Mod Profile";
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        conflictTable = new HashMap<>();
     }
 
     public ModListProfile(String profileName, SpaceEngineersVersion spaceEngineersVersion) {
@@ -51,6 +52,7 @@ public class ModListProfile {
         ID = UUID.randomUUID();
         modList = new ArrayList<>();
         this.profileName = profileName;
+        conflictTable = new HashMap<>();
     }
 
     public ModListProfile(ModListProfile modListProfile) {
@@ -67,6 +69,7 @@ public class ModListProfile {
             }
         }
         SPACE_ENGINEERS_VERSION = modListProfile.getSPACE_ENGINEERS_VERSION();
+        conflictTable = modListProfile.getConflictTable();
     }
 
     @XmlAttribute

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class SteamMod extends Mod {
 
+    //TODO: We need to store this as UTC in the DB.
     private LocalDateTime lastUpdated;
 
     public SteamMod(String id) {
