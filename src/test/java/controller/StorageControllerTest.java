@@ -2,7 +2,7 @@ package controller;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.controller.FileStorageController;
+import com.gearshiftgaming.se_mod_manager.controller.StorageController;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-public class FileStorageControllerTest {
+public class StorageControllerTest {
     private SandboxConfigRepository sandboxConfigRepository;
 
     private UserDataRepository userDataRepository;
@@ -24,7 +24,7 @@ public class FileStorageControllerTest {
 
     private UserConfiguration userConfiguration;
 
-    private FileStorageController fileStorageController;
+    private StorageController storageController;
 
     @TempDir
     private File tempUserConfigFile;
@@ -34,7 +34,7 @@ public class FileStorageControllerTest {
         sandboxConfigRepository = mock(SandboxConfigFileRepository.class);
         userDataRepository = mock(UserDataFileRepository.class);
         saveRepository = mock(SaveRepository.class);
-        fileStorageController = new FileStorageController(sandboxConfigRepository, userDataRepository, saveRepository, tempUserConfigFile);
+        storageController = new StorageController(sandboxConfigRepository, userDataRepository, saveRepository);
         userConfiguration = new UserConfiguration();
 
         userConfiguration.setRunFirstTimeSetup(false);
@@ -62,7 +62,7 @@ public class FileStorageControllerTest {
         goodResult.addMessage("Successful.", ResultType.SUCCESS);
         when(userDataRepository.loadUserData()).thenReturn(goodResult);
 
-        Result<UserConfiguration> returnedResult = fileStorageController.getUserData();
+        Result<UserConfiguration> returnedResult = storageController.getUserData();
         assertTrue(returnedResult.isSuccess());
 
         ModListProfile firstModListProfile = userConfiguration.getModListProfiles().get(1);

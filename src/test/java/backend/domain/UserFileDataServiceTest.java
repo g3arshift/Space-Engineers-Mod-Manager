@@ -49,7 +49,7 @@ public class UserFileDataServiceTest {
 		UserConfiguration userData = result.getPayload();
 		assertEquals(ResultType.FAILED, result.getType());
 		assertEquals("User data was not found. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
-		assertEquals("Primer Light", userData.getUserTheme());
+		assertEquals("PrimerLight", userData.getUserTheme());
 		assertNull(userData.getLastModifiedSaveProfileId());
 		assertEquals(1, userData.getModListProfiles().size());
 		assertEquals("Default", userData.getModListProfiles().getFirst().getProfileName());

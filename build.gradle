@@ -85,7 +85,7 @@ dependencies {
 liquibase {
     activities{
         main {
-            changeLogFile 'Database/changelog.xml'
+            changeLogFile 'Storage/Database/changelog.xml'
             url 'jdbc:sqlite:Storage/SEMM_Data.db'
             driver 'org.sqlite.JDBC'
         }
