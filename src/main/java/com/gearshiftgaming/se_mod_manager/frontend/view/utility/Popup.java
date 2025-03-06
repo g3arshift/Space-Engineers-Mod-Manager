@@ -702,7 +702,7 @@ public class Popup {
 
 		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
 			double stageHeight = newValue.doubleValue();
-			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - newValue.doubleValue() / 2);
+			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
 		};
 
 		childStage.widthProperty().addListener(widthListener);
