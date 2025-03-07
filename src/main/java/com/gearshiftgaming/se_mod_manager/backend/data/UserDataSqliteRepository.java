@@ -36,7 +36,6 @@ public class UserDataSqliteRepository implements UserDataRepository{
         if(Files.notExists(Path.of(databasePath))) {
             userConfigurationResult.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
             userConfigurationResult.setPayload(new UserConfiguration());
-
         } else {
             //TODO: Need to fillout the query.
         }
@@ -52,6 +51,14 @@ public class UserDataSqliteRepository implements UserDataRepository{
                 liquibase.update();
                 SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
                 //TODO: Write the user config to the DB.
+                // First insert into ID 1 if exists, on duplicate key update. https://sqlite.org/lang_upsert.html. We actually want to do this for basically everything
+                // Second create all the parent objects. That should also be on duplicate key update. Everything should. first table should be mod profiles
+                // Third insert into user_configuration_mod_list_profile
+                // Fourth insert save profiles
+                // Fifth insert into user_configuration_save_profile
+                // Sixth go back through our modprofiles. Insert an appropriate entry into the mod table for each mod, as well as their sub-tables. Like steam mods, categories, mod_list_conflicts, etc
+                //      After this. then also an entry into the modlist profile.
+                // Seventh do the same for save profiles and their bridge table.
                 return true;
             } catch (LiquibaseException e) {
                 throw new RuntimeException(e);
