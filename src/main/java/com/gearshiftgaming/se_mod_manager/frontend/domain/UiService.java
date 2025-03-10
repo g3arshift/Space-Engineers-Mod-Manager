@@ -173,7 +173,9 @@ public class UiService {
     }
 
     public Result<Void> saveUserData() {
-        return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
+        Result<Void> saveResult = STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
+        log(saveResult);
+        return saveResult;
     }
 
     public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
