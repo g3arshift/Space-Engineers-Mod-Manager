@@ -50,7 +50,8 @@ public class UserDataFileRepository implements UserDataRepository {
     }
 
     @Override
-    public boolean saveUserData(UserConfiguration userConfiguration) {
+    public Result<Void> saveUserData(UserConfiguration userConfiguration) {
+        Result<Void> saveResult = new Result<>();
         try {
             if (!USER_CONFIGURATION_FILE.exists()) {
                 if (!USER_CONFIGURATION_FILE.getParentFile().exists()) {
@@ -70,10 +71,12 @@ public class UserDataFileRepository implements UserDataRepository {
 
             marshaller.marshal(userConfiguration, sw);
             bw.write(sw.toString());
-            return true;
+            saveResult.addMessage("Successfully saved user configuration.", ResultType.SUCCESS);
         } catch (JAXBException | IOException e) {
-            return false;
+            saveResult.addMessage(e.toString(), ResultType.FAILED);
+            saveResult.addMessage("Failed to save user data.", ResultType.FAILED);
         }
+        return saveResult;
     }
 
     @Override

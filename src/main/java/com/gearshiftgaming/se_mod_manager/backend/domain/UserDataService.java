@@ -24,13 +24,7 @@ public record UserDataService(UserDataRepository userDataFileRepository) {
     }
 
     public Result<Void> saveUserData(UserConfiguration userConfiguration) throws IOException {
-        Result<Void> result = new Result<>();
-        if (userDataFileRepository().saveUserData(userConfiguration)) {
-            result.addMessage("Successfully saved user data.", ResultType.SUCCESS);
-        } else {
-            result.addMessage("Failed to save user data.", ResultType.FAILED);
-        }
-        return result;
+        return userDataFileRepository().saveUserData(userConfiguration);
     }
 
     public Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation) {

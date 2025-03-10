@@ -144,7 +144,9 @@ public class UiService {
             case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
             default -> messageType = MessageType.INFO;
         }
-        log(result.getCurrentMessage(), messageType);
+        for(String message : result.getMESSAGES()) {
+            log(message, messageType);
+        }
     }
 
     public void log(Exception e) {

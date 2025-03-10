@@ -18,7 +18,7 @@ import java.io.IOException;
 public interface UserDataRepository {
     Result<UserConfiguration> loadUserData();
 
-    boolean saveUserData(UserConfiguration userConfiguration);
+    Result<Void> saveUserData(UserConfiguration userConfiguration);
 
     Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation);
 
