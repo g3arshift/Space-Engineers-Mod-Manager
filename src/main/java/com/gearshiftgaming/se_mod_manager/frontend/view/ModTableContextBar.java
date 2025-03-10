@@ -329,7 +329,8 @@ public class ModTableContextBar {
         if (savedUserTheme.isSuccess()) {
             UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
         } else {
-            UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
+            savedUserTheme.addMessage("Failed to save theme to user configuration.", ResultType.FAILED);
+            UI_SERVICE.log(savedUserTheme);
         }
     }
 

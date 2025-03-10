@@ -58,8 +58,6 @@ public class UserFileDataServiceTest {
 
 	@Test
 	void shouldGetGoodUserData() throws JAXBException {
-		File goodUserDataFile = new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml");
-
 		UserConfiguration goodUserConfig = new UserConfiguration();
 		goodUserConfig.setUserTheme("Primer Dark");
 		Result<UserConfiguration> goodResult = new Result<>();
@@ -83,23 +81,25 @@ public class UserFileDataServiceTest {
 
 	@Test
 	void shouldSaveUserData() throws IOException {
-		File goodUserDataFile = new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml");
+		Result<Void> goodResult = new Result<>();
+		goodResult.addMessage("Successfully saved user configuration.", ResultType.SUCCESS);
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
-		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(true);
+		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(goodResult);
 
 		Result<Void> result = userDataService.saveUserData(mockUserConfig);
 
 		assertEquals(ResultType.SUCCESS, result.getType());
-		assertEquals("Successfully saved user data.", result.getMESSAGES().getFirst());
+		assertEquals("Successfully saved user configuration.", result.getMESSAGES().getFirst());
 	}
 
 	@Test
 	void shouldNotSaveUserData() throws IOException {
-		File badUserDataFile = new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml");
+		Result<Void> badResult = new Result<>();
+		badResult.addMessage("Failed to save user data.", ResultType.FAILED);
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
-		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(false);
+		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(badResult);
 
 		Result<Void> result = userDataService.saveUserData(mockUserConfig);
 		assertEquals(ResultType.FAILED, result.getType());

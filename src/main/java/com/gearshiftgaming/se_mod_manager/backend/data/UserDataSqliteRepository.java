@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -14,12 +13,11 @@ import org.jdbi.v3.core.transaction.TransactionException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
 
 public class UserDataSqliteRepository implements UserDataRepository {
 
-    //TODO: We need to make sure we enable foreign keys every single time we connect.
     //TODO: Indexes! FK's aren't default indexed.
+    //TODO: We need to re-engineer mod scraping code to check if a mod already exists in the mod table, and if it does, update it. Maybe? What about updating mods? Performance?
     //https://medium.com/destinationaarhus-techblog/integrate-liquibase-with-the-pipeline-using-gradle-2ad24f691009
 
     private final Jdbi SQLITE_DB;
@@ -47,12 +45,21 @@ public class UserDataSqliteRepository implements UserDataRepository {
     @Override
     public Result<Void> saveUserData(UserConfiguration userConfiguration) {
         Result<Void> saveResult = new Result<>();
+        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         if (Files.notExists(Path.of(databasePath))) {
             Database database = new SQLiteDatabase();
             Liquibase liquibase = new Liquibase(changelogPath, new ClassLoaderResourceAccessor(), database);
             try {
                 liquibase.update();
                 SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
+                SQLITE_DB.useHandle(handle -> handle.execute("""    
+                        CREATE TRIGGER delete_orphan_mods
+                            AFTER DELETE ON mod_list_profile_mod
+                            FOR EACH ROW
+                            WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
+                            BEGIN
+                                DELETE FROM mod WHERE mod_id = OLD.mod_id;
+                            END;"""));
             } catch (LiquibaseException e) {
                 throw new RuntimeException(e);
             }
@@ -97,38 +104,38 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
                 //Upsert our save_profile table, but only update information that's changed.
                 PreparedBatch saveProfilesBatch = handle.prepareBatch("""
-                                INSERT INTO save_profile (
-                                        save_profile_id,
-                                        profile_name,
-                                        save_name,
-                                        save_path,
-                                        last_used_mod_list_profile_id,
-                                        last_save_status,
-                                        last_saved,
-                                        save_exists,
-                                        space_engineers_version)
-                                     VALUES (
-                                        :id,
-                                        :profileName,
-                                        :saveName,
-                                        :savePath,
-                                        :lastUsedModProfileId,
-                                        :lastSaveStatus,
-                                        :lastSaved,
-                                        :saveExists)
-                                     ON CONFLICT (save_profile_id) DO UPDATE SET
-                                        profile_name = CASE WHEN save_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
-                                        last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id  != excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
-                                        last_save_status = CASE WHEN save_profile.last_save_status != excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
-                                        last_saved = CASE WHEN save_profile.last_saved != excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
-                                        save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END""");
+                        INSERT INTO save_profile (
+                            save_profile_id,
+                            profile_name,
+                            save_name,
+                            save_path,
+                            last_used_mod_list_profile_id,
+                            last_save_status,
+                            last_saved,
+                            save_exists,
+                            space_engineers_version)
+                            VALUES (
+                                :id,
+                                :profileName,
+                                :saveName,
+                                :savePath,
+                                :lastUsedModProfileId,
+                                :lastSaveStatus,
+                                :lastSaved,
+                                :saveExists)
+                            ON CONFLICT (save_profile_id) DO UPDATE SET
+                                profile_name = CASE WHEN save_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
+                                last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id  != excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
+                                last_save_status = CASE WHEN save_profile.last_save_status != excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
+                                last_saved = CASE WHEN save_profile.last_saved != excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
+                                save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END""");
                 //Update our bridge table to connect save profiles to the user config. Ignore duplicates.
                 PreparedBatch saveProfilesUserConfigurationBatch = handle.prepareBatch("""
-                                     INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
-                                     VALUES (1, :saveProfileId)""");
+                        INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
+                            VALUES (1, :saveProfileId)""");
 
                 //Actually attach a value to our variables in our batch.
-                for(SaveProfile saveProfile : userConfiguration.getSaveProfiles()) {
+                for (SaveProfile saveProfile : userConfiguration.getSaveProfiles()) {
                     saveProfilesBatch.bind("id", saveProfile.getID())
                             .bind("profileName", saveProfile.getProfileName())
                             .bind("saveName", saveProfile.getSaveName())
@@ -139,20 +146,61 @@ public class UserDataSqliteRepository implements UserDataRepository {
                             .bind("saveExists", saveProfile.isSaveExists())
                             .add();
 
-                    saveProfilesUserConfigurationBatch.bind("saveProfileId", saveProfile.getID());
+                    saveProfilesUserConfigurationBatch.bind("saveProfileId", saveProfile.getID()).add();
                 }
-                int[] saveProfileRowsUpdate = saveProfilesBatch.execute();
-                saveResult.addMessage(saveProfileRowsUpdate.length + " save profiles saved to database. Expected " + userConfiguration.getSaveProfiles().size(), ResultType.SUCCESS);
-                int[] saveProfilesUserConfigurationRowsUpdated = saveProfilesUserConfigurationBatch.execute();
-                saveResult.addMessage(saveProfilesUserConfigurationRowsUpdated.length + " save profiles saved to user config bridge table. Expected " + userConfiguration.getSaveProfiles().size(), ResultType.SUCCESS);
+
+                //Execute our batches
+                int countExpectedSaveProfilesUpdate = userConfiguration.getSaveProfiles().size();
+                int[] saveProfileRowsUpdated = saveProfilesBatch.execute();
+                saveResult.addMessage(saveProfileRowsUpdated.length + " save profiles saved to database. Expected " + countExpectedSaveProfilesUpdate, (saveProfileRowsUpdated.length == countExpectedSaveProfilesUpdate ? ResultType.SUCCESS : ResultType.FAILED));
+                int[] saveProfileUserConfigurationRowsUpdated = saveProfilesUserConfigurationBatch.execute();
+                saveResult.addMessage(saveProfileUserConfigurationRowsUpdated.length + " save profiles saved to user config bridge table. Expected " + countExpectedSaveProfilesUpdate, (saveProfileRowsUpdated.length == countExpectedSaveProfilesUpdate ? ResultType.SUCCESS : ResultType.FAILED ));
 
                 //Delete the removed save profiles
-                int numSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id NOT IN (<ids>)")
+                int countSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id NOT IN (<ids>)")
                         .bindList("ids", userConfiguration.getSaveProfiles())
                         .execute();
-                saveResult.addMessage(numSaveProfilesDeleted + " save profiles deleted.", ResultType.SUCCESS);
-                //TODO: Follow this same process for mod_list_profile and mods and their bridge tables and all that shit
+                saveResult.addMessage(countSaveProfilesDeleted + " save profiles deleted.", ResultType.SUCCESS);
+
+                //Upsert the mod_list_profile table, but only for information that's changed
+                PreparedBatch modListProfilesBatch = handle.prepareBatch("""
+                        INSERT INTO mod_list_profile (
+                            mod_list_profile_id,
+                            profile_name,
+                            space_engineers_version)
+                            VALUES (
+                                :id,
+                                :profileName,
+                                :spaceEngineersVersion)
+                            ON CONFLICT (mod_list_profile_id) DO UPDATE SET
+                                profile_name = CASE WHEN mod_list_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END""");
+                //Update our bridge table to connect mod list profiles to the user config. Ignore duplicates.
+                PreparedBatch modListProfilesUserConfigurationBatch = handle.prepareBatch("""
+                        INSERT OR IGNORE INTO user_configuration_mod_list_profile (user_configuration_id, mod_list_profile_id)
+                            values (1, :modListProfileId)""");
+                for (ModListProfile modListProfile : userConfiguration.getModListProfiles()) {
+                    modListProfilesBatch.bind("id", modListProfile.getID())
+                            .bind("profileName", modListProfile.getProfileName())
+                            .bind("spaceEngineersVersion", modListProfile.getSPACE_ENGINEERS_VERSION())
+                            .add();
+                    modListProfilesUserConfigurationBatch.bind("modListProfileId", modListProfile.getID()).add();
+                }
+
+                //Execute our batches
+                int countExpectedModListProfilesUpdated = userConfiguration.getModListProfiles().size();
+                int[] modListProfileRowsUpdated = modListProfilesBatch.execute();
+                saveResult.addMessage(modListProfileRowsUpdated.length + " mod list profiles saved to database. Expected " + countExpectedModListProfilesUpdated, (modListProfileRowsUpdated.length == countExpectedModListProfilesUpdated ? ResultType.SUCCESS : ResultType.FAILED));
+                int[] modListProfileUserConfigurationRowsUpdated = modListProfilesUserConfigurationBatch.execute();
+                saveResult.addMessage(modListProfileUserConfigurationRowsUpdated.length + " mod list profiles saved to user config bridge table. Expected " + userConfiguration.getSaveProfiles().size(), (modListProfileRowsUpdated.length == countExpectedModListProfilesUpdated ? ResultType.SUCCESS : ResultType.FAILED));
+
+                //Dete the removed mod list profiles
+                int countModListProfilesDeleted = handle.createUpdate("DELETE FROM mod_list_profile WHERE mod_list_profile_id not int (<ids>)")
+                        .bindList("ids", userConfiguration.getModListProfiles())
+                        .execute();
+                saveResult.addMessage(countModListProfilesDeleted + " mod list profiles deleted.", ResultType.SUCCESS);
+                //TODO: Follow this same process for mods and their bridge tables and all that shit
                 //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
+                //TODO: We need a trigger in SQLite that deletes orphaned mod rows.
             });
         } catch (TransactionException e) {
             saveResult.addMessage(e.toString(), ResultType.FAILED);

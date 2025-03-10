@@ -59,7 +59,7 @@ public class UserDataFileRepositoryTest {
 		UserConfiguration freshUserConfig = new UserConfiguration();
 		Path tempFile = Files.createFile(tempDir.toPath().resolve("test_user_data.xml"));
 		userDataFileRepository = new UserDataFileRepository(tempFile.toFile());
-		assertTrue(userDataFileRepository.saveUserData(freshUserConfig));
+		assertTrue(userDataFileRepository.saveUserData(freshUserConfig).isSuccess());
 	}
 
 	@Test
