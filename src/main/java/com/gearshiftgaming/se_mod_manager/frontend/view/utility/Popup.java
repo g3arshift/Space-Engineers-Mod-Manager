@@ -289,7 +289,7 @@ public class Popup {
 				messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
 				messageIcon.setIconLiteral("ci-information-square");
 			}
-			case INVALID -> {
+			case INVALID, WARN -> {
 				messageIcon.setStyle("-fx-icon-color: -color-warning-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-alt");
 			}

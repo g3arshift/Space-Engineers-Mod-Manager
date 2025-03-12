@@ -41,7 +41,7 @@ public class Result<T> {
     }
 
     public boolean isSuccess() {
-        return type == ResultType.SUCCESS;
+        return type == ResultType.SUCCESS || type == ResultType.WARN;
     }
 
     public String getCurrentMessage() {

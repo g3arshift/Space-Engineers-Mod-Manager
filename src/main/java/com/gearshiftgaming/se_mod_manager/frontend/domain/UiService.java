@@ -166,7 +166,7 @@ public class UiService {
     public <T> void logPrivate(@NotNull Result<T> result) {
         switch (result.getType()) {
             case SUCCESS, CANCELLED -> LOGGER.info(result.getCurrentMessage());
-            case INVALID -> LOGGER.warn(result.getCurrentMessage());
+            case INVALID, WARN -> LOGGER.warn(result.getCurrentMessage());
             case FAILED -> LOGGER.error(result.getCurrentMessage());
             default -> LOGGER.error("ERROR UNKNOWN - {}", result.getCurrentMessage());
         }
