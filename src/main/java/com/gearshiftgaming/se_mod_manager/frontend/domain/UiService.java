@@ -96,6 +96,7 @@ public class UiService {
     @Getter
     final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
 
+    //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
                      @NotNull ObservableList<ModListProfile> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {

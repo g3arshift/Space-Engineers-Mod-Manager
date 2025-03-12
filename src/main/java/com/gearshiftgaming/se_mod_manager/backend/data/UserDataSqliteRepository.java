@@ -21,9 +21,7 @@ import java.util.List;
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository implements UserDataRepository {
 
-    //TODO: Indexes! FK's aren't default indexed.
     //TODO: We need to re-engineer mod scraping code to check if a mod already exists in the mod table, and if it does, update it. Maybe? What about updating mods? Performance?
-    //https://medium.com/destinationaarhus-techblog/integrate-liquibase-with-the-pipeline-using-gradle-2ad24f691009
 
     private final Jdbi SQLITE_DB;
     private final String databasePath;
@@ -43,6 +41,8 @@ public class UserDataSqliteRepository implements UserDataRepository {
             userConfigurationResult.setPayload(new UserConfiguration());
         } else {
             //TODO: Need to fillout the query.
+            //TODO: We actually can assemble our conflict table for each profile on the fly instead of saving them.
+            // When we load our table and have all our mods loaded, create the conflict table for the profile by reading the paths of all mods and assembling the conflict table.
         }
         return userConfigurationResult;
     }
@@ -61,7 +61,6 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 saveSaveProfiles(userConfiguration.getSaveProfiles(), handle, saveResult);
                 saveModListProfiles(userConfiguration.getModListProfiles(), handle, saveResult);
                 saveMods(userConfiguration.getModListProfiles(), handle, saveResult);
-                saveModConflicts(userConfiguration.getModListProfiles(), handle, saveResult);
 
                 saveResult.addMessage("Successfully saved all user data!", ResultType.SUCCESS);
                 //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
@@ -230,7 +229,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     ON CONFLICT (mod_id) DO UPDATE SET
                         friendly_name = CASE WHEN mod.friendly_name != excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
                         active = CASE WHEN mod.active != excluded.active THEN excluded.active ELSE mod.active END,
-                        description = CASE WHEN mod.description != excluded.description THEN excluded.description ELE mod.description END""");
+                        description = CASE WHEN mod.description != excluded.description THEN excluded.description ELSE mod.description END""");
 
         //Upsert the mod categories table but only for info that's changed
         PreparedBatch modCategoriesBatch = handle.prepareBatch("""
@@ -364,10 +363,6 @@ public class UserDataSqliteRepository implements UserDataRepository {
         saveResult.addMessage("Successfully updated mods.", ResultType.SUCCESS);
     }
 
-    private void saveModConflicts(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) {
-        //TODO: then conflict.
-    }
-
     @Override
     public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation) {
         return null;
@@ -387,7 +382,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 Files.delete(databaseLocation);
                 resetResult.addMessage("Deleted existing database.", ResultType.SUCCESS);
                 createDatabase();
-                resetResult.addMessage("Succesfully deleted user data.", ResultType.SUCCESS);
+                resetResult.addMessage("Successfully deleted user data.", ResultType.SUCCESS);
             } catch (IOException e) {
                 resetResult.addMessage(e.toString(), ResultType.FAILED);
                 return resetResult;
