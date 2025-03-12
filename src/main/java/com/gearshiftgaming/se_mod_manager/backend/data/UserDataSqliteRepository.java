@@ -102,10 +102,13 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
     private void saveSaveProfiles(List<SaveProfile> saveProfiles, Handle handle, Result<Void> saveResult) {
         //Delete the removed save profiles
-        int countSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id NOT IN (<ids>)")
-                .bindList("ids", saveProfiles.isEmpty() ? List.of(-1) : saveProfiles.stream().map(SaveProfile::getID).toList())
-                .execute();
-        saveResult.addMessage(countSaveProfilesDeleted + " save profiles deleted.", ResultType.SUCCESS);
+        PreparedBatch deleteBatch = handle.prepareBatch("""
+                DELETE FROM save_profile
+                WHERE save_profile_id NOT IN (<ids>)""");
+        deleteBatch.bindList("ids", saveProfiles.isEmpty() ? List.of(-1) : saveProfiles.stream().map(SaveProfile::getID).toList()).add();
+
+        int[] countSaveProfilesDeleted = deleteBatch.execute();
+        saveResult.addMessage(countSaveProfilesDeleted.length + " save profiles deleted.", ResultType.SUCCESS);
 
         //Upsert our save_profile table, but only update information that's changed.
         PreparedBatch saveProfilesBatch = handle.prepareBatch("""
@@ -165,10 +168,12 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
     private void saveModListProfiles(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) {
         //Delete the removed mod list profiles
-        int countModListProfilesDeleted = handle.createUpdate("DELETE FROM mod_list_profile WHERE mod_list_profile_id NOT IN(<ids>)")
-                .bindList("ids", modListProfiles.isEmpty() ? List.of(-1) : modListProfiles.stream().map(ModListProfile::getID).toList())
-                .execute();
-        saveResult.addMessage(countModListProfilesDeleted + " mod list profiles deleted.", ResultType.SUCCESS);
+        PreparedBatch deleteBatch = handle.prepareBatch("""
+                DELETE FROM mod_list_profile
+                WHERE mod_list_profile_id NOT IN(<ids>)""");
+        deleteBatch.bindList("ids", modListProfiles.isEmpty() ? List.of(-1) : modListProfiles.stream().map(ModListProfile::getID).toList()).add();
+        int[] countModListProfilesDeleted = deleteBatch.execute();
+        saveResult.addMessage(countModListProfilesDeleted.length + " mod list profiles deleted.", ResultType.SUCCESS);
 
         //Upsert the mod_list_profile table, but only for information that's changed
         PreparedBatch modListProfilesBatch = handle.prepareBatch("""
@@ -205,13 +210,17 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
     private void saveMods(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) throws IOException {
         //Delete mods from a profile that are no longer in it
-        for(ModListProfile modListProfile : modListProfiles) {
-            int countModsRemovedFromProfile = handle.createUpdate("DELETE FROM mod_list_profile_mod WHERE mod_list_profile_id = :profileId AND mod_id NOT IN (<ids>)")
-                    .bind("profileId", modListProfile.getID())
-                    .bindList("ids", modListProfile.getModList().stream().map(Mod::getId).toList())
-                    .execute();
-            saveResult.addMessage(countModsRemovedFromProfile + " mods deleted from profile " + modListProfile.getProfileName() + " (" + modListProfile.getID() + ").", ResultType.SUCCESS;
+        PreparedBatch deleteBatch = handle.prepareBatch("""
+                DELETE FROM mod_list_profile_mod
+                WHERE mod_list_profile_id = :profileId
+                AND mod_id NOT IN (<ids>)""");
+        for (ModListProfile modListProfile : modListProfiles) {
+            deleteBatch.bind("profileId", modListProfile.getID())
+                    .bindList("ids", modListProfile.getModList().stream().map(Mod::getId).toList()).add();
         }
+        int[] countModsRemovedFromProfile = deleteBatch.execute();
+        saveResult.addMessage(countModsRemovedFromProfile.length + " mods deleted from profile ", ResultType.SUCCESS);
+
         //Upsert the mod table but only for info that's changed
         PreparedBatch modsBatch = handle.prepareBatch("""
                 INSERT INTO mod (
@@ -377,7 +386,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
     public Result<Void> resetUserConfiguration() {
         Result<Void> resetResult = new Result<>();
         Path databaseLocation = Path.of(databasePath);
-        if((Files.exists(databaseLocation))) {
+        if ((Files.exists(databaseLocation))) {
             try {
                 Files.delete(databaseLocation);
                 resetResult.addMessage("Deleted existing database.", ResultType.SUCCESS);
