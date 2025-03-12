@@ -52,22 +52,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
         Result<Void> saveResult = new Result<>();
         //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         if (Files.notExists(Path.of(databasePath))) {
-            Database database = new SQLiteDatabase();
-            Liquibase liquibase = new Liquibase(changelogPath, new ClassLoaderResourceAccessor(), database);
-            try {
-                liquibase.update();
-                SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
-                SQLITE_DB.useHandle(handle -> handle.execute("""    
-                        CREATE TRIGGER delete_orphan_mods
-                            AFTER DELETE ON mod_list_profile_mod
-                            FOR EACH ROW
-                            WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
-                            BEGIN
-                                DELETE FROM mod WHERE mod_id = OLD.mod_id;
-                            END;"""));
-            } catch (LiquibaseException e) {
-                throw new RuntimeException(e);
-            }
+            createDatabase();
         }
 
         try {
@@ -181,7 +166,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
     private void saveModListProfiles(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) {
         //Delete the removed mod list profiles
-        int countModListProfilesDeleted = handle.createUpdate("DELETE FROM mod_list_profile WHERE mod_list_profile_id not int (<ids>)")
+        int countModListProfilesDeleted = handle.createUpdate("DELETE FROM mod_list_profile WHERE mod_list_profile_id NOT IN(<ids>)")
                 .bindList("ids", modListProfiles.isEmpty() ? List.of(-1) : modListProfiles.stream().map(ModListProfile::getID).toList())
                 .execute();
         saveResult.addMessage(countModListProfilesDeleted + " mod list profiles deleted.", ResultType.SUCCESS);
@@ -216,14 +201,17 @@ public class UserDataSqliteRepository implements UserDataRepository {
         saveResult.addMessage(modListProfileRowsUpdated.length + " mod list profiles saved to database. Expected " + countExpectedModListProfilesUpdated, (modListProfileRowsUpdated.length == countExpectedModListProfilesUpdated ? ResultType.SUCCESS : ResultType.WARN));
         int[] modListProfileUserConfigurationRowsUpdated = modListProfilesUserConfigurationBatch.execute();
         saveResult.addMessage(modListProfileUserConfigurationRowsUpdated.length + " mod list profiles saved to user config bridge table. Expected " + modListProfiles.size(), (modListProfileRowsUpdated.length == countExpectedModListProfilesUpdated ? ResultType.SUCCESS : ResultType.WARN));
-        saveResult.addMessage("Sucessfully updated mod list profiles.", ResultType.SUCCESS);
+        saveResult.addMessage("Successfully updated mod list profiles.", ResultType.SUCCESS);
     }
 
     private void saveMods(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) throws IOException {
-        //TODO: IMPLEMENT.
-        //Delete mods from the table that aren't in any mod lists.
+        //Delete mods from a profile that are no longer in it
         for(ModListProfile modListProfile : modListProfiles) {
-            int countModsRemovedFromProfile = handle.createUpdate("DELETE FROM mod_list_profile_mod where ")
+            int countModsRemovedFromProfile = handle.createUpdate("DELETE FROM mod_list_profile_mod WHERE mod_list_profile_id = :profileId AND mod_id NOT IN (<ids>)")
+                    .bind("profileId", modListProfile.getID())
+                    .bindList("ids", modListProfile.getModList().stream().map(Mod::getId).toList())
+                    .execute();
+            saveResult.addMessage(countModsRemovedFromProfile + " mods deleted from profile " + modListProfile.getProfileName() + " (" + modListProfile.getID() + ").", ResultType.SUCCESS;
         }
         //Upsert the mod table but only for info that's changed
         PreparedBatch modsBatch = handle.prepareBatch("""
@@ -377,7 +365,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
     }
 
     private void saveModConflicts(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) {
-        //TODO:  then conflict.
+        //TODO: then conflict.
     }
 
     @Override
@@ -390,9 +378,40 @@ public class UserDataSqliteRepository implements UserDataRepository {
         return null;
     }
 
-    //TODO: Reset and re-create the DB.
     @Override
     public Result<Void> resetUserConfiguration() {
-        return null;
+        Result<Void> resetResult = new Result<>();
+        Path databaseLocation = Path.of(databasePath);
+        if((Files.exists(databaseLocation))) {
+            try {
+                Files.delete(databaseLocation);
+                resetResult.addMessage("Deleted existing database.", ResultType.SUCCESS);
+                createDatabase();
+                resetResult.addMessage("Succesfully deleted user data.", ResultType.SUCCESS);
+            } catch (IOException e) {
+                resetResult.addMessage(e.toString(), ResultType.FAILED);
+                return resetResult;
+            }
+        }
+        return resetResult;
+    }
+
+    private void createDatabase() {
+        Database database = new SQLiteDatabase();
+        Liquibase liquibase = new Liquibase(changelogPath, new ClassLoaderResourceAccessor(), database);
+        try {
+            liquibase.update();
+            SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
+            SQLITE_DB.useHandle(handle -> handle.execute("""    
+                    CREATE TRIGGER delete_orphan_mods
+                        AFTER DELETE ON mod_list_profile_mod
+                        FOR EACH ROW
+                        WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
+                        BEGIN
+                            DELETE FROM mod WHERE mod_id = OLD.mod_id;
+                        END;"""));
+        } catch (LiquibaseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

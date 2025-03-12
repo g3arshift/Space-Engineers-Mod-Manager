@@ -117,17 +117,15 @@ public class UserDataFileRepository implements UserDataRepository {
 
     @Override
     public Result<Void> resetUserConfiguration() {
+        Result<Void> resetResult = new Result<>();
         try {
             Files.delete(USER_CONFIGURATION_FILE.toPath());
+            resetResult.addMessage("Successfully deleted user configuration file.", ResultType.SUCCESS);
         } catch (IOException e) {
-            Result<Void> failedResult = new Result<>();
-            failedResult.addMessage(e.toString(), ResultType.FAILED);
-            return failedResult;
+            resetResult.addMessage(e.toString(), ResultType.FAILED);
+            return resetResult;
         }
 
-        Result<Void> successfulResult = new Result<>();
-        successfulResult.addMessage("Successfully deleted user configuration file.", ResultType.SUCCESS);
-
-        return successfulResult;
+        return resetResult;
     }
 }
