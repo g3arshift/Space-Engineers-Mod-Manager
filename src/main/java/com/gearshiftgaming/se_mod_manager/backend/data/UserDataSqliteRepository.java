@@ -2,30 +2,17 @@ package com.gearshiftgaming.se_mod_manager.backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import liquibase.Contexts;
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseConnection;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.core.SQLiteDatabase;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.core.transaction.TransactionException;
-import org.sqlite.SQLiteDataSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
 
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository implements UserDataRepository {
@@ -34,11 +21,9 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
     private final Jdbi SQLITE_DB;
     private final String databasePath;
-    private final String changelogPath;
 
-    public UserDataSqliteRepository(String databasePath, String changelogPath) {
+    public UserDataSqliteRepository(String databasePath) {
         this.databasePath = databasePath;
-        this.changelogPath = changelogPath;
         SQLITE_DB = Jdbi.create("jdbc:sqlite:" + databasePath);
     }
 
@@ -67,7 +52,13 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     Files.createDirectory(databaseLocation.getParent());
                 }
                 createDatabase();
-            } catch (SQLException | IOException e) {
+            } catch (MissingDatabaseBaseConfigException | IOException e) {
+                try {
+                    Files.delete(databaseLocation.getParent());
+                } catch (IOException ex) {
+                    saveResult.addMessage(ex.toString(), ResultType.FAILED);
+                    saveResult.addMessage("Failed to delete database after failure to create/update it. How?", ResultType.FAILED);
+                }
                 saveResult.addMessage(e.toString(), ResultType.FAILED);
                 return saveResult;
             }
@@ -410,7 +401,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 resetResult.addMessage("Deleted existing database.", ResultType.SUCCESS);
                 createDatabase();
                 resetResult.addMessage("Successfully deleted user data.", ResultType.SUCCESS);
-            } catch (IOException | SQLException e) {
+            } catch (MissingDatabaseBaseConfigException | IOException e) {
                 resetResult.addMessage(e.toString(), ResultType.FAILED);
                 return resetResult;
             }
@@ -418,23 +409,25 @@ public class UserDataSqliteRepository implements UserDataRepository {
         return resetResult;
     }
 
-    //TODO: Gonna scream. Why the fuck can you not find the changelog?!?!?!?!
-    private void createDatabase() throws SQLException {
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath)){
-            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-            Liquibase liquibase = new Liquibase(Objects.requireNonNull(getClass().getClassLoader().getResource("Database/base_changelog.xml")).getPath(), new ClassLoaderResourceAccessor(), database);
-            liquibase.update(new Contexts());
-            SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
-            SQLITE_DB.useHandle(handle -> handle.execute("""    
+    private void createDatabase() {
+        SQLITE_DB.useTransaction(handle -> {
+            handle.execute("PRAGMA journal_mode=WAL;");
+            handle.execute("""
                     CREATE TRIGGER delete_orphan_mods
                         AFTER DELETE ON mod_list_profile_mod
                         FOR EACH ROW
                         WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
                         BEGIN
                             DELETE FROM mod WHERE mod_id = OLD.mod_id;
-                        END;"""));
-        } catch (LiquibaseException e) {
-            throw new RuntimeException(e);
-        }
+                        END;""");
+            try(InputStream sql = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")) {
+                if(sql == null) {
+                    throw new MissingDatabaseBaseConfigException();
+                }
+                handle.execute(sql.toString());
+            } catch (MissingDatabaseBaseConfigException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }

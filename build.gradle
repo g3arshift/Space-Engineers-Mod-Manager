@@ -4,15 +4,11 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath 'org.liquibase:liquibase-core:4.31.1'
-    }
 }
 
 plugins {
     id 'java-library'
     id("com.gradleup.shadow") version "8.3.5"
-    id("org.liquibase.gradle") version "2.2.1"
 }
 
 repositories {
@@ -27,10 +23,6 @@ repositories {
 }
 
 dependencies {
-    liquibaseRuntime 'org.liquibase:liquibase-core:4.31.1'
-    liquibaseRuntime 'org.liquibase:liquibase-groovy-dsl:4.0.1'
-    liquibaseRuntime 'info.picocli:picocli:4.7.6'
-    liquibaseRuntime 'org.xerial:sqlite-jdbc:3.49.1.0'
 
     api libs.org.apache.commons.commons.lang3
     api libs.commons.io.commons.io
@@ -51,8 +43,6 @@ dependencies {
     testImplementation group: 'org.jdbi', name: 'jdbi3-testing', version: '3.48.0'
     // https://mvnrepository.com/artifact/org.jdbi/jdbi3-sqlite
     implementation group: 'org.jdbi', name: 'jdbi3-sqlite', version: '3.48.0'
-    // https://mvnrepository.com/artifact/org.liquibase/liquibase-core
-    implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.31.1'
     // https://mvnrepository.com/artifact/info.picocli/picocli
     implementation group: 'info.picocli', name: 'picocli', version: '4.7.6'
     api libs.org.mockito.mockito.core
@@ -82,18 +72,8 @@ dependencies {
     annotationProcessor libs.org.projectlombok.lombok
 }
 
-liquibase {
-    activities{
-        main {
-            changeLogFile 'resources/Database/changelog.xml'
-            url 'jdbc:sqlite:Storage/SEMM_Data.db'
-            driver 'org.sqlite.JDBC'
-        }
-    }
-}
-
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.7.1'
+version = '0.7.2'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
@@ -109,14 +89,15 @@ jar {
     duplicatesStrategy = 'EXCLUDE'
 }
 
-tasks.register('makeFatJar', Jar) {
+shadowJar {
+    archiveBaseName = 'Space-Engineers-Mod-Manager'
+    archiveVersion.set(version.toString())
+    archiveClassifier.set("")
     manifest {
         attributes 'Main-Class': 'com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager'
     }
-    archiveBaseName = 'Space-Engineers-Mod-Manager'
+    // You can also add exclusions or customizations here
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
 }
 
 tasks.register('removeForeignBrowserBinaries') {

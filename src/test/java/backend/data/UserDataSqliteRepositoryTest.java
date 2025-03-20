@@ -15,11 +15,10 @@ import java.nio.file.Path;
 public class UserDataSqliteRepositoryTest {
     private UserDataSqliteRepository userDataSqliteRepository;
     private final String databasePath = "Storage/Test/SEMM_Data_Test.db";
-    private final String changelogPath = "Database/base_changelog.xml";
 
     @BeforeEach
     void setup() {
-        userDataSqliteRepository = new UserDataSqliteRepository(databasePath, changelogPath);
+        userDataSqliteRepository = new UserDataSqliteRepository(databasePath);
     }
 
 //    @AfterEach
@@ -29,8 +28,7 @@ public class UserDataSqliteRepositoryTest {
 
     @Test
     void developmentTest() {
-        UserDataFileRepository tempRepo = new UserDataFileRepository(new File("Storage/SEMM_Data.xml"));
-        UserConfiguration tempConfig = tempRepo.loadUserData().getPayload();
+        UserConfiguration tempConfig = userDataSqliteRepository.loadUserData().getPayload();
         userDataSqliteRepository.saveUserData(tempConfig);
     }
 }
