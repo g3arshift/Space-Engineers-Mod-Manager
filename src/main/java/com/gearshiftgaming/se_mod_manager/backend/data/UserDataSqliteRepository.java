@@ -7,12 +7,12 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.core.transaction.TransactionException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository implements UserDataRepository {
@@ -48,11 +48,11 @@ public class UserDataSqliteRepository implements UserDataRepository {
         Path databaseLocation = Path.of(databasePath);
         if (Files.notExists(databaseLocation)) {
             try {
-                if(Files.notExists(databaseLocation.getParent())) {
-                    Files.createDirectory(databaseLocation.getParent());
+                if (Files.notExists(databaseLocation.getParent())) {
+                    Files.createDirectories(databaseLocation.getParent());
                 }
                 createDatabase();
-            } catch (MissingDatabaseBaseConfigException | IOException e) {
+            } catch (IOException e) {
                 try {
                     Files.delete(databaseLocation.getParent());
                 } catch (IOException ex) {
@@ -139,7 +139,8 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         :lastUsedModProfileId,
                         :lastSaveStatus,
                         :lastSaved,
-                        :saveExists)
+                        :saveExists,
+                        :spaceEngineersVersion)
                     ON CONFLICT (save_profile_id) DO UPDATE SET
                         profile_name = CASE WHEN save_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
                         last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id  != excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
@@ -161,6 +162,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     .bind("lastSaveStatus", saveProfile.getLastSaveStatus())
                     .bind("lastSaved", saveProfile.getLastSaved())
                     .bind("saveExists", saveProfile.isSaveExists())
+                    .bind("spaceEngineersVersion", saveProfile.getSPACE_ENGINEERS_VERSION())
                     .add();
 
             saveProfilesUserConfigurationBatch.bind("saveProfileId", saveProfile.getID()).add();
@@ -217,6 +219,8 @@ public class UserDataSqliteRepository implements UserDataRepository {
         saveResult.addMessage("Successfully updated mod list profiles.", ResultType.SUCCESS);
     }
 
+    //TODO: We need to check our constraints. Are nulls fine? Or are we initializing our list wrong? Ah... No... It's empty.
+    // We need empty processing
     private void saveMods(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) throws IOException {
         //Delete mods from a profile that are no longer in it
         PreparedBatch deleteBatch = handle.prepareBatch("""
@@ -224,6 +228,9 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 WHERE mod_list_profile_id = :profileId
                 AND mod_id NOT IN (<ids>)""");
         for (ModListProfile modListProfile : modListProfiles) {
+            if (modListProfile.getModList().isEmpty()) {
+                continue;
+            }
             deleteBatch.bind("profileId", modListProfile.getID())
                     .bindList("ids", modListProfile.getModList().stream().map(Mod::getId).toList()).add();
         }
@@ -257,7 +264,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     VALUES (
                         :id,
                         :category)
-                    ON CONFLICT (mod_id) DO UPDATE SET
+                    ON CONFLICT (mod_id, category) DO UPDATE SET
                         category = CASE WHEN mod_category.category != excluded.category THEN excluded.category ELSE mod_category.category END""");
 
         //Upsert the steam mods table but only for info that's changed
@@ -273,7 +280,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
         //Upsert the mod io mods table but only for info that's changed
         PreparedBatch modIoModsBatch = handle.prepareBatch("""
-                INSERT INTO mod_io_mod (
+                INSERT INTO modio_mod (
                     mod_id,
                     last_updated_year,
                     last_updated_month_day,
@@ -284,9 +291,9 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         :lastUpdatedMonthDay,
                         :lastUpdatedHour)
                     ON CONFLICT (mod_id) DO UPDATE SET
-                        last_updated_year = CASE WHEN mod_io_mod.last_updated_year != excluded.last_updated_year THEN excluded.last_updated_year ELSE mod_io_mod.last_updated_year END,
-                        last_updated_month_day = CASE WHEN mod_io_mod.last_updated_month_day != excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE mod_io_mod.last_updated_month_day END,
-                        last_updated_hour = CASE WHEN mod_io_mod.last_updated_hour != last_updated_hour THEN excluded.last_updated_hour ELSE mod_io_mod.last_updated_hour END""");
+                        last_updated_year = CASE WHEN modio_mod.last_updated_year != excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
+                        last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day != excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
+                        last_updated_hour = CASE WHEN modio_mod.last_updated_hour != last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END""");
 
         //Upsert the mod modified paths table but only for info that's changed
         PreparedBatch modifiedPathsBatch = handle.prepareBatch("""
@@ -296,7 +303,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     VALUES (
                         :id,
                         :modifiedPath)
-                    ON CONFLICT (mod_id) DO UPDATE SET
+                    ON CONFLICT (mod_id, modified_path) DO UPDATE SET
                         modified_path = CASE WHEN mod_modified_path.modified_path != excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END""");
 
         //Update our bridge table to connect mod list profiles to the user config. Ignore duplicates.
@@ -333,7 +340,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
                 if (mod instanceof SteamMod steamMod) {
                     steamModsBatch.bind("id", steamMod.getId())
-                            .bind("last_updated", steamMod.getLastUpdated())
+                            .bind("lastUpdated", steamMod.getLastUpdated())
                             .add();
                     countExpectedSteamModsUpdated++;
                 } else {
@@ -346,12 +353,13 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     countExpectedModIoModsUpdated++;
                 }
 
-                for (String modifiedPath : mod.getModifiedPaths()) {
-                    modifiedPathsBatch.bind("id", mod.getId())
-                            .bind("modifiedPath", modifiedPath)
-                            .add();
+                if (!mod.getModifiedPaths().isEmpty()) {
+                    for (String modifiedPath : mod.getModifiedPaths()) {
+                        modifiedPathsBatch.bind("id", mod.getId())
+                                .bind("modifiedPath", modifiedPath)
+                                .add();
+                    }
                 }
-
                 modListProfileModBatch.bind("id", mod.getId())
                         .bind("modListProfileId", modListProfile.getID())
                         .bind("loadPriority", mod.getLoadPriority())
@@ -401,7 +409,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 resetResult.addMessage("Deleted existing database.", ResultType.SUCCESS);
                 createDatabase();
                 resetResult.addMessage("Successfully deleted user data.", ResultType.SUCCESS);
-            } catch (MissingDatabaseBaseConfigException | IOException e) {
+            } catch (IOException e) {
                 resetResult.addMessage(e.toString(), ResultType.FAILED);
                 return resetResult;
             }
@@ -410,24 +418,29 @@ public class UserDataSqliteRepository implements UserDataRepository {
     }
 
     private void createDatabase() {
+        SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
         SQLITE_DB.useTransaction(handle -> {
-            handle.execute("PRAGMA journal_mode=WAL;");
-            handle.execute("""
-                    CREATE TRIGGER delete_orphan_mods
-                        AFTER DELETE ON mod_list_profile_mod
-                        FOR EACH ROW
-                        WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
-                        BEGIN
-                            DELETE FROM mod WHERE mod_id = OLD.mod_id;
-                        END;""");
-            try(InputStream sql = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")) {
-                if(sql == null) {
-                    throw new MissingDatabaseBaseConfigException();
+            try {
+                String sqlScript = Files.readString(Path.of(
+                        Objects.requireNonNull(
+                                        this.getClass().getClassLoader().getResource("Database/semm_db_base.sql"))
+                                .toURI()));
+
+                String[] sqlOperations = sqlScript.split("\\r\\n\\r\\n");
+                for (String sql : sqlOperations) {
+                    handle.execute(sql);
                 }
-                handle.execute(sql.toString());
-            } catch (MissingDatabaseBaseConfigException | IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
+        SQLITE_DB.useHandle(handle -> handle.execute("""
+                CREATE TRIGGER delete_orphan_mods
+                    AFTER DELETE ON mod_list_profile_mod
+                    FOR EACH ROW
+                    WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
+                    BEGIN
+                        DELETE FROM mod WHERE mod_id = OLD.mod_id;
+                    END;"""));
     }
 }

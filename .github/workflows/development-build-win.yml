@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - 'development/**'
+      - '!development/sqlite-backend'
       - 'gh-actions-testing'
 
 permissions:

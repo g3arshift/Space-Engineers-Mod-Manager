@@ -31,19 +31,19 @@ public abstract class Mod {
 
     private int loadPriority;
 
-    private List<String> categories;
+    private List<String> categories = new ArrayList<>();
+
     @Setter
     private boolean active;
 
     private String description;
 
-    private List<String> modifiedPaths;
+    private List<String> modifiedPaths = new ArrayList<>();
 
     public Mod(String id) {
         this.id = id.intern();
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
-        categories = new ArrayList<>();
     }
 
     //We are intentionally forgoing copying load priority as it is a generated field
@@ -54,6 +54,7 @@ public abstract class Mod {
         this.categories = new ArrayList<>(mod.getCategories());
         this.active = mod.isActive();
         this.description = mod.getDescription();
+        this.modifiedPaths = mod.getModifiedPaths();
     }
 
     @Override

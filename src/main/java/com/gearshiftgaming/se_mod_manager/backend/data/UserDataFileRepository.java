@@ -55,7 +55,7 @@ public class UserDataFileRepository implements UserDataRepository {
         try {
             if (!USER_CONFIGURATION_FILE.exists()) {
                 if (!USER_CONFIGURATION_FILE.getParentFile().exists()) {
-                    Files.createDirectory(Path.of(USER_CONFIGURATION_FILE.getParent()));
+                    Files.createDirectories(Path.of(USER_CONFIGURATION_FILE.getParent()));
                 }
                 Files.createFile(USER_CONFIGURATION_FILE.toPath());
             }
