@@ -153,9 +153,12 @@ public class ModListManager {
                 boolean duplicateProfileName;
                 int copyIndex = 1;
                 String copyProfileName;
+                String endOfModlistName = profileToCopy.getProfileName();
 
-                //Prepare our copy string by removing any existing copy numbers.
-                String endOfModlistName = profileToCopy.getProfileName().substring(profileToCopy.getProfileName().length() - 3);
+                if(endOfModlistName.length() > 3) {
+                    //Prepare our copy string by removing any existing copy numbers.
+                   endOfModlistName = endOfModlistName.substring(profileToCopy.getProfileName().length() - 3);
+                }
                 Pattern endOfModlistNameRegex = Pattern.compile("\\(([^d\\)]+)\\)");
                 if (endOfModlistNameRegex.matcher(endOfModlistName).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
                     copyProfileName = profileToCopy.getProfileName();

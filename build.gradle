@@ -71,7 +71,7 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.7.0'
+version = '0.7.2'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
