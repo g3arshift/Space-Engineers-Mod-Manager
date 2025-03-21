@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class UserDataSqliteRepositoryTest {
     private UserDataSqliteRepository userDataSqliteRepository;
@@ -23,9 +26,10 @@ public class UserDataSqliteRepositoryTest {
 //    }
 
     @Test
-    void developmentTest() {
+    void developmentTest() throws IOException {
         UserDataFileRepository userDataFileRepository = new UserDataFileRepository(new File("Storage/SEMM_Data.xml"));
         UserConfiguration tempConfig = userDataFileRepository.loadUserData().getPayload();
         userDataSqliteRepository.saveUserData(tempConfig);
+        Files.delete(Path.of(databasePath));
     }
 }

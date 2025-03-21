@@ -64,6 +64,16 @@ public class UserConfiguration {
         this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
     }
 
+    public UserConfiguration(String userTheme, UUID lastModifiedSaveProfileId, UUID lastActiveModProfileId, UUID lastActiveSaveProfileId, boolean runFirstTimeSetup) {
+        this.userTheme = userTheme;
+        this.lastModifiedSaveProfileId = lastModifiedSaveProfileId;
+        this.lastActiveModProfileId = lastActiveModProfileId;
+        this.lastActiveSaveProfileId = lastActiveSaveProfileId;
+        this.saveProfiles = new ArrayList<>();
+        this.modListProfiles = new ArrayList<>();
+        this.runFirstTimeSetup = runFirstTimeSetup;
+    }
+
     @XmlElement(name = "userTheme")
     public void setUserTheme(String userTheme) {
         this.userTheme = userTheme;

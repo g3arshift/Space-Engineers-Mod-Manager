@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository implements UserDataRepository {
@@ -39,6 +40,10 @@ public class UserDataSqliteRepository implements UserDataRepository {
             // When we load our table and have all our mods loaded, create the conflict table for the profile by reading the paths of all mods and assembling the conflict table.
         }
         return userConfigurationResult;
+    }
+
+    private UserConfiguration loadUserConfiguration() {
+        return null;
     }
 
     @Override
@@ -226,13 +231,19 @@ public class UserDataSqliteRepository implements UserDataRepository {
         PreparedBatch deleteBatch = handle.prepareBatch("""
                 DELETE FROM mod_list_profile_mod
                 WHERE mod_list_profile_id = :profileId
-                AND mod_id NOT IN (<ids>)""");
+                AND mod_id NOT IN (:ids)""");
         for (ModListProfile modListProfile : modListProfiles) {
             if (modListProfile.getModList().isEmpty()) {
                 continue;
             }
+            String ids = modListProfile.getModList().stream()
+                    .map(Mod::getId)
+                    .map(id -> "'" + id + "'")  // Ensure values are treated as strings
+                    .collect(Collectors.joining(","));
+
             deleteBatch.bind("profileId", modListProfile.getID())
-                    .bindList("ids", modListProfile.getModList().stream().map(Mod::getId).toList()).add();
+                    .bind("ids", ids)
+                    .add();
         }
         int[] countModsRemovedFromProfile = deleteBatch.execute();
         saveResult.addMessage(countModsRemovedFromProfile.length + " mods deleted from profile ", ResultType.SUCCESS);

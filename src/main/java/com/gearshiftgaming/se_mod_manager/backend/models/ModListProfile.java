@@ -24,41 +24,34 @@ public class ModListProfile {
 
     private String profileName;
 
-    private List<Mod> modList;
+    private List<Mod> modList = new ArrayList<>();
 
     @XmlElement
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
 
-    private final HashMap<String, List<Mod>> conflictTable;
+    private  HashMap<String, List<Mod>> conflictTable = new HashMap<>();
 
     public ModListProfile() {
         ID = UUID.randomUUID();
-        modList = new ArrayList<>();
         profileName = "New Mod Profile";
         SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
-        conflictTable = new HashMap<>();
     }
 
     public ModListProfile(SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
-        modList = new ArrayList<>();
         profileName = "New Mod Profile";
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
-        conflictTable = new HashMap<>();
     }
 
     public ModListProfile(String profileName, SpaceEngineersVersion spaceEngineersVersion) {
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
         ID = UUID.randomUUID();
-        modList = new ArrayList<>();
         this.profileName = profileName;
-        conflictTable = new HashMap<>();
     }
 
     public ModListProfile(ModListProfile modListProfile) {
         this.ID = UUID.randomUUID();
         this.profileName = modListProfile.getProfileName();
-        this.modList = new ArrayList<>();
         if(modListProfile.getModList() != null){
             for(Mod m : modListProfile.getModList()) {
                 if(m instanceof SteamMod) {
