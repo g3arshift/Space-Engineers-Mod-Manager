@@ -5,6 +5,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jdbi.v3.core.statement.SqlLogger;
+import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.transaction.TransactionException;
 
 import java.io.*;
@@ -16,6 +18,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 //TODO: look into parallelizing this.
+//TODO: Our logging on numbers of edited rows has some problems, primarily because it returns a list of rows and if they're edited or not. I think. 1 for edited for that row (batch), 0 for not.
 public class UserDataSqliteRepository implements UserDataRepository {
 
     //TODO: We need to re-engineer mod scraping code to check if a mod already exists in the mod table, and if it does, update it. Maybe? What about updating mods? Performance?
@@ -26,6 +29,25 @@ public class UserDataSqliteRepository implements UserDataRepository {
     public UserDataSqliteRepository(String databasePath) {
         this.databasePath = databasePath;
         SQLITE_DB = Jdbi.create("jdbc:sqlite:" + databasePath);
+
+        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
+        Path databaseLocation = Path.of(databasePath);
+        if (Files.notExists(databaseLocation)) {
+            try {
+                if (Files.notExists(databaseLocation.getParent())) {
+                    Files.createDirectories(databaseLocation.getParent());
+                }
+                createDatabase();
+            } catch (IOException e) {
+                try {
+                    Files.delete(databaseLocation.getParent());
+                } catch (IOException ex) {
+                    System.out.println("Failed to delete corrupt database. How?");
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+        SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA foreign_key=ON;"));
     }
 
     @Override
@@ -49,26 +71,6 @@ public class UserDataSqliteRepository implements UserDataRepository {
     @Override
     public Result<Void> saveUserData(UserConfiguration userConfiguration) {
         Result<Void> saveResult = new Result<>();
-        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
-        Path databaseLocation = Path.of(databasePath);
-        if (Files.notExists(databaseLocation)) {
-            try {
-                if (Files.notExists(databaseLocation.getParent())) {
-                    Files.createDirectories(databaseLocation.getParent());
-                }
-                createDatabase();
-            } catch (IOException e) {
-                try {
-                    Files.delete(databaseLocation.getParent());
-                } catch (IOException ex) {
-                    saveResult.addMessage(ex.toString(), ResultType.FAILED);
-                    saveResult.addMessage("Failed to delete database after failure to create/update it. How?", ResultType.FAILED);
-                }
-                saveResult.addMessage(e.toString(), ResultType.FAILED);
-                return saveResult;
-            }
-        }
-
         try {
             SQLITE_DB.useTransaction(handle -> {
                 saveUserConfiguration(userConfiguration, handle, saveResult);
@@ -224,8 +226,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
         saveResult.addMessage("Successfully updated mod list profiles.", ResultType.SUCCESS);
     }
 
-    //TODO: We need to check our constraints. Are nulls fine? Or are we initializing our list wrong? Ah... No... It's empty.
-    // We need empty processing
+    //TODO: We need to fix this shiz
     private void saveMods(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) throws IOException {
         //Delete mods from a profile that are no longer in it
         PreparedBatch deleteBatch = handle.prepareBatch("""
@@ -234,16 +235,19 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 AND mod_id NOT IN (:ids)""");
         for (ModListProfile modListProfile : modListProfiles) {
             if (modListProfile.getModList().isEmpty()) {
-                continue;
-            }
-            String ids = modListProfile.getModList().stream()
-                    .map(Mod::getId)
-                    .map(id -> "'" + id + "'")  // Ensure values are treated as strings
-                    .collect(Collectors.joining(","));
+                deleteBatch.bind("profileId", modListProfile.getID())
+                        .bind("ids", "-1")
+                        .add();
+            } else {
+                String ids = modListProfile.getModList().stream()
+                        .map(Mod::getId)
+                        .map(id -> "'" + id + "'")  // Ensure values are treated as strings
+                        .collect(Collectors.joining(","));
 
-            deleteBatch.bind("profileId", modListProfile.getID())
-                    .bind("ids", ids)
-                    .add();
+                deleteBatch.bind("profileId", modListProfile.getID())
+                        .bind("ids", ids)
+                        .add();
+            }
         }
         int[] countModsRemovedFromProfile = deleteBatch.execute();
         saveResult.addMessage(countModsRemovedFromProfile.length + " mods deleted from profile ", ResultType.SUCCESS);

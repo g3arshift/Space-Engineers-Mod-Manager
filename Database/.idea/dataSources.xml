@@ -8,7 +8,7 @@
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/../Storage/SEMM_Data.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="SEMM_Data_Test.db" uuid="078ae048-7ad2-49e5-9c5c-335a022fa346">
+    <data-source source="LOCAL" name="SEMM_Data_Test.db" uuid="b64ac67c-383d-481f-b405-c56537eed107">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>

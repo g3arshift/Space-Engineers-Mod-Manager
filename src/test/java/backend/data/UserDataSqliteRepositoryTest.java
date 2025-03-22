@@ -30,6 +30,6 @@ public class UserDataSqliteRepositoryTest {
         UserDataFileRepository userDataFileRepository = new UserDataFileRepository(new File("Storage/SEMM_Data.xml"));
         UserConfiguration tempConfig = userDataFileRepository.loadUserData().getPayload();
         userDataSqliteRepository.saveUserData(tempConfig);
-        Files.delete(Path.of(databasePath));
+        //Files.delete(Path.of(databasePath));
     }
 }
