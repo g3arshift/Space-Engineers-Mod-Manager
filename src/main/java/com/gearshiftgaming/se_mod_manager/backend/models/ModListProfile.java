@@ -29,7 +29,7 @@ public class ModListProfile {
     @XmlElement
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
 
-    private  HashMap<String, List<Mod>> conflictTable = new HashMap<>();
+    private HashMap<String, List<Mod>> conflictTable = new HashMap<>();
 
     public ModListProfile() {
         ID = UUID.randomUUID();
@@ -65,6 +65,12 @@ public class ModListProfile {
         conflictTable = modListProfile.getConflictTable();
     }
 
+    public ModListProfile(UUID ID, String profileName, SpaceEngineersVersion SPACE_ENGINEERS_VERSION) {
+        this.ID = ID;
+        this.profileName = profileName;
+        this.SPACE_ENGINEERS_VERSION = SPACE_ENGINEERS_VERSION;
+    }
+
     @XmlAttribute
     public void setProfileName(String profileName) {
         this.profileName = profileName;
@@ -81,6 +87,14 @@ public class ModListProfile {
         if (this == o) return true;
         if (!(o instanceof ModListProfile that)) return false;
 		return Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
+    }
+
+    public void generateConflictTable() {
+        for(Mod m : modList) {
+            for(String modifiedPath : m.getModifiedPaths()) {
+                conflictTable.computeIfAbsent(modifiedPath, k -> new ArrayList<>()).add(m);
+            }
+        }
     }
 
     @Override

@@ -1,27 +1,29 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.ModListProfileMapper;
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.ModMapper;
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.SaveProfileMapper;
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfigurationMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
-import org.jdbi.v3.core.statement.SqlLogger;
-import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.transaction.TransactionException;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 //TODO: look into parallelizing this.
 //TODO: Our logging on numbers of edited rows has some problems, primarily because it returns a list of rows and if they're edited or not. I think. 1 for edited for that row (batch), 0 for not.
-public class UserDataSqliteRepository implements UserDataRepository {
+public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer implements UserDataRepository {
 
     //TODO: We need to re-engineer mod scraping code to check if a mod already exists in the mod table, and if it does, update it. Maybe? What about updating mods? Performance?
+    //TODO: We need to modify the entire program in later versions so that we don't store everything in memory, only a list of the current mod/save profiles and load the information from the
+    // DB on the fly.
 
     private final Jdbi SQLITE_DB;
     private final String databasePath;
@@ -47,6 +49,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                 }
             }
         }
+        //We have to enable foreign keys on each connection for SQLite
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA foreign_key=ON;"));
     }
 
@@ -57,15 +60,147 @@ public class UserDataSqliteRepository implements UserDataRepository {
             userConfigurationResult.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
             userConfigurationResult.setPayload(new UserConfiguration());
         } else {
-            //TODO: Need to fillout the query.
-            //TODO: We actually can assemble our conflict table for each profile on the fly instead of saving them.
-            // When we load our table and have all our mods loaded, create the conflict table for the profile by reading the paths of all mods and assembling the conflict table.
+            Result<UserConfiguration> userProfileLoadResult = loadUserProfile();
+            if (!userConfigurationResult.isSuccess()) {
+                userConfigurationResult.addMessage(userProfileLoadResult.getCurrentMessage(), userProfileLoadResult.getType());
+                return userConfigurationResult;
+            }
+
+            UserConfiguration userConfiguration = userProfileLoadResult.getPayload();
+
+            Result<List<SaveProfile>> saveProfileLoadResult = loadSaveProfiles();
+            if (!saveProfileLoadResult.isSuccess()) {
+                userConfigurationResult.addMessage(saveProfileLoadResult.getCurrentMessage(), saveProfileLoadResult.getType());
+                return userConfigurationResult;
+            }
+
+            userConfiguration.setSaveProfiles(saveProfileLoadResult.getPayload());
+
+            Result<List<ModListProfile>> modListProfileLoadResult = loadModListProfiles();
+            if (!modListProfileLoadResult.isSuccess()) {
+                userConfigurationResult.addMessage(modListProfileLoadResult.getCurrentMessage(), modListProfileLoadResult.getType());
+                return userConfigurationResult;
+            }
+
+            userConfiguration.setModListProfiles(modListProfileLoadResult.getPayload());
         }
         return userConfigurationResult;
     }
 
-    private UserConfiguration loadUserConfiguration() {
-        return null;
+    private Result<UserConfiguration> loadUserProfile() {
+        Result<UserConfiguration> userProfileLoadResult = new Result<>();
+        UserConfiguration userConfiguration;
+        try (Handle handle = SQLITE_DB.open()) {
+            userConfiguration = handle.createQuery("SELECT * from user_configuration where id = 1;")
+                    .map(new UserConfigurationMapper())
+                    .first();
+            userProfileLoadResult.addMessage("Loaded user configuration from database.", ResultType.SUCCESS);
+        }
+        if (userConfiguration == null) {
+            userProfileLoadResult.addMessage("Failed to load user configuration.", ResultType.FAILED);
+        } else {
+            userProfileLoadResult.setPayload(userConfiguration);
+        }
+        return userProfileLoadResult;
+    }
+
+    private Result<List<SaveProfile>> loadSaveProfiles() {
+        Result<List<SaveProfile>> saveProfileLoadResult = new Result<>();
+        List<SaveProfile> saveProfiles;
+        try (Handle handle = SQLITE_DB.open()) {
+            saveProfiles = handle.createQuery("SELECT * from save_profile;")
+                    .map(new SaveProfileMapper())
+                    .list();
+            saveProfileLoadResult.addMessage("Loaded save profiles from database.", ResultType.SUCCESS);
+        }
+        if (saveProfiles == null) {
+            saveProfileLoadResult.addMessage("Failed to load user save profiles.", ResultType.FAILED);
+        } else {
+            saveProfileLoadResult.setPayload(saveProfiles);
+        }
+        return saveProfileLoadResult;
+    }
+
+    private Result<List<ModListProfile>> loadModListProfiles() {
+        Result<List<ModListProfile>> modListProfileLoadResult = new Result<>();
+        try (Handle handle = SQLITE_DB.open()) {
+            //TODO: Verify this doesn't introduce a thousand bugs through each list technically using the same list of mods? Probably actually just do an add here.
+            modListProfileLoadResult.addMessage("Successfully grabbed initial mod list profile information. Fetching mods...", ResultType.SUCCESS);
+            Map<String, Mod> modMap = handle.createQuery("""
+                            WITH ModDetails AS (
+                                SELECT m.*,
+                                    modio.last_updated_year,
+                                    modio.last_updated_month_day,
+                                    modio.last_updated_hour,
+                                    steam.last_updated AS steam_mod_last_updated
+                                FROM mod m
+                                LEFT JOIN modio_mod modio ON m.mod_id = modio.mod_id
+                                LEFT JOIN steam_mod steam ON m.mod_id = steam.mod_id)
+                            SELECT *,
+                                GROUP_CONCAT(DISTINCT mc.category) AS categories,
+                                    mlpm.load_priority
+                            FROM mod_list_profile_mod mlpm
+                            JOIN ModDetails mod_details ON mlpm.mod_id = mod_details.mod_id
+                            LEFT JOIN main.mod_category mc ON mod_details.mod_id = mc.mod_id
+                            GROUP BY mod_details.mod_id, mod_details.friendly_name, mod_details.published_service_name,
+                                mod_details.active, mod_details.description, mod_details.last_updated_year,
+                                mod_details.last_updated_month_day, mod_details.last_updated_hour,
+                                mod_details.steam_mod_last_updated, mlpm.load_priority
+                            ORDER BY mlpm.load_priority;""")
+                    .map(new ModMapper())
+                    .list()
+                    .stream()
+                    .collect(Collectors.toMap(Mod::getId, mod -> mod));
+
+            //TODO: We're going to need a separate query for the modified paths due to size of the strings.
+            // We get back a CSV string for categories which is fine since it's small, but modified paths will be huge so it needs to be a separate query.
+
+            modListProfileLoadResult.addMessage("Successfully grabbed all mod data. Fetching mod list profiles...", ResultType.SUCCESS);
+
+            List<ModListProfile> modListProfiles = handle.createQuery("SELECT * from mod_list_profile;")
+                    .map(new ModListProfileMapper())
+                    .list();
+
+            if (modListProfiles == null || modListProfiles.isEmpty()) {
+                modListProfileLoadResult.addMessage("Failed to load mod list profiles.", ResultType.FAILED);
+                return modListProfileLoadResult;
+            }
+
+            modListProfileLoadResult.setPayload(modListProfiles);
+
+            if (modMap.isEmpty()) {
+                modListProfileLoadResult.addMessage("No mods in the database!", ResultType.SUCCESS);
+                return modListProfileLoadResult;
+            }
+
+            for (ModListProfile modListProfile : modListProfiles) {
+                List<String> modIds = handle.createQuery("""
+                        SELECT mod_id
+                        FROM mod_list_profile_mod
+                        WHERE mod_list_profile_id = :modListProfileId""")
+                        .bind("modListProfileId", modListProfile.getID())
+                        .mapTo(String.class)
+                        .list();
+                if(!modIds.isEmpty()) {
+                    modListProfile.setModList(modIds.stream()
+                            .map(modMap::get)
+                            .filter(Objects::nonNull)
+                            .toList());
+                    modListProfile.generateConflictTable();
+                    modListProfileLoadResult.addMessage("Successfully loaded mods for Mod List Profile ID: " + modListProfile.getID(), ResultType.SUCCESS);
+                }
+            }
+        } catch (Exception e) {
+            modListProfileLoadResult.addMessage(e.toString(), ResultType.FAILED);
+            modListProfileLoadResult.addMessage("Unknown error when loading data from database.", ResultType.FAILED);
+            return modListProfileLoadResult;
+        }
+        if (!modListProfileLoadResult.isSuccess()) {
+            modListProfileLoadResult.addMessage("Failed to load mod list profiles!", ResultType.FAILED);
+        } else {
+            modListProfileLoadResult.addMessage("Successfully loaded all mod list profiles.", ResultType.SUCCESS);
+        }
+        return modListProfileLoadResult;
     }
 
     @Override
@@ -110,7 +245,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                                 last_modified_save_profile_id = excluded.last_modified_save_profile_id,
                                 last_active_mod_profile_id = excluded.last_active_mod_profile_id,
                                 last_active_save_profile_id = excluded.last_active_save_profile_id,
-                                run_first_time_setup = excluded.run_first_time_setup""")
+                                run_first_time_setup = excluded.run_first_time_setup;""")
                 .bindBean(userConfiguration)
                 .execute();
         saveResult.addMessage("Successfully updated user_configuration table.", ResultType.SUCCESS);
@@ -120,7 +255,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
         //Delete the removed save profiles
         PreparedBatch deleteBatch = handle.prepareBatch("""
                 DELETE FROM save_profile
-                WHERE save_profile_id NOT IN (<ids>)""");
+                WHERE save_profile_id NOT IN (<ids>);""");
         deleteBatch.bindList("ids", saveProfiles.isEmpty() ? List.of(-1) : saveProfiles.stream().map(SaveProfile::getID).toList()).add();
 
         int[] countSaveProfilesDeleted = deleteBatch.execute();
@@ -153,11 +288,11 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id  != excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
                         last_save_status = CASE WHEN save_profile.last_save_status != excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
                         last_saved = CASE WHEN save_profile.last_saved != excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
-                        save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END""");
+                        save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""");
         //Update our bridge table to connect save profiles to the user config. Ignore duplicates.
         PreparedBatch saveProfilesUserConfigurationBatch = handle.prepareBatch("""
                 INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
-                    VALUES (1, :saveProfileId)""");
+                    VALUES (1, :saveProfileId);""");
 
         //Actually attach a value to our variables in our batch.
         for (SaveProfile saveProfile : saveProfiles) {
@@ -188,7 +323,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
         //Delete the removed mod list profiles
         PreparedBatch deleteBatch = handle.prepareBatch("""
                 DELETE FROM mod_list_profile
-                WHERE mod_list_profile_id NOT IN(<ids>)""");
+                WHERE mod_list_profile_id NOT IN(<ids>);""");
         deleteBatch.bindList("ids", modListProfiles.isEmpty() ? List.of(-1) : modListProfiles.stream().map(ModListProfile::getID).toList()).add();
         int[] countModListProfilesDeleted = deleteBatch.execute();
         saveResult.addMessage(countModListProfilesDeleted.length + " mod list profiles deleted.", ResultType.SUCCESS);
@@ -208,7 +343,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
         //Update our bridge table to connect mod list profiles to the user config. Ignore duplicates.
         PreparedBatch modListProfilesUserConfigurationBatch = handle.prepareBatch("""
                 INSERT OR IGNORE INTO user_configuration_mod_list_profile (user_configuration_id, mod_list_profile_id)
-                    values (1, :modListProfileId)""");
+                    values (1, :modListProfileId);""");
         for (ModListProfile modListProfile : modListProfiles) {
             modListProfilesBatch.bind("id", modListProfile.getID())
                     .bind("profileName", modListProfile.getProfileName())
@@ -226,13 +361,12 @@ public class UserDataSqliteRepository implements UserDataRepository {
         saveResult.addMessage("Successfully updated mod list profiles.", ResultType.SUCCESS);
     }
 
-    //TODO: We need to fix this shiz
     private void saveMods(List<ModListProfile> modListProfiles, Handle handle, Result<Void> saveResult) throws IOException {
         //Delete mods from a profile that are no longer in it
         PreparedBatch deleteBatch = handle.prepareBatch("""
                 DELETE FROM mod_list_profile_mod
                 WHERE mod_list_profile_id = :profileId
-                AND mod_id NOT IN (:ids)""");
+                AND mod_id NOT IN (:ids);""");
         for (ModListProfile modListProfile : modListProfiles) {
             if (modListProfile.getModList().isEmpty()) {
                 deleteBatch.bind("profileId", modListProfile.getID())
@@ -269,7 +403,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     ON CONFLICT (mod_id) DO UPDATE SET
                         friendly_name = CASE WHEN mod.friendly_name != excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
                         active = CASE WHEN mod.active != excluded.active THEN excluded.active ELSE mod.active END,
-                        description = CASE WHEN mod.description != excluded.description THEN excluded.description ELSE mod.description END""");
+                        description = CASE WHEN mod.description != excluded.description THEN excluded.description ELSE mod.description END;""");
 
         //Upsert the mod categories table but only for info that's changed
         PreparedBatch modCategoriesBatch = handle.prepareBatch("""
@@ -280,7 +414,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         :id,
                         :category)
                     ON CONFLICT (mod_id, category) DO UPDATE SET
-                        category = CASE WHEN mod_category.category != excluded.category THEN excluded.category ELSE mod_category.category END""");
+                        category = CASE WHEN mod_category.category != excluded.category THEN excluded.category ELSE mod_category.category END;""");
 
         //Upsert the steam mods table but only for info that's changed
         PreparedBatch steamModsBatch = handle.prepareBatch("""
@@ -291,7 +425,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         :id,
                         :lastUpdated)
                     ON CONFLICT (mod_id) DO UPDATE SET
-                        last_updated = CASE WHEN steam_mod.last_updated != excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END""");
+                        last_updated = CASE WHEN steam_mod.last_updated != excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""");
 
         //Upsert the mod io mods table but only for info that's changed
         PreparedBatch modIoModsBatch = handle.prepareBatch("""
@@ -308,7 +442,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                     ON CONFLICT (mod_id) DO UPDATE SET
                         last_updated_year = CASE WHEN modio_mod.last_updated_year != excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
                         last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day != excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
-                        last_updated_hour = CASE WHEN modio_mod.last_updated_hour != last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END""");
+                        last_updated_hour = CASE WHEN modio_mod.last_updated_hour != last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""");
 
         //Upsert the mod modified paths table but only for info that's changed
         PreparedBatch modifiedPathsBatch = handle.prepareBatch("""
@@ -319,7 +453,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         :id,
                         :modifiedPath)
                     ON CONFLICT (mod_id, modified_path) DO UPDATE SET
-                        modified_path = CASE WHEN mod_modified_path.modified_path != excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END""");
+                        modified_path = CASE WHEN mod_modified_path.modified_path != excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""");
 
         //Update our bridge table to connect mod list profiles to the user config. Ignore duplicates.
         PreparedBatch modListProfileModBatch = handle.prepareBatch("""
@@ -332,7 +466,7 @@ public class UserDataSqliteRepository implements UserDataRepository {
                         :modListProfileId,
                         :loadPriority)
                     ON CONFLICT (mod_id, mod_list_profile_id) DO UPDATE SET
-                        load_priority = CASE WHEN mod_list_profile_mod.load_priority != excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END""");
+                        load_priority = CASE WHEN mod_list_profile_mod.load_priority != excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END;""");
 
         //Holy mother of batching. This is the binding for all our batches for every mod profile table.
         int countExpectedModsUpdated = 0;
@@ -406,12 +540,12 @@ public class UserDataSqliteRepository implements UserDataRepository {
 
     @Override
     public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation) {
-        return null;
+        return super.exportModlist(modListProfile, modlistLocation);
     }
 
     @Override
     public Result<ModListProfile> importModlist(File modlistLocation) {
-        return null;
+        return super.importModlist(modlistLocation);
     }
 
     @Override

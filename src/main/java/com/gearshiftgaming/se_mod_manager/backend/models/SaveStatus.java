@@ -8,8 +8,21 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 
  */
 public enum SaveStatus {
-    SAVED,
-    UNSAVED,
-    FAILED,
-    NONE
+    SAVED("Saved"),
+    UNSAVED("Unsaved"),
+    FAILED("Failed"),
+    NONE("None");
+
+    private final String name;
+
+    SaveStatus(String name) {this.name = name;}
+
+    public static SaveStatus fromString(String name) {
+        for(SaveStatus b : SaveStatus.values()) {
+            if(b.name.equalsIgnoreCase(name)) {
+                return b;
+            }
+        }
+        return null;
+    }
 }

@@ -14,6 +14,7 @@ import java.sql.SQLException;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
+//TODO: Note, the DB stores steam times as epoch.
 public class ModMapper implements RowMapper<Mod> {
     @Override
     public Mod map(ResultSet rs, StatementContext ctx) throws SQLException {

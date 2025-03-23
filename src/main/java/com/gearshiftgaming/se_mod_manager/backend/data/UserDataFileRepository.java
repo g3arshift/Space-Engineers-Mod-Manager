@@ -22,7 +22,7 @@ import java.nio.file.Path;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 @Getter
-public class UserDataFileRepository implements UserDataRepository {
+public class UserDataFileRepository extends ModListProfileJaxbSerializer implements UserDataRepository{
     private final File USER_CONFIGURATION_FILE;
 
     public UserDataFileRepository(File userConfigurationFile) {
@@ -81,38 +81,12 @@ public class UserDataFileRepository implements UserDataRepository {
 
     @Override
     public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation) {
-        ModListProfile copiedProfile = new ModListProfile(modListProfile);
-
-        Result<Void> result = new Result<>();
-
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(modlistLocation))) {
-            JAXBContext context = JAXBContext.newInstance(ModListProfile.class);
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            StringWriter sw = new StringWriter();
-
-            marshaller.marshal(copiedProfile, sw);
-            bw.write(sw.toString());
-            result.addMessage("Successfully exported modlist.", ResultType.SUCCESS);
-        } catch (JAXBException | IOException e) {
-            result.addMessage(e.toString(), ResultType.FAILED);
-        }
-        return result;
+        return super.exportModlist(modListProfile, modlistLocation);
     }
 
     @Override
     public Result<ModListProfile> importModlist(File modlistLocation) {
-        Result<ModListProfile> modlistProfileResult = new Result<>();
-        try {
-            JAXBContext context = JAXBContext.newInstance(ModListProfile.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
-            ModListProfile modListProfile = (ModListProfile) unmarshaller.unmarshal(modlistLocation);
-            modlistProfileResult.addMessage("Successfully loaded mod profile.", ResultType.SUCCESS);
-            modlistProfileResult.setPayload(modListProfile);
-        } catch (JAXBException e) {
-            modlistProfileResult.addMessage("Failed to load mod profile. Error Details: " + e, ResultType.FAILED);
-        }
-        return modlistProfileResult;
+        return super.importModlist(modlistLocation);
     }
 
     @Override

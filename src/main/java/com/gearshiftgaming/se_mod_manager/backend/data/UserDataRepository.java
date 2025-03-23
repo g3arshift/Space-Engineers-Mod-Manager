@@ -20,9 +20,9 @@ public interface UserDataRepository {
 
     Result<Void> saveUserData(UserConfiguration userConfiguration);
 
-    Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation);
-
-    Result<ModListProfile> importModlist(File modlistLocation);
-
     Result<Void> resetUserConfiguration();
+
+    public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation);
+
+    public Result<ModListProfile> importModlist(File modlistLocation);
 }
