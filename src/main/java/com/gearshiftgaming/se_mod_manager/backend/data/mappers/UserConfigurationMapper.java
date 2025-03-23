@@ -19,9 +19,9 @@ public class UserConfigurationMapper implements RowMapper<UserConfiguration> {
     @Override
     public UserConfiguration map(ResultSet rs, StatementContext ctx) throws SQLException {
         return new UserConfiguration(rs.getString("user_theme"),
-                UUID.fromString(rs.getString("last_modified_save_profile_id")),
-                UUID.fromString(rs.getString("last_active_mod_profile_id")),
-                UUID.fromString(rs.getString("last_active_save_profile_id")),
+                rs.getString("last_modified_save_profile_id") != null ? UUID.fromString(rs.getString("last_modified_save_profile_id")) : null,
+                rs.getString("last_active_mod_profile_id") != null ? UUID.fromString(rs.getString("last_active_mod_profile_id")) : null,
+                rs.getString("last_active_save_profile_id") != null ? UUID.fromString(rs.getString("last_active_save_profile_id")) : null,
                 rs.getBoolean("run_first_time_setup"));
     }
 }

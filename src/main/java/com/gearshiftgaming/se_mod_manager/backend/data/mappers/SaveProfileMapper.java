@@ -24,7 +24,7 @@ public class SaveProfileMapper implements RowMapper<SaveProfile> {
                 rs.getString("profile_name"),
                 rs.getString("save_name"),
                 rs.getString("save_path"),
-                UUID.fromString(rs.getString("last_used_mod_list_profile_id")),
+                rs.getString("last_used_mod_list_profile_id") != null ? UUID.fromString(rs.getString("last_used_mod_list_profile_id")) : null,
                 SaveStatus.fromString(rs.getString("last_save_status")),
                 rs.getString("last_saved"),
                 rs.getInt("save_exists") >= 1,

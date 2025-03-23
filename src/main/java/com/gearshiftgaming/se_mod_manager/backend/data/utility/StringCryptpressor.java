@@ -15,7 +15,7 @@ import java.util.zip.GZIPOutputStream;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  * <p>
- * Encrypts and compresses any string into base64. Hence the name, cryptpressor
+ * Encrypts and compresses any string into base64. Hence, the name, cryptpressor.
  */
 public class StringCryptpressor {
 

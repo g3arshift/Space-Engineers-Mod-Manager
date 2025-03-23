@@ -76,7 +76,7 @@ create table modio_mod
         constraint modio_mod_mod_mod_id_fk
             references mod
             on delete cascade,
-    last_updated_year      integer,
+    last_updated_year      text,
     last_updated_month_day text,
     last_updated_hour      text
 )

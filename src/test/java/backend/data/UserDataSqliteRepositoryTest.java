@@ -2,6 +2,7 @@ package backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,5 +30,8 @@ public class UserDataSqliteRepositoryTest {
         UserConfiguration tempConfig = userDataFileRepository.loadUserData().getPayload();
         userDataSqliteRepository.saveUserData(tempConfig);
         //Files.delete(Path.of(databasePath));
+
+       Result<UserConfiguration> loadedResult = userDataSqliteRepository.loadUserData();
+        System.out.println("text");
     }
 }

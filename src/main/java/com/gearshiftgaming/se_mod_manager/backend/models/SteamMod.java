@@ -5,7 +5,9 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -23,14 +25,18 @@ public class SteamMod extends Mod {
 
     public SteamMod(String id) {
         super(id);
-
-       setPublishedServiceName("Steam");
+        setPublishedServiceName("Steam");
     }
 
     public SteamMod(SteamMod mod) {
         super(mod);
         setPublishedServiceName("Steam");
         this.lastUpdated = mod.getLastUpdated();
+    }
+
+    public SteamMod(String id, String friendlyName, String publishedServiceName, List<String> categories, boolean active, String description, LocalDateTime lastUpdated) {
+        super(id, friendlyName, publishedServiceName, categories, active, description);
+        this.lastUpdated = lastUpdated;
     }
 
     @XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)

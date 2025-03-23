@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 //TODO: look into parallelizing this.
 //TODO: Our logging on numbers of edited rows has some problems, primarily because it returns a list of rows and if they're edited or not. I think. 1 for edited for that row (batch), 0 for not.
-public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer implements UserDataRepository {
+public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
 
     //TODO: We need to re-engineer mod scraping code to check if a mod already exists in the mod table, and if it does, update it. Maybe? What about updating mods? Performance?
     //TODO: We need to modify the entire program in later versions so that we don't store everything in memory, only a list of the current mod/save profiles and load the information from the
@@ -87,6 +87,8 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
         return userConfigurationResult;
     }
 
+    //TODO: It's not loading properly.
+    //TODO: We still have to create the SQL For loading the modified paths for mods. Use a map!!!
     private Result<UserConfiguration> loadUserProfile() {
         Result<UserConfiguration> userProfileLoadResult = new Result<>();
         UserConfiguration userConfiguration;
@@ -134,19 +136,23 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
                                     modio.last_updated_hour,
                                     steam.last_updated AS steam_mod_last_updated
                                 FROM mod m
-                                LEFT JOIN modio_mod modio ON m.mod_id = modio.mod_id
-                                LEFT JOIN steam_mod steam ON m.mod_id = steam.mod_id)
-                            SELECT *,
+                                    LEFT JOIN modio_mod modio ON m.mod_id = modio.mod_id
+                                    LEFT JOIN steam_mod steam ON m.mod_id = steam.mod_id)
+                            SELECT mod_details.mod_id,
+                                mod_details.friendly_name,
+                                mod_details.published_service_name,
+                                mod_details.active,
+                                mod_details.description,
+                                mod_details.last_updated_year,
+                                mod_details.last_updated_month_day,
+                                mod_details.last_updated_hour,
+                                mod_details.steam_mod_last_updated,
                                 GROUP_CONCAT(DISTINCT mc.category) AS categories,
-                                    mlpm.load_priority
+                                   mlpm.load_priority
                             FROM mod_list_profile_mod mlpm
-                            JOIN ModDetails mod_details ON mlpm.mod_id = mod_details.mod_id
-                            LEFT JOIN main.mod_category mc ON mod_details.mod_id = mc.mod_id
-                            GROUP BY mod_details.mod_id, mod_details.friendly_name, mod_details.published_service_name,
-                                mod_details.active, mod_details.description, mod_details.last_updated_year,
-                                mod_details.last_updated_month_day, mod_details.last_updated_hour,
-                                mod_details.steam_mod_last_updated, mlpm.load_priority
-                            ORDER BY mlpm.load_priority;""")
+                                JOIN ModDetails mod_details ON mlpm.mod_id = mod_details.mod_id
+                                LEFT JOIN main.mod_category mc ON mod_details.mod_id = mc.mod_id
+                            GROUP BY mod_details.mod_id, mlpm.load_priority;""")
                     .map(new ModMapper())
                     .list()
                     .stream()
@@ -154,6 +160,8 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
 
             //TODO: We're going to need a separate query for the modified paths due to size of the strings.
             // We get back a CSV string for categories which is fine since it's small, but modified paths will be huge so it needs to be a separate query.
+//            Map<String, List<String>> modifiedPathsMap = handle.createQuery("""
+//                            """);
 
             modListProfileLoadResult.addMessage("Successfully grabbed all mod data. Fetching mod list profiles...", ResultType.SUCCESS);
 
@@ -175,13 +183,13 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
 
             for (ModListProfile modListProfile : modListProfiles) {
                 List<String> modIds = handle.createQuery("""
-                        SELECT mod_id
-                        FROM mod_list_profile_mod
-                        WHERE mod_list_profile_id = :modListProfileId""")
+                                SELECT mod_id
+                                FROM mod_list_profile_mod
+                                WHERE mod_list_profile_id = :modListProfileId""")
                         .bind("modListProfileId", modListProfile.getID())
                         .mapTo(String.class)
                         .list();
-                if(!modIds.isEmpty()) {
+                if (!modIds.isEmpty()) {
                     modListProfile.setModList(modIds.stream()
                             .map(modMap::get)
                             .filter(Objects::nonNull)
@@ -203,6 +211,7 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
         return modListProfileLoadResult;
     }
 
+    //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
     @Override
     public Result<Void> saveUserData(UserConfiguration userConfiguration) {
         Result<Void> saveResult = new Result<>();
@@ -214,7 +223,6 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
                 saveMods(userConfiguration.getModListProfiles(), handle, saveResult);
 
                 saveResult.addMessage("Successfully saved all user data!", ResultType.SUCCESS);
-                //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
             });
         } catch (TransactionException | IOException e) {
             saveResult.addMessage(e.toString(), ResultType.FAILED);
@@ -495,9 +503,9 @@ public class UserDataSqliteRepository extends  ModListProfileJaxbSerializer impl
                 } else {
                     ModIoMod modIoMod = (ModIoMod) mod;
                     modIoModsBatch.bind("id", modIoMod.getId())
-                            .bind("lastUpdatedYear", modIoMod.getLastUpdatedYear())
-                            .bind("lastUpdatedMonthDay", modIoMod.getLastUpdatedMonthDay())
-                            .bind("lastUpdatedHour", modIoMod.getLastUpdatedHour())
+                            .bind("lastUpdatedYear", modIoMod.getLastUpdatedYear() != null ? modIoMod.getLastUpdatedYear().toString() : null)
+                            .bind("lastUpdatedMonthDay", modIoMod.getLastUpdatedMonthDay() != null ? modIoMod.getLastUpdatedMonthDay().toString() : null)
+                            .bind("lastUpdatedHour", modIoMod.getLastUpdatedHour() != null ? modIoMod.getLastUpdatedHour().toString() : null)
                             .add();
                     countExpectedModIoModsUpdated++;
                 }

@@ -1,11 +1,17 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
+import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.*;
+import java.util.Arrays;
 
 /**
  * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
@@ -15,9 +21,36 @@ import java.sql.SQLException;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 //TODO: Note, the DB stores steam times as epoch.
+//TODO: We do a simple null check for the lastmodifiedyear field to tell if it's a steam or modio mod
+//TODO: Separate categories by comma
 public class ModMapper implements RowMapper<Mod> {
     @Override
     public Mod map(ResultSet rs, StatementContext ctx) throws SQLException {
-        return null;
+        Mod mod = null;
+        try {
+            if (rs.getString("published_service_name").equalsIgnoreCase("Steam")) {
+                mod = new SteamMod(rs.getString("mod_id"),
+                        rs.getString("friendly_name"),
+                        rs.getString("published_service_name"),
+                        Arrays.asList(rs.getString("categories").split(",")),
+                        rs.getInt("active") >= 1,
+                        StringCryptpressor.decompressAndDecryptString(rs.getString("description")),
+                        Instant.ofEpochMilli(Long.parseLong(rs.getString("steam_mod_last_updated"))).atZone(ZoneId.systemDefault()).toLocalDateTime());
+
+            } else {
+                mod = new ModIoMod(rs.getString("mod_id"),
+                        rs.getString("friendly_name"),
+                        rs.getString("published_service_name"),
+                        Arrays.asList(rs.getString("categories").split(",")),
+                        rs.getInt("active") >= 1,
+                        StringCryptpressor.decompressAndDecryptString(rs.getString("description")),
+                        Year.parse(rs.getString("last_updated_year")),
+                        MonthDay.parse(rs.getString("last_updated_month_day")),
+                        LocalTime.parse(rs.getString("last_updated_hour")));
+            }
+            return mod;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

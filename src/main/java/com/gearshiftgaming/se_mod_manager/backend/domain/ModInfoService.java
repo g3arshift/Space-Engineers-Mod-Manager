@@ -396,7 +396,6 @@ public class ModInfoService {
                 }
             }
         }
-
         return modScrapeResult;
     }
 
