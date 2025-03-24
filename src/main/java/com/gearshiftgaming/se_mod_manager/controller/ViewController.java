@@ -1,10 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
 import atlantafx.base.theme.PrimerLight;
-import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
@@ -27,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 
 /**
@@ -61,9 +59,10 @@ public class ViewController {
         }
 
         //TODO: We will need to replace this once we switch over to database. Probably gonna have to uncouple a lot of things, actually...
-        File userDataFile = new File(PROPERTIES.getProperty("semm.userData.default.location") + ".xml");
+        //File userDataFile = new File(PROPERTIES.getProperty("semm.userData.default.location") + ".xml");
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
-                new UserDataFileRepository(userDataFile),
+                //new UserDataFileRepository(userDataFile),
+                new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
                 new SaveFileRepository());
 
 
@@ -75,17 +74,19 @@ public class ViewController {
         } else {
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
             logger.error(userConfigurationResult.getCurrentMessage());
-            if (Files.exists(Path.of("/logs"))) { //This is a hack, but it's the only way to check for a true first time setup versus a deleted config.
-                int choice = Popup.displayYesNoDialog("Failed to load existing user configuration, see log for details. " +
-                        "Would you like to create a new user configuration and continue?", MessageType.WARN);
-                if (choice == 1) {
-                    storageController.saveUserData(userConfiguration);
+            try (Stream<Path> stream = Files.list(Path.of("./logs"))) {
+                if (stream.anyMatch(Files::isDirectory)) { //This is a hack, but it's the only way to check for a true first time setup versus a deleted config.
+                    int choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +
+                            "Would you like to create a new user configuration and continue?", MessageType.WARN);
+                    if (choice == 1) {
+                        storageController.saveUserData(userConfiguration);
+                    } else {
+                        Platform.exit();
+                        return;
+                    }
                 } else {
-                    Platform.exit();
-                    return;
+                    storageController.saveUserData(userConfiguration);
                 }
-            } else {
-				storageController.saveUserData(userConfiguration);
             }
         }
 
