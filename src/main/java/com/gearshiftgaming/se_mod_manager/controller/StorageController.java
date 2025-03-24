@@ -37,17 +37,17 @@ public class StorageController {
 	}
 
 	public Result<UserConfiguration> getUserData() {
-		Result<UserConfiguration> userConfigurationResult = USER_DATA_SERVICE.getUserData();
 
-		if (userConfigurationResult.isSuccess()) {
-			for (ModListProfile modListProfile : userConfigurationResult.getPayload().getModListProfiles()) {
-				for (int i = 0; i < modListProfile.getModList().size(); i++) {
-					modListProfile.getModList().get(i).setLoadPriority(i + 1);
-				}
-			}
-		}
+		//No longer necessary for the database implementation.
+//		if (userConfigurationResult.isSuccess()) {
+//			for (ModListProfile modListProfile : userConfigurationResult.getPayload().getModListProfiles()) {
+//				for (int i = 0; i < modListProfile.getModList().size(); i++) {
+//					modListProfile.getModList().get(i).setLoadPriority(i + 1);
+//				}
+//			}
+//		}
 
-		return userConfigurationResult;
+		return USER_DATA_SERVICE.getUserData();
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {

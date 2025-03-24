@@ -2,6 +2,7 @@ package backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +29,15 @@ public class UserDataSqliteRepositoryTest {
     void developmentTest() throws IOException {
         UserDataFileRepository userDataFileRepository = new UserDataFileRepository(new File("Storage/SEMM_Data.xml"));
         UserConfiguration tempConfig = userDataFileRepository.loadUserData().getPayload();
+        for (ModListProfile modListProfile : tempConfig.getModListProfiles()) {
+            for (int i = 0; i < modListProfile.getModList().size(); i++) {
+                modListProfile.getModList().get(i).setLoadPriority(i + 1);
+            }
+        }
+        userDataFileRepository.saveUserData(tempConfig);
         userDataSqliteRepository.saveUserData(tempConfig);
         //Files.delete(Path.of(databasePath));
 
-       Result<UserConfiguration> loadedResult = userDataSqliteRepository.loadUserData();
-        System.out.println("text");
+        Result<UserConfiguration> loadedResult = userDataSqliteRepository.loadUserData();
     }
 }

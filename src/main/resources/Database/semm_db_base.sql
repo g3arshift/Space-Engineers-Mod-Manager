@@ -4,7 +4,6 @@ create table mod
         primary key,
     friendly_name          TEXT                  not null,
     published_service_name TEXT                  not null,
-    active                 integer default false not null,
     description            text
 )
     strict;
@@ -42,6 +41,7 @@ create table mod_list_profile_mod
             references mod
             on delete cascade,
     load_priority       integer not null,
+    active                 integer default false not null,
     constraint mod_list_profile_mod_pk
         primary key (mod_id, mod_list_profile_id)
 )
@@ -89,7 +89,7 @@ create table save_profile
             primary key,
     profile_name                  text                  not null,
     save_name                     text                  not null,
-    save_path                     text                  not null,
+    save_path                     text,
     last_used_mod_list_profile_id text
         constraint save_profile_mod_list_profile_mod_list_profile_id_fk
             references mod_list_profile

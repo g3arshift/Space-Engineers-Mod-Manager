@@ -1,8 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
 public enum SpaceEngineersVersion {
-    SPACE_ENGINEERS_ONE("Space Engineers One"),
-    SPACE_ENGINEERS_TWO("Space Engineers Two");
+    SPACE_ENGINEERS_ONE("SPACE_ENGINEERS_ONE"),
+    SPACE_ENGINEERS_TWO("SPACE_ENGINEERS_TWO");
 
     private final String name;
 

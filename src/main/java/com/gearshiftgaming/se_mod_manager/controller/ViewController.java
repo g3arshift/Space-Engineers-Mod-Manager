@@ -73,7 +73,9 @@ public class ViewController {
             userConfiguration = userConfigurationResult.getPayload();
         } else {
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-            logger.error(userConfigurationResult.getCurrentMessage());
+            for(String message : userConfigurationResult.getMESSAGES()) {
+                logger.error(message);
+            }
             try (Stream<Path> stream = Files.list(Path.of("./logs"))) {
                 if (stream.anyMatch(Files::isDirectory)) { //This is a hack, but it's the only way to check for a true first time setup versus a deleted config.
                     int choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +

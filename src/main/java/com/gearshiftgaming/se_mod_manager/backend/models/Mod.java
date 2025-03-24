@@ -58,12 +58,11 @@ public abstract class Mod {
         this.modifiedPaths = mod.getModifiedPaths();
     }
 
-    public Mod(String id, String friendlyName, String publishedServiceName, List<String> categories, boolean active, String description) {
+    public Mod(String id, String friendlyName, String publishedServiceName, List<String> categories, String description) {
         this.id = id.intern();
         this.friendlyName = friendlyName.intern();
         this.publishedServiceName = publishedServiceName.intern();
         this.categories = categories;
-        this.active = active;
         this.description = description.intern();
     }
 

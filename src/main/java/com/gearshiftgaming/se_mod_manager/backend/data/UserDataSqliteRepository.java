@@ -6,6 +6,8 @@ import com.gearshiftgaming.se_mod_manager.backend.data.mappers.SaveProfileMapper
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfigurationMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
@@ -40,6 +42,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     Files.createDirectories(databaseLocation.getParent());
                 }
                 createDatabase();
+                saveUserData(new UserConfiguration());
             } catch (IOException e) {
                 try {
                     Files.delete(databaseLocation.getParent());
@@ -56,39 +59,39 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<UserConfiguration> loadUserData() {
         Result<UserConfiguration> userConfigurationResult = new Result<>();
-        if (Files.notExists(Path.of(databasePath))) {
-            userConfigurationResult.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
-            userConfigurationResult.setPayload(new UserConfiguration());
-        } else {
-            Result<UserConfiguration> userProfileLoadResult = loadUserProfile();
-            if (!userConfigurationResult.isSuccess()) {
-                userConfigurationResult.addMessage(userProfileLoadResult.getCurrentMessage(), userProfileLoadResult.getType());
-                return userConfigurationResult;
-            }
 
-            UserConfiguration userConfiguration = userProfileLoadResult.getPayload();
-
-            Result<List<SaveProfile>> saveProfileLoadResult = loadSaveProfiles();
-            if (!saveProfileLoadResult.isSuccess()) {
-                userConfigurationResult.addMessage(saveProfileLoadResult.getCurrentMessage(), saveProfileLoadResult.getType());
-                return userConfigurationResult;
-            }
-
-            userConfiguration.setSaveProfiles(saveProfileLoadResult.getPayload());
-
-            Result<List<ModListProfile>> modListProfileLoadResult = loadModListProfiles();
-            if (!modListProfileLoadResult.isSuccess()) {
-                userConfigurationResult.addMessage(modListProfileLoadResult.getCurrentMessage(), modListProfileLoadResult.getType());
-                return userConfigurationResult;
-            }
-
-            userConfiguration.setModListProfiles(modListProfileLoadResult.getPayload());
+        Result<UserConfiguration> userProfileLoadResult = loadUserProfile();
+        if (!userProfileLoadResult.isSuccess()) {
+            return userProfileLoadResult;
         }
+
+        UserConfiguration userConfiguration = userProfileLoadResult.getPayload();
+
+        Result<List<SaveProfile>> saveProfileLoadResult = loadSaveProfiles();
+        if (!saveProfileLoadResult.isSuccess()) {
+            for (String message : saveProfileLoadResult.getMESSAGES()) {
+                userConfigurationResult.addMessage(message, ResultType.FAILED);
+            }
+            return userConfigurationResult;
+        }
+
+        userConfiguration.setSaveProfiles(saveProfileLoadResult.getPayload());
+
+        Result<List<ModListProfile>> modListProfileLoadResult = loadModListProfiles();
+        if (!modListProfileLoadResult.isSuccess()) {
+            for (String message : modListProfileLoadResult.getMESSAGES()) {
+                userConfigurationResult.addMessage(message, ResultType.FAILED);
+            }
+            return userConfigurationResult;
+        }
+
+        userConfiguration.setModListProfiles(modListProfileLoadResult.getPayload());
+        userConfigurationResult.addMessage("Successfully loaded all user data.", ResultType.SUCCESS);
+        userConfigurationResult.setPayload(userConfiguration);
+
         return userConfigurationResult;
     }
 
-    //TODO: It's not loading properly.
-    //TODO: We still have to create the SQL For loading the modified paths for mods. Use a map!!!
     private Result<UserConfiguration> loadUserProfile() {
         Result<UserConfiguration> userProfileLoadResult = new Result<>();
         UserConfiguration userConfiguration;
@@ -126,8 +129,22 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     private Result<List<ModListProfile>> loadModListProfiles() {
         Result<List<ModListProfile>> modListProfileLoadResult = new Result<>();
         try (Handle handle = SQLITE_DB.open()) {
-            //TODO: Verify this doesn't introduce a thousand bugs through each list technically using the same list of mods? Probably actually just do an add here.
+            //Grab all our mod list profiles.
+            List<ModListProfile> modListProfiles = handle.createQuery("SELECT * from mod_list_profile;")
+                    .map(new ModListProfileMapper())
+                    .list();
+
+            //If we don't get our profiles then anything else is a bit moot.
+            if (modListProfiles == null || modListProfiles.isEmpty()) {
+                modListProfileLoadResult.addMessage("Failed to load mod list profiles.", ResultType.FAILED);
+                return modListProfileLoadResult;
+            }
+
             modListProfileLoadResult.addMessage("Successfully grabbed initial mod list profile information. Fetching mods...", ResultType.SUCCESS);
+
+            //TODO: Verify this doesn't introduce a thousand bugs through each list technically using the same list of mods? Probably actually just do an add here.
+            //TODO: fffffuuuuuuuck. It is. It's shallow copies. We really need to reengineer the damn code to use the DB properly, not this "load and save the world" shit.
+            //Get all information for mods from the database. This will get us a map for all mod information where the modID is the key and the mod object the value.
             Map<String, Mod> modMap = handle.createQuery("""
                             WITH ModDetails AS (
                                 SELECT m.*,
@@ -141,66 +158,81 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                             SELECT mod_details.mod_id,
                                 mod_details.friendly_name,
                                 mod_details.published_service_name,
-                                mod_details.active,
                                 mod_details.description,
                                 mod_details.last_updated_year,
                                 mod_details.last_updated_month_day,
                                 mod_details.last_updated_hour,
                                 mod_details.steam_mod_last_updated,
-                                GROUP_CONCAT(DISTINCT mc.category) AS categories,
-                                   mlpm.load_priority
-                            FROM mod_list_profile_mod mlpm
-                                JOIN ModDetails mod_details ON mlpm.mod_id = mod_details.mod_id
+                                GROUP_CONCAT(DISTINCT mc.category) AS categories
+                            FROM ModDetails mod_details
                                 LEFT JOIN main.mod_category mc ON mod_details.mod_id = mc.mod_id
-                            GROUP BY mod_details.mod_id, mlpm.load_priority;""")
+                            GROUP BY mod_details.mod_id;""")
                     .map(new ModMapper())
                     .list()
                     .stream()
                     .collect(Collectors.toMap(Mod::getId, mod -> mod));
 
-            //TODO: We're going to need a separate query for the modified paths due to size of the strings.
-            // We get back a CSV string for categories which is fine since it's small, but modified paths will be huge so it needs to be a separate query.
-//            Map<String, List<String>> modifiedPathsMap = handle.createQuery("""
-//                            """);
+            modListProfileLoadResult.addMessage("Successfully grabbed all mod data. Fetching modified paths...", ResultType.SUCCESS);
 
-            modListProfileLoadResult.addMessage("Successfully grabbed all mod data. Fetching mod list profiles...", ResultType.SUCCESS);
-
-            List<ModListProfile> modListProfiles = handle.createQuery("SELECT * from mod_list_profile;")
-                    .map(new ModListProfileMapper())
-                    .list();
-
-            if (modListProfiles == null || modListProfiles.isEmpty()) {
-                modListProfileLoadResult.addMessage("Failed to load mod list profiles.", ResultType.FAILED);
-                return modListProfileLoadResult;
-            }
-
-            modListProfileLoadResult.setPayload(modListProfiles);
-
+            //If there's no mods on any mod list we can just skip the next steps since they're all mod assembly steps.
             if (modMap.isEmpty()) {
                 modListProfileLoadResult.addMessage("No mods in the database!", ResultType.SUCCESS);
+                modListProfileLoadResult.setPayload(modListProfiles);
                 return modListProfileLoadResult;
             }
 
+            //Finish constructing our mod objects with their modified paths.
+            Map<String, List<String>> modifiedPathsMap = handle.createQuery("""
+                            SELECT * from mod_modified_path;""")
+                    .reduceRows(new LinkedHashMap<>(), (map, row) -> {
+                        String modId = row.getColumn("mod_id", String.class);
+                        String modifiedPath = row.getColumn("modified_path", String.class);
+                        map.computeIfAbsent(modId, k -> new ArrayList<>()).add(modifiedPath);
+                        return map;
+                    });
+
+            if (modifiedPathsMap.isEmpty()) {
+                modListProfileLoadResult.addMessage("No modified paths found for mods!", ResultType.SUCCESS);
+            } else {
+                //Actually add the values of the modified paths to each mod
+                for (Map.Entry<String, Mod> entry : modMap.entrySet()) {
+                    entry.getValue().setModifiedPaths(modifiedPathsMap.getOrDefault(entry.getKey(),
+                            entry.getValue().getModifiedPaths()));
+                }
+            }
+
+            //Grab the list of mod ID's we expect to have in each mod list profile, then add them to the profile from our earlier hashtable.
             for (ModListProfile modListProfile : modListProfiles) {
-                List<String> modIds = handle.createQuery("""
-                                SELECT mod_id
+                List<Triple<String, Integer, Boolean>> modIds = handle.createQuery("""
+                                SELECT mod_id, load_priority, active
                                 FROM mod_list_profile_mod
-                                WHERE mod_list_profile_id = :modListProfileId""")
+                                WHERE mod_list_profile_id = :modListProfileId
+                                ORDER BY load_priority""")
                         .bind("modListProfileId", modListProfile.getID())
-                        .mapTo(String.class)
+                        .map((rs, ctx) -> Triple.of(rs.getString("mod_id"), rs.getInt("load_priority"), rs.getInt("active") >= 1))
                         .list();
+                //TODO: Need active field
                 if (!modIds.isEmpty()) {
-                    modListProfile.setModList(modIds.stream()
-                            .map(modMap::get)
+                    List<Mod> sortedMods = modIds.stream()
+                            .map(entry -> {
+                                Mod mod = modMap.get(entry.getLeft());
+                                if (mod != null) {
+                                    mod.setLoadPriority(entry.getMiddle());
+                                    mod.setActive(entry.getRight());
+                                }
+                                return mod;
+                            })
                             .filter(Objects::nonNull)
-                            .toList());
+                            .toList();
+                    modListProfile.setModList(sortedMods);
                     modListProfile.generateConflictTable();
                     modListProfileLoadResult.addMessage("Successfully loaded mods for Mod List Profile ID: " + modListProfile.getID(), ResultType.SUCCESS);
                 }
             }
+            modListProfileLoadResult.setPayload(modListProfiles);
         } catch (Exception e) {
             modListProfileLoadResult.addMessage(e.toString(), ResultType.FAILED);
-            modListProfileLoadResult.addMessage("Unknown error when loading data from database.", ResultType.FAILED);
+            modListProfileLoadResult.addMessage("Error when loading data from database. Check the log for more information.", ResultType.FAILED);
             return modListProfileLoadResult;
         }
         if (!modListProfileLoadResult.isSuccess()) {
@@ -400,17 +432,14 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     mod_id,
                     friendly_name,
                     published_service_name,
-                    active,
                     description)
                     VALUES (
                         :id,
                         :friendlyName,
                         :publishedServiceName,
-                        :active,
                         :description)
                     ON CONFLICT (mod_id) DO UPDATE SET
                         friendly_name = CASE WHEN mod.friendly_name != excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
-                        active = CASE WHEN mod.active != excluded.active THEN excluded.active ELSE mod.active END,
                         description = CASE WHEN mod.description != excluded.description THEN excluded.description ELSE mod.description END;""");
 
         //Upsert the mod categories table but only for info that's changed
@@ -468,13 +497,16 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 INSERT INTO mod_list_profile_mod (
                     mod_id,
                     mod_list_profile_id,
-                    load_priority)
+                    load_priority,
+                    active)
                     VALUES (
                         :id,
                         :modListProfileId,
-                        :loadPriority)
+                        :loadPriority,
+                        :active)
                     ON CONFLICT (mod_id, mod_list_profile_id) DO UPDATE SET
-                        load_priority = CASE WHEN mod_list_profile_mod.load_priority != excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END;""");
+                        load_priority = CASE WHEN mod_list_profile_mod.load_priority != excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
+                        active = CASE WHEN mod_list_profile_mod.active != excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""");
 
         //Holy mother of batching. This is the binding for all our batches for every mod profile table.
         int countExpectedModsUpdated = 0;
@@ -485,7 +517,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 modsBatch.bind("id", mod.getId())
                         .bind("friendlyName", mod.getFriendlyName())
                         .bind("publishedServiceName", mod.getPublishedServiceName())
-                        .bind("active", mod.isActive())
                         .bind("description", StringCryptpressor.compressAndEncryptString(mod.getDescription()))
                         .add();
 
@@ -520,6 +551,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 modListProfileModBatch.bind("id", mod.getId())
                         .bind("modListProfileId", modListProfile.getID())
                         .bind("loadPriority", mod.getLoadPriority())
+                        .bind("active", mod.isActive())
                         .add();
                 countExpectedModsUpdated++;
             }

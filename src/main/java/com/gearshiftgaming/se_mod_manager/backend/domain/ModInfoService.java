@@ -74,6 +74,8 @@ public class ModInfoService {
 
     private final String MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR;
 
+    //TODO: Download mods using steamCMD to the user directory. Have some sort of UI indication they're downloading in the UI.
+    // Once downloaded, get modified paths and modify conflict table.
     public ModInfoService(ModlistRepository MODLIST_REPOSITORY, Properties PROPERTIES) {
         this.MODLIST_REPOSITORY = MODLIST_REPOSITORY;
 

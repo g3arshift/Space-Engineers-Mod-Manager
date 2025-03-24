@@ -53,11 +53,16 @@ public class ModListProfile {
         this.ID = UUID.randomUUID();
         this.profileName = modListProfile.getProfileName();
         if(modListProfile.getModList() != null){
-            for(Mod m : modListProfile.getModList()) {
+            for(int i = 0; i < modListProfile.getModList().size(); i++) {
+                Mod m = modListProfile.getModList().get(i);
                 if(m instanceof SteamMod) {
-                    this.modList.add(new SteamMod((SteamMod) m));
+                    SteamMod steamMod = new SteamMod((SteamMod) m);
+                    steamMod.setLoadPriority(i + 1);
+                    this.modList.add(steamMod);
                 } else {
-                    this.modList.add(new ModIoMod((ModIoMod) m));
+                    ModIoMod modIoMod = new ModIoMod((ModIoMod) m);
+                    modIoMod.setLoadPriority(i + 1);
+                    this.modList.add(modIoMod);
                 }
             }
         }
