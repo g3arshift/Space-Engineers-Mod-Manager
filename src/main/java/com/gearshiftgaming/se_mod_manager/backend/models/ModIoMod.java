@@ -42,8 +42,8 @@ public class ModIoMod extends Mod {
         this.lastUpdatedHour = mod.getLastUpdatedHour();
     }
     
-    public ModIoMod(String id, String friendlyName, String publishedServiceName, List<String> categories, String description, Year lastUpdatedYear, MonthDay lastUpdatedMonthDay, LocalTime lastUpdatedHour) {
-        super(id, friendlyName, publishedServiceName, categories, description);
+    public ModIoMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, Year lastUpdatedYear, MonthDay lastUpdatedMonthDay, LocalTime lastUpdatedHour) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description);
         this.lastUpdatedYear = lastUpdatedYear;
         this.lastUpdatedMonthDay = lastUpdatedMonthDay;
         this.lastUpdatedHour = lastUpdatedHour;

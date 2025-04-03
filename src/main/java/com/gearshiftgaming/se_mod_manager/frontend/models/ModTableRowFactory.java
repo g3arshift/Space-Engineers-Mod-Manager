@@ -64,6 +64,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         this.MODLIST_MANAGER_HELPER = modlistManagerHelper;
     }
 
+    //TODO: We need a "Update mods" button.
     @Override
     public ModTableRow call(@NotNull TableView<Mod> modTable) {
         modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
@@ -98,6 +99,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				}
             }
             modTable.refresh();
+            //TODO: Swap this out for just updating active mods.
             UI_SERVICE.saveUserData();
         });
 
@@ -111,6 +113,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				}
             }
             modTable.refresh();
+            //TODO: Swap this out for just updating active mods.
             UI_SERVICE.saveUserData();
         });
 
@@ -267,7 +270,9 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					but for whatever reason the changes aren't propagating without this.
 				 */
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
+                //TODO: We might be able to fix this with the new memory model. Investigate.
                 UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+                //TODO: Swap this out for just updating mods.
                 UI_SERVICE.saveUserData();
 
                 dragEvent.consume();

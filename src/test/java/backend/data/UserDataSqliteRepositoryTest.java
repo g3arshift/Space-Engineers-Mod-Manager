@@ -28,16 +28,16 @@ public class UserDataSqliteRepositoryTest {
     @Test
     void developmentTest() throws IOException {
         UserDataFileRepository userDataFileRepository = new UserDataFileRepository(new File("Storage/SEMM_Data.xml"));
-        UserConfiguration tempConfig = userDataFileRepository.loadUserData().getPayload();
-        for (ModListProfile modListProfile : tempConfig.getModListProfiles()) {
+        UserConfiguration tempConfig = userDataFileRepository.loadAllData().getPayload();
+        for (ModListProfile modListProfile : tempConfig.getModListProfilesBasicInfo()) {
             for (int i = 0; i < modListProfile.getModList().size(); i++) {
                 modListProfile.getModList().get(i).setLoadPriority(i + 1);
             }
         }
-        userDataFileRepository.saveUserData(tempConfig);
-        userDataSqliteRepository.saveUserData(tempConfig);
+        userDataFileRepository.saveAllData(tempConfig);
+        userDataSqliteRepository.saveAllData(tempConfig);
         //Files.delete(Path.of(databasePath));
 
-        Result<UserConfiguration> loadedResult = userDataSqliteRepository.loadUserData();
+        Result<UserConfiguration> loadedResult = userDataSqliteRepository.loadAllData();
     }
 }

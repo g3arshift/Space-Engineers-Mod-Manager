@@ -196,7 +196,7 @@ public class ModTableContextBar {
         STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
-        modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
+        modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILE_IDS());
         Optional<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isPresent())
             modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
@@ -323,6 +323,7 @@ public class ModTableContextBar {
             }
         }
 
+        //TODO: Replace with just the user config save.
         Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
         //This fixes the selected row being the wrong color until we change selection
         MASTER_MANAGER_VIEW.getModTable().refresh();

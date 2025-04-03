@@ -87,7 +87,7 @@ public class ModListManager {
 
     public ModListManager(UiService UI_SERVICE, SimpleInput PROFILE_INPUT_VIEW) {
         this.UI_SERVICE = UI_SERVICE;
-        MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILES();
+        MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILE_IDS();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
         PROFILE_INPUT_VIEW.setTitle("Create Mod List");
         PROFILE_INPUT_VIEW.setInputInstructions("Mod list name");
@@ -201,6 +201,7 @@ public class ModListManager {
                     copyProfile.setProfileName(copyProfileName);
 
                     MOD_PROFILES.add(copyProfile);
+                    //TODO: Replace with just saving mod list profile.
                     UI_SERVICE.saveUserData();
 
                     Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
@@ -222,6 +223,7 @@ public class ModListManager {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                     MOD_PROFILES.remove(profileIndex);
 
+                    //TODO: Replace with just deleting mod list profile
                     UI_SERVICE.saveUserData();
                     if (profileIndex > MOD_PROFILES.size())
                         profileList.getSelectionModel().select(MOD_PROFILES.size() - 1);
@@ -280,6 +282,7 @@ public class ModListManager {
 
                     UI_SERVICE.log(String.format("Successfully renamed mod profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
+                    //TODO: Replace with just saving mod list profile.
                     UI_SERVICE.saveUserData();
                 }
             } else {

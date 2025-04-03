@@ -112,6 +112,7 @@ public class MainWindow {
                 }
             }
 
+            //TODO: Replace with save saveProfile call
             UI_SERVICE.saveUserData();
         }
 
@@ -142,6 +143,7 @@ public class MainWindow {
                     UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW);
                 } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
                     UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+                    //TODO: Replace with save user config call
                     UI_SERVICE.saveUserData();
                 }
             }

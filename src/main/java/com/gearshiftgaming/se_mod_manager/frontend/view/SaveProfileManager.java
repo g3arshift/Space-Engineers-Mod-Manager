@@ -269,6 +269,7 @@ public class SaveProfileManager {
 //        modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
 //        modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
 
+        //TODO: Replace with just saving user profile.
         UI_SERVICE.saveUserData();
         //TODO: Switch active profile to the new profile
     }
@@ -283,7 +284,7 @@ public class SaveProfileManager {
                 if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
-                        Optional<ModListProfile> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
+                        Optional<ModListProfile> modlistProfile = UI_SERVICE.getMODLIST_PROFILE_IDS().stream()
                                 .filter(modlistProfile1 -> modlistProfile1.getProfileName().equals(newProfileName))
                                 .findFirst();
                         modlistProfile.ifPresent(profile -> modTableContextBar.getModProfileDropdown().getSelectionModel().select(profile));
@@ -314,6 +315,7 @@ public class SaveProfileManager {
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
             UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+            //TODO: Replace with just saving mod profile
             UI_SERVICE.saveUserData();
 
             Platform.runLater(() -> {
@@ -377,6 +379,7 @@ public class SaveProfileManager {
             Popup.displaySimpleAlert(profileCopyResult, stage);
 
             UI_SERVICE.log(profileCopyResult);
+            //TODO: Replace with just saving user profile.
             UI_SERVICE.saveUserData();
 
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
@@ -403,6 +406,7 @@ public class SaveProfileManager {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
                     SAVE_PROFILES.remove(profileIndex);
 
+                    //TODO: Replace with just saving user profile.
                     UI_SERVICE.saveUserData();
                     if (profileIndex > SAVE_PROFILES.size())
                         saveList.getSelectionModel().select(profileIndex - 1);
@@ -455,6 +459,7 @@ public class SaveProfileManager {
 
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
+                    //TODO: Replace with just saving user profile.
                     UI_SERVICE.saveUserData();
                 }
             } else {

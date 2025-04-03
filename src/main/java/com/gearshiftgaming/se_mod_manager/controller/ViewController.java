@@ -17,7 +17,6 @@ import javafx.scene.Parent;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -61,12 +60,10 @@ public class ViewController {
         //TODO: We will need to replace this once we switch over to database. Probably gonna have to uncouple a lot of things, actually...
         //File userDataFile = new File(PROPERTIES.getProperty("semm.userData.default.location") + ".xml");
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
-                //new UserDataFileRepository(userDataFile),
                 new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
                 new SaveFileRepository());
 
-
-        Result<UserConfiguration> userConfigurationResult = storageController.getUserData();
+        Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
         UserConfiguration userConfiguration = new UserConfiguration();
 
         if (userConfigurationResult.isSuccess()) {
@@ -92,7 +89,7 @@ public class ViewController {
             }
         }
 
-        ObservableList<ModListProfile> modListProfiles = FXCollections.observableList(userConfiguration.getModListProfiles());
+        ObservableList<ModListProfile> modListProfiles = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
         ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 
         //Initialize the list we use to store log messages shown to the user

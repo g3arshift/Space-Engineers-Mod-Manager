@@ -21,6 +21,6 @@ public class ModListProfileMapper implements RowMapper<ModListProfile> {
     public ModListProfile map(ResultSet rs, StatementContext ctx) throws SQLException {
         return new ModListProfile(UUID.fromString(rs.getString("mod_list_profile_id")),
                 rs.getString("profile_name"),
-                SpaceEngineersVersion.fromString(rs.getString("space_engineers_version")));
+                SpaceEngineersVersion.valueOf(rs.getString("space_engineers_version")));
     }
 }

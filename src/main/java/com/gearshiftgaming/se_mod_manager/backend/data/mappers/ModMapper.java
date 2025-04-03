@@ -32,7 +32,9 @@ public class ModMapper implements RowMapper<Mod> {
                 mod = new SteamMod(rs.getString("mod_id"),
                         rs.getString("friendly_name"),
                         rs.getString("published_service_name"),
+                        rs.getInt("load_priority"),
                         Arrays.asList(rs.getString("categories").split(",")),
+                        rs.getInt("active") >= 1,
                         StringCryptpressor.decompressAndDecryptString(rs.getString("description")),
                         Instant.ofEpochMilli(Long.parseLong(rs.getString("steam_mod_last_updated"))).atZone(ZoneId.systemDefault()).toLocalDateTime());
 
@@ -40,7 +42,9 @@ public class ModMapper implements RowMapper<Mod> {
                 mod = new ModIoMod(rs.getString("mod_id"),
                         rs.getString("friendly_name"),
                         rs.getString("published_service_name"),
+                        rs.getInt("load_priority"),
                         Arrays.asList(rs.getString("categories").split(",")),
+                        rs.getInt("active") >= 1,
                         StringCryptpressor.decompressAndDecryptString(rs.getString("description")),
                         Year.parse(rs.getString("last_updated_year")),
                         rs.getString("last_updated_month_day") != null ? MonthDay.parse(rs.getString("last_updated_month_day")) : null,

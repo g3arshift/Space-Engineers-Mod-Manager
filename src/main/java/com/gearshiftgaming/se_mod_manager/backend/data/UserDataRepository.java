@@ -1,28 +1,48 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import jakarta.xml.bind.JAXBException;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public interface UserDataRepository {
-    Result<UserConfiguration> loadUserData();
+    Result<Void> saveAllData(UserConfiguration userConfiguration);
 
-    Result<Void> saveUserData(UserConfiguration userConfiguration);
+    public Result<UserConfiguration> loadStartupData();
 
-    Result<Void> resetUserConfiguration();
+    public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration);
 
-    public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation);
+    public Result<ModListProfile> loadModListProfileByName(String profileName);
 
-    public Result<ModListProfile> importModlist(File modlistLocation);
+    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId);
+
+    public Result<Void> saveModListProfileDetails(ModListProfile modListProfile);
+
+    public Result<Void> deleteModListProfile(ModListProfile modListProfile);
+
+    public Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList);
+
+    public Result<Void> updateModListActiveMods(UUID modListProfileId, List<Mod> modList);
+
+    public Result<Void> updateModListLoadPriority(UUID modListProfileId, List<Mod> modList);
+
+    public Result<Void> saveSaveProfile(SaveProfile saveProfile);
+
+    public Result<Void> deleteSaveProfile(SaveProfile saveProfile);
+
+    public Result<Void> updateModInformation(List<Mod> modList);
+
+    public Result<Void> exportModListProfile(ModListProfile modListProfile, File modlistLocation);
+
+    public Result<ModListProfile> importModListProfile(File modlistLocation);
+
+    Result<Void> resetData();
 }

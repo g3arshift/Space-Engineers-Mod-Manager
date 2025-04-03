@@ -30,6 +30,9 @@ create table mod_list_profile
 )
     strict;
 
+create index mod_list_profile_profile_name
+    on mod_list_profile (profile_name);
+
 create table mod_list_profile_mod
 (
     mod_list_profile_id text    not null

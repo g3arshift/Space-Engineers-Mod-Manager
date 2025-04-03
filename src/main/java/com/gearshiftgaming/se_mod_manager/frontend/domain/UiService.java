@@ -62,7 +62,7 @@ public class UiService {
     private final ObservableList<LogMessage> USER_LOG;
 
     @Getter
-    private final ObservableList<ModListProfile> MODLIST_PROFILES;
+    private final ObservableList<UUID> MODLIST_PROFILE_IDS;
 
     @Getter
     private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -98,22 +98,23 @@ public class UiService {
 
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-                     @NotNull ObservableList<ModListProfile> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+                     @NotNull ObservableList<UUID> MODLIST_PROFILE_IDS, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
         this.MOD_INFO_CONTROLLER = modInfoController;
         this.USER_LOG = USER_LOG;
-        this.MODLIST_PROFILES = MODLIST_PROFILES;
+        this.MODLIST_PROFILE_IDS = MODLIST_PROFILE_IDS;
         this.SAVE_PROFILES = SAVE_PROFILES;
         this.STORAGE_CONTROLLER = storageController;
         this.USER_CONFIGURATION = USER_CONFIGURATION;
 
         this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
+        //TODO: Lookup modlist profile by ID. We need to actually load it here.
         getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModListProfileProfile = modlistProfile, () -> {
             log("No previously chosen modlist detected.", MessageType.INFO);
-            currentModListProfileProfile = MODLIST_PROFILES.getFirst();
+            currentModListProfileProfile = MODLIST_PROFILE_IDS.getFirst();
         });
         getLastActiveSaveProfile().ifPresentOrElse(saveProfile -> currentSaveProfile = saveProfile, () -> {
             log("No previously chosen save profile detected.", MessageType.INFO);
@@ -173,6 +174,7 @@ public class UiService {
         }
     }
 
+    //TODO: Gonna need a whoooole lot more DB functions. Additionally, we should log private successes (except for the last success message), and log public the failures.
     public Result<Void> saveUserData() {
         Result<Void> saveResult = STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
         log(saveResult);
@@ -217,9 +219,11 @@ public class UiService {
         currentModList = FXCollections.observableArrayList(currentModListProfileProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
         setLastActiveModlistProfile(modListProfile.getID());
+        //TODO: Swap out for just saving mod list profile.
         saveUserData();
     }
 
+    //TODO: Swap out for saving save profile? We might leave this alone.
     public void setCurrentSaveProfile(SaveProfile currentSaveProfile) {
         this.currentSaveProfile = currentSaveProfile;
         setLastActiveSaveProfile(currentSaveProfile.getID());
@@ -534,14 +538,14 @@ public class UiService {
         Result<ModListProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
         if (modlistProfileResult.isSuccess()) {
             ModListProfile importModListProfile = modlistProfileResult.getPayload();
-            boolean duplicateProfileExists = MODLIST_PROFILES
+            boolean duplicateProfileExists = MODLIST_PROFILE_IDS
                     .stream()
                     .anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModListProfile.getProfileName().toLowerCase().trim()));
             if (!duplicateProfileExists) {
                 for (int i = 0; i < importModListProfile.getModList().size(); i++) {
                     importModListProfile.getModList().get(i).setLoadPriority(i + 1);
                 }
-                MODLIST_PROFILES.add(modlistProfileResult.getPayload());
+                MODLIST_PROFILE_IDS.add(modlistProfileResult.getPayload());
             } else
                 modlistProfileResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
         }
@@ -557,7 +561,7 @@ public class UiService {
     }
 
     public Optional<ModListProfile> getLastActiveModlistProfile() {
-        return MODLIST_PROFILES.stream()
+        return MODLIST_PROFILE_IDS.stream()
                 .filter(modlistProfile -> modlistProfile.getID().equals(USER_CONFIGURATION.getLastActiveModProfileId()))
                 .findAny();
     }
@@ -568,6 +572,7 @@ public class UiService {
                 .findFirst();
     }
 
+    //TODO: Swap out for saving save profile? We might leave this alone.
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
         currentSaveProfile.setLastUsedModProfileId(currentModListProfileProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);

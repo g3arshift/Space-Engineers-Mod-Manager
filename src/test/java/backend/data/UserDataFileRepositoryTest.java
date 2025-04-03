@@ -1,8 +1,6 @@
 package backend.data;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import jakarta.xml.bind.JAXBException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,20 +26,20 @@ public class UserDataFileRepositoryTest {
 	@Test
 	void shouldGetValidConfig() {
 		userDataFileRepository = new UserDataFileRepository((new File("src/test/resources/TestUserData/SEMM_TEST_Data.xml")));
-		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadUserData();
+		Result<UserConfiguration> userConfigurationResult = userDataFileRepository.loadAllData();
 		assertTrue(userConfigurationResult.isSuccess());
 		UserConfiguration validUserConfig = userConfigurationResult.getPayload();
 		assertEquals("Primer Dark", validUserConfig.getUserTheme());
 		assertNull(validUserConfig.getLastModifiedSaveProfileId());
-		assertEquals(1, validUserConfig.getModListProfiles().size());
-		assertEquals("Default", validUserConfig.getModListProfiles().getFirst().getProfileName());
+		assertEquals(1, validUserConfig.getModListProfilesBasicInfo().size());
+		assertEquals("Default", validUserConfig.getModListProfilesBasicInfo().getFirst().getProfileName());
 		assertEquals("None", validUserConfig.getSaveProfiles().getFirst().getProfileName());
 	}
 
 	@Test
 	void shouldFailOnInvalidUserConfig() {
 		userDataFileRepository = new UserDataFileRepository((new File("src/test/resources/TestUserData/SEMM_BAD_TEST_Data.xml")));
-		Result<UserConfiguration> userConfigurationResult = (userDataFileRepository.loadUserData());
+		Result<UserConfiguration> userConfigurationResult = (userDataFileRepository.loadAllData());
 		UserConfiguration badUserConfiguration = new UserConfiguration();
 		badUserConfiguration.setUserTheme("Primer Light");
 		userConfigurationResult.setPayload(badUserConfiguration);
@@ -49,17 +47,17 @@ public class UserDataFileRepositoryTest {
 		UserConfiguration badUserData = userConfigurationResult.getPayload();
 		assertEquals("Primer Light", badUserData.getUserTheme());
 		assertNull(badUserData.getLastModifiedSaveProfileId());
-		assertEquals(1, badUserData.getModListProfiles().size());
-		assertEquals("Default", badUserData.getModListProfiles().getFirst().getProfileName());
+		assertEquals(1, badUserData.getModListProfilesBasicInfo().size());
+		assertEquals("Default", badUserData.getModListProfilesBasicInfo().getFirst().getProfileName());
 		assertEquals("None", badUserData.getSaveProfiles().getFirst().getProfileName());
 	}
 
 	@Test
-	void shouldSaveUserData() throws IOException {
+	void shouldSaveAllData() throws IOException {
 		UserConfiguration freshUserConfig = new UserConfiguration();
 		Path tempFile = Files.createFile(tempDir.toPath().resolve("test_user_data.xml"));
 		userDataFileRepository = new UserDataFileRepository(tempFile.toFile());
-		assertTrue(userDataFileRepository.saveUserData(freshUserConfig).isSuccess());
+		assertTrue(userDataFileRepository.saveAllData(freshUserConfig).isSuccess());
 	}
 
 	@Test
@@ -73,12 +71,12 @@ public class UserDataFileRepositoryTest {
 
 		assertFalse(Files.exists(testFile.toPath()));
 		userDataFileRepository = new UserDataFileRepository(new File("null"));
-		Result<Void> result = userDataFileRepository.exportModlist(modListProfile, testFile);
+		Result<Void> result = userDataFileRepository.exportModListProfile(modListProfile, testFile);
 		assertTrue(result.isSuccess());
 		assertEquals("Successfully exported modlist.", result.getCurrentMessage());
 		assertTrue(Files.exists(testFile.toPath()));
 
-		Result<ModListProfile> exportContents = userDataFileRepository.importModlist(testFile);
+		Result<ModListProfile> exportContents = userDataFileRepository.importModListProfile(testFile);
 		assertTrue(exportContents.isSuccess());
 		ModListProfile testModListProfile = exportContents.getPayload();
 		assertEquals(2, testModListProfile.getModList().size());
@@ -91,7 +89,7 @@ public class UserDataFileRepositoryTest {
 		Files.copy(Path.of("src/test/resources/TestUserData/SEMM_TEST_Data.xml"), testFile.toPath());
 		userDataFileRepository = new UserDataFileRepository(testFile);
 		assertTrue(Files.exists(testFile.toPath()));
-		userDataFileRepository.resetUserConfiguration();
+		userDataFileRepository.resetData();
 		assertFalse(Files.exists(testFile.toPath()));
 	}
 }

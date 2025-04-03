@@ -29,8 +29,7 @@ public class UserDataFileRepository extends ModListProfileJaxbSerializer impleme
         USER_CONFIGURATION_FILE = userConfigurationFile;
     }
 
-    @Override
-    public Result<UserConfiguration> loadUserData() {
+    public Result<UserConfiguration> loadAllData() {
         Result<UserConfiguration> userConfigurationResult = new Result<>();
         if (!USER_CONFIGURATION_FILE.exists()) {
             userConfigurationResult.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
@@ -50,7 +49,7 @@ public class UserDataFileRepository extends ModListProfileJaxbSerializer impleme
     }
 
     @Override
-    public Result<Void> saveUserData(UserConfiguration userConfiguration) {
+    public Result<Void> saveAllData(UserConfiguration userConfiguration) {
         Result<Void> saveResult = new Result<>();
         try {
             if (!USER_CONFIGURATION_FILE.exists()) {
@@ -80,17 +79,17 @@ public class UserDataFileRepository extends ModListProfileJaxbSerializer impleme
     }
 
     @Override
-    public Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation) {
+    public Result<Void> exportModListProfile(ModListProfile modListProfile, File modlistLocation) {
         return super.exportModlist(modListProfile, modlistLocation);
     }
 
     @Override
-    public Result<ModListProfile> importModlist(File modlistLocation) {
+    public Result<ModListProfile> importModListProfile(File modlistLocation) {
         return super.importModlist(modlistLocation);
     }
 
     @Override
-    public Result<Void> resetUserConfiguration() {
+    public Result<Void> resetData() {
         Result<Void> resetResult = new Result<>();
         try {
             Files.delete(USER_CONFIGURATION_FILE.toPath());

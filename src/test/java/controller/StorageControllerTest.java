@@ -51,8 +51,8 @@ public class StorageControllerTest {
         secondProfile.getModList().add(new ModIoMod("5544"));
         secondProfile.getModList().add(new SteamMod("1221"));
 
-        userConfiguration.getModListProfiles().add(firstProfile);
-        userConfiguration.getModListProfiles().add(secondProfile);
+        userConfiguration.getModListProfilesBasicInfo().add(firstProfile);
+        userConfiguration.getModListProfilesBasicInfo().add(secondProfile);
     }
 
     @Test
@@ -60,13 +60,13 @@ public class StorageControllerTest {
         Result<UserConfiguration> goodResult = new Result<>();
         goodResult.setPayload(userConfiguration);
         goodResult.addMessage("Successful.", ResultType.SUCCESS);
-        when(userDataRepository.loadUserData()).thenReturn(goodResult);
+        when(userDataRepository.loadAllData()).thenReturn(goodResult);
 
-        Result<UserConfiguration> returnedResult = storageController.getUserData();
+        Result<UserConfiguration> returnedResult = storageController.loadStartupData();
         assertTrue(returnedResult.isSuccess());
 
-        ModListProfile firstModListProfile = userConfiguration.getModListProfiles().get(1);
-        ModListProfile secondModListProfile = userConfiguration.getModListProfiles().getLast();
+        ModListProfile firstModListProfile = userConfiguration.getModListProfilesBasicInfo().get(1);
+        ModListProfile secondModListProfile = userConfiguration.getModListProfilesBasicInfo().getLast();
 
         assertEquals(3, firstModListProfile.getModList().size());
         assertEquals(2, secondModListProfile.getModList().size());

@@ -28,6 +28,6 @@ public class SaveProfileMapper implements RowMapper<SaveProfile> {
                 SaveStatus.fromString(rs.getString("last_save_status")),
                 rs.getString("last_saved"),
                 rs.getInt("save_exists") >= 1,
-                SpaceEngineersVersion.fromString(rs.getString("space_engineers_version")));
+                SpaceEngineersVersion.valueOf(rs.getString("space_engineers_version")));
     }
 }

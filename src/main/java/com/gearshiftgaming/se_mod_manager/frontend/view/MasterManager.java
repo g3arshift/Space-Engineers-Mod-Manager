@@ -876,6 +876,7 @@ public class MasterManager {
             Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
 
             UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+            //TODO: Replace with save user config call
             UI_SERVICE.saveUserData();
             runTutorialCleanup();
         }
@@ -1058,7 +1059,9 @@ public class MasterManager {
 				but for whatever reason the changes aren't propagating without this.
 			*/
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
+                //TODO: NEw memory model might fix. check.
                 UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+                //TODO: Replace with save mod profile call
                 UI_SERVICE.saveUserData();
             }
 
@@ -1298,6 +1301,7 @@ public class MasterManager {
             }
 
             UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+            //TODO: Depending on the save choice, we're either gonna need to replace this with save modlist call or profile changing + saving
             UI_SERVICE.saveUserData();
 
             //Reset our UI settings for the mod progress

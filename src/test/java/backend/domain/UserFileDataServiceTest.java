@@ -9,7 +9,6 @@ import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,16 +42,16 @@ public class UserFileDataServiceTest {
 		Result<UserConfiguration> badResult = new Result<>();
 		badResult.addMessage("User data was not found. Defaulting to new user configuration.", ResultType.FAILED);
 		badResult.setPayload(new UserConfiguration());
-		when(userDataFileRepository.loadUserData()).thenReturn(badResult);
-		Result<UserConfiguration> result = userDataService.getUserData();
+		when(userDataFileRepository.loadAllData()).thenReturn(badResult);
+		Result<UserConfiguration> result = userDataService.loadStartupData();
 
 		UserConfiguration userData = result.getPayload();
 		assertEquals(ResultType.FAILED, result.getType());
 		assertEquals("User data was not found. Defaulting to new user configuration.", result.getMESSAGES().getFirst());
 		assertEquals("PrimerLight", userData.getUserTheme());
 		assertNull(userData.getLastModifiedSaveProfileId());
-		assertEquals(1, userData.getModListProfiles().size());
-		assertEquals("Default", userData.getModListProfiles().getFirst().getProfileName());
+		assertEquals(1, userData.getModListProfilesBasicInfo().size());
+		assertEquals("Default", userData.getModListProfilesBasicInfo().getFirst().getProfileName());
 		assertEquals("None", userData.getSaveProfiles().getFirst().getProfileName());
 	}
 
@@ -64,9 +63,9 @@ public class UserFileDataServiceTest {
 		goodResult.addMessage("Successfully loaded user data.", ResultType.SUCCESS);
 		goodResult.setPayload(goodUserConfig);
 
-		when(userDataFileRepository.loadUserData()).thenReturn(goodResult);
+		when(userDataFileRepository.loadAllData()).thenReturn(goodResult);
 
-		Result<UserConfiguration> result = userDataService.getUserData();
+		Result<UserConfiguration> result = userDataService.loadStartupData();
 
 		UserConfiguration userConfiguration = result.getPayload();
 
@@ -74,8 +73,8 @@ public class UserFileDataServiceTest {
 
 		assertEquals("Primer Dark", userConfiguration.getUserTheme());
 		assertNull(userConfiguration.getLastModifiedSaveProfileId());
-		assertEquals(1, userConfiguration.getModListProfiles().size());
-		assertEquals("Default", userConfiguration.getModListProfiles().getFirst().getProfileName());
+		assertEquals(1, userConfiguration.getModListProfilesBasicInfo().size());
+		assertEquals("Default", userConfiguration.getModListProfilesBasicInfo().getFirst().getProfileName());
 		assertEquals("None", userConfiguration.getSaveProfiles().getFirst().getProfileName());
 	}
 
@@ -85,7 +84,7 @@ public class UserFileDataServiceTest {
 		goodResult.addMessage("Successfully saved user configuration.", ResultType.SUCCESS);
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
-		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(goodResult);
+		when(userDataFileRepository.saveAllData(mockUserConfig)).thenReturn(goodResult);
 
 		Result<Void> result = userDataService.saveUserData(mockUserConfig);
 
@@ -99,7 +98,7 @@ public class UserFileDataServiceTest {
 		badResult.addMessage("Failed to save user data.", ResultType.FAILED);
 		UserConfiguration mockUserConfig = mock(UserConfiguration.class);
 
-		when(userDataFileRepository.saveUserData(mockUserConfig)).thenReturn(badResult);
+		when(userDataFileRepository.saveAllData(mockUserConfig)).thenReturn(badResult);
 
 		Result<Void> result = userDataService.saveUserData(mockUserConfig);
 		assertEquals(ResultType.FAILED, result.getType());

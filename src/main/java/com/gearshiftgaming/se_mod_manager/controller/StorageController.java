@@ -36,7 +36,7 @@ public class StorageController {
         this.SAVE_SERVICE = new SaveService(saveRepository, SANDBOX_SERVICE);
 	}
 
-	public Result<UserConfiguration> getUserData() {
+	public Result<UserConfiguration> loadStartupData() {
 
 		//No longer necessary for the database implementation.
 //		if (userConfigurationResult.isSuccess()) {
@@ -47,7 +47,7 @@ public class StorageController {
 //			}
 //		}
 
-		return USER_DATA_SERVICE.getUserData();
+		return USER_DATA_SERVICE.loadStartupData();
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
@@ -154,7 +154,7 @@ public class StorageController {
 		UserConfiguration userConfiguration = new UserConfiguration();
 		userConfiguration.getSaveProfiles().removeFirst();
 		userConfiguration.getSaveProfiles().add(testSaveProfile);
-		userConfiguration.getModListProfiles().add(testModListProfile);
+		userConfiguration.getModListProfilesBasicInfo().add(testModListProfile);
 		userConfiguration.setUserTheme(theme.getName());
 
 		System.out.println("Created test user data.");
@@ -181,7 +181,7 @@ public class StorageController {
 
 	private UserConfiguration sortUserConfigurationModLists(UserConfiguration userConfiguration) {
 		UserConfiguration sortedUserConfiguration = new UserConfiguration(userConfiguration);
-		for (ModListProfile m : sortedUserConfiguration.getModListProfiles()) {
+		for (ModListProfile m : sortedUserConfiguration.getModListProfilesBasicInfo()) {
 			List<Mod> sortedModList = m.getModList().stream()
 					.sorted(Comparator.comparing(Mod::getLoadPriority))
 					.toList();

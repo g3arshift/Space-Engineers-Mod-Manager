@@ -1,11 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import atlantafx.base.theme.PrimerLight;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class UserConfiguration {
 
     private List<SaveProfile> saveProfiles;
 
-    private List<ModListProfile> modListProfiles;
+    private List<Triple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo;
 
     private boolean runFirstTimeSetup;
 
@@ -43,13 +43,15 @@ public class UserConfiguration {
      */
     public UserConfiguration() {
         saveProfiles = new ArrayList<>();
-        modListProfiles = new ArrayList<>();
+        modListProfilesBasicInfo = new ArrayList<>();
         userTheme = "PrimerLight";
 
         //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
+        //TODO: Need to move this to UI service startup.
         ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
-        modListProfiles.add(modListProfile);
+        modListProfilesBasicInfo.add(modListProfile);
+        modListProfilesBasicInfo.add(Triple.of(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION()));
         lastActiveModProfileId = modListProfile.getID();
         runFirstTimeSetup = true;
     }
@@ -58,7 +60,7 @@ public class UserConfiguration {
         this.userTheme = userConfiguration.getUserTheme();
         this.lastModifiedSaveProfileId = userConfiguration.getLastModifiedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
-        this.modListProfiles = userConfiguration.getModListProfiles();
+        this.modListProfilesBasicInfo = userConfiguration.getModListProfilesBasicInfo();
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
         this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
@@ -70,7 +72,7 @@ public class UserConfiguration {
         this.lastActiveModProfileId = lastActiveModProfileId;
         this.lastActiveSaveProfileId = lastActiveSaveProfileId;
         this.saveProfiles = new ArrayList<>();
-        this.modListProfiles = new ArrayList<>();
+        this.modListProfilesBasicInfo = new ArrayList<>();
         this.runFirstTimeSetup = runFirstTimeSetup;
     }
 
@@ -87,19 +89,19 @@ public class UserConfiguration {
 
     @XmlElementWrapper(name = "modlistProfiles")
     @XmlElement(name = "modlistProfile")
-    public void setModListProfiles(List<ModListProfile> modListProfiles) {
-        this.modListProfiles = modListProfiles;
+    public void setModListProfilesBasicInfo(List<Triple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo) {
+        this.modListProfilesBasicInfo = modListProfilesBasicInfo;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modListProfiles, that.modListProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modListProfilesBasicInfo, that.modListProfilesBasicInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modListProfiles);
+        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modListProfilesBasicInfo);
     }
 }

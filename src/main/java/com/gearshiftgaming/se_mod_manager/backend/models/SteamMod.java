@@ -34,8 +34,8 @@ public class SteamMod extends Mod {
         this.lastUpdated = mod.getLastUpdated();
     }
 
-    public SteamMod(String id, String friendlyName, String publishedServiceName, List<String> categories, String description, LocalDateTime lastUpdated) {
-        super(id, friendlyName, publishedServiceName, categories, description);
+    public SteamMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, LocalDateTime lastUpdated) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description);
         this.lastUpdated = lastUpdated;
     }
 
