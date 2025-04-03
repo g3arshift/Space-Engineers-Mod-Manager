@@ -14,7 +14,7 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public interface UserDataRepository {
-    Result<Void> saveAllData(UserConfiguration userConfiguration);
+    Result<Void> saveAllData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile);
 
     public Result<UserConfiguration> loadStartupData();
 
