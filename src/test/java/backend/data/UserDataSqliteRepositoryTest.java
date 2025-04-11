@@ -35,7 +35,7 @@ public class UserDataSqliteRepositoryTest {
             }
         }
         userDataFileRepository.saveAllData(tempConfig);
-        userDataSqliteRepository.saveAllData(tempConfig);
+        userDataSqliteRepository.saveCurrentData(tempConfig);
         //Files.delete(Path.of(databasePath));
 
         Result<UserConfiguration> loadedResult = userDataSqliteRepository.loadAllData();

@@ -271,7 +271,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				 */
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
                 //TODO: We might be able to fix this with the new memory model. Investigate.
-                UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
                 //TODO: Swap this out for just updating mods.
                 UI_SERVICE.saveUserData();
 
@@ -317,7 +317,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
 			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
-			UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
 
 			int previouslyActiveModCount = 0;
 

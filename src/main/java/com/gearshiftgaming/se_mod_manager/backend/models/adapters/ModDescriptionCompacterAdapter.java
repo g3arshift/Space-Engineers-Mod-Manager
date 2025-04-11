@@ -1,11 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.models.adapters;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
+import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
-
-import java.io.ByteArrayInputStream;
-import java.util.Base64;
-import java.util.zip.GZIPInputStream;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -19,12 +15,12 @@ public class ModDescriptionCompacterAdapter extends XmlAdapter<String, String> {
 	//Load
 	@Override
 	public String unmarshal(String s) throws Exception {
-		return StringCryptpressor.decompressAndDecryptString(s);
+		return StringCodepressor.decompressAndDecodeString(s);
 	}
 
 	//Save
 	@Override
 	public String marshal(String s) throws Exception {
-		return StringCryptpressor.compressAndEncryptString(s);
+		return StringCodepressor.compressandEncodeString(s);
 	}
 }

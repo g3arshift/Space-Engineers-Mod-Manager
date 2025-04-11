@@ -15,6 +15,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 
@@ -46,7 +48,7 @@ public class ViewController {
     private UiService uiService;
 
     //TODO: Check for file locks to prevent two copies of the app from running simultaneously
-    public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         logger.info("Started application");
 
         PROPERTIES = new Properties();
@@ -57,8 +59,6 @@ public class ViewController {
             throw (e);
         }
 
-        //TODO: We will need to replace this once we switch over to database. Probably gonna have to uncouple a lot of things, actually...
-        //File userDataFile = new File(PROPERTIES.getProperty("semm.userData.default.location") + ".xml");
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
                 new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
                 new SaveFileRepository());
@@ -89,7 +89,9 @@ public class ViewController {
             }
         }
 
-        ObservableList<ModListProfile> modListProfiles = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
+        //TODO: Go down through this to start figuring out how we're going to change over the memory model.
+        //TODO: Start by fixing this and then UI service.
+        ObservableList<Triple<UUID, String, SpaceEngineersVersion>> modListProfileDetails = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
         ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 
         //Initialize the list we use to store log messages shown to the user
@@ -101,7 +103,7 @@ public class ViewController {
 
         ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-        uiService = new UiService(logger, userLog, modListProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+        uiService = new UiService(logger, userLog, modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
         uiService.log(userConfigurationResult);
 
         setupInterface(stage);

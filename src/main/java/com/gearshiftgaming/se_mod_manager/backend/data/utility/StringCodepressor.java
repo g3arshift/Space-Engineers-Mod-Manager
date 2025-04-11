@@ -17,9 +17,9 @@ import java.util.zip.GZIPOutputStream;
  * <p>
  * Encrypts and compresses any string into base64. Hence, the name, cryptpressor.
  */
-public class StringCryptpressor {
+public class StringCodepressor {
 
-    public static String decompressAndDecryptString(String input) throws IOException {
+    public static String decompressAndDecodeString(String input) throws IOException {
         if (input == null || input.isEmpty()) {
             return input;
         }
@@ -38,7 +38,7 @@ public class StringCryptpressor {
         return output.toString();
     }
 
-    public static String compressAndEncryptString(String input) throws IOException {
+    public static String compressandEncodeString(String input) throws IOException {
         if (input == null || input.isEmpty()) {
             return input;
         }

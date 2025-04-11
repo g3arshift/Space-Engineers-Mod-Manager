@@ -839,10 +839,9 @@ public class MasterManager {
         File savePath = importChooser.showOpenDialog(STAGE);
 
         if (savePath != null) {
-            Result<ModListProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<Void> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
-                UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
             }
             Popup.displaySimpleAlert(modlistProfileResult, STAGE);
         }
@@ -908,7 +907,7 @@ public class MasterManager {
         else
             UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
 
-        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfileProfile());
+        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
     }
 
     @FXML
@@ -1060,7 +1059,7 @@ public class MasterManager {
 			*/
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
                 //TODO: NEw memory model might fix. check.
-                UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
                 //TODO: Replace with save mod profile call
                 UI_SERVICE.saveUserData();
             }
@@ -1300,7 +1299,7 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
-            UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
+            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
             //TODO: Depending on the save choice, we're either gonna need to replace this with save modlist call or profile changing + saving
             UI_SERVICE.saveUserData();
 

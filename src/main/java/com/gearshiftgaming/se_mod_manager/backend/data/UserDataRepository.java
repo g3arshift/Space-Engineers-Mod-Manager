@@ -14,17 +14,21 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public interface UserDataRepository {
-    Result<Void> saveAllData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile);
+    Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile);
 
     public Result<UserConfiguration> loadStartupData();
 
     public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration);
 
+    public Result<ModListProfile> loadFirstModListProfile();
+
     public Result<ModListProfile> loadModListProfileByName(String profileName);
 
     public Result<ModListProfile> loadModListProfileById(UUID modListProfileId);
 
-    public Result<Void> saveModListProfileDetails(ModListProfile modListProfile);
+    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion);
+
+    public Result<Void> saveModListProfile(ModListProfile modListProfile);
 
     public Result<Void> deleteModListProfile(ModListProfile modListProfile);
 

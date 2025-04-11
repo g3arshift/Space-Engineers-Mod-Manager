@@ -63,7 +63,7 @@ public class StatusBar {
 			}
 
 			lastSaveModifiedName.setText(lastUsedSaveProfile.get().getProfileName());
-			Optional<ModListProfile> lastAppliedModlistProfile = UI_SERVICE.getMODLIST_PROFILE_IDS().stream()
+			Optional<ModListProfile> lastAppliedModlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
 							.filter(modlistProfile -> modlistProfile.getID().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
 									.findFirst();
 

@@ -188,7 +188,7 @@ public class ModTableContextBar {
         };
 
 		ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-			String profileName = UI_SERVICE.getCurrentModListProfileProfile().getProfileName();
+			String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
 			double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
 			((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
 		};
@@ -196,7 +196,7 @@ public class ModTableContextBar {
         STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
-        modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILE_IDS());
+        modProfileDropdown.setItems(UI_SERVICE.getMOD_LIST_PROFILE_DETAILS());
         Optional<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isPresent())
             modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
@@ -339,13 +339,17 @@ public class ModTableContextBar {
     private void selectModProfile() {
         clearSearchBox();
 
-        UI_SERVICE.setCurrentModListProfileProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
         MASTER_MANAGER_VIEW.updateModTableContents();
     }
 
     @FXML
     private void selectSaveProfile() {
-        UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+        Result<Void> saveSelectionResult = UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+        if(!saveSelectionResult.isSuccess()) {
+            UI_SERVICE.log(saveSelectionResult);
+            Popup.displaySimpleAlert("Failed to select save profile. See log for more details.", MessageType.ERROR);
+        }
     }
 
     @FXML
@@ -371,7 +375,7 @@ public class ModTableContextBar {
         if (resetChoice == 1) {
             resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
             if (resetChoice == 1) {
-                Result<Void> configResetResult = UI_SERVICE.resetUserConfig();
+                Result<Void> configResetResult = UI_SERVICE.resetData();
                 if (configResetResult.isSuccess()) {
                     Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
                     Platform.exit();

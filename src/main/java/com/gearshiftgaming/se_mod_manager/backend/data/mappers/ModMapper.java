@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
+import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
@@ -20,13 +20,11 @@ import java.util.Arrays;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-//TODO: Note, the DB stores steam times as epoch.
-//TODO: We do a simple null check for the lastmodifiedyear field to tell if it's a steam or modio mod
-//TODO: Separate categories by comma
+//Note, the DB stores steam times as epoch.
 public class ModMapper implements RowMapper<Mod> {
     @Override
     public Mod map(ResultSet rs, StatementContext ctx) throws SQLException {
-        Mod mod = null;
+        Mod mod;
         try {
             if (rs.getString("published_service_name").equalsIgnoreCase("Steam")) {
                 mod = new SteamMod(rs.getString("mod_id"),
@@ -35,7 +33,7 @@ public class ModMapper implements RowMapper<Mod> {
                         rs.getInt("load_priority"),
                         Arrays.asList(rs.getString("categories").split(",")),
                         rs.getInt("active") >= 1,
-                        StringCryptpressor.decompressAndDecryptString(rs.getString("description")),
+                        StringCodepressor.decompressAndDecodeString(rs.getString("description")),
                         Instant.ofEpochMilli(Long.parseLong(rs.getString("steam_mod_last_updated"))).atZone(ZoneId.systemDefault()).toLocalDateTime());
 
             } else {
@@ -45,7 +43,7 @@ public class ModMapper implements RowMapper<Mod> {
                         rs.getInt("load_priority"),
                         Arrays.asList(rs.getString("categories").split(",")),
                         rs.getInt("active") >= 1,
-                        StringCryptpressor.decompressAndDecryptString(rs.getString("description")),
+                        StringCodepressor.decompressAndDecodeString(rs.getString("description")),
                         Year.parse(rs.getString("last_updated_year")),
                         rs.getString("last_updated_month_day") != null ? MonthDay.parse(rs.getString("last_updated_month_day")) : null,
                         rs.getString("last_updated_hour") != null ? LocalTime.parse(rs.getString("last_updated_hour")) : null);

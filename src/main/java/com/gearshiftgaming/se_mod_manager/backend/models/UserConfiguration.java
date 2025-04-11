@@ -49,8 +49,6 @@ public class UserConfiguration {
         //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
         //TODO: Need to move this to UI service startup.
-        ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
-        modListProfilesBasicInfo.add(modListProfile);
         modListProfilesBasicInfo.add(Triple.of(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION()));
         lastActiveModProfileId = modListProfile.getID();
         runFirstTimeSetup = true;

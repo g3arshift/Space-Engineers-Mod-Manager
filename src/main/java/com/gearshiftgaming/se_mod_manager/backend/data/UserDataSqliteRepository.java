@@ -4,9 +4,8 @@ import com.gearshiftgaming.se_mod_manager.backend.data.mappers.ModListProfileMap
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.ModMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.SaveProfileMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfigurationMapper;
-import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCryptpressor;
+import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.microsoft.playwright.impl.HARRouter;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
@@ -17,7 +16,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
@@ -41,7 +39,10 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     Files.createDirectories(databaseLocation.getParent());
                 }
                 createDatabase();
-                saveAllData(new UserConfiguration());
+                UserConfiguration userConfiguration = new UserConfiguration();
+                ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
+                userConfiguration.setLastActiveModProfileId(modListProfile.getID());
+                saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
             } catch (IOException e) {
                 try {
                     Files.delete(databaseLocation.getParent());
@@ -56,15 +57,14 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
-    //TODO: Rework to fit new memory model. Just call the individual save methods.
     @Override
-    public Result<Void> saveAllData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
+    public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         Result<Void> saveResult = saveUserConfiguration(userConfiguration);
         if(!saveResult.isSuccess()) {
             return saveResult;
         }
 
-        saveResult.addAllMessages(saveModListProfileDetails(modListProfile));
+        saveResult.addAllMessages(saveModListProfileDetails(, modListProfile, , ));
         if(!saveResult.isSuccess()) {
             return saveResult;
         }
@@ -148,6 +148,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         return saveProfiles;
     }
 
+    //TODO: OP#58
     @Override
     public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration) {
         Result<Void> saveResult = new Result<>();
@@ -203,6 +204,24 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         loadModList(profileName, foundModListProfile.get(), modListProfileResult);
 
+        return modListProfileResult;
+    }
+
+    @Override
+    public Result<ModListProfile> loadFirstModListProfile() {
+        Result<ModListProfile> modListProfileResult = new Result<>();
+        Optional<ModListProfile> foundModListProfile;
+        try (Handle handle = SQLITE_DB.open()) {
+            foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile LIMIT 1;")
+                    .map(new ModListProfileMapper())
+                    .findFirst();
+        }
+        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
+                () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
+        if (foundModListProfile.isEmpty()) {
+            return modListProfileResult;
+        }
+        loadModList(foundModListProfile.get().getID().toString(), foundModListProfile.get(), modListProfileResult);
         return modListProfileResult;
     }
 
@@ -318,7 +337,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
     //Saves a mod list profile, but ONLY the profile. Does not save the mod list.
     @Override
-    public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
+    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
         Result<Void> modListProfileSaveResult = new Result<>();
         try {
             SQLITE_DB.useTransaction(handle -> handle.createUpdate("""
@@ -332,21 +351,37 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :spaceEngineersVersion)
                                 ON CONFLICT (mod_list_profile_id) DO UPDATE SET
                                     profile_name = CASE WHEN mod_list_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""")
-                    .bind("id", modListProfile.getID())
-                    .bind("profileName", modListProfile.getProfileName())
-                    .bind("spaceEngineersVersion", modListProfile.getSPACE_ENGINEERS_VERSION())
+                    .bind("id", modListProfileId)
+                    .bind("profileName", modListProfileName)
+                    .bind("spaceEngineersVersion", spaceEngineersVersion)
                     .execute());
             //Update our user config bridge table too
             SQLITE_DB.useTransaction(handle -> handle.createUpdate("""
                             INSERT OR IGNORE INTO user_configuration_mod_list_profile (user_configuration_id, mod_list_profile_id)
                                 values (1, :modListProfileId);""")
-                    .bind("modListProfileId", modListProfile.getID())
+                    .bind("modListProfileId", modListProfileId)
                     .execute());
-            modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\"", modListProfile.getProfileName()), ResultType.SUCCESS);
+            modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\"", modListProfileName), ResultType.SUCCESS);
         } catch (TransactionException e) {
             modListProfileSaveResult.addMessage(e.toString(), ResultType.FAILED);
             return modListProfileSaveResult;
         }
+        return modListProfileSaveResult;
+    }
+
+    @Override
+    public Result<Void> saveModListProfile(ModListProfile modListProfile) {
+        Result<Void> modListProfileSaveResult = saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
+        if(!modListProfileSaveResult.isSuccess()) {
+            return modListProfileSaveResult;
+        }
+
+        modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
+        if(!modListProfileSaveResult.isSuccess()) {
+            return modListProfileSaveResult;
+        }
+
+        modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
         return modListProfileSaveResult;
     }
 
@@ -652,7 +687,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     modsBatch.bind("id", mod.getId())
                             .bind("friendlyName", mod.getFriendlyName())
                             .bind("publishedServiceName", mod.getPublishedServiceName())
-                            .bind("description", StringCryptpressor.compressAndEncryptString(mod.getDescription()))
+                            .bind("description", StringCodepressor.compressandEncodeString(mod.getDescription()))
                             .add();
 
                     for (String category : mod.getCategories()) {

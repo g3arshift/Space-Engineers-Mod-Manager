@@ -85,14 +85,14 @@ public class ModListManager {
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
-    public ModListManager(UiService UI_SERVICE, SimpleInput PROFILE_INPUT_VIEW) {
-        this.UI_SERVICE = UI_SERVICE;
-        MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILE_IDS();
+    public ModListManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
+        this.UI_SERVICE = uiService;
+        MOD_PROFILES = uiService.getMOD_LIST_PROFILE_DETAILS();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
         PROFILE_INPUT_VIEW.setTitle("Create Mod List");
         PROFILE_INPUT_VIEW.setInputInstructions("Mod list name");
         PROFILE_INPUT_VIEW.setEmptyTextMessage("Mod list name cannot be empty!");
-        TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
+        TUTORIAL_HIGHLIGHT_PANES = uiService.getHighlightPanes();
     }
 
 
@@ -215,7 +215,7 @@ public class ModListManager {
     @FXML
     private void removeProfile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            if (UI_SERVICE.getCurrentModListProfileProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+            if (UI_SERVICE.getCurrentModListProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
@@ -276,7 +276,7 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfileProfile())) {
+                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfile())) {
                         activeProfileName.setText(profileToModify.getProfileName());
                     }
 
@@ -347,10 +347,9 @@ public class ModListManager {
         File savePath = importChooser.showOpenDialog(stage);
 
         if (savePath != null) {
-            Result<ModListProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<Void> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modTableContextBar.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
-                UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
                 profileList.refresh();
             }
             Popup.displaySimpleAlert(modlistProfileResult, stage);
@@ -375,7 +374,7 @@ public class ModListManager {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModListProfileProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
         Platform.enterNestedEventLoop(stage);
     }
 
@@ -395,7 +394,7 @@ public class ModListManager {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModListProfileProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("This is the Mod List Manager. Here you can manage the mod lists that you can apply to saves.");
