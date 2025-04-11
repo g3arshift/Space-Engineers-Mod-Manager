@@ -206,8 +206,8 @@ public class UiService {
         return STORAGE_CONTROLLER.loadModListProfileByName(profileName);
     }
 
-    public Result<Void> updateModListLoadPriority(UUID modListProfileId, List<Mod> modList) {
-        return STORAGE_CONTROLLER.updateModListLoadPriority(modListProfileId, modList);
+    public Result<Void> updateModListLoadPriority() {
+        return STORAGE_CONTROLLER.updateModListLoadPriority(currentModListProfile.getID(), currentModList);
     }
 
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
@@ -218,8 +218,8 @@ public class UiService {
         return STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
     }
 
-    public Result<Void> updateModListActiveMods(UUID modListProfileId, List<Mod> modList) {
-        return STORAGE_CONTROLLER.updateModListActiveMods(modListProfileId, modList);
+    public Result<Void> updateModListActiveMods() {
+        return STORAGE_CONTROLLER.updateModListActiveMods(currentModListProfile.getID(), currentModList);
     }
 
     public Result<ModListProfile> importModListProfile(File modlistLocation) {
@@ -242,8 +242,8 @@ public class UiService {
         return STORAGE_CONTROLLER.deleteSaveProfile(saveProfile);
     }
 
-    public Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList) {
-        return STORAGE_CONTROLLER.updateModListProfileModList(modListProfileId, modList);
+    public Result<Void> updateModListProfileModList() {
+        return STORAGE_CONTROLLER.updateModListProfileModList(currentModListProfile.getID(), currentModList);
     }
 
     public Result<Void> saveSaveProfile(SaveProfile saveProfile) {

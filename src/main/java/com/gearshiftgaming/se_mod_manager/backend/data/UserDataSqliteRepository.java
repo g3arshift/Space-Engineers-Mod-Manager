@@ -39,10 +39,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     Files.createDirectories(databaseLocation.getParent());
                 }
                 createDatabase();
-                UserConfiguration userConfiguration = new UserConfiguration();
-                ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
-                userConfiguration.setLastActiveModProfileId(modListProfile.getID());
-                saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
+                initializeData();
             } catch (IOException e) {
                 try {
                     Files.delete(databaseLocation.getParent());
@@ -56,15 +53,17 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA foreign_key=ON;"));
     }
 
+    public Result<Void> initializeData() {
+        UserConfiguration userConfiguration = new UserConfiguration();
+        ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
+        userConfiguration.setLastActiveModProfileId(modListProfile.getID());
+        return saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
+    }
+
     //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
     @Override
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         Result<Void> saveResult = saveUserConfiguration(userConfiguration);
-        if(!saveResult.isSuccess()) {
-            return saveResult;
-        }
-
-        saveResult.addAllMessages(saveModListProfileDetails(, modListProfile, , ));
         if(!saveResult.isSuccess()) {
             return saveResult;
         }
@@ -177,6 +176,13 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 run_first_time_setup = excluded.run_first_time_setup;""")
                     .bindBean(userConfiguration)
                     .execute());
+            for(Triple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
+                Result<Void> detailsSaveResult = saveModListProfileDetails(details.getLeft(), details.getMiddle(), details.getRight());
+                if(!detailsSaveResult.isSuccess()) {
+                    saveResult.addAllMessages(detailsSaveResult);
+                    throw new TransactionException(detailsSaveResult.getCurrentMessage());
+                }
+            }
             saveResult.addMessage("Successfully saved user configuration.", ResultType.SUCCESS);
         } catch (TransactionException e) {
             saveResult.addMessage(e.toString(), ResultType.FAILED);

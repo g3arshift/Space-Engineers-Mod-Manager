@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
@@ -99,8 +100,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				}
             }
             modTable.refresh();
-            //TODO: Swap this out for just updating active mods.
-            UI_SERVICE.saveUserData();
+            Result<Void> updateModListActiveStateResult = UI_SERVICE.updateModListActiveMods();
+            checkResult(updateModListActiveStateResult, "Failed to update active mods. See the log for more information.");
         });
 
         final MenuItem DEACTIVATE_MODS_MENU_ITEM = new MenuItem("Deactivate selected mods");
@@ -113,8 +114,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				}
             }
             modTable.refresh();
-            //TODO: Swap this out for just updating active mods.
-            UI_SERVICE.saveUserData();
+            Result<Void> updateModListActiveStateResult = UI_SERVICE.updateModListActiveMods();
+            checkResult(updateModListActiveStateResult, "Failed to update active mods. See the log for more information.");
         });
 
         final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mods");
@@ -272,8 +273,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
                 //TODO: We might be able to fix this with the new memory model. Investigate.
                 UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-                //TODO: Swap this out for just updating mods.
-                UI_SERVICE.saveUserData();
+                Result<Void> updateModListLoadPriorityResult = UI_SERVICE.updateModListLoadPriority();
+                checkResult(updateModListLoadPriorityResult, "Failed to update mod list load priority. See the log for more information.");
 
                 dragEvent.consume();
             }
@@ -340,7 +341,17 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 
 			UI_SERVICE.modifyActiveModCount(-previouslyActiveModCount);
-			UI_SERVICE.saveUserData();
+			UI_SERVICE.updateModListProfileModList();
 		}
 	}
+
+    private void checkResult(Result<?> result, String failMessage) {
+        if(!result.isSuccess()) {
+            UI_SERVICE.log(result);
+            Popup.displaySimpleAlert(failMessage, MessageType.ERROR);
+            throw new RuntimeException(result.getCurrentMessage());
+        } else {
+            UI_SERVICE.logPrivate(result);
+        }
+    }
 }

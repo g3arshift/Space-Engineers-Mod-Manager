@@ -15,6 +15,13 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public record UserDataService(UserDataRepository userDataRepository) {
+    public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
+        return userDataRepository.saveCurrentData(userConfiguration, modListProfile, saveProfile);
+    }
+    
+    public Result<Void> initializeData() {
+        return userDataRepository.initializeData();
+    }
 
     public Result<UserConfiguration> loadStartupData() {
         return userDataRepository.loadStartupData();
@@ -26,10 +33,6 @@ public record UserDataService(UserDataRepository userDataRepository) {
 
     public Result<ModListProfile> loadModListProfileByName(String profileName) {
         return userDataRepository.loadModListProfileByName(profileName);
-    }
-
-    public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
-        return userDataRepository.saveCurrentData(userConfiguration, modListProfile, saveProfile);
     }
 
     public Result<ModListProfile> loadFirstModListProfile() {

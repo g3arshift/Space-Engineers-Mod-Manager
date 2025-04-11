@@ -78,13 +78,14 @@ public class ViewController {
                     int choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +
                             "Would you like to create a new user configuration and continue?", MessageType.WARN);
                     if (choice == 1) {
-                        storageController.saveUserData(userConfiguration);
+                        storageController.initializeData();
                     } else {
                         Platform.exit();
                         return;
                     }
+                    //TODO: What is this really for? I THINK it's for first time startup, but I think the earlier phases capture that... Check it later.
                 } else {
-                    storageController.saveUserData(userConfiguration);
+                    storageController.initializeData();
                 }
             }
         }
@@ -114,7 +115,6 @@ public class ViewController {
         //This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
         //The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
         //For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
-
 
         //View for adding a new Save Profile
         final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));

@@ -40,6 +40,10 @@ public class StorageController {
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         return USER_DATA_SERVICE.saveCurrentData(userConfiguration, modListProfile, saveProfile);
     }
+    
+    public Result<Void> initializeData() {
+        return USER_DATA_SERVICE.initializeData();
+    }
 
     public Result<UserConfiguration> loadStartupData() {
         return USER_DATA_SERVICE.loadStartupData();

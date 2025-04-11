@@ -71,6 +71,7 @@ public class Popup {
 
 	/**
 	 * Displays a Yes/No dialog centered on the screen
+	 * 1 for yes, 0 for no.
 	 */
 	public static int displayYesNoDialog(String message, MessageType messageType) throws IOException {
 		Stage stage = new Stage();
