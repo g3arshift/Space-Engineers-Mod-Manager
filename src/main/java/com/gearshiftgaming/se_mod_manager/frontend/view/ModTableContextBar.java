@@ -28,16 +28,15 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -89,7 +88,7 @@ public class ModTableContextBar {
 
     @FXML
     @Getter
-    private ComboBox<ModListProfile> modProfileDropdown;
+    private ComboBox<Triple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
 
     @FXML
     @Getter
@@ -180,7 +179,6 @@ public class ModTableContextBar {
         saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
         saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
 
-        //TODO: do the same for the modprofile
         ChangeListener<Number> saveProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
 			String profileName = UI_SERVICE.getCurrentSaveProfile().getProfileName();
             double cellWidth = saveProfileDropdown.getButtonCell().getWidth() - 5;
@@ -197,9 +195,14 @@ public class ModTableContextBar {
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
         modProfileDropdown.setItems(UI_SERVICE.getMOD_LIST_PROFILE_DETAILS());
-        Optional<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
-        if (lastActiveModlistProfile.isPresent())
-            modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
+        Result<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+        if (lastActiveModlistProfile.isSuccess())
+            for(Triple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
+                if(details.getLeft().equals(UI_SERVICE.getUSER_CONFIGURATION().getLastActiveModProfileId())) {
+                    modProfileDropdown.getSelectionModel().select(details);
+                    break;
+                }
+            }
         else
             modProfileDropdown.getSelectionModel().selectFirst();
 
@@ -224,12 +227,12 @@ public class ModTableContextBar {
         });
         modProfileDropdown.setConverter(new StringConverter<>() {
             @Override
-            public String toString(ModListProfile modListProfile) {
-                return modListProfile.getProfileName();
+            public String toString(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
+                return modListProfileDetails.getMiddle();
             }
 
             @Override
-            public ModListProfile fromString(String s) {
+            public Triple<UUID, String, SpaceEngineersVersion> fromString(String s) {
                 return null;
             }
         });
@@ -324,7 +327,7 @@ public class ModTableContextBar {
         }
 
         //TODO: Replace with just the user config save.
-        Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
+        Result<Void> savedUserTheme = UI_SERVICE.saveUserConfiguration();
         //This fixes the selected row being the wrong color until we change selection
         MASTER_MANAGER_VIEW.getModTable().refresh();
         if (savedUserTheme.isSuccess()) {
@@ -339,7 +342,7 @@ public class ModTableContextBar {
     private void selectModProfile() {
         clearSearchBox();
 
-        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem().getLeft());
         MASTER_MANAGER_VIEW.updateModTableContents();
     }
 

@@ -198,8 +198,8 @@ public class UiService {
         return STORAGE_CONTROLLER.deleteModListProfile(modListProfile);
     }
 
-    public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration) {
-        return STORAGE_CONTROLLER.saveUserConfiguration(userConfiguration);
+    public Result<Void> saveUserConfiguration() {
+        return STORAGE_CONTROLLER.saveUserConfiguration(USER_CONFIGURATION);
     }
 
     public Result<ModListProfile> loadModListProfileByName(String profileName) {
@@ -210,8 +210,8 @@ public class UiService {
         return STORAGE_CONTROLLER.updateModListLoadPriority(currentModListProfile.getID(), currentModList);
     }
 
-    public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
-        return STORAGE_CONTROLLER.saveCurrentData(userConfiguration, modListProfile, saveProfile);
+    public Result<Void> saveCurrentData() {
+        return STORAGE_CONTROLLER.saveCurrentData(USER_CONFIGURATION, currentModListProfile, currentSaveProfile);
     }
 
     public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
@@ -644,12 +644,12 @@ public class UiService {
 
     public Result<Void> setLastActiveModlistProfile(UUID modlistProfileId) {
         USER_CONFIGURATION.setLastActiveModProfileId(modlistProfileId);
-        return saveUserConfiguration(USER_CONFIGURATION);
+        return saveUserConfiguration();
     }
 
     public Result<Void> setLastActiveSaveProfile(UUID saveProfileId) {
         USER_CONFIGURATION.setLastActiveSaveProfileId(saveProfileId);
-        return saveUserConfiguration(USER_CONFIGURATION);
+        return saveUserConfiguration();
     }
 
     public Result<ModListProfile> getLastActiveModlistProfile() {
@@ -667,7 +667,7 @@ public class UiService {
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
         saveSaveProfile(currentSaveProfile);
-        saveUserConfiguration(USER_CONFIGURATION);
+        saveUserConfiguration();
     }
 
     //TODO: Add a dialog option to choose whether you have space engineers 1, 2, or both.
