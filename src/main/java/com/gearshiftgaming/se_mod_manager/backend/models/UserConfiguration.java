@@ -5,6 +5,7 @@ import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
@@ -34,12 +35,12 @@ public class UserConfiguration {
 
     private List<SaveProfile> saveProfiles;
 
-    private List<Triple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo;
+    private List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo;
 
     private boolean runFirstTimeSetup;
 
     /**
-     * Creates an entirely new XML configuration file to store user information with.
+     * Creates an entirely new user configuration to store user information with.
      */
     public UserConfiguration() {
         saveProfiles = new ArrayList<>();
@@ -48,9 +49,6 @@ public class UserConfiguration {
 
         //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
-        //TODO: Need to move this to UI service startup.
-        modListProfilesBasicInfo.add(Triple.of(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION()));
-        lastActiveModProfileId = modListProfile.getID();
         runFirstTimeSetup = true;
     }
 
@@ -87,7 +85,7 @@ public class UserConfiguration {
 
     @XmlElementWrapper(name = "modlistProfiles")
     @XmlElement(name = "modlistProfile")
-    public void setModListProfilesBasicInfo(List<Triple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo) {
+    public void setModListProfilesBasicInfo(List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo) {
         this.modListProfilesBasicInfo = modListProfilesBasicInfo;
     }
 

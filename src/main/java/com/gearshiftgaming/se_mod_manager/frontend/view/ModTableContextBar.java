@@ -28,6 +28,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.awt.*;
@@ -88,7 +89,7 @@ public class ModTableContextBar {
 
     @FXML
     @Getter
-    private ComboBox<Triple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
+    private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
 
     @FXML
     @Getter
@@ -197,7 +198,7 @@ public class ModTableContextBar {
         modProfileDropdown.setItems(UI_SERVICE.getMOD_LIST_PROFILE_DETAILS());
         Result<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isSuccess())
-            for(Triple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
+            for(MutableTriple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
                 if(details.getLeft().equals(UI_SERVICE.getUSER_CONFIGURATION().getLastActiveModProfileId())) {
                     modProfileDropdown.getSelectionModel().select(details);
                     break;
@@ -227,12 +228,12 @@ public class ModTableContextBar {
         });
         modProfileDropdown.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
+            public String toString(MutableTriple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
                 return modListProfileDetails.getMiddle();
             }
 
             @Override
-            public Triple<UUID, String, SpaceEngineersVersion> fromString(String s) {
+            public MutableTriple<UUID, String, SpaceEngineersVersion> fromString(String s) {
                 return null;
             }
         });

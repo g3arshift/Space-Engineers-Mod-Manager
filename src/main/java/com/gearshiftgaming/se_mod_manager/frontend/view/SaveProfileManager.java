@@ -21,6 +21,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.NotNull;
 
@@ -278,7 +279,7 @@ public class SaveProfileManager {
                 if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
-                        Optional<Triple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
+                        Optional<MutableTriple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
                                 .filter(modlistProfile1 -> modlistProfile1.getMiddle().equals(newProfileName))
                                 .findFirst();
                         modlistProfile.ifPresent(profile -> modTableContextBar.getModProfileDropdown().getSelectionModel().select(profile));

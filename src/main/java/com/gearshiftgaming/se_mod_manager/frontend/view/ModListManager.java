@@ -27,7 +27,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -149,7 +148,7 @@ public class ModListManager {
 
     @FXML
     private void copyProfile() {
-        Triple<UUID, String, SpaceEngineersVersion> profileToCopy = profileList.getSelectionModel().getSelectedItem();
+        MutableTriple<UUID, String, SpaceEngineersVersion> profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
             int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", TextTruncationUtility.truncateWithEllipsis(profileToCopy.getMiddle(), 600)), stage, MessageType.WARN);
             if (copyChoice == 1) {
@@ -200,7 +199,7 @@ public class ModListManager {
                 }
 
                 if (!copyProfileName.isBlank()) {
-                    Triple<UUID, String, SpaceEngineersVersion> copiedProfileDetails = profileList.getSelectionModel().getSelectedItem();
+                    MutableTriple<UUID, String, SpaceEngineersVersion> copiedProfileDetails = profileList.getSelectionModel().getSelectedItem();
                     Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(copiedProfileDetails.getLeft());
                     if(!copyResult.isSuccess()) {
                         UI_SERVICE.log(copyResult);
@@ -259,7 +258,7 @@ public class ModListManager {
         boolean duplicateProfileName;
 
         do {
-            Triple<UUID, String, SpaceEngineersVersion> selectedProfile = profileList.getSelectionModel().getSelectedItem();
+            MutableTriple<UUID, String, SpaceEngineersVersion> selectedProfile = profileList.getSelectionModel().getSelectedItem();
             if (selectedProfile != null) {
                 PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getMiddle());
                 PROFILE_INPUT_VIEW.getInput().requestFocus();
@@ -276,8 +275,8 @@ public class ModListManager {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
                     String originalProfileName = MOD_LIST_PROFILE_DETAILS.get(profileIndex).getMiddle();
-                    Triple<UUID, String, SpaceEngineersVersion> profileToModify = MOD_LIST_PROFILE_DETAILS.get(profileIndex);
-                    profileToModify.(newProfileName);
+                    MutableTriple<UUID, String, SpaceEngineersVersion> profileToModify = MOD_LIST_PROFILE_DETAILS.get(profileIndex);
+                    profileToModify.setMiddle(newProfileName);
 
                     //We manually refresh here because the original profile won't update its name while it's selected in the list
                     profileList.refresh();
@@ -288,7 +287,7 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (MOD_LIST_PROFILE_DETAILS.size() == 1) {
-                        MOD_LIST_PROFILE_DETAILS.add(new ModListProfile(SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
+                        MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(UUID.randomUUID(), "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                         MOD_LIST_PROFILE_DETAILS.removeLast();

@@ -17,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 
@@ -94,7 +95,7 @@ public class ViewController {
 
         //TODO: Go down through this to start figuring out how we're going to change over the memory model.
         //TODO: Start by fixing this and then UI service.
-        ObservableList<Triple<UUID, String, SpaceEngineersVersion>> modListProfileDetails = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
+        ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
         ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 
         //Initialize the list we use to store log messages shown to the user

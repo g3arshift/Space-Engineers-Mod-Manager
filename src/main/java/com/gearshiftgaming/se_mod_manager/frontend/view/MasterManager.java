@@ -1304,9 +1304,6 @@ public class MasterManager {
             }
 
             UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-            //TODO: 1. Update mod info
-            //      2. Update mod list profile
-            //      3. Update mod list profile mod list
             Result<Void> saveResult = UI_SERVICE.updateModInformation(modList);
             if(!saveResult.isSuccess()) {
                 UI_SERVICE.log(saveResult);

@@ -6,7 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.data.mappers.SaveProfileMapper
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfigurationMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
@@ -103,7 +103,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             return userProfileLoadResult;
         }
 
-        List<Triple<UUID, String, SpaceEngineersVersion>> modListProfileIds = loadAllBasicModProfileInformation();
+        List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileIds = loadAllBasicModProfileInformation();
         if (modListProfileIds.isEmpty()) {
             userProfileLoadResult.addMessage("Failed to load mod list profile IDS.", ResultType.FAILED);
             return userProfileLoadResult;
@@ -125,11 +125,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     //Loads all the mod list profile ID's, names, and the SE version of those profiles into our user configuration.
-    private List<Triple<UUID, String, SpaceEngineersVersion>> loadAllBasicModProfileInformation() {
-        List<Triple<UUID, String, SpaceEngineersVersion>> modListProfileIds;
+    private List<MutableTriple<UUID, String, SpaceEngineersVersion>> loadAllBasicModProfileInformation() {
+        List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileIds;
         try (Handle handle = SQLITE_DB.open()) {
             modListProfileIds = handle.createQuery("SELECT mod_list_profile.mod_list_profile_id from mod_list_profile;")
-                    .map((rs, ctx) -> Triple.of(UUID.fromString(rs.getString("mod_list_profile_id")),
+                    .map((rs, ctx) -> MutableTriple.of(UUID.fromString(rs.getString("mod_list_profile_id")),
                             rs.getString("mod_list_profile_name"),
                             SpaceEngineersVersion.valueOf(rs.getString("space_engineers_version"))))
                     .list();
@@ -177,7 +177,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 run_first_time_setup = excluded.run_first_time_setup;""")
                     .bindBean(userConfiguration)
                     .execute());
-            for(Triple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
+            for(MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
                 Result<Void> detailsSaveResult = saveModListProfileDetails(details.getLeft(), details.getMiddle(), details.getRight());
                 if(!detailsSaveResult.isSuccess()) {
                     saveResult.addAllMessages(detailsSaveResult);
