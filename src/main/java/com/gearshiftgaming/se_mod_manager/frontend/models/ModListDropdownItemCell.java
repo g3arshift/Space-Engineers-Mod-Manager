@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
@@ -12,7 +11,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.UUID;
 

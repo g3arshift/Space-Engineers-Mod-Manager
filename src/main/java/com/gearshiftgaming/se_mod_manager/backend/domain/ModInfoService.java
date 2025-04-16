@@ -2,7 +2,9 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.microsoft.playwright.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;

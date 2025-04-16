@@ -5,9 +5,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.stage.Stage;
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.File;
 import java.io.IOException;

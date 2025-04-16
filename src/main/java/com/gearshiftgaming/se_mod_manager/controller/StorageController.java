@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataRepository;
@@ -11,8 +10,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 

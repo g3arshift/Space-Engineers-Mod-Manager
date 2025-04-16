@@ -1,6 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.scene.control.TableColumn;

@@ -1,12 +1,14 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
 import atlantafx.base.theme.PrimerLight;
-import com.gearshiftgaming.se_mod_manager.backend.data.*;
+import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
