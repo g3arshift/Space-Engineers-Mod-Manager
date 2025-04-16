@@ -841,7 +841,7 @@ public class MasterManager {
         if (savePath != null) {
             Result<Void> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
-                modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
+                modProfileDropdown.getSelectionModel().selectLast();
             }
             Popup.displaySimpleAlert(modlistProfileResult, STAGE);
         }
@@ -875,8 +875,12 @@ public class MasterManager {
             Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
 
             UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
-            //TODO: Replace with save user config call
-            UI_SERVICE.saveUserData();
+
+            Result<Void> saveConfigResult = UI_SERVICE.saveUserConfiguration();
+            if (!saveConfigResult.isSuccess()) {
+                UI_SERVICE.log(saveConfigResult);
+                Popup.displaySimpleAlert(saveConfigResult);
+            }
             runTutorialCleanup();
         }
     }
@@ -1060,8 +1064,8 @@ public class MasterManager {
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
                 //TODO: NEw memory model might fix. check.
                 UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-                //TODO: Replace with save mod profile call
-                UI_SERVICE.saveUserData();
+
+                UI_SERVICE.updateModListLoadPriority();
             }
 
             dragEvent.consume();
@@ -1300,37 +1304,58 @@ public class MasterManager {
             }
 
             UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-            //TODO: Depending on the save choice, we're either gonna need to replace this with save modlist call or profile changing + saving
-            UI_SERVICE.saveUserData();
+            //TODO: 1. Update mod info
+            //      2. Update mod list profile
+            //      3. Update mod list profile mod list
+            Result<Void> saveResult = UI_SERVICE.updateModInformation(modList);
+            if(!saveResult.isSuccess()) {
+                UI_SERVICE.log(saveResult);
+                Popup.displaySimpleAlert(saveResult);
+                finishModListImport();
+                return;
+            }
 
-            //Reset our UI settings for the mod progress
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
+            saveResult.addAllMessages(UI_SERVICE.saveCurrentModListProfile());
+            if(!saveResult.isSuccess()) {
+                UI_SERVICE.log(saveResult);
+                Popup.displaySimpleAlert(saveResult);
+                finishModListImport();
+                return;
+            }
 
-            fadeTransition.setOnFinished(actionEvent -> {
-                disableUserInputElements(false);
-                resetModImportProgressUi();
-                Platform.runLater(() -> {
-                    if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
-                        List<String> tutorialMessages = new ArrayList<>();
-                        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
-                        tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
-                                "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
-                        tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
-                                "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
-                        Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
-                        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
-                    }
-                });
-            });
-
-            fadeTransition.play();
+            UI_SERVICE.logPrivate(saveResult);
+            finishModListImport();
         }));
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
         thread.setDaemon(true);
         return thread;
+    }
+
+    private void finishModListImport() {
+        //Reset our UI settings for the mod progress
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+        fadeTransition.setFromValue(1d);
+        fadeTransition.setToValue(0d);
+
+        fadeTransition.setOnFinished(actionEvent -> {
+            disableUserInputElements(false);
+            resetModImportProgressUi();
+            Platform.runLater(() -> {
+                if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                    List<String> tutorialMessages = new ArrayList<>();
+                    TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
+                    tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
+                            "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
+                    tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
+                            "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
+                    Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
+                    TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
+                }
+            });
+        });
+
+        fadeTransition.play();
     }
 
     //TODO: These function names suck. Make them something like "show{name of what the UI is. Like "steam collection check panel.}.

@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +64,7 @@ public class UiService {
     private final ObservableList<LogMessage> USER_LOG;
 
     @Getter
-    private final ObservableList<Triple<UUID, String, SpaceEngineersVersion>> MOD_LIST_PROFILE_DETAILS;
+    private final ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> MOD_LIST_PROFILE_DETAILS;
 
     @Getter
     private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -99,7 +100,7 @@ public class UiService {
 
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-                     @NotNull ObservableList<Triple<UUID, String, SpaceEngineersVersion>> modListProfileDetails, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+                     @NotNull ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
@@ -188,14 +189,14 @@ public class UiService {
             }
         }
     }
+    //TODO: Make all the functions that currently don't use the return value, use it. Find where they're called and use them.
 
-    //TODO: Gonna need a whoooole lot more DB functions. Additionally, we should log private successes (except for the last success message), and log public the failures.
     public Result<UserConfiguration> loadStartupData() {
         return STORAGE_CONTROLLER.loadStartupData();
     }
 
-    public Result<Void> deleteModListProfile(ModListProfile modListProfile) {
-        return STORAGE_CONTROLLER.deleteModListProfile(modListProfile);
+    public Result<Void> deleteModListProfile(UUID modListProfileId) {
+        return STORAGE_CONTROLLER.deleteModListProfile(modListProfileId);
     }
 
     public Result<Void> saveUserConfiguration() {
@@ -232,6 +233,14 @@ public class UiService {
 
     public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
         return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfile);
+    }
+
+    public Result<Void> saveModListProfile(ModListProfile modListProfile) {
+        return STORAGE_CONTROLLER.saveModListProfile(modListProfile);
+    }
+
+    public Result<Void> saveCurrentModListProfile() {
+        return STORAGE_CONTROLLER.saveModListProfile(currentModListProfile);
     }
 
     public Result<Void> updateModInformation(List<Mod> modList) {
@@ -632,7 +641,7 @@ public class UiService {
                 for (int i = 0; i < importModListProfile.getModList().size(); i++) {
                     importModListProfile.getModList().get(i).setLoadPriority(i + 1);
                 }
-                MOD_LIST_PROFILE_DETAILS.add(Triple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
+                MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
                 currentModListProfile = importModListProfile;
                 importResult.addAllMessages(setLastActiveModlistProfile(importModListProfile.getID()));
                 log(importResult);

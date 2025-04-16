@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.scene.control.ListCell;
 import javafx.scene.text.Text;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.UUID;
@@ -20,7 +21,7 @@ import java.util.UUID;
  */
 
 @Getter
-public abstract class ModListCell extends ListCell<Triple<UUID, String, SpaceEngineersVersion>> {
+public abstract class ModListCell extends ListCell<MutableTriple<UUID, String, SpaceEngineersVersion>> {
     private final Text PROFILE_NAME = new Text();
 
     private final String cellStyle;
@@ -34,7 +35,7 @@ public abstract class ModListCell extends ListCell<Triple<UUID, String, SpaceEng
     }
 
     @Override
-    protected void updateItem(Triple<UUID, String, SpaceEngineersVersion> item, boolean empty) {
+    protected void updateItem(MutableTriple<UUID, String, SpaceEngineersVersion> item, boolean empty) {
         super.updateItem(item, empty);
         if(empty || item == null) {
             setGraphic(null);

@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.UUID;
@@ -26,7 +27,7 @@ public class ModListDropdownButtonCell extends ModListCell {
 	}
 
 	@Override
-	protected void updateItem(Triple<UUID, String, SpaceEngineersVersion> item, boolean empty) {
+	protected void updateItem(MutableTriple<UUID, String, SpaceEngineersVersion> item, boolean empty) {
 		super.updateItem(item, empty);
 		if(empty || item == null) {
 			setGraphic(null);

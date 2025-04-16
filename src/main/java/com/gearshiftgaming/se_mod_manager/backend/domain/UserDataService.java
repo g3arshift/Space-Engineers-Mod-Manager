@@ -44,15 +44,15 @@ public record UserDataService(UserDataRepository userDataRepository) {
     }
 
     public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
-        return userDataRepository.saveModListProfileDetails(, modListProfile, , );
+        return userDataRepository.saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
     }
 
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         return userDataRepository.saveModListProfile(modListProfile);
     }
 
-    public Result<Void> deleteModListProfile(ModListProfile modListProfile) {
-        return userDataRepository.deleteModListProfile(modListProfile);
+    public Result<Void> deleteModListProfile(UUID modListProfileId) {
+        return userDataRepository.deleteModListProfile(modListProfileId);
     }
 
     public Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList) {

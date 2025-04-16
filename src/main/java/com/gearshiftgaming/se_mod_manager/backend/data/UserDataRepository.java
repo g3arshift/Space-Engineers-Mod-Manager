@@ -32,7 +32,7 @@ public interface UserDataRepository {
 
     public Result<Void> saveModListProfile(ModListProfile modListProfile);
 
-    public Result<Void> deleteModListProfile(ModListProfile modListProfile);
+    public Result<Void> deleteModListProfile(UUID modListProfileId);
 
     public Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList);
 

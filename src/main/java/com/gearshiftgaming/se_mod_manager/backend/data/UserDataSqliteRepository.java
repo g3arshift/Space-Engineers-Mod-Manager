@@ -361,7 +361,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .bind("profileName", modListProfileName)
                     .bind("spaceEngineersVersion", spaceEngineersVersion)
                     .execute());
-            //Update our user config bridge table too
+            //Update our user config bridge table to
             SQLITE_DB.useTransaction(handle -> handle.createUpdate("""
                             INSERT OR IGNORE INTO user_configuration_mod_list_profile (user_configuration_id, mod_list_profile_id)
                                 values (1, :modListProfileId);""")
@@ -375,6 +375,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         return modListProfileSaveResult;
     }
 
+    /**
+     * Saves the mod list profile details AND the mod list for it.
+     * @param modListProfile
+     * @return
+     */
     @Override
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         Result<Void> modListProfileSaveResult = saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
@@ -383,26 +388,22 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         }
 
         modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
-        if(!modListProfileSaveResult.isSuccess()) {
-            return modListProfileSaveResult;
-        }
 
-        modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
         return modListProfileSaveResult;
     }
 
     @Override
-    public Result<Void> deleteModListProfile(ModListProfile modListProfile) {
+    public Result<Void> deleteModListProfile(UUID modListProfileId) {
         Result<Void> modListProfileDeleteResult = new Result<>();
         try {
             SQLITE_DB.useTransaction(handle -> {
                 int numDeletedRows = handle.createUpdate("DELETE FROM mod_list_profile WHERE mod_list_profile_id = :id")
-                        .bind("id", modListProfile.getID())
+                        .bind("id", modListProfileId)
                         .execute();
                 if (numDeletedRows != 1) {
                     modListProfileDeleteResult.addMessage(String.format("Error. Deleted %d rows, expected to delete 1 row.", numDeletedRows), ResultType.FAILED);
                 } else {
-                    modListProfileDeleteResult.addMessage(String.format("Successfully deleted mod list profile \"%s\".", modListProfile.getProfileName()), ResultType.SUCCESS);
+                    modListProfileDeleteResult.addMessage(String.format("Successfully deleted mod list profile \"%s\".", modListProfileId), ResultType.SUCCESS);
                 }
             });
         } catch (TransactionException e) {

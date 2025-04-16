@@ -67,7 +67,18 @@ public class ModListProfile {
             }
         }
         SPACE_ENGINEERS_VERSION = modListProfile.getSPACE_ENGINEERS_VERSION();
-        conflictTable = modListProfile.getConflictTable();
+        conflictTable = new HashMap<>();
+        for(Map.Entry<String, List<Mod>> entry : modListProfile.getConflictTable().entrySet()) {
+            List<Mod> copiedModConflictList = new ArrayList<>();
+            for(Mod mod : entry.getValue()) {
+                if(mod instanceof SteamMod) {
+                    copiedModConflictList.add(new SteamMod((SteamMod) mod));
+                } else {
+                    copiedModConflictList.add(new ModIoMod((ModIoMod) mod));
+                }
+            }
+            conflictTable.put(entry.getKey(), copiedModConflictList);
+        }
     }
 
     public ModListProfile(UUID ID, String profileName, SpaceEngineersVersion SPACE_ENGINEERS_VERSION) {

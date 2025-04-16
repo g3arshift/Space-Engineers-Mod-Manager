@@ -73,8 +73,8 @@ public class StorageController {
         return USER_DATA_SERVICE.saveModListProfile(modListProfile);
     }
 
-    public Result<Void> deleteModListProfile(ModListProfile modListProfile) {
-		return USER_DATA_SERVICE.deleteModListProfile(modListProfile);
+    public Result<Void> deleteModListProfile(UUID modListProfileId) {
+		return USER_DATA_SERVICE.deleteModListProfile(modListProfileId);
 	}
 
 	public Result<Void> updateModInformation(List<Mod> modList) {

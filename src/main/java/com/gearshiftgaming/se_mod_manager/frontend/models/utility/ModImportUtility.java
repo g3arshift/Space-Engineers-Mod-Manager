@@ -5,6 +5,9 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,20 +96,21 @@ public class ModImportUtility {
 			PROFILE_INPUT_VIEW.getInput().clear();
 			PROFILE_INPUT_VIEW.getInput().requestFocus();
 			PROFILE_INPUT_VIEW.show(STAGE);
+			newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
 			//TODO: We need to prompt for SE version for this mod profile. For now it's stubbed.
 			SpaceEngineersVersion spaceEngineersVersion = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
-			ModListProfile newModListProfile = new ModListProfile(PROFILE_INPUT_VIEW.getInput().getText(), spaceEngineersVersion);
-			duplicateProfileName = profileNameExists(PROFILE_INPUT_VIEW.getInput().getText().toLowerCase().trim(), UI_SERVICE);
+			ModListProfile newModListProfile = new ModListProfile(newProfileName, spaceEngineersVersion);
+			duplicateProfileName = profileNameExists(newProfileName.toLowerCase().trim(), UI_SERVICE);
 
 			if (duplicateProfileName) {
 				Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
 			} else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-				UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().add(newModListProfile);
+				UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().add(MutableTriple.of(newModListProfile.getID(), newProfileName, newModListProfile.getSPACE_ENGINEERS_VERSION()));
 				UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
-				newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
+
 				PROFILE_INPUT_VIEW.getInput().clear();
 				//TODO: Swap out for saving just mod list profile.
-				UI_SERVICE.saveUserData();
+				UI_SERVICE.saveModListProfile(newModListProfile);
 			}
 		} while (duplicateProfileName);
 
@@ -115,6 +119,6 @@ public class ModImportUtility {
 
 	private static boolean profileNameExists(String profileName, final UiService UI_SERVICE) {
 		return UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
-				.anyMatch(modProfile -> modProfile.getProfileName().toLowerCase().trim().equals(profileName));
+				.anyMatch(modProfileDetails -> modProfileDetails.getMiddle().toLowerCase().trim().equals(profileName));
 	}
 }
