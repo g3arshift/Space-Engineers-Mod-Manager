@@ -265,7 +265,11 @@ public class SaveProfileManager {
         saveList.refresh();
         saveList.getSelectionModel().selectLast();
         setActive();
-        UI_SERVICE.saveSaveProfile(saveProfile);
+        Result<Void> saveResult = UI_SERVICE.saveSaveProfile(saveProfile);
+        if(!saveResult.isSuccess()) {
+            UI_SERVICE.log(saveResult);
+            Popup.displaySimpleAlert(saveResult);
+        }
         //TODO: Switch active profile to the new profile
     }
 
@@ -310,7 +314,11 @@ public class SaveProfileManager {
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
             UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-            UI_SERVICE.updateModListProfileModList();
+            Result<Void> updateResult = UI_SERVICE.updateModListProfileModList();
+            if(!updateResult.isSuccess()) {
+                UI_SERVICE.log(updateResult);
+                Popup.displaySimpleAlert("Failed to import modlist. See log for more information.", MessageType.ERROR);
+            }
 
             Platform.runLater(() -> {
                 FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
@@ -373,7 +381,11 @@ public class SaveProfileManager {
             Popup.displaySimpleAlert(profileCopyResult, stage);
 
             UI_SERVICE.log(profileCopyResult);
-            UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
+            Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
+            if(!saveResult.isSuccess()) {
+                UI_SERVICE.log(saveResult);
+                Popup.displaySimpleAlert(saveResult);
+            }
 
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
             fadeTransition.setFromValue(1d);
@@ -399,7 +411,12 @@ public class SaveProfileManager {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
                     SAVE_PROFILES.remove(profileIndex);
 
-                    UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
+                    Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
+                    if(!deleteResult.isSuccess()) {
+                        UI_SERVICE.log(deleteResult);
+                        Popup.displaySimpleAlert(String.format("Failed to delete save profile \"%s\". See log for more details.", SAVE_PROFILES.get(profileIndex).getProfileName()), MessageType.ERROR);
+                        return;
+                    }
                     if (profileIndex > SAVE_PROFILES.size())
                         saveList.getSelectionModel().select(profileIndex - 1);
                     else
@@ -451,7 +468,11 @@ public class SaveProfileManager {
 
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
-                    UI_SERVICE.saveSaveProfile(profileToModify);
+                    Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileToModify);
+                    if(!saveResult.isSuccess()) {
+                        UI_SERVICE.log(saveResult);
+                        Popup.displaySimpleAlert(saveResult);
+                    }
                 }
             } else {
                 duplicateProfileName = false;

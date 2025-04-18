@@ -43,6 +43,7 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
@@ -240,7 +241,7 @@ public class MasterManager {
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
-    private ComboBox<ModListProfile> modProfileDropdown;
+    private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
@@ -272,7 +273,7 @@ public class MasterManager {
     }
 
     public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-                         ComboBox<ModListProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+                         ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
 

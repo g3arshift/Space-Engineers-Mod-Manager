@@ -43,8 +43,8 @@ public record UserDataService(UserDataRepository userDataRepository) {
         return userDataRepository.loadModListProfileById(modListProfileId);
     }
 
-    public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
-        return userDataRepository.saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
+    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
+        return userDataRepository.saveModListProfileDetails(modListProfileId, modListProfileName, spaceEngineersVersion);
     }
 
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {

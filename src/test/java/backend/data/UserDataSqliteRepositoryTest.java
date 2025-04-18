@@ -1,6 +1,5 @@
 package backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;

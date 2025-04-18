@@ -46,7 +46,7 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 				item.setActive(ACTIVATE_TOGGLE.isSelected());
 				UI_SERVICE.modifyActiveModCount(item);
 				//TODO: Swap this out for just updating active mods.
-				UI_SERVICE.saveUserData();
+				UI_SERVICE.updateModListActiveMods();
 			});
 			setGraphic(LAYOUT);
 		}

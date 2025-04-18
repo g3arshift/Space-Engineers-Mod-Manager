@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
@@ -188,7 +189,6 @@ public class UiService {
             }
         }
     }
-    //TODO: Make all the functions that currently don't use the return value, use it. Find where they're called and use them.
 
     public Result<UserConfiguration> loadStartupData() {
         return STORAGE_CONTROLLER.loadStartupData();
@@ -233,6 +233,15 @@ public class UiService {
     public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
         return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfile);
     }
+
+    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
+        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfileId, modListProfileName, spaceEngineersVersion);
+    }
+
+    public Result<Void> saveModListProfileDetails(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
+        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfileDetails.getLeft(), modListProfileDetails.getMiddle(), modListProfileDetails.getRight());
+    }
+
 
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         return STORAGE_CONTROLLER.saveModListProfile(modListProfile);
@@ -298,7 +307,7 @@ public class UiService {
     public void setCurrentModListProfile(UUID modListProfileId) {
         STORAGE_CONTROLLER.saveModListProfile(currentModListProfile);
         Result<ModListProfile> newCurrentModListProfileResult = STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
-        if(!newCurrentModListProfileResult.isSuccess()) {
+        if (!newCurrentModListProfileResult.isSuccess()) {
             log(newCurrentModListProfileResult);
             return;
         }
@@ -625,7 +634,7 @@ public class UiService {
     //Once the file is read, we want to add its details to the detail list
     public Result<Void> importModlist(File saveLocation) {
         Result<Void> importResult = STORAGE_CONTROLLER.saveModListProfile(currentModListProfile);
-        if(!importResult.isSuccess()) {
+        if (!importResult.isSuccess()) {
             log(importResult);
             return importResult;
         }
@@ -674,8 +683,18 @@ public class UiService {
         currentSaveProfile.setLastUsedModProfileId(currentModListProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
-        saveSaveProfile(currentSaveProfile);
-        saveUserConfiguration();
+        Result<Void> saveResult = saveSaveProfile(currentSaveProfile);
+        if (!saveResult.isSuccess()) {
+            log(saveResult);
+            Popup.displaySimpleAlert(saveResult);
+            return;
+        }
+
+        saveResult = saveUserConfiguration();
+        if (!saveResult.isSuccess()) {
+            log(saveResult);
+            Popup.displaySimpleAlert(saveResult);
+        }
     }
 
     //TODO: Add a dialog option to choose whether you have space engineers 1, 2, or both.

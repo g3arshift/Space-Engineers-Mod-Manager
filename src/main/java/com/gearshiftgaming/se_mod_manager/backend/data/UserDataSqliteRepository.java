@@ -21,16 +21,13 @@ import java.util.*;
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
 
-    //TODO: We need to re-engineer mod scraping code to check if a mod already exists in the mod table, and if it does, update it. Maybe? What about updating mods? Performance?
-    //TODO: We need to modify the entire program in later versions so that we don't store everything in memory, only a list of the current mod/save profiles and load the information from the
-    // DB on the fly.
-
     private final Jdbi SQLITE_DB;
     private final String databasePath;
 
     public UserDataSqliteRepository(String databasePath) {
         this.databasePath = databasePath;
-        SQLITE_DB = Jdbi.create("jdbc:sqlite:" + databasePath);
+        //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
+        SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
 
         //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         Path databaseLocation = Path.of(databasePath);
@@ -50,8 +47,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 }
             }
         }
-        //We have to enable foreign keys on each connection for SQLite
-        SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA foreign_key=ON;"));
     }
 
     public Result<Void> initializeData() {
@@ -64,12 +59,12 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
     @Override
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
-        Result<Void> saveResult = saveUserConfiguration(userConfiguration);
+        Result<Void> saveResult = updateModListProfileModList(modListProfile.getID(), modListProfile.getModList());
         if(!saveResult.isSuccess()) {
             return saveResult;
         }
 
-        saveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
+        saveResult.addAllMessages(saveSaveProfile(saveProfile));
         if(!saveResult.isSuccess()) {
             return saveResult;
         }
@@ -79,7 +74,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             return saveResult;
         }
 
-        saveResult.addAllMessages(saveSaveProfile(saveProfile));
+        saveResult.addAllMessages(saveUserConfiguration(userConfiguration));
         if(!saveResult.isSuccess()) {
             return saveResult;
         }
@@ -425,7 +420,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         try {
             SQLITE_DB.useTransaction(handle -> {
-
+                boolean fkEnabled = handle.createQuery("PRAGMA foreign_keys;")
+                        .mapTo(Boolean.class)
+                        .one();
                 //Update our bridge table to connect mod list profiles to mods. Ignore duplicates.
                 PreparedBatch modListProfileModBatch = handle.prepareBatch("""
                         INSERT INTO mod_list_profile_mod (
@@ -471,9 +468,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             SQLITE_DB.useTransaction(handle -> {
                 int deletedMods = handle.createUpdate("DELETE FROM mod_list_profile_mod WHERE mod_list_profile_id = :modListProfileId AND mod_id NOT IN (<currentModListIds>);")
                         .bind("modListProfileId", modListProfileId)
-                        .bindList("currentModListIds", modProfileModList.stream()
-                                .map(Mod::getId)
-                                .toList())
+                        .bindList("currentModListIds", !modProfileModList.isEmpty() ? modProfileModList.stream().map(Mod::getId).toList() : -1)
                         .execute();
                 modDeletionResult.addMessage(String.format("Successfully deleted %d mods from mod list profile \"%s\".", deletedMods, modListProfileId), ResultType.SUCCESS);
             });
@@ -572,7 +567,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     save_exists,
                                     space_engineers_version)
                                 VALUES (
-                                    :id,
+                                    :ID,
                                     :profileName,
                                     :saveName,
                                     :savePath,
@@ -589,13 +584,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""")
                         .bindBean(saveProfile)
                         .execute();
-                SQLITE_DB.useTransaction(handle1 -> {
-                    handle.createUpdate("""
-                                    INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
-                                        VALUES (1, :saveProfileId);""")
-                            .bind("saveProfileId", saveProfile.getID())
-                            .execute();
-                });
+                SQLITE_DB.useTransaction(handle1 -> handle.createUpdate("""
+                                INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
+                                    VALUES (1, :saveProfileId);""")
+                        .bind("saveProfileId", saveProfile.getID())
+                        .execute());
                 saveSaveProfileResult.addMessage(String.format("Successfully updated save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
             });
         } catch (TransactionException e) {
@@ -606,15 +599,15 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     @Override
-    public Result<Void> deleteSaveProfile(SaveProfile saveProfile) {
+    public Result<Void> deleteSaveProfile(SaveProfile saveProfileId) {
         //Delete the removed save profiles
         Result<Void> saveResult = new Result<>();
         SQLITE_DB.useTransaction(handle -> {
-            int countSaveProfilesDeleted = handle.execute("DELETE FROM save_profile WHERE save_profile_id NOT IN :id", saveProfile.getID());
+            int countSaveProfilesDeleted = handle.execute("DELETE FROM save_profile WHERE save_profile_id NOT IN :id", saveProfileId.getID());
             if (countSaveProfilesDeleted != 1) {
-                saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfile.getProfileName()), ResultType.FAILED);
+                saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfileId.getProfileName()), ResultType.FAILED);
             } else
-                saveResult.addMessage(String.format("\"%s\" successfully deleted.", saveProfile.getProfileName()), ResultType.SUCCESS);
+                saveResult.addMessage(String.format("\"%s\" successfully deleted.", saveProfileId.getProfileName()), ResultType.SUCCESS);
         });
         return saveResult;
     }

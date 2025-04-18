@@ -1,9 +1,13 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
+import org.apache.commons.lang3.tuple.MutableTriple;
+
+import java.util.UUID;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -22,13 +26,13 @@ public class ModListManagerCell extends ModListCell {
 	}
 
 	@Override
-	protected void updateItem(ModListProfile item, boolean empty) {
+	protected void updateItem(MutableTriple<UUID, String , SpaceEngineersVersion> item, boolean empty) {
 		super.updateItem(item, empty);
 		if (empty || item == null) {
 			setGraphic(null);
 			setStyle(null);
 		} else {
-			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 600));
+			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getMiddle(), 600));
 			setGraphic(getPROFILE_NAME());
 
 			StringBuilder styleBuilder = new StringBuilder(getCellStyle());

@@ -7,6 +7,7 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,8 +64,16 @@ public class StorageController {
 	}
 
 	public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
-		return USER_DATA_SERVICE.saveModListProfileDetails(modListProfile);
+		return USER_DATA_SERVICE.saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
 	}
+
+    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
+        return USER_DATA_SERVICE.saveModListProfileDetails(modListProfileId, modListProfileName, spaceEngineersVersion);
+    }
+
+    public Result<Void> saveModListProfileDetails(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
+        return USER_DATA_SERVICE.saveModListProfileDetails(modListProfileDetails.getLeft(), modListProfileDetails.getMiddle(), modListProfileDetails.getRight());
+    }
 
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         return USER_DATA_SERVICE.saveModListProfile(modListProfile);

@@ -3,10 +3,12 @@ package com.gearshiftgaming.se_mod_manager.frontend.view;
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.MutableTriple;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -63,13 +65,12 @@ public class StatusBar {
 			}
 
 			lastSaveModifiedName.setText(lastUsedSaveProfile.get().getProfileName());
-			Optional<ModListProfile> lastAppliedModlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
-							.filter(modlistProfile -> modlistProfile.getID().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
+			Optional <MutableTriple<UUID, String, SpaceEngineersVersion>> lastAppliedModlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
+							.filter(modlistProfileDetails -> modlistProfileDetails.getLeft().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
 									.findFirst();
 
-			lastAppliedModlistProfile.ifPresentOrElse(modlistProfile -> lastModlistAppliedName.setText(modlistProfile.getProfileName()), () -> {
-				lastModlistAppliedName.setText("None");
-			});
+			lastAppliedModlistProfile.ifPresentOrElse(modlistProfileDetails -> lastModlistAppliedName.setText(modlistProfileDetails.getMiddle()),
+					() -> lastModlistAppliedName.setText("None"));
 
 			updateSaveStatus(UI_SERVICE.getCurrentSaveProfile());
 		} else {

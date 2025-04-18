@@ -27,6 +27,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -268,8 +269,10 @@ public class ModListManager {
                 String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
                 duplicateProfileName = profileNameExists(newProfileName);
 
-                //TODO: A ton of shit is broken. We switched from triple to mutable triple.
-                if (duplicateProfileName) {
+                if(newProfileName.equals(selectedProfile.getMiddle())) {
+                    Popup.displaySimpleAlert("You have to name the profile something different!", MessageType.WARN);
+                }
+                else if (duplicateProfileName) {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
                 } else if (!newProfileName.isBlank()) {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
@@ -296,14 +299,17 @@ public class ModListManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfile())) {
-                        activeProfileName.setText(profileToModify.getProfileName());
+                    if (profileToModify.getLeft().equals(UI_SERVICE.getCurrentModListProfile().getID())) {
+                        activeProfileName.setText(profileToModify.getMiddle());
                     }
 
                     UI_SERVICE.log(String.format("Successfully renamed mod profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
-                    //TODO: Replace with just saving mod list profile details.
-                    UI_SERVICE.saveUserData();
+                    Result<Void> renameSaveResult = UI_SERVICE.saveModListProfileDetails(profileToModify);
+                    if(!renameSaveResult.isSuccess()) {
+                        UI_SERVICE.log(renameSaveResult);
+                        Popup.displaySimpleAlert("Failed to rename profile, see log for more details.", MessageType.ERROR);
+                    }
                 }
             } else {
                 duplicateProfileName = false;
@@ -328,9 +334,9 @@ public class ModListManager {
 
     private void setModListActive() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            ModListProfile modListProfile = profileList.getSelectionModel().getSelectedItem();
-            modTableContextBar.getModProfileDropdown().getSelectionModel().select(modListProfile);
-            activeProfileName.setText(modListProfile.getProfileName());
+            MutableTriple<UUID, String, SpaceEngineersVersion> newCurrentProfile = profileList.getSelectionModel().getSelectedItem();
+            modTableContextBar.getModProfileDropdown().getSelectionModel().select(newCurrentProfile);
+            activeProfileName.setText(newCurrentProfile.getMiddle());
             profileList.refresh();
         }
     }
@@ -369,7 +375,7 @@ public class ModListManager {
         if (savePath != null) {
             Result<Void> modlistProfileResult = UI_SERVICE.importModlist(savePath);
             if (modlistProfileResult.isSuccess()) {
-                modTableContextBar.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
+                modTableContextBar.getModProfileDropdown().getSelectionModel().selectLast();
                 profileList.refresh();
             }
             Popup.displaySimpleAlert(modlistProfileResult, stage);
@@ -383,10 +389,9 @@ public class ModListManager {
         }
     }
 
-    //TODO: Modify this to exclude the profile we're renaming.
     private boolean profileNameExists(String profileName) {
         return MOD_LIST_PROFILE_DETAILS.stream()
-                .anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));
+                .anyMatch(details -> !details.getMiddle().equals(profileName));
     }
 
     public void show(Stage parentStage) {

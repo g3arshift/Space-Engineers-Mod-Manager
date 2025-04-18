@@ -341,7 +341,11 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 
 			UI_SERVICE.modifyActiveModCount(-previouslyActiveModCount);
-			UI_SERVICE.updateModListProfileModList();
+			Result<Void> updateResult = UI_SERVICE.updateModListProfileModList();
+            if(!updateResult.isSuccess()) {
+                UI_SERVICE.log(updateResult);
+                Popup.displaySimpleAlert("Failed to delete mod from modlist. See log for more information.", MessageType.ERROR);
+            }
 		}
 	}
 
