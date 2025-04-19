@@ -18,7 +18,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -44,8 +43,6 @@ import java.util.stream.Stream;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ViewController {
-    private final String HOME_PATH = System.getProperty("user.home");
-
     private final Properties PROPERTIES;
 
     private UiService uiService;
@@ -66,7 +63,7 @@ public class ViewController {
                 new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
                 new SaveFileRepository());
 
-        Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
+        Result<UserConfiguration> userConfigurationResult = uiService.loadStartupData();
         UserConfiguration userConfiguration = new UserConfiguration();
 
         if (userConfigurationResult.isSuccess()) {
@@ -81,14 +78,24 @@ public class ViewController {
                     int choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +
                             "Would you like to create a new user configuration and continue?", MessageType.WARN);
                     if (choice == 1) {
-                        storageController.initializeData();
+                        Result<Void> dataInitializaitonResult = storageController.initializeData();
+                        if(!dataInitializaitonResult.isSuccess()) {
+                            uiService.log(dataInitializaitonResult);
+                            Popup.displaySimpleAlert(dataInitializaitonResult);
+                            throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
+                        }
                     } else {
                         Platform.exit();
                         return;
                     }
                     //TODO: What is this really for? I THINK it's for first time startup, but I think the earlier phases capture that... Check it later.
                 } else {
-                    storageController.initializeData();
+                    Result<Void> dataInitializaitonResult = storageController.initializeData();
+                    if(!dataInitializaitonResult.isSuccess()) {
+                        uiService.log(dataInitializaitonResult);
+                        Popup.displaySimpleAlert(dataInitializaitonResult);
+                        throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
+                    }
                 }
             }
         }

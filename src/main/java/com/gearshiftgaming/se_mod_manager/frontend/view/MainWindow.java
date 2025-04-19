@@ -156,7 +156,7 @@ public class MainWindow {
     /**
      * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
      */
-    private void setupWindow(Parent root) throws IOException {
+    private void setupWindow(Parent root) {
         this.scene = new Scene(root);
         //Prepare the scene
         int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));

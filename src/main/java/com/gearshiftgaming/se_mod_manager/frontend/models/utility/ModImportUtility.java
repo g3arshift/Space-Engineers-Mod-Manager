@@ -88,7 +88,7 @@ public class ModImportUtility {
 
 	public static String createNewModProfile(final UiService UI_SERVICE, final Stage STAGE, final SimpleInput PROFILE_INPUT_VIEW) {
 		boolean duplicateProfileName;
-		String newProfileName = "";
+		String newProfileName;
 
 		do {
 			PROFILE_INPUT_VIEW.getInput().clear();

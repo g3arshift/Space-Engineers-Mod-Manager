@@ -120,14 +120,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
         final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mods");
         DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTable.getSelectionModel().getSelectedItems()));
-        DELETE_MENU_ITEM.setOnAction(actionEvent -> {
-            deleteMods(modTable);
-        });
+        DELETE_MENU_ITEM.setOnAction(actionEvent -> deleteMods(modTable));
 
 		final MenuItem SELECT_ALL_MENU_ITEM = new MenuItem("Select all");
-		SELECT_ALL_MENU_ITEM.setOnAction(event -> {
-			modTable.getSelectionModel().selectAll();
-		});
+		SELECT_ALL_MENU_ITEM.setOnAction(event -> modTable.getSelectionModel().selectAll());
 
         TABLE_CONTEXT_MENU.getItems().addAll(ACTIVATE_MODS_MENU_ITEM, DEACTIVATE_MODS_MENU_ITEM, WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM, SELECT_ALL_MENU_ITEM);
 

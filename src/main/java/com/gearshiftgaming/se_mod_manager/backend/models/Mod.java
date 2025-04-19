@@ -26,7 +26,9 @@ public abstract class Mod {
     //These are the fields required for the sandbox_config.sbc file
     //For mod.io mods we have to use an actual API here. https://docs.mod.io/support/search-by-id/
     private String id;
+    @Setter
     private String friendlyName;
+    @Setter
     private String publishedServiceName;
 
     private int loadPriority;
@@ -106,13 +108,5 @@ public abstract class Mod {
     @XmlJavaTypeAdapter(value = ModDescriptionCompacterAdapter.class)
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setFriendlyName(String friendlyName) {
-        this.friendlyName = friendlyName;
-    }
-
-    public void setPublishedServiceName(String publishedServiceName) {
-        this.publishedServiceName = publishedServiceName;
     }
 }
