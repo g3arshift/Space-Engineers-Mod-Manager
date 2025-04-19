@@ -195,10 +195,6 @@ public class UiService {
         }
     }
 
-    public Result<UserConfiguration> loadStartupData() {
-        return STORAGE_CONTROLLER.loadStartupData();
-    }
-
     public Result<Void> deleteModListProfile(UUID modListProfileId) {
         return STORAGE_CONTROLLER.deleteModListProfile(modListProfileId);
     }

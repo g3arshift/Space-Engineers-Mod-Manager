@@ -63,7 +63,7 @@ public class ViewController {
                 new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
                 new SaveFileRepository());
 
-        Result<UserConfiguration> userConfigurationResult = uiService.loadStartupData();
+        Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
         UserConfiguration userConfiguration = new UserConfiguration();
 
         if (userConfigurationResult.isSuccess()) {
