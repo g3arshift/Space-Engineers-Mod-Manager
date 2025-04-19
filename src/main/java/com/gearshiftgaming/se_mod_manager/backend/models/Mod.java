@@ -42,7 +42,7 @@ public abstract class Mod {
     private List<String> modifiedPaths = new ArrayList<>();
 
     public Mod(String id) {
-        this.id = id.intern();
+        this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
     }
@@ -50,22 +50,22 @@ public abstract class Mod {
     //We are intentionally forgoing copying load priority as it is a generated field
     @SuppressWarnings("CopyConstructorMissesField")
     public Mod(Mod mod) {
-        this.id = mod.getId().intern();
-        this.friendlyName = mod.getFriendlyName().intern();
+        this.id = mod.getId();
+        this.friendlyName = mod.getFriendlyName();
         this.categories = new ArrayList<>(mod.getCategories());
         this.active = mod.isActive();
-        this.description = mod.getDescription().intern();
+        this.description = mod.getDescription();
         this.modifiedPaths = mod.getModifiedPaths();
     }
 
     public Mod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description) {
-        this.id = id.intern();
-        this.friendlyName = friendlyName.intern();
-        this.publishedServiceName = publishedServiceName.intern();
+        this.id = id;
+        this.friendlyName = friendlyName;
+        this.publishedServiceName = publishedServiceName;
         this.loadPriority = loadPriority;
         this.categories = categories;
         this.active = active;
-        this.description = description.intern();
+        this.description = description;
     }
 
     @Override
@@ -82,7 +82,7 @@ public abstract class Mod {
 
     @XmlAttribute
     public void setId(String id) {
-        this.id = id.intern();
+        this.id = id;
     }
 
     @XmlElementWrapper(name = "categories")
@@ -105,14 +105,14 @@ public abstract class Mod {
 
     @XmlJavaTypeAdapter(value = ModDescriptionCompacterAdapter.class)
     public void setDescription(String description) {
-        this.description = description.intern();
+        this.description = description;
     }
 
     public void setFriendlyName(String friendlyName) {
-        this.friendlyName = friendlyName.intern();
+        this.friendlyName = friendlyName;
     }
 
     public void setPublishedServiceName(String publishedServiceName) {
-        this.publishedServiceName = publishedServiceName.intern();
+        this.publishedServiceName = publishedServiceName;
     }
 }

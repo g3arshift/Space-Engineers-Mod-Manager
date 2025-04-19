@@ -1304,8 +1304,14 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
+            List<Mod> successfullyScrapedMods = new ArrayList<>();
+            for(Result<Mod> modResult : TASK.getValue()) {
+                if(modResult.isSuccess())
+                    successfullyScrapedMods.add(modResult.getPayload());
+            }
+
             UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-            Result<Void> saveResult = UI_SERVICE.updateModInformation(modList);
+            Result<Void> saveResult = UI_SERVICE.updateModInformation(successfullyScrapedMods);
             if(!saveResult.isSuccess()) {
                 UI_SERVICE.log(saveResult);
                 Popup.displaySimpleAlert(saveResult);

@@ -52,30 +52,32 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> initializeData() {
         UserConfiguration userConfiguration = new UserConfiguration();
         ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
+        Result<Void> saveResult = saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
         userConfiguration.setLastActiveModProfileId(modListProfile.getID());
-        return saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
+        saveResult.addAllMessages(saveUserConfiguration(userConfiguration));
+        return saveResult;
     }
 
     //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
     @Override
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
-        Result<Void> saveResult = updateModListProfileModList(modListProfile.getID(), modListProfile.getModList());
-        if(!saveResult.isSuccess()) {
+        Result<Void> saveResult = saveUserConfiguration(userConfiguration);
+        if (!saveResult.isSuccess()) {
+            return saveResult;
+        }
+
+        saveResult.addAllMessages(saveModListProfile(modListProfile));
+        if (!saveResult.isSuccess()) {
             return saveResult;
         }
 
         saveResult.addAllMessages(saveSaveProfile(saveProfile));
-        if(!saveResult.isSuccess()) {
+        if (!saveResult.isSuccess()) {
             return saveResult;
         }
 
         saveResult.addAllMessages(updateModInformation(modListProfile.getModList()));
-        if(!saveResult.isSuccess()) {
-            return saveResult;
-        }
-
-        saveResult.addAllMessages(saveUserConfiguration(userConfiguration));
-        if(!saveResult.isSuccess()) {
+        if (!saveResult.isSuccess()) {
             return saveResult;
         }
 
@@ -123,9 +125,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     private List<MutableTriple<UUID, String, SpaceEngineersVersion>> loadAllBasicModProfileInformation() {
         List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileIds;
         try (Handle handle = SQLITE_DB.open()) {
-            modListProfileIds = handle.createQuery("SELECT mod_list_profile.mod_list_profile_id from mod_list_profile;")
+            modListProfileIds = handle.createQuery("SELECT * from mod_list_profile;")
                     .map((rs, ctx) -> MutableTriple.of(UUID.fromString(rs.getString("mod_list_profile_id")),
-                            rs.getString("mod_list_profile_name"),
+                            rs.getString("profile_name"),
                             SpaceEngineersVersion.valueOf(rs.getString("space_engineers_version"))))
                     .list();
         }
@@ -172,9 +174,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 run_first_time_setup = excluded.run_first_time_setup;""")
                     .bindBean(userConfiguration)
                     .execute());
-            for(MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
+            for (MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
                 Result<Void> detailsSaveResult = saveModListProfileDetails(details.getLeft(), details.getMiddle(), details.getRight());
-                if(!detailsSaveResult.isSuccess()) {
+                if (!detailsSaveResult.isSuccess()) {
                     saveResult.addAllMessages(detailsSaveResult);
                     throw new TransactionException(detailsSaveResult.getCurrentMessage());
                 }
@@ -204,7 +206,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             return modListProfileResult;
         }
 
-        loadModList(profileName, foundModListProfile.get(), modListProfileResult);
+        loadModList(foundModListProfile.get(), modListProfileResult);
 
         return modListProfileResult;
     }
@@ -223,7 +225,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         if (foundModListProfile.isEmpty()) {
             return modListProfileResult;
         }
-        loadModList(foundModListProfile.get().getID().toString(), foundModListProfile.get(), modListProfileResult);
+        loadModList(foundModListProfile.get(), modListProfileResult);
         return modListProfileResult;
     }
 
@@ -243,11 +245,12 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             return modListProfileResult;
         }
 
-        loadModList(modListProfileId.toString(), foundModListProfile.get(), modListProfileResult);
+        loadModList(foundModListProfile.get(), modListProfileResult);
+        modListProfileResult.setPayload(foundModListProfile.get());
         return modListProfileResult;
     }
 
-    private void loadModList(String profileName, ModListProfile modListProfile, Result<ModListProfile> modListProfileResult) {
+    private void loadModList(ModListProfile modListProfile, Result<ModListProfile> modListProfileResult) {
         Result<List<Mod>> modListResult = loadModListForProfile(modListProfile.getID());
         if (!modListResult.isSuccess()) {
             modListProfileResult.addAllMessages(modListResult);
@@ -255,7 +258,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         modListProfile.setModList(modListResult.getPayload());
         modListProfile.generateConflictTable();
-        modListProfileResult.addMessage(String.format("Successfully loaded mod profile \"%s\"", profileName), ResultType.SUCCESS);
+        modListProfileResult.addMessage(String.format("Successfully loaded mod profile \"%s\"", modListProfile.getProfileName()), ResultType.SUCCESS);
     }
 
     private Result<List<Mod>> loadModListForProfile(UUID modListProfileId) {
@@ -269,6 +272,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
             if (modListIds.isEmpty()) {
                 modListLoadResult.addMessage(String.format("No mods for mod list profile \"%s\"", modListProfileId), ResultType.SUCCESS);
+                modListLoadResult.setPayload(new ArrayList<>());
                 return modListLoadResult;
             }
 
@@ -292,12 +296,16 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 mod_details.last_updated_month_day,
                                 mod_details.last_updated_hour,
                                 mod_details.steam_mod_last_updated,
+                                mlpm.load_priority,
+                                mlpm.active,
                                 GROUP_CONCAT(DISTINCT mc.category) AS categories
                             FROM ModDetails mod_details
                                 LEFT JOIN mod_category mc ON mod_details.mod_id = mc.mod_id
                                 LEFT JOIN mod_list_profile_mod mlpm ON mod_details.mod_id = mlpm.mod_id
-                            WHERE mod_details.mod_id IN (<modListIds>)
-                            GROUP BY mod_details.mod_id, mlpm.load_priority, mlpm_active;""")
+                            WHERE mod_details.mod_id IN (<modListIds>) AND mlpm.mod_list_profile_id = :modListProfileId
+                            GROUP BY mod_details.mod_id, mlpm.load_priority, mlpm.active
+                            ORDER BY mlpm.load_priority;""")
+                    .bind("modListProfileId", modListProfileId)
                     .bindList("modListIds", modListIds)
                     .map(new ModMapper())
                     .list();
@@ -373,13 +381,14 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
     /**
      * Saves the mod list profile details AND the mod list for it.
+     *
      * @param modListProfile
      * @return
      */
     @Override
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         Result<Void> modListProfileSaveResult = saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
-        if(!modListProfileSaveResult.isSuccess()) {
+        if (!modListProfileSaveResult.isSuccess()) {
             return modListProfileSaveResult;
         }
 
@@ -420,9 +429,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         try {
             SQLITE_DB.useTransaction(handle -> {
-                boolean fkEnabled = handle.createQuery("PRAGMA foreign_keys;")
-                        .mapTo(Boolean.class)
-                        .one();
                 //Update our bridge table to connect mod list profiles to mods. Ignore duplicates.
                 PreparedBatch modListProfileModBatch = handle.prepareBatch("""
                         INSERT INTO mod_list_profile_mod (
@@ -468,7 +474,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             SQLITE_DB.useTransaction(handle -> {
                 int deletedMods = handle.createUpdate("DELETE FROM mod_list_profile_mod WHERE mod_list_profile_id = :modListProfileId AND mod_id NOT IN (<currentModListIds>);")
                         .bind("modListProfileId", modListProfileId)
-                        .bindList("currentModListIds", !modProfileModList.isEmpty() ? modProfileModList.stream().map(Mod::getId).toList() : -1)
+                        .bindList("currentModListIds", !modProfileModList.isEmpty() ? modProfileModList.stream().map(Mod::getId).toList() : List.of(-1))
                         .execute();
                 modDeletionResult.addMessage(String.format("Successfully deleted %d mods from mod list profile \"%s\".", deletedMods, modListProfileId), ResultType.SUCCESS);
             });
@@ -615,6 +621,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<Void> updateModInformation(List<Mod> modList) throws TransactionException {
         Result<Void> modUpdateResult = new Result<>();
+        if(modList.isEmpty()) {
+            modUpdateResult.addMessage("No mods to update.", ResultType.SUCCESS);
+            return modUpdateResult;
+        }
+
         try {
             SQLITE_DB.useTransaction(handle -> {
                 //Upsert the mod table but only for info that's changed
@@ -720,6 +731,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         }
                     }
 
+                    modsBatch.execute();
+                    modUpdateResult.addMessage("Mods updated.", ResultType.SUCCESS);
+
                     modCategoriesBatch.execute();
                     modUpdateResult.addMessage("Mod categories updated.", ResultType.SUCCESS);
 
@@ -739,7 +753,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                             numModIoModRowsActuallyAffected++;
                         }
                     }
-                    modUpdateResult.addMessage(numModIoModRowsActuallyAffected + " steam mods saved to database. Expected " + countExpectedModIoModsUpdated, (numModIoModRowsActuallyAffected == countExpectedModIoModsUpdated ? ResultType.SUCCESS : ResultType.WARN));
+                    modUpdateResult.addMessage(numModIoModRowsActuallyAffected + " mod.io mods saved to database. Expected " + countExpectedModIoModsUpdated, (numModIoModRowsActuallyAffected == countExpectedModIoModsUpdated ? ResultType.SUCCESS : ResultType.WARN));
 
                     modifiedPathsBatch.execute();
                     modUpdateResult.addMessage("Mod modified paths updated.", ResultType.SUCCESS);

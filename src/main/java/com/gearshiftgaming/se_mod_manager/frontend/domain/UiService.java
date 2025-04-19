@@ -113,14 +113,26 @@ public class UiService {
 
         this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
+        KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
+            switch (arrowKeyEvent.getCode()) {
+                case UP, DOWN, LEFT, RIGHT, TAB:
+                    arrowKeyEvent.consume();
+                    break;
+            }
+        };
+
         //Load our last active mod list profile, or at least the first one.
         Result<ModListProfile> modListProfileResult = getLastActiveModlistProfile();
-        if (modListProfileResult.isSuccess()) {
-            currentModListProfile = modListProfileResult.getPayload();
-        } else {
+        if (!modListProfileResult.isSuccess()) {
             log("No previously chosen modlist detected.", MessageType.INFO);
             modListProfileResult = storageController.loadFirstModListProfile();
+            if (!modListProfileResult.isSuccess()) {
+                log(modListProfileResult);
+                Popup.displaySimpleAlert(String.format("Fatal error!\n%s", modListProfileResult.getCurrentMessage()), MessageType.ERROR);
+                throw new RuntimeException(modListProfileResult.getCurrentMessage());
+            }
         }
+        currentModListProfile = modListProfileResult.getPayload();
         if (!modListProfileResult.isSuccess()) {
             logPrivate(modListProfileResult);
             log(modListProfileResult.getCurrentMessage(), MessageType.ERROR);
@@ -138,14 +150,6 @@ public class UiService {
         //A little bit of duplication, but the order of construction is a bit different from setCurrentModProfile
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
-
-        KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
-            switch (arrowKeyEvent.getCode()) {
-                case UP, DOWN, LEFT, RIGHT, TAB:
-                    arrowKeyEvent.consume();
-                    break;
-            }
-        };
     }
 
     public void log(String message, MessageType messageType) {
@@ -305,7 +309,6 @@ public class UiService {
     }
 
     public void setCurrentModListProfile(UUID modListProfileId) {
-        STORAGE_CONTROLLER.saveModListProfile(currentModListProfile);
         Result<ModListProfile> newCurrentModListProfileResult = STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
         if (!newCurrentModListProfileResult.isSuccess()) {
             log(newCurrentModListProfileResult);
@@ -321,7 +324,6 @@ public class UiService {
     }
 
     public Result<Void> setCurrentSaveProfile(SaveProfile newCurrentSaveProfile) {
-        STORAGE_CONTROLLER.saveSaveProfile(currentSaveProfile);
         this.currentSaveProfile = newCurrentSaveProfile;
         return setLastActiveSaveProfile(newCurrentSaveProfile.getID());
     }
@@ -630,15 +632,9 @@ public class UiService {
         return STORAGE_CONTROLLER.exportModlist(modListProfile, exportLocation);
     }
 
-    //When we import a modlist we need to first save the details of our current modlist to the database, just to be safe, then try to read the profile from the file.
     //Once the file is read, we want to add its details to the detail list
     public Result<Void> importModlist(File saveLocation) {
-        Result<Void> importResult = STORAGE_CONTROLLER.saveModListProfile(currentModListProfile);
-        if (!importResult.isSuccess()) {
-            log(importResult);
-            return importResult;
-        }
-
+        Result<Void> importResult = new Result<>();
         Result<ModListProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
         if (modlistProfileResult.isSuccess()) {
             ModListProfile importModListProfile = modlistProfileResult.getPayload();
@@ -651,10 +647,15 @@ public class UiService {
                 }
                 MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
                 currentModListProfile = importModListProfile;
-                importResult.addAllMessages(setLastActiveModlistProfile(importModListProfile.getID()));
-                log(importResult);
+                saveModListProfile(importModListProfile);
+                importResult = setLastActiveModlistProfile(importModListProfile.getID());
+                if(importResult.isSuccess()) {
+                    logPrivate(importResult);
+                    importResult.addMessage(String.format("Successfully imported mod list profile \"%s\".", importModListProfile.getProfileName()), ResultType.SUCCESS);
+                } else
+                    log(importResult);
             } else
-                modlistProfileResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
+                importResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
         }
         return importResult;
     }

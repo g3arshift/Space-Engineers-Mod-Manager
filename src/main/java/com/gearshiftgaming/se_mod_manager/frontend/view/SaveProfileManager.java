@@ -264,8 +264,8 @@ public class SaveProfileManager {
 
         saveList.refresh();
         saveList.getSelectionModel().selectLast();
-        setActive();
         Result<Void> saveResult = UI_SERVICE.saveSaveProfile(saveProfile);
+        setActive();
         if(!saveResult.isSuccess()) {
             UI_SERVICE.log(saveResult);
             Popup.displaySimpleAlert(saveResult);
