@@ -303,7 +303,7 @@ public class SaveProfileManager {
     }
 
     private @NotNull Thread importModlist(List<Mod> modList) {
-        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
+        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlistProfile(modList);
 
         TASK.setOnRunning(workerStateEvent -> {
             disableUserInput(true);

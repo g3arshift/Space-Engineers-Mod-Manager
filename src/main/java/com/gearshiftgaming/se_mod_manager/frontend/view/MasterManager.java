@@ -840,7 +840,7 @@ public class MasterManager {
         File savePath = importChooser.showOpenDialog(STAGE);
 
         if (savePath != null) {
-            Result<Void> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<Void> modlistProfileResult = UI_SERVICE.importModlistProfile(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modProfileDropdown.getSelectionModel().selectLast();
             }
@@ -1283,7 +1283,7 @@ public class MasterManager {
      * @param modList The list of mods to import
      */
     public @NotNull Thread importModsFromList(List<Mod> modList) {
-        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
+        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlistProfile(modList);
 
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.

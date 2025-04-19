@@ -99,6 +99,7 @@ public class UiService {
     final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
 
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
+    // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
                      @NotNull ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
@@ -206,16 +207,8 @@ public class UiService {
         return STORAGE_CONTROLLER.saveUserConfiguration(USER_CONFIGURATION);
     }
 
-    public Result<ModListProfile> loadModListProfileByName(String profileName) {
-        return STORAGE_CONTROLLER.loadModListProfileByName(profileName);
-    }
-
     public Result<Void> updateModListLoadPriority() {
         return STORAGE_CONTROLLER.updateModListLoadPriority(currentModListProfile.getID(), currentModList);
-    }
-
-    public Result<Void> saveCurrentData() {
-        return STORAGE_CONTROLLER.saveCurrentData(USER_CONFIGURATION, currentModListProfile, currentSaveProfile);
     }
 
     public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
@@ -226,26 +219,9 @@ public class UiService {
         return STORAGE_CONTROLLER.updateModListActiveMods(currentModListProfile.getID(), currentModList);
     }
 
-    public Result<ModListProfile> importModListProfile(File modlistLocation) {
-        return STORAGE_CONTROLLER.importModListProfile(modlistLocation);
-    }
-
-    public Result<Void> exportModListProfile(ModListProfile modListProfile, File modlistLocation) {
-        return STORAGE_CONTROLLER.exportModListProfile(modListProfile, modlistLocation);
-    }
-
-    public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
-        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfile);
-    }
-
-    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
-        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfileId, modListProfileName, spaceEngineersVersion);
-    }
-
     public Result<Void> saveModListProfileDetails(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
-        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfileDetails.getLeft(), modListProfileDetails.getMiddle(), modListProfileDetails.getRight());
+        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfileDetails);
     }
-
 
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         return STORAGE_CONTROLLER.saveModListProfile(modListProfile);
@@ -465,7 +441,7 @@ public class UiService {
         return modImportProgressPercentage.get();
     }
 
-    public Task<List<Result<Mod>>> importModlist(List<Mod> modList) {
+    public Task<List<Result<Mod>>> importModlistProfile(List<Mod> modList) {
         List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
         return new Task<>() {
             @Override
@@ -628,14 +604,14 @@ public class UiService {
         return MOD_INFO_CONTROLLER.getModIdsFromFile(modlistFile, modType);
     }
 
-    public Result<Void> exportModlist(ModListProfile modListProfile, File exportLocation) {
-        return STORAGE_CONTROLLER.exportModlist(modListProfile, exportLocation);
+    public Result<Void> exportModListProfile(ModListProfile modListProfile, File exportLocation) {
+        return STORAGE_CONTROLLER.exportModListProfile(modListProfile, exportLocation);
     }
 
     //Once the file is read, we want to add its details to the detail list
-    public Result<Void> importModlist(File saveLocation) {
+    public Result<Void> importModlistProfile(File saveLocation) {
         Result<Void> importResult = new Result<>();
-        Result<ModListProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
+        Result<ModListProfile> modlistProfileResult = STORAGE_CONTROLLER.importModListProfile(saveLocation);
         if (modlistProfileResult.isSuccess()) {
             ModListProfile importModListProfile = modlistProfileResult.getPayload();
             boolean duplicateProfileExists = MOD_LIST_PROFILE_DETAILS

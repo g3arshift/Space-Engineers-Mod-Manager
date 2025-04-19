@@ -137,7 +137,7 @@ public class ModListManagerHelper {
 
         File savePath = exportChooser.showSaveDialog(STAGE);
         if (savePath != null) {
-            Result<Void> exportModlistResult = UI_SERVICE.exportModlist(UI_SERVICE.getCurrentModListProfile(), savePath);
+            Result<Void> exportModlistResult = UI_SERVICE.exportModListProfile(UI_SERVICE.getCurrentModListProfile(), savePath);
             if (!exportModlistResult.isSuccess()) UI_SERVICE.log(exportModlistResult);
             Popup.displaySimpleAlert(exportModlistResult, STAGE);
         }

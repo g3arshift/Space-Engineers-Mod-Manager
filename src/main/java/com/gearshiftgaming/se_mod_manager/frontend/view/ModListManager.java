@@ -66,7 +66,7 @@ public class ModListManager {
     private Button importModlist;
 
     @FXML
-    private Button exportModlist;
+    private Button exportModListProfile;
 
     @FXML
     private Label activeProfileName;
@@ -372,7 +372,7 @@ public class ModListManager {
         File savePath = importChooser.showOpenDialog(stage);
 
         if (savePath != null) {
-            Result<Void> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<Void> modlistProfileResult = UI_SERVICE.importModlistProfile(savePath);
             if (modlistProfileResult.isSuccess()) {
                 modTableContextBar.getModProfileDropdown().getSelectionModel().selectLast();
                 profileList.refresh();

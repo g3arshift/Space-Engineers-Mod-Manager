@@ -779,6 +779,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         return super.importModlist(modlistLocation);
     }
 
+    //TODO: REdo this to drop data instead of resetting everything.
     @Override
     public Result<Void> resetData() {
         Result<Void> resetResult = new Result<>();

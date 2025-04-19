@@ -8,6 +8,8 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.UserDataService;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import java.util.UUID;
  */
 public class StorageController {
 
+    private static final Logger log = LogManager.getLogger(StorageController.class);
     private final SandboxService SANDBOX_SERVICE;
 
     private final UserDataService USER_DATA_SERVICE;
@@ -33,10 +36,6 @@ public class StorageController {
         this.SANDBOX_SERVICE = new SandboxService(sandboxConfigRepository);
         this.USER_DATA_SERVICE = new UserDataService(userDataRepository);
         this.SAVE_SERVICE = new SaveService(saveRepository, SANDBOX_SERVICE);
-    }
-
-    public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
-        return USER_DATA_SERVICE.saveCurrentData(userConfiguration, modListProfile, saveProfile);
     }
     
     public Result<Void> initializeData() {
@@ -55,21 +54,9 @@ public class StorageController {
         return USER_DATA_SERVICE.loadFirstModListProfile();
     }
 
-    public Result<ModListProfile> loadModListProfileByName(String profileName) {
-		return USER_DATA_SERVICE.loadModListProfileByName(profileName);
-	}
-
 	public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
 		return USER_DATA_SERVICE.loadModListProfileById(modListProfileId);
 	}
-
-	public Result<Void> saveModListProfileDetails(ModListProfile modListProfile) {
-		return USER_DATA_SERVICE.saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
-	}
-
-    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
-        return USER_DATA_SERVICE.saveModListProfileDetails(modListProfileId, modListProfileName, spaceEngineersVersion);
-    }
 
     public Result<Void> saveModListProfileDetails(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
         return USER_DATA_SERVICE.saveModListProfileDetails(modListProfileDetails.getLeft(), modListProfileDetails.getMiddle(), modListProfileDetails.getRight());
@@ -103,16 +90,8 @@ public class StorageController {
 		return USER_DATA_SERVICE.updateModListLoadPriority(modListProfileId, modList);
 	}
 
-	public Result<ModListProfile> importModListProfile(File modlistLocation) {
-		return USER_DATA_SERVICE.importModListProfile(modlistLocation);
-	}
-
 	public Result<Void> saveSaveProfile(SaveProfile saveProfile) {
 		return USER_DATA_SERVICE.saveSaveProfile(saveProfile);
-	}
-
-	public Result<Void> exportModListProfile(ModListProfile modListProfile, File modlistLocation) {
-		return USER_DATA_SERVICE.exportModListProfile(modListProfile, modlistLocation);
 	}
 
 	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
@@ -126,17 +105,6 @@ public class StorageController {
             return failedModification;
         }
     }
-
-//    //Sort our mod profile's mod list by loadPriority when we save so that load priority is preserved
-//    public Result<Void> saveUserData(UserConfiguration userConfiguration) {
-//        Result<Void> saveResult = new Result<>();
-//        try {
-//            saveResult = USER_DATA_SERVICE.saveUserData(sortUserConfigurationModLists(userConfiguration));
-//        } catch (IOException e) {
-//            saveResult.addMessage(e.toString(), ResultType.FAILED);
-//        }
-//        return saveResult;
-//    }
 
     //TODO: Space Engineers version checking. Right now "getSessionName" is setup for only SE1.
     public Result<SaveProfile> getSpaceEngineersOneSaveProfile(File sandboxConfigFile) throws IOException {
@@ -180,13 +148,13 @@ public class StorageController {
     }
 
 
-    public Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation) {
-        return USER_DATA_SERVICE.exportModlist(modListProfile, saveLocation);
+    public Result<Void> exportModListProfile(ModListProfile modListProfile, File saveLocation) {
+        return USER_DATA_SERVICE.exportModlistProfile(modListProfile, saveLocation);
     }
 
 
-    public Result<ModListProfile> importModlist(File saveLocation) {
-        return USER_DATA_SERVICE.importModlist(saveLocation);
+    public Result<ModListProfile> importModListProfile(File saveLocation) {
+        return USER_DATA_SERVICE.importModlistProfile(saveLocation);
     }
 
 	public Result<Void> resetData() {
@@ -195,7 +163,11 @@ public class StorageController {
             UserConfiguration userConfiguration = new UserConfiguration();
             ModListProfile modListProfile = new ModListProfile();
             userConfiguration.setLastActiveModProfileId(modListProfile.getID());
-            USER_DATA_SERVICE.saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
+            Result<Void> saveResult = USER_DATA_SERVICE.saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
+            if(!saveResult.isSuccess()) {
+                log.error(saveResult.getCurrentMessage());
+                throw new RuntimeException(saveResult.getCurrentMessage());
+            }
             userConfigResetResult.addMessage("Successfully deleted existing user configuration and saved new one.", ResultType.SUCCESS);
         }
 

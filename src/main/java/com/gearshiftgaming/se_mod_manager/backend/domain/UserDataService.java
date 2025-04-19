@@ -18,7 +18,7 @@ public record UserDataService(UserDataRepository userDataRepository) {
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         return userDataRepository.saveCurrentData(userConfiguration, modListProfile, saveProfile);
     }
-    
+
     public Result<Void> initializeData() {
         return userDataRepository.initializeData();
     }
@@ -29,10 +29,6 @@ public record UserDataService(UserDataRepository userDataRepository) {
 
     public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration) {
         return userDataRepository.saveUserConfiguration(userConfiguration);
-    }
-
-    public Result<ModListProfile> loadModListProfileByName(String profileName) {
-        return userDataRepository.loadModListProfileByName(profileName);
     }
 
     public Result<ModListProfile> loadFirstModListProfile() {
@@ -83,19 +79,11 @@ public record UserDataService(UserDataRepository userDataRepository) {
         return userDataRepository.updateModInformation(modList);
     }
 
-    public Result<ModListProfile> importModListProfile(File modlistLocation) {
-        return userDataRepository.importModListProfile(modlistLocation);
-    }
-
-    public Result<Void> exportModListProfile(ModListProfile modListProfile, File modlistLocation) {
-        return userDataRepository.exportModListProfile(modListProfile, modlistLocation);
-    }
-
-    public Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation) {
+    public Result<Void> exportModlistProfile(ModListProfile modListProfile, File saveLocation) {
         return userDataRepository.exportModListProfile(modListProfile, saveLocation);
     }
 
-    public Result<ModListProfile> importModlist(File saveLocation) {
+    public Result<ModListProfile> importModlistProfile(File saveLocation) {
         return userDataRepository.importModListProfile(saveLocation);
     }
 }
