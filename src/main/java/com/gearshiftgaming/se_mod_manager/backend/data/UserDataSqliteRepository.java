@@ -49,6 +49,33 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         }
     }
 
+    private void createDatabase() {
+        SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
+        SQLITE_DB.useTransaction(handle -> {
+            try {
+                String sqlScript = Files.readString(Path.of(
+                        Objects.requireNonNull(
+                                        this.getClass().getClassLoader().getResource("Database/semm_db_base.sql"))
+                                .toURI()));
+
+                String[] sqlOperations = sqlScript.split("\\r\\n\\r\\n");
+                for (String sql : sqlOperations) {
+                    handle.execute(sql);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        SQLITE_DB.useHandle(handle -> handle.execute("""
+                CREATE TRIGGER delete_orphan_mods
+                    AFTER DELETE ON mod_list_profile_mod
+                    FOR EACH ROW
+                    WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
+                    BEGIN
+                        DELETE FROM mod WHERE mod_id = OLD.mod_id;
+                    END;"""));
+    }
+
     public Result<Void> initializeData() {
         UserConfiguration userConfiguration = new UserConfiguration();
         ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
@@ -796,32 +823,5 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             }
         }
         return resetResult;
-    }
-
-    private void createDatabase() {
-        SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
-        SQLITE_DB.useTransaction(handle -> {
-            try {
-                String sqlScript = Files.readString(Path.of(
-                        Objects.requireNonNull(
-                                        this.getClass().getClassLoader().getResource("Database/semm_db_base.sql"))
-                                .toURI()));
-
-                String[] sqlOperations = sqlScript.split("\\r\\n\\r\\n");
-                for (String sql : sqlOperations) {
-                    handle.execute(sql);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-        SQLITE_DB.useHandle(handle -> handle.execute("""
-                CREATE TRIGGER delete_orphan_mods
-                    AFTER DELETE ON mod_list_profile_mod
-                    FOR EACH ROW
-                    WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
-                    BEGIN
-                        DELETE FROM mod WHERE mod_id = OLD.mod_id;
-                    END;"""));
     }
 }
