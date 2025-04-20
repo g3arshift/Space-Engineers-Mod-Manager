@@ -55,10 +55,10 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         log.info("Creating database schema...");
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
         SQLITE_DB.useTransaction(handle -> {
-            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("database/semm_db_base.sql")){
+            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")){
                 if(sqlStream == null) {
                     log.error("Could not find database schema.");
-                    throw new FileNotFoundException("Resource not found: " + "database/semm_db_base.sql");
+                    throw new FileNotFoundException("Resource not found: " + "Database/semm_db_base.sql");
                 }
                 String sqlScript = new String(sqlStream.readAllBytes(), StandardCharsets.UTF_8);
 
