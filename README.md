@@ -20,5 +20,7 @@ It can do this for either Space Engineers servers or clients, providing a far ea
 Currently tested on Windows 10 and 11. It functions with Linux but there are minor UI bugs.
 
 Gear Shift - Developer
+
 Kevanddev - QA/Testing
+
 Payday Park - Tutorial Language
