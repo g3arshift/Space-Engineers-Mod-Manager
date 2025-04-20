@@ -7,13 +7,18 @@ import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfiguration
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.core.transaction.TransactionException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -21,42 +26,41 @@ import java.util.*;
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
 
+    private static final Logger log = LogManager.getLogger(UserDataSqliteRepository.class);
     private final Jdbi SQLITE_DB;
     private final String databasePath;
 
-    public UserDataSqliteRepository(String databasePath) {
+    public UserDataSqliteRepository(String databasePath) throws IOException {
         this.databasePath = databasePath;
-        //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
-        SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
 
         //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         Path databaseLocation = Path.of(databasePath);
         if (Files.notExists(databaseLocation)) {
-            try {
-                if (Files.notExists(databaseLocation.getParent())) {
-                    Files.createDirectories(databaseLocation.getParent());
-                }
-                createDatabase();
-                initializeData();
-            } catch (IOException e) {
-                try {
-                    Files.delete(databaseLocation.getParent());
-                } catch (IOException ex) {
-                    System.out.println("Failed to delete corrupt database. How?");
-                    throw new RuntimeException(ex);
-                }
+            log.info("Database not found. Creating new database...");
+            if (Files.notExists(databaseLocation.getParent())) {
+                log.info("Database storage folder not found. Creating folder...");
+                Files.createDirectories(databaseLocation.getParent());
             }
+            //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
+            SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
+            createDatabase();
+            initializeData();
+        } else {
+            //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
+            SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
         }
     }
 
     private void createDatabase() {
+        log.info("Creating database schema...");
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
         SQLITE_DB.useTransaction(handle -> {
-            try {
-                String sqlScript = Files.readString(Path.of(
-                        Objects.requireNonNull(
-                                        this.getClass().getClassLoader().getResource("Database/semm_db_base.sql"))
-                                .toURI()));
+            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("database/semm_db_base.sql")){
+                if(sqlStream == null) {
+                    log.error("Could not find database schema.");
+                    throw new FileNotFoundException("Resource not found: " + "database/semm_db_base.sql");
+                }
+                String sqlScript = new String(sqlStream.readAllBytes(), StandardCharsets.UTF_8);
 
                 String[] sqlOperations = sqlScript.split("\\r\\n\\r\\n");
                 for (String sql : sqlOperations) {
@@ -74,14 +78,22 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     BEGIN
                         DELETE FROM mod WHERE mod_id = OLD.mod_id;
                     END;"""));
+        log.info("Finished creating database schema.");
     }
 
     public Result<Void> initializeData() {
+        log.info("Initializing data...");
         UserConfiguration userConfiguration = new UserConfiguration();
         ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
         Result<Void> saveResult = saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
         userConfiguration.setLastActiveModProfileId(modListProfile.getID());
         saveResult.addAllMessages(saveUserConfiguration(userConfiguration));
+        if (!saveResult.isSuccess()) {
+            log.error("Failed to initialize database data!");
+            log.error(saveResult.getCurrentMessage());
+        } else {
+            log.info("Finished initializing database data.");
+        }
         return saveResult;
     }
 
@@ -648,7 +660,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<Void> updateModInformation(List<Mod> modList) throws TransactionException {
         Result<Void> modUpdateResult = new Result<>();
-        if(modList.isEmpty()) {
+        if (modList.isEmpty()) {
             modUpdateResult.addMessage("No mods to update.", ResultType.SUCCESS);
             return modUpdateResult;
         }
