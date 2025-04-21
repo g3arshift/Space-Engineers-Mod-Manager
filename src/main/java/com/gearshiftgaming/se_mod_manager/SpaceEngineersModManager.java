@@ -30,7 +30,7 @@ public class SpaceEngineersModManager extends Application {
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws IOException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void start(Stage primaryStage) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 		new ViewController(primaryStage, LOGGER);
 		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
 			try {

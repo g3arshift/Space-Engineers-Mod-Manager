@@ -1306,6 +1306,9 @@ public class MasterManager {
 
             ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
             cleanupModImportUi();
+            //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping.
+            //It really, truly is, not cleaning up when it should at this point. Trust me.
+            System.gc();
         }));
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
