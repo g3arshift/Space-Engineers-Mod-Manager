@@ -63,6 +63,8 @@ public class UiService {
     @Getter
     private final ObservableList<LogMessage> USER_LOG;
 
+    private final int USER_LOG_MAX_SIZE;
+
     @Getter
     private final ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> MOD_LIST_PROFILE_DETAILS;
 
@@ -100,13 +102,14 @@ public class UiService {
 
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
-    public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
+    public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG, int userLogMaxSize,
                      @NotNull ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
         this.MOD_INFO_CONTROLLER = modInfoController;
         this.USER_LOG = USER_LOG;
+        this.USER_LOG_MAX_SIZE = userLogMaxSize;
         this.MOD_LIST_PROFILE_DETAILS = modListProfileDetails;
         this.SAVE_PROFILES = SAVE_PROFILES;
         this.STORAGE_CONTROLLER = storageController;
@@ -156,6 +159,11 @@ public class UiService {
     public void log(String message, MessageType messageType) {
         LogMessage logMessage = new LogMessage(message, messageType, LOGGER);
         USER_LOG.add(logMessage);
+
+        //There's no observable queue in JavaFX so we're basically mimicking that here.
+        if(USER_LOG.size() > USER_LOG_MAX_SIZE){
+            USER_LOG.removeFirst();
+        }
     }
 
     public <T> void log(@NotNull Result<T> result) {

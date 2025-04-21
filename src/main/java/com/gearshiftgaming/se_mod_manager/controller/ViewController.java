@@ -114,7 +114,7 @@ public class ViewController {
 
         ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-        uiService = new UiService(logger, userLog, modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+        uiService = new UiService(logger, userLog, Integer.parseInt(PROPERTIES.getProperty("semm.ui.maxUserLogSize")), modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
         uiService.log(userConfigurationResult);
 
         setupInterface(stage);
