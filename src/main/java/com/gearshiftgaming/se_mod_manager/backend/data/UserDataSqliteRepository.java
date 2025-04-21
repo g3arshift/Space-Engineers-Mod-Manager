@@ -769,37 +769,37 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     .add();
                         }
                     }
-
-                    modsBatch.execute();
-                    modUpdateResult.addMessage("Mods updated.", ResultType.SUCCESS);
-
-                    modCategoriesBatch.execute();
-                    modUpdateResult.addMessage("Mod categories updated.", ResultType.SUCCESS);
-
-                    int[] affectedSteamModRows = steamModsBatch.execute();
-                    int numSteamModRowsActuallyAffected = 0;
-                    for (int i : affectedSteamModRows) {
-                        if (i == 1) {
-                            numSteamModRowsActuallyAffected++;
-                        }
-                    }
-                    modUpdateResult.addMessage(numSteamModRowsActuallyAffected + " steam mods saved to database. Expected " + countExpectedSteamModsUpdated, (numSteamModRowsActuallyAffected == countExpectedSteamModsUpdated ? ResultType.SUCCESS : ResultType.WARN));
-
-                    int[] affectedModIoModRows = modIoModsBatch.execute();
-                    int numModIoModRowsActuallyAffected = 0;
-                    for (int i : affectedModIoModRows) {
-                        if (i == 1) {
-                            numModIoModRowsActuallyAffected++;
-                        }
-                    }
-                    modUpdateResult.addMessage(numModIoModRowsActuallyAffected + " mod.io mods saved to database. Expected " + countExpectedModIoModsUpdated, (numModIoModRowsActuallyAffected == countExpectedModIoModsUpdated ? ResultType.SUCCESS : ResultType.WARN));
-
-                    modifiedPathsBatch.execute();
-                    modUpdateResult.addMessage("Mod modified paths updated.", ResultType.SUCCESS);
-
-                    modUpdateResult.addMessage("Mod list profiles updated with mods.", ResultType.SUCCESS);
-                    modUpdateResult.addMessage("Successfully updated mods.", ResultType.SUCCESS);
                 }
+
+                modsBatch.execute();
+                modUpdateResult.addMessage("Mods updated.", ResultType.SUCCESS);
+
+                modCategoriesBatch.execute();
+                modUpdateResult.addMessage("Mod categories updated.", ResultType.SUCCESS);
+
+                int[] affectedSteamModRows = steamModsBatch.execute();
+                int numSteamModRowsActuallyAffected = 0;
+                for (int i : affectedSteamModRows) {
+                    if (i == 1) {
+                        numSteamModRowsActuallyAffected++;
+                    }
+                }
+                modUpdateResult.addMessage(numSteamModRowsActuallyAffected + " steam mods saved to database. Expected " + countExpectedSteamModsUpdated, (numSteamModRowsActuallyAffected == countExpectedSteamModsUpdated ? ResultType.SUCCESS : ResultType.WARN));
+
+                int[] affectedModIoModRows = modIoModsBatch.execute();
+                int numModIoModRowsActuallyAffected = 0;
+                for (int i : affectedModIoModRows) {
+                    if (i == 1) {
+                        numModIoModRowsActuallyAffected++;
+                    }
+                }
+                modUpdateResult.addMessage(numModIoModRowsActuallyAffected + " mod.io mods saved to database. Expected " + countExpectedModIoModsUpdated, (numModIoModRowsActuallyAffected == countExpectedModIoModsUpdated ? ResultType.SUCCESS : ResultType.WARN));
+
+                modifiedPathsBatch.execute();
+                modUpdateResult.addMessage("Mod modified paths updated.", ResultType.SUCCESS);
+
+                modUpdateResult.addMessage("Mod list profiles updated with mods.", ResultType.SUCCESS);
+                modUpdateResult.addMessage("Successfully updated mods.", ResultType.SUCCESS);
             });
         } catch (IOException e) {
             modUpdateResult.addMessage(e.toString(), ResultType.FAILED);
