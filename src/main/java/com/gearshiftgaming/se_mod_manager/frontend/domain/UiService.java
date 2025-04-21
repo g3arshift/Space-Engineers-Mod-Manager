@@ -437,7 +437,7 @@ public class UiService {
         return modImportProgressPercentage.get();
     }
 
-    public Task<List<Result<Mod>>> importModlistProfile(List<Mod> modList) {
+    public Task<List<Result<Mod>>> importModsFromList(List<Mod> modList) {
         List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
         return new Task<>() {
             @Override

@@ -303,7 +303,7 @@ public class SaveProfileManager {
     }
 
     private @NotNull Thread importModlist(List<Mod> modList) {
-        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlistProfile(modList);
+        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModsFromList(modList);
 
         TASK.setOnRunning(workerStateEvent -> {
             disableUserInput(true);
@@ -312,27 +312,26 @@ public class SaveProfileManager {
 
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
-            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-            Result<Void> updateResult = UI_SERVICE.updateModListProfileModList();
-            if(!updateResult.isSuccess()) {
-                UI_SERVICE.log(updateResult);
-                Popup.displaySimpleAlert("Failed to import modlist. See log for more information.", MessageType.ERROR);
-            }
 
-            Platform.runLater(() -> {
-                FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-                fadeTransition.setFromValue(1d);
-                fadeTransition.setToValue(0d);
-
-                fadeTransition.setOnFinished(actionEvent -> resetProgressUi());
-
-                fadeTransition.play();
-            });
+            ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
+            cleanupModImportUi();
         });
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
         thread.setDaemon(true);
         return thread;
+    }
+
+    private void cleanupModImportUi() {
+        Platform.runLater(() -> {
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+            fadeTransition.setFromValue(1d);
+            fadeTransition.setToValue(0d);
+
+            fadeTransition.setOnFinished(actionEvent -> resetProgressUi());
+
+            fadeTransition.play();
+        });
     }
 
     @FXML

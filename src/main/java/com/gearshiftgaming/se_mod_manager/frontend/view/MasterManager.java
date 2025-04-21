@@ -1283,7 +1283,7 @@ public class MasterManager {
      * @param modList The list of mods to import
      */
     public @NotNull Thread importModsFromList(List<Mod> modList) {
-        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlistProfile(modList);
+        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModsFromList(modList);
 
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
@@ -1304,31 +1304,8 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
-            List<Mod> successfullyScrapedMods = new ArrayList<>();
-            for(Result<Mod> modResult : TASK.getValue()) {
-                if(modResult.isSuccess())
-                    successfullyScrapedMods.add(modResult.getPayload());
-            }
-
-            UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-            Result<Void> saveResult = UI_SERVICE.updateModInformation(successfullyScrapedMods);
-            if(!saveResult.isSuccess()) {
-                UI_SERVICE.log(saveResult);
-                Popup.displaySimpleAlert(saveResult);
-                finishModListImport();
-                return;
-            }
-
-            saveResult.addAllMessages(UI_SERVICE.saveCurrentModListProfile());
-            if(!saveResult.isSuccess()) {
-                UI_SERVICE.log(saveResult);
-                Popup.displaySimpleAlert(saveResult);
-                finishModListImport();
-                return;
-            }
-
-            UI_SERVICE.logPrivate(saveResult);
-            finishModListImport();
+            ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
+            cleanupModImportUi();
         }));
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
@@ -1336,7 +1313,7 @@ public class MasterManager {
         return thread;
     }
 
-    private void finishModListImport() {
+    private void cleanupModImportUi() {
         //Reset our UI settings for the mod progress
         FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
         fadeTransition.setFromValue(1d);
