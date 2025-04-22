@@ -2,9 +2,9 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.scene.control.Tooltip;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -31,7 +31,7 @@ public class SaveProfileManagerCell extends SaveProfileCell {
 		} else {
 			//This lets a region span the entire width of the cell, and allows the tooltip to be visible even in the "empty" space.
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
-			getPROFILE_NAME().setText(item.getProfileName());
+			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 600));
 
 			if (!item.isSaveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");

@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
 
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +20,7 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 @Getter
+@AllArgsConstructor
 public class SaveProfile {
 
     @XmlElement
@@ -42,6 +44,9 @@ public class SaveProfile {
 
     private boolean saveExists;
 
+    @XmlElement
+    private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
+
     //This represents our base save profile that only exists when the application is launched for the first time.
     public SaveProfile(){
         ID = UUID.randomUUID();
@@ -49,22 +54,25 @@ public class SaveProfile {
         this.saveName = "None";
         this.lastSaveStatus = SaveStatus.NONE;
         saveExists = false;
+        SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
     }
 
-    public SaveProfile(String profileName, String savePath) {
+    public SaveProfile(String profileName, String savePath, SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
         this.profileName = profileName;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
         saveExists = true;
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
-    public SaveProfile(File saveFile) {
+    public SaveProfile(File saveFile, SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
         this.profileName = "Default";
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = saveFile.getPath();
         saveExists = true;
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
 
     public SaveProfile(SaveProfile saveProfile) {
@@ -76,6 +84,7 @@ public class SaveProfile {
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
         this.saveExists = saveProfile.isSaveExists();
+        this.SPACE_ENGINEERS_VERSION = saveProfile.getSPACE_ENGINEERS_VERSION();
     }
 
     public void setLastUsedModProfileId(UUID lastUsedModProfileId) {

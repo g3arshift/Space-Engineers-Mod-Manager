@@ -29,6 +29,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
+//TODO: It might be a good idea to put the dialog boxes in a scroll pane with a fixed max size. That way if we have to log a massive message it doesn't get TOO big.
 public class Popup {
 
 	private static final int FONT_SIZE = 16;
@@ -51,6 +53,7 @@ public class Popup {
 	 * @param message     The message to display
 	 * @param parentStage The stage this will be centered on
 	 * @param messageType The type of message this is
+	 * @return Returns 1 for yes, 0 for no.
 	 */
 
 	public static int displayYesNoDialog(String message, Stage parentStage, MessageType messageType) {
@@ -68,6 +71,7 @@ public class Popup {
 
 	/**
 	 * Displays a Yes/No dialog centered on the screen
+	 * 1 for yes, 0 for no.
 	 */
 	public static int displayYesNoDialog(String message, MessageType messageType) throws IOException {
 		Stage stage = new Stage();
@@ -89,7 +93,7 @@ public class Popup {
 
 		Label label = new Label(result.getCurrentMessage());
 		FontIcon messageIcon = new FontIcon();
-		setResultWindowDressing(result, stage, messageIcon);
+		setResultWindowDressing(result, messageIcon);
 
 		return yesNoDialog(stage, label, messageIcon);
 	}
@@ -107,7 +111,7 @@ public class Popup {
 		Label label = new Label(result.getCurrentMessage());
 		FontIcon messageIcon = new FontIcon();
 
-		setResultWindowDressing(result, stage, messageIcon);
+		setResultWindowDressing(result, messageIcon);
 		simpleAlert(stage, parentStage, label, messageIcon);
 	}
 
@@ -122,7 +126,7 @@ public class Popup {
 		Label label = new Label(result.getCurrentMessage());
 		FontIcon messageIcon = new FontIcon();
 
-		setResultWindowDressing(result, stage, messageIcon);
+		setResultWindowDressing(result, messageIcon);
 		simpleAlert(stage, label, messageIcon);
 	}
 
@@ -211,14 +215,82 @@ public class Popup {
 		return threeChoice(stage, parentStage, label, messageIcon, leftButtonMessage, centerButtonMessage, rightButtonMessage);
 	}
 
+	public static void displayNavigationDialog(List<String> messages, Stage parentStage, MessageType messageType, String title) {
+		Stage stage = new Stage();
+		stage.initModality(Modality.APPLICATION_MODAL);
+		stage.initStyle(StageStyle.UNDECORATED);
 
-	public static <T> void setResultWindowDressing(Result<T> result, Stage stage, FontIcon messageIcon) {
+		AtomicInteger currentStep = new AtomicInteger(0);
+		Label label = new Label(messages.get(currentStep.get()));
+		FontIcon messageIcon = new FontIcon();
+
+		getIconByMessageType(messageType, messageIcon);
+
+		makeNavigationDialog(stage, parentStage, messages, currentStep, label, messageIcon, title);
+	}
+
+	private static void makeNavigationDialog(Stage childStage, Stage parentStage, List<String> messages, AtomicInteger currentStep, Label label, FontIcon messageIcon, String title) {
+		HBox dialogBox = makeDialog(label, messageIcon, title);
+
+		HBox buttonBar = makeNavigationBar(childStage, messages, currentStep, label);
+
+		createPopup(childStage, parentStage, dialogBox, buttonBar);
+	}
+
+	private static HBox makeNavigationBar(Stage childStage, List<String> messages, AtomicInteger currentStep, Label label) {
+		Button backButton = new Button("Back");
+		Button nextButton = new Button("Next");
+		backButton.setDisable(true);
+
+		backButton.setOnAction((ActionEvent event) -> {
+			if(currentStep.get() - 1 <= 0) {
+				backButton.setDisable(true);
+			}
+
+			if (currentStep.get() > 0) {
+				currentStep.getAndDecrement();
+				label.setText(messages.get(currentStep.get()));
+				childStage.sizeToScene();
+			}
+		});
+
+		nextButton.setOnAction((ActionEvent event) -> {
+			if (currentStep.get() < messages.size() - 1) {
+				backButton.setDisable(false);
+				currentStep.getAndIncrement();
+				label.setText(messages.get(currentStep.get()));
+				childStage.sizeToScene();
+			} else {
+				childStage.close();
+				childStage.setHeight(childStage.getHeight() - 1);
+				Platform.exitNestedEventLoop(childStage, null);
+			}
+		});
+
+		backButton.setMinWidth(80d);
+		backButton.setMinHeight(36d);
+		backButton.setMaxHeight(36d);
+
+		nextButton.setMinWidth(80d);
+		nextButton.setMinHeight(36d);
+		nextButton.setMaxHeight(36d);
+
+		HBox buttonBar = new HBox(backButton, nextButton);
+		buttonBar.setPadding(new Insets(5, 5, 5, 5));
+		buttonBar.setStyle("-fx-background-color: -color-neutral-subtle;");
+		buttonBar.setAlignment(Pos.CENTER);
+		buttonBar.setSpacing(10);
+
+		return buttonBar;
+	}
+
+	private static <T> void setResultWindowDressing(Result<T> result, FontIcon messageIcon) {
 		switch (result.getType()) {
 			case SUCCESS -> {
 				messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
 				messageIcon.setIconLiteral("ci-information-square");
 			}
-			case INVALID -> {
+			case INVALID, WARN -> {
 				messageIcon.setStyle("-fx-icon-color: -color-warning-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-alt");
 			}
@@ -466,51 +538,16 @@ public class Popup {
 		return buttonBar;
 	}
 
-	private static void centerStage(Stage childStage, Stage parentStage) {
-		//Center the alert in the middle of the provided stage by using listeners that will fire off when the window is created.
-		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-			double stageWidth = newValue.doubleValue();
-			childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
-		};
-		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-			double stageHeight = newValue.doubleValue();
-			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
-		};
-
-		childStage.widthProperty().addListener(widthListener);
-		childStage.heightProperty().addListener(heightListener);
-
-		//Once the window is visible, remove the listeners.
-		childStage.setOnShown(e -> {
-			childStage.widthProperty().removeListener(widthListener);
-			childStage.heightProperty().removeListener(heightListener);
-		});
-	}
-
-	private static void centerStage(Stage stage) {
-		//Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
-		Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-
-		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-			stage.setX((screenBounds.getWidth() - stage.getWidth()) / 2);
-		};
-		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-			stage.setY((screenBounds.getHeight() - stage.getHeight()) / 2);
-		};
-
-		stage.widthProperty().addListener(widthListener);
-		stage.heightProperty().addListener(heightListener);
-
-		//Once the window is visible, remove the listeners.
-		stage.setOnShown(e -> {
-			stage.widthProperty().removeListener(widthListener);
-			stage.heightProperty().removeListener(heightListener);
-		});
-	}
-
 	//Creates a dialog box message
 	private static HBox makeDialog(Label label, FontIcon messageIcon) {
 		VBox contentBox = new VBox(makeTitleBar(messageIcon), getDialogBox(label, messageIcon));
+
+		return new HBox(contentBox);
+	}
+
+	//Creates a dialog box message with a custom title
+	private static HBox makeDialog(Label label, FontIcon messageIcon, String title) {
+		VBox contentBox = new VBox(makeTitleBar(title), getDialogBox(label, messageIcon));
 
 		return new HBox(contentBox);
 	}
@@ -600,11 +637,19 @@ public class Popup {
 		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
 
 		Label title = new Label(switch(messageIcon.getIconLiteral()) {
-			case "ci-information-square" -> "Success";
+			case "ci-information-square" -> "Info";
 			case "ci-warning-alt" -> "Warning";
 			case "ci-warning-square" -> "Error";
 			default -> "Unknown";
 		});
+
+		return makeTitleBarContent(logo, title);
+	}
+
+	private static HBox makeTitleBar(String titleMessage) {
+		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
+
+		Label title = new Label(titleMessage);
 
 		return makeTitleBarContent(logo, title);
 	}
@@ -625,14 +670,6 @@ public class Popup {
 		titleBox.setBackground(background);
 
 		return titleBox;
-	}
-
-	private static HBox makeTitleBar(String titleMessage) {
-		Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
-
-		Label title = new Label(titleMessage);
-
-		return makeTitleBarContent(logo, title);
 	}
 
 	private static void getIconByMessageType(MessageType messageType, FontIcon messageIcon) {
@@ -656,6 +693,61 @@ public class Popup {
 		}
 	}
 
+	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
+		prepareStage(childStage, dialogBox, buttonBar);
+
+		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+			double stageWidth = newValue.doubleValue();
+			childStage.setX(parentStage.getX() + parentStage.getWidth() / 2 - stageWidth / 2);
+		};
+
+		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
+			double stageHeight = newValue.doubleValue();
+			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
+		};
+
+		childStage.widthProperty().addListener(widthListener);
+		childStage.heightProperty().addListener(heightListener);
+		//Once the window is visible, remove the listeners.
+		childStage.setOnShown(e -> {
+			childStage.widthProperty().removeListener(widthListener);
+			childStage.heightProperty().removeListener(heightListener);
+		});
+
+		childStage.show();
+		buttonBar.getChildren().getLast().requestFocus();
+		WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
+		Platform.enterNestedEventLoop(childStage);
+	}
+
+	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
+		prepareStage(childStage, dialogBox, buttonBar);
+
+		//Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
+		Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+		ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+			childStage.setX((screenBounds.getWidth() - childStage.getWidth()) / 2);
+		};
+		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
+			childStage.setY((screenBounds.getHeight() - childStage.getHeight()) / 2);
+		};
+
+		childStage.widthProperty().addListener(widthListener);
+		childStage.heightProperty().addListener(heightListener);
+
+		//Once the window is visible, remove the listeners.
+		childStage.setOnShown(e -> {
+			childStage.widthProperty().removeListener(widthListener);
+			childStage.heightProperty().removeListener(heightListener);
+		});
+
+		childStage.show();
+		buttonBar.getChildren().getLast().requestFocus();
+		WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
+		Platform.enterNestedEventLoop(childStage);
+	}
+
 	private static void prepareStage(Stage childStage, HBox dialogBox, HBox buttonBar) {
 		VBox contents = new VBox(dialogBox, buttonBar);
 		Color borderColor;
@@ -676,27 +768,5 @@ public class Popup {
 		childStage.setResizable(false);
 
 		childStage.setScene(scene);
-	}
-
-	private static void createPopup(Stage childStage, Stage parentStage, HBox dialogBox, HBox buttonBar) {
-		prepareStage(childStage, dialogBox, buttonBar);
-
-		centerStage(childStage, parentStage);
-
-		childStage.show();
-		buttonBar.getChildren().getLast().requestFocus();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
-		Platform.enterNestedEventLoop(childStage);
-	}
-
-	private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
-		prepareStage(childStage, dialogBox, buttonBar);
-
-		centerStage(childStage);
-
-		childStage.show();
-		buttonBar.getChildren().getLast().requestFocus();
-		NativeWindowUtility.SetWindowsTitleBar(childStage);
-		Platform.enterNestedEventLoop(childStage);
 	}
 }

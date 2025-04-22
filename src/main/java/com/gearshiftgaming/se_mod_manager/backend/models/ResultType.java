@@ -13,5 +13,6 @@ public enum ResultType {
     REQUIRES_ADJUDICATION,
     CANCELLED,
     FAILED,
+    WARN,
     NOT_INITIALIZED
 }

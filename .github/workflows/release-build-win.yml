@@ -33,6 +33,9 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      - name: Build with Gradle
+        run: gradle build -x test
+
       - name: Read app version
         uses: kurt-code/gha-properties@v0.0.1
         id: read-properties
@@ -47,7 +50,10 @@ jobs:
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
-        run: ./gradlew makeFatJar
+        run: ./gradlew shadowJar
+
+      - name: Remove unneeded browser binaries
+        run: ./gradlew removeForeignOsBrowsers
 
       - name: Check jpackage availability
         run: |

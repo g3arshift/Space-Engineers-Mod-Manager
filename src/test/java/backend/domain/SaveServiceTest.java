@@ -4,7 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileReposito
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModlistProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
@@ -33,6 +33,8 @@ import static org.mockito.Mockito.*;
  *
  * @author Gear Shift
  */
+
+//TODO: Make sure these are still valid
 public class SaveServiceTest {
 
 	//TODO: Write integration tests.
@@ -175,17 +177,17 @@ public class SaveServiceTest {
 		assertNotNull(result.getPayload());
 		SaveProfile finalSaveProfile = result.getPayload();
 
-		assertTrue(Files.exists(Path.of(testDir + "_1")));
-		assertEquals(saveProfile.getProfileName() + "_1", finalSaveProfile.getProfileName());
-		assertEquals(saveProfile.getSaveName() + "_1", finalSaveProfile.getSaveName());
-		assertEquals( testDir + "_1\\Sandbox_config.sbc", finalSaveProfile.getSavePath());
+		assertTrue(Files.exists(Path.of(testDir + " (1)")));
+		assertEquals(saveProfile.getProfileName() + " (1)", finalSaveProfile.getProfileName());
+		assertEquals(saveProfile.getSaveName() + " (1)", finalSaveProfile.getSaveName());
+		assertEquals( testDir + " (1)\\Sandbox_config.sbc", finalSaveProfile.getSavePath());
 
 		assertEquals("Save directory successfully copied.", result.getMESSAGES().get(0));
 		assertEquals("Successfully copied profile.", result.getMESSAGES().get(1));
 
 		//Check the changes were written to the actual sandbox and sandbox_config file
-		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + "_1\\Sandbox_config.sbc")), "Test Save_1"));
-		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + "_1\\Sandbox.sbc")), "Test Save_1"));
+		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox_config.sbc")), "Test Save (1)"));
+		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox.sbc")), "Test Save (1)"));
 	}
 
 
@@ -210,12 +212,12 @@ public class SaveServiceTest {
 	}
 
 	private SaveProfile createTestSaveProfile () {
-		ModlistProfile testModlistProfile = new ModlistProfile();
+		ModListProfile testModListProfile = new ModListProfile();
 
 		SaveProfile testSaveProfile = new SaveProfile();
 		testSaveProfile.setSaveName("Test Save");
 		testSaveProfile.setSavePath(testDir.toString() + "\\Sandbox_config.sbc");
-		testSaveProfile.setLastUsedModProfileId(testModlistProfile.getID());
+		testSaveProfile.setLastUsedModProfileId(testModListProfile.getID());
 
 		return testSaveProfile;
 	}

@@ -40,8 +40,16 @@ public class Result<T> {
         this.type = result.getType();
     }
 
+    //TODO: We really ought to rework this and associate a type with EACH message, not globally for the class.
+    public void addAllMessages(Result<?> result) {
+        this.type = result.getType();
+        for(String message : result.getMESSAGES()) {
+            this.addMessage(message, result.getType());
+        }
+    }
+
     public boolean isSuccess() {
-        return type == ResultType.SUCCESS;
+        return type == ResultType.SUCCESS || type == ResultType.WARN;
     }
 
     public String getCurrentMessage() {

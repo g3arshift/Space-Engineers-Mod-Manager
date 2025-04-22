@@ -1,11 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.backend.models;
 
-import atlantafx.base.theme.PrimerLight;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.tuple.MutableTriple;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +19,8 @@ import java.util.UUID;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-@Getter
 @Setter
+@Getter
 @XmlRootElement(name = "userConfiguration")
 public class UserConfiguration {
 
@@ -28,36 +28,47 @@ public class UserConfiguration {
 
     private UUID lastModifiedSaveProfileId;
 
-    private List<SaveProfile> saveProfiles;
-
-    private List<ModlistProfile> modlistProfiles;
-
     private UUID lastActiveModProfileId;
 
     private UUID lastActiveSaveProfileId;
 
+    private List<SaveProfile> saveProfiles;
+
+    private List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo;
+
+    private boolean runFirstTimeSetup;
+
     /**
-     * Creates an entirely new XML configuration file to store user information with.
+     * Creates an entirely new user configuration to store user information with.
      */
     public UserConfiguration() {
         saveProfiles = new ArrayList<>();
-        modlistProfiles = new ArrayList<>();
-        userTheme = new PrimerLight().getName();
+        modListProfilesBasicInfo = new ArrayList<>();
+        userTheme = "PrimerLight";
 
         //The save profile is actually useless here because it has no save path.
         saveProfiles.add(new SaveProfile());
-        ModlistProfile modlistProfile = new ModlistProfile("Default");
-        modlistProfiles.add(modlistProfile);
-        lastActiveModProfileId = modlistProfile.getID();
+        runFirstTimeSetup = true;
     }
 
     public UserConfiguration(UserConfiguration userConfiguration) {
         this.userTheme = userConfiguration.getUserTheme();
         this.lastModifiedSaveProfileId = userConfiguration.getLastModifiedSaveProfileId();
         this.saveProfiles = userConfiguration.getSaveProfiles();
-        this.modlistProfiles = userConfiguration.getModlistProfiles();
+        this.modListProfilesBasicInfo = userConfiguration.getModListProfilesBasicInfo();
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
+        this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
+    }
+
+    public UserConfiguration(String userTheme, UUID lastModifiedSaveProfileId, UUID lastActiveModProfileId, UUID lastActiveSaveProfileId, boolean runFirstTimeSetup) {
+        this.userTheme = userTheme;
+        this.lastModifiedSaveProfileId = lastModifiedSaveProfileId;
+        this.lastActiveModProfileId = lastActiveModProfileId;
+        this.lastActiveSaveProfileId = lastActiveSaveProfileId;
+        this.saveProfiles = new ArrayList<>();
+        this.modListProfilesBasicInfo = new ArrayList<>();
+        this.runFirstTimeSetup = runFirstTimeSetup;
     }
 
     @XmlElement(name = "userTheme")
@@ -73,19 +84,19 @@ public class UserConfiguration {
 
     @XmlElementWrapper(name = "modlistProfiles")
     @XmlElement(name = "modlistProfile")
-    public void setModlistProfiles(List<ModlistProfile> modlistProfiles) {
-        this.modlistProfiles = modlistProfiles;
+    public void setModListProfilesBasicInfo(List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfilesBasicInfo) {
+        this.modListProfilesBasicInfo = modListProfilesBasicInfo;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UserConfiguration that)) return false;
-		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modlistProfiles, that.modlistProfiles);
+		return Objects.equals(userTheme, that.userTheme) && Objects.equals(lastModifiedSaveProfileId, that.lastModifiedSaveProfileId) && Objects.equals(saveProfiles, that.saveProfiles) && Objects.equals(modListProfilesBasicInfo, that.modListProfilesBasicInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modlistProfiles);
+        return Objects.hash(userTheme, lastModifiedSaveProfileId, saveProfiles, modListProfilesBasicInfo);
     }
 }

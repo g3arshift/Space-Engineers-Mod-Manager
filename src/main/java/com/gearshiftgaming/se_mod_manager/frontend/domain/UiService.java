@@ -1,11 +1,12 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
-import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Theme;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -16,9 +17,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,8 +63,10 @@ public class UiService {
     @Getter
     private final ObservableList<LogMessage> USER_LOG;
 
+    private final int USER_LOG_MAX_SIZE;
+
     @Getter
-    private final ObservableList<ModlistProfile> MODLIST_PROFILES;
+    private final ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> MOD_LIST_PROFILE_DETAILS;
 
     @Getter
     private final ObservableList<SaveProfile> SAVE_PROFILES;
@@ -70,7 +78,7 @@ public class UiService {
     private SaveProfile currentSaveProfile;
 
     @Getter
-    private ModlistProfile currentModlistProfile;
+    private ModListProfile currentModListProfile;
 
     @Getter
     private ObservableList<Mod> currentModList;
@@ -89,37 +97,73 @@ public class UiService {
 
     private final String MOD_DATE_FORMAT;
 
-    public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG,
-                     @NotNull ObservableList<ModlistProfile> MODLIST_PROFILES, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
+    @Getter
+    final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
+
+    //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
+    // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
+    public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG, int userLogMaxSize,
+                     @NotNull ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
                      StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
         this.MOD_INFO_CONTROLLER = modInfoController;
         this.USER_LOG = USER_LOG;
-        this.MODLIST_PROFILES = MODLIST_PROFILES;
+        this.USER_LOG_MAX_SIZE = userLogMaxSize;
+        this.MOD_LIST_PROFILE_DETAILS = modListProfileDetails;
         this.SAVE_PROFILES = SAVE_PROFILES;
         this.STORAGE_CONTROLLER = storageController;
         this.USER_CONFIGURATION = USER_CONFIGURATION;
 
         this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
-        getLastActiveModlistProfile().ifPresentOrElse(modlistProfile -> currentModlistProfile = modlistProfile, () -> {
+        KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
+            switch (arrowKeyEvent.getCode()) {
+                case UP, DOWN, LEFT, RIGHT, TAB:
+                    arrowKeyEvent.consume();
+                    break;
+            }
+        };
+
+        //Load our last active mod list profile, or at least the first one.
+        Result<ModListProfile> modListProfileResult = getLastActiveModlistProfile();
+        if (!modListProfileResult.isSuccess()) {
             log("No previously chosen modlist detected.", MessageType.INFO);
-            currentModlistProfile = MODLIST_PROFILES.getFirst();
-        });
+            modListProfileResult = storageController.loadFirstModListProfile();
+            if (!modListProfileResult.isSuccess()) {
+                log(modListProfileResult);
+                Popup.displaySimpleAlert(String.format("Fatal error!\n%s", modListProfileResult.getCurrentMessage()), MessageType.ERROR);
+                throw new RuntimeException(modListProfileResult.getCurrentMessage());
+            }
+        }
+        currentModListProfile = modListProfileResult.getPayload();
+        if (!modListProfileResult.isSuccess()) {
+            logPrivate(modListProfileResult);
+            log(modListProfileResult.getCurrentMessage(), MessageType.ERROR);
+            throw new MissingDefaultModListProfileException();
+        } else {
+            log(modListProfileResult.getCurrentMessage(), MessageType.INFO);
+        }
+
+        //Load our last active save profile
         getLastActiveSaveProfile().ifPresentOrElse(saveProfile -> currentSaveProfile = saveProfile, () -> {
             log("No previously chosen save profile detected.", MessageType.INFO);
             currentSaveProfile = SAVE_PROFILES.getFirst();
         });
 
-        //A little bit of duplication, but the order of construction is a big different from setCurrentModProfile
-        currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
+        //A little bit of duplication, but the order of construction is a bit different from setCurrentModProfile
+        currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
     }
 
     public void log(String message, MessageType messageType) {
         LogMessage logMessage = new LogMessage(message, messageType, LOGGER);
         USER_LOG.add(logMessage);
+
+        //There's no observable queue in JavaFX so we're basically mimicking that here.
+        if(USER_LOG.size() > USER_LOG_MAX_SIZE){
+            USER_LOG.removeFirst();
+        }
     }
 
     public <T> void log(@NotNull Result<T> result) {
@@ -129,7 +173,9 @@ public class UiService {
             case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
             default -> messageType = MessageType.INFO;
         }
-        log(result.getCurrentMessage(), messageType);
+        for (String message : result.getMESSAGES()) {
+            log(message, messageType);
+        }
     }
 
     public void log(Exception e) {
@@ -147,16 +193,66 @@ public class UiService {
     }
 
     public <T> void logPrivate(@NotNull Result<T> result) {
-        switch (result.getType()) {
-            case SUCCESS, CANCELLED -> LOGGER.info(result.getCurrentMessage());
-            case INVALID -> LOGGER.warn(result.getCurrentMessage());
-            case FAILED -> LOGGER.error(result.getCurrentMessage());
-            default -> LOGGER.error("ERROR UNKNOWN - {}", result.getCurrentMessage());
+        for (String message : result.getMESSAGES()) {
+            switch (result.getType()) {
+                case SUCCESS, CANCELLED -> LOGGER.info(message);
+                case INVALID, WARN -> LOGGER.warn(message);
+                case FAILED -> LOGGER.error(message);
+                default -> LOGGER.error("ERROR UNKNOWN - {}", message);
+            }
         }
     }
 
-    public Result<Void> saveUserData() {
-        return STORAGE_CONTROLLER.saveUserData(USER_CONFIGURATION);
+    public Result<Void> deleteModListProfile(UUID modListProfileId) {
+        return STORAGE_CONTROLLER.deleteModListProfile(modListProfileId);
+    }
+
+    public Result<Void> saveUserConfiguration() {
+        return STORAGE_CONTROLLER.saveUserConfiguration(USER_CONFIGURATION);
+    }
+
+    public Result<Void> updateModListLoadPriority() {
+        return STORAGE_CONTROLLER.updateModListLoadPriority(currentModListProfile.getID(), currentModList);
+    }
+
+    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
+        return STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
+    }
+
+    public Result<Void> updateModListActiveMods() {
+        return STORAGE_CONTROLLER.updateModListActiveMods(currentModListProfile.getID(), currentModList);
+    }
+
+    public Result<Void> saveModListProfileDetails(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
+        return STORAGE_CONTROLLER.saveModListProfileDetails(modListProfileDetails);
+    }
+
+    public Result<Void> saveModListProfile(ModListProfile modListProfile) {
+        return STORAGE_CONTROLLER.saveModListProfile(modListProfile);
+    }
+
+    public Result<Void> saveCurrentModListProfile() {
+        return STORAGE_CONTROLLER.saveModListProfile(currentModListProfile);
+    }
+
+    public Result<Void> updateModInformation(List<Mod> modList) {
+        return STORAGE_CONTROLLER.updateModInformation(modList);
+    }
+
+    public Result<Void> deleteSaveProfile(SaveProfile saveProfile) {
+        return STORAGE_CONTROLLER.deleteSaveProfile(saveProfile);
+    }
+
+    public Result<Void> updateModListProfileModList() {
+        return STORAGE_CONTROLLER.updateModListProfileModList(currentModListProfile.getID(), currentModList);
+    }
+
+    public Result<Void> saveSaveProfile(SaveProfile saveProfile) {
+        return STORAGE_CONTROLLER.saveSaveProfile(saveProfile);
+    }
+
+    public Result<Void> resetData() {
+        return STORAGE_CONTROLLER.resetData();
     }
 
     public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
@@ -168,15 +264,11 @@ public class UiService {
     }
 
     public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
-        return STORAGE_CONTROLLER.getSaveProfile(sandboxConfigFile);
+        return STORAGE_CONTROLLER.getSpaceEngineersOneSaveProfile(sandboxConfigFile);
     }
 
     public Result<String> getSaveName(File sandboxConfigFile) throws IOException {
         return STORAGE_CONTROLLER.getSaveName(sandboxConfigFile);
-    }
-
-    public void firstTimeSetup() {
-        //TODO: Setup users first modlist and save, and also ask if they want to try and automatically find ALL saves they have and add them to SEMM.
     }
 
     /**
@@ -196,18 +288,24 @@ public class UiService {
         }
     }
 
-    public void setCurrentModlistProfile(ModlistProfile modlistProfile) {
-        currentModlistProfile = modlistProfile;
-        currentModList = FXCollections.observableArrayList(currentModlistProfile.getModList());
+    public void setCurrentModListProfile(UUID modListProfileId) {
+        Result<ModListProfile> newCurrentModListProfileResult = STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
+        if (!newCurrentModListProfileResult.isSuccess()) {
+            log(newCurrentModListProfileResult);
+            return;
+        }
+
+        log(newCurrentModListProfileResult.getCurrentMessage(), MessageType.INFO);
+        ModListProfile modListProfile = newCurrentModListProfileResult.getPayload();
+        currentModListProfile = modListProfile;
+        currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-        setLastActiveModlistProfile(modlistProfile.getID());
-        saveUserData();
+        setLastActiveModlistProfile(modListProfile.getID());
     }
 
-    public void setCurrentSaveProfile(SaveProfile currentSaveProfile) {
-        this.currentSaveProfile = currentSaveProfile;
-        setLastActiveSaveProfile(currentSaveProfile.getID());
-        saveUserData();
+    public Result<Void> setCurrentSaveProfile(SaveProfile newCurrentSaveProfile) {
+        this.currentSaveProfile = newCurrentSaveProfile;
+        return setLastActiveSaveProfile(newCurrentSaveProfile.getID());
     }
 
     public void modifyActiveModCount(@NotNull Mod mod) {
@@ -231,10 +329,12 @@ public class UiService {
         //Process the returned ID's and check for duplicates in our current mod list.
         for (Result<String> modIdResult : steamCollectionModIds) {
             if (modIdResult.isSuccess()) {
-                Optional<Mod> duplicateMod = currentModList.stream()
-                        .filter(mod -> modIdResult.getPayload().equals(mod.getId()))
-                        .findFirst();
-                duplicateMod.ifPresent(mod -> modIdResult.addMessage("\"" + mod.getFriendlyName() + "\" already exists in modlist.", ResultType.INVALID));
+                SteamMod duplicateSteamMod = ModListManagerHelper.findDuplicateSteamMod(modIdResult.getPayload(), currentModList);
+                if (duplicateSteamMod != null) {
+                    modIdResult.addMessage(String.format("\"%s\" is already in the modlist!", duplicateSteamMod.getFriendlyName()), ResultType.INVALID);
+                }
+            } else {
+                log(modIdResult);
             }
         }
 
@@ -246,25 +346,20 @@ public class UiService {
 
         if (modListResult.isSuccess()) {
             int initialModlistSize = modListResult.getPayload().size();
-            HashMap<String, Mod> modMap = new HashMap<>();
-            for (Mod mod : currentModList) {
-                modMap.put(mod.getId(), mod);
-            }
-            modListResult.getPayload().removeIf(m -> modMap.containsKey(m.getId()));
+            ModListManagerHelper.removeDuplicateMods(modListResult.getPayload(), currentModList);
 
             if (modListResult.getPayload().size() != initialModlistSize) {
-                modListResult.addMessage(String.format("%d mods were found. %d are already in the modlist.", initialModlistSize, (initialModlistSize - modListResult.getPayload().size())), ResultType.SUCCESS);
-            }
-
-            if (modListResult.getPayload().isEmpty()) {
-                modListResult.addMessage("Every mod in the save is already in the modlist!", ResultType.INVALID);
+                if (modListResult.getPayload().isEmpty()) {
+                    modListResult.addMessage("Every mod in the save is already in the modlist!", ResultType.INVALID);
+                } else
+                    modListResult.addMessage(String.format("%d mods were found. %d are already in the modlist.", initialModlistSize, (initialModlistSize - modListResult.getPayload().size())), ResultType.SUCCESS);
             }
         }
 
         return modListResult;
     }
 
-    public Result<Mod> fillOutModInformation(Mod mod) throws IOException {
+    public Result<Mod> fillOutModInformation(Mod mod) throws IOException, InterruptedException {
         Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
         Result<Mod> modInfoResult = new Result<>();
 
@@ -280,28 +375,7 @@ public class UiService {
 
             modInfoResult.setPayload(mod);
 
-            boolean duplicateModFound = false;
-            String duplicateModName = "";
-            for (Mod m : currentModList) {
-                //We only want to do this comparison when we are comparing different mod types, as we can otherwise assume the ID check has handled duplicates.
-                if (!m.getClass().equals(mod.getClass())) {
-                    String shorterModName;
-                    String longerModName;
-                    if (m.getFriendlyName().length() < mod.getFriendlyName().length()) {
-                        shorterModName = m.getFriendlyName();
-                        longerModName = mod.getFriendlyName();
-                    } else {
-                        shorterModName = mod.getFriendlyName();
-                        longerModName = m.getFriendlyName();
-                    }
-
-                    if (longerModName.contains(shorterModName)) {
-                        duplicateModFound = true;
-                        duplicateModName = m.getFriendlyName();
-                        break;
-                    }
-                }
-            }
+            String duplicateModMessage = ModListManagerHelper.findDuplicateMod(mod, currentModList);
 
             DateTimeFormatter formatter;
             if (mod instanceof SteamMod) {
@@ -322,13 +396,13 @@ public class UiService {
                 }
             }
 
-            if (duplicateModFound) {
-                modInfoResult.addMessage(String.format("Mod \"%s\" may be the same as \"%s\". Do you still want to add it?", mod.getFriendlyName(), duplicateModName), ResultType.REQUIRES_ADJUDICATION);
+            if (!duplicateModMessage.isBlank()) {
+                modInfoResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
             } else {
                 modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
             }
         } else {
-            modInfoResult.addMessage(modScrapeResult.getCurrentMessage(), modScrapeResult.getType());
+            modInfoResult.addAllMessages(modScrapeResult);
         }
 
         Platform.runLater(() -> {
@@ -371,7 +445,7 @@ public class UiService {
         return modImportProgressPercentage.get();
     }
 
-    public Task<List<Result<Mod>>> importModlist(List<Mod> modList) {
+    public Task<List<Result<Mod>>> importModsFromList(List<Mod> modList) {
         List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
         return new Task<>() {
             @Override
@@ -379,10 +453,14 @@ public class UiService {
                 Platform.runLater(() -> modImportProgressDenominator.setValue(modList.size()));
                 List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
                 try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+                    Random random = new Random();
                     for (Mod m : modList) {
                         // Submit the task without waiting for it to finish
                         Future<Result<Mod>> future = executorService.submit(() -> {
                             try {
+                                if (m instanceof ModIoMod && modList.size() > 1) {
+                                    Thread.sleep(random.nextInt(200, 600));
+                                }
                                 return fillOutModInformation(m);
                             } catch (IOException e) {
                                 Result<Mod> failedResult = new Result<>();
@@ -458,10 +536,11 @@ public class UiService {
                             } else {
                                 idResult = getModIoModIdFromUrlName(modUrl);
                             }
+
                             if (idResult.isSuccess()) {
-                                Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(idResult.getPayload(), UiService.this);
-                                if (!duplicateIdResult.isSuccess()) {
-                                    idResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
+                                ModIoMod duplicateModIoMod = ModListManagerHelper.findDuplicateModIoMod(idResult.getPayload(), currentModList);
+                                if (duplicateModIoMod != null) {
+                                    idResult.addMessage(String.format("Mod \"%s\" is already in the mod list!", idResult.getPayload()), ResultType.FAILED);
                                 }
                             }
                             return idResult;
@@ -495,9 +574,9 @@ public class UiService {
             protected Result<String> call() {
                 Result<String> urltoIdConversionResult = getModIoModIdFromUrlName(modUrl);
                 if (urltoIdConversionResult.isSuccess()) {
-                    Result<Void> duplicateIdResult = ModlistManagerHelper.checkForDuplicateModIoMod(modUrl, UiService.this);
-                    if (!duplicateIdResult.isSuccess()) {
-                        urltoIdConversionResult.addMessage(duplicateIdResult.getCurrentMessage(), duplicateIdResult.getType());
+                    ModIoMod duplicateModIoMod = ModListManagerHelper.findDuplicateModIoMod(urltoIdConversionResult.getPayload(), currentModList);
+                    if (duplicateModIoMod != null) {
+                        urltoIdConversionResult.addMessage(String.format("Mod \"%s\" is already in the mod list!", duplicateModIoMod.getFriendlyName()), ResultType.FAILED);
                     }
                 }
                 return urltoIdConversionResult;
@@ -529,40 +608,50 @@ public class UiService {
         return MOD_INFO_CONTROLLER.getModIdsFromFile(modlistFile, modType);
     }
 
-    public Result<Void> exportModlist(ModlistProfile modlistProfile, File exportLocation) {
-        return STORAGE_CONTROLLER.exportModlist(modlistProfile, exportLocation);
+    public Result<Void> exportModListProfile(ModListProfile modListProfile, File exportLocation) {
+        return STORAGE_CONTROLLER.exportModListProfile(modListProfile, exportLocation);
     }
 
-    public Result<ModlistProfile> importModlist(File saveLocation) {
-        Result<ModlistProfile> modlistProfileResult = STORAGE_CONTROLLER.importModlist(saveLocation);
+    //Once the file is read, we want to add its details to the detail list
+    public Result<Void> importModlistProfile(File saveLocation) {
+        Result<Void> importResult = new Result<>();
+        Result<ModListProfile> modlistProfileResult = STORAGE_CONTROLLER.importModListProfile(saveLocation);
         if (modlistProfileResult.isSuccess()) {
-            ModlistProfile importModlistProfile = modlistProfileResult.getPayload();
-            boolean duplicateProfileExists = MODLIST_PROFILES
+            ModListProfile importModListProfile = modlistProfileResult.getPayload();
+            boolean duplicateProfileExists = MOD_LIST_PROFILE_DETAILS
                     .stream()
-                    .anyMatch(modlistProfile -> modlistProfile.getProfileName().toLowerCase().trim().equals(importModlistProfile.getProfileName().toLowerCase().trim()));
+                    .anyMatch(modlistProfile -> modlistProfile.getMiddle().toLowerCase().trim().equals(importModListProfile.getProfileName().toLowerCase().trim()));
             if (!duplicateProfileExists) {
-                for (int i = 0; i < importModlistProfile.getModList().size(); i++) {
-                    importModlistProfile.getModList().get(i).setLoadPriority(i + 1);
+                for (int i = 0; i < importModListProfile.getModList().size(); i++) {
+                    importModListProfile.getModList().get(i).setLoadPriority(i + 1);
                 }
-                MODLIST_PROFILES.add(modlistProfileResult.getPayload());
+                MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
+                currentModListProfile = importModListProfile;
+                saveModListProfile(importModListProfile);
+                importResult = setLastActiveModlistProfile(importModListProfile.getID());
+                if(importResult.isSuccess()) {
+                    logPrivate(importResult);
+                    importResult.addMessage(String.format("Successfully imported mod list profile \"%s\".", importModListProfile.getProfileName()), ResultType.SUCCESS);
+                } else
+                    log(importResult);
             } else
-                modlistProfileResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
+                importResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
         }
-        return modlistProfileResult;
+        return importResult;
     }
 
-    public void setLastActiveModlistProfile(UUID modlistProfileId) {
+    public Result<Void> setLastActiveModlistProfile(UUID modlistProfileId) {
         USER_CONFIGURATION.setLastActiveModProfileId(modlistProfileId);
+        return saveUserConfiguration();
     }
 
-    public void setLastActiveSaveProfile(UUID saveProfileId) {
+    public Result<Void> setLastActiveSaveProfile(UUID saveProfileId) {
         USER_CONFIGURATION.setLastActiveSaveProfileId(saveProfileId);
+        return saveUserConfiguration();
     }
 
-    public Optional<ModlistProfile> getLastActiveModlistProfile() {
-        return MODLIST_PROFILES.stream()
-                .filter(modlistProfile -> modlistProfile.getID().equals(USER_CONFIGURATION.getLastActiveModProfileId()))
-                .findAny();
+    public Result<ModListProfile> getLastActiveModlistProfile() {
+        return loadModListProfileById(USER_CONFIGURATION.getLastActiveModProfileId());
     }
 
     public Optional<SaveProfile> getLastActiveSaveProfile() {
@@ -572,33 +661,59 @@ public class UiService {
     }
 
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
-        currentSaveProfile.setLastUsedModProfileId(currentModlistProfile.getID());
+        currentSaveProfile.setLastUsedModProfileId(currentModListProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
-        saveUserData();
+        Result<Void> saveResult = saveSaveProfile(currentSaveProfile);
+        if (!saveResult.isSuccess()) {
+            log(saveResult);
+            Popup.displaySimpleAlert(saveResult);
+            return;
+        }
+
+        saveResult = saveUserConfiguration();
+        if (!saveResult.isSuccess()) {
+            log(saveResult);
+            Popup.displaySimpleAlert(saveResult);
+        }
     }
 
-    //TODO: Instead of this BS, do it way more simply by deleting the file, popping up to the user it was deleted, logging the operation, and telling them torelaunch semm.
-    // Then, close semm with Platform.exit.
-    public Result<Void> resetUserConfig() {
-        return STORAGE_CONTROLLER.resetUserConfig();
-//        ModlistProfile newModlistProfile = new ModlistProfile("Default");
-//        MODLIST_PROFILES.add(newModlistProfile);
-//        setCurrentModlistProfile(newModlistProfile);
-//        MODLIST_PROFILES.removeIf(modlistProfile -> !modlistProfile.equals(newModlistProfile));
-//
-//        //TODO: Check the rest of these work, and properly do the current save profile setting
-//
-//        SAVE_PROFILES.clear();
-//        SAVE_PROFILES.add(new SaveProfile());
-//
-//        setLastActiveModlistProfile(null);
-//        setLastActiveSaveProfile(null);
-//
-//        USER_CONFIGURATION.setLastModifiedSaveProfileId(null);
-//
-//        USER_CONFIGURATION.setUserTheme(new PrimerLight().getName());
-//        log("Successfully reset user data.", MessageType.INFO);
-//        saveUserData();
+    //TODO: Add a dialog option to choose whether you have space engineers 1, 2, or both.
+    // Make it a part of UserConfiguration, and add menu options to toggle SEMM support for either game. Reference it when creating mod + save lists.
+    public void displayTutorial(Stage stage, MasterManager masterManager) {
+        log("Starting tutorial...", MessageType.INFO);
+
+        stage.setResizable(false);
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, KEYBOARD_BUTTON_NAVIGATION_DISABLER);
+
+        List<String> tutorialMessages = new ArrayList<>();
+        tutorialMessages.add("Welcome to Space Engineers Mod Manager (SEMM). " +
+                "This tutorial will guide you through managing the mods of an existing save, how to create a mod list, how to add mods to a mod list, and how to apply a mod list to a save.");
+        tutorialMessages.add("Let's start by creating a new mod list by pressing the \"Manage Mod Profiles\" button.");
+        Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Welcome to SEMM!");
+
+        masterManager.runTutorialModListManagementStep();
+    }
+
+    /**
+     * This returns an array of panes to be used for highlighting parts of the UI.
+     * The panes are returned in top, right, bottom, left order
+     */
+    public Pane[] getHighlightPanes() {
+        Pane[] panes = new Pane[4];
+        Pane topPane = new Pane();
+        Pane rightPane = new Pane();
+        Pane bottomPane = new Pane();
+        Pane leftPane = new Pane();
+        panes[0] = topPane;
+        panes[1] = rightPane;
+        panes[2] = bottomPane;
+        panes[3] = leftPane;
+
+        for (Pane p : panes) {
+            p.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
+        }
+
+        return panes;
     }
 }

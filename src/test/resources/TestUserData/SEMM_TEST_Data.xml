@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <userConfiguration>
-    <userTheme>Primer Dark</userTheme>
+    <lastActiveModProfileId>4e9c3fe4-1a43-4512-bc4a-79f922165624</lastActiveModProfileId>
+    <modlistProfiles>
+        <modlistProfile profileName="Default">
+            <ID>4e9c3fe4-1a43-4512-bc4a-79f922165624</ID>
+            <SPACE_ENGINEERS_VERSION>SPACE_ENGINEERS_ONE</SPACE_ENGINEERS_VERSION>
+            <mods/>
+        </modlistProfile>
+    </modlistProfiles>
+    <runFirstTimeSetup>false</runFirstTimeSetup>
     <saveProfiles>
         <saveProfile profileName="None" saveExists="false">
-            <lastModifiedBy>NOT_MODIFIED</lastModifiedBy>
+            <ID>13490f08-9c1e-4449-8d21-dc36603a563c</ID>
+            <SPACE_ENGINEERS_VERSION>SPACE_ENGINEERS_ONE</SPACE_ENGINEERS_VERSION>
             <lastSaveStatus>NONE</lastSaveStatus>
             <saveName>None</saveName>
         </saveProfile>
     </saveProfiles>
-    <modlistProfiles>
-        <modlistProfile profileName="Default">
-            <mods/>
-        </modlistProfile>
-    </modlistProfiles>
+    <userTheme>Primer Dark</userTheme>
 </userConfiguration>

@@ -2,20 +2,22 @@ package com.gearshiftgaming.se_mod_manager.frontend.models;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.ModlistManagerView;
-import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModlistManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
+import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.*;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.io.IOException;
@@ -44,9 +46,9 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
     private TableRow<Mod> previousRow;
 
-    private final ModlistManagerView MODLIST_MANAGER_VIEW;
+    private final MasterManager MODLIST_MANAGER_VIEW;
 
-    private final ModlistManagerHelper MODLIST_MANAGER_HELPER;
+    private final ModListManagerHelper MODLIST_MANAGER_HELPER;
 
     private ScrollBar modTableVerticalScrollBar;
 
@@ -55,16 +57,17 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         BOTTOM
     }
 
-    public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, ModlistManagerView modlistManagerView, ModlistManagerHelper modlistManagerHelper) {
+    public ModTableRowFactory(UiService uiService, DataFormat serializedMimeType, List<Mod> selections, MasterManager masterManager, ModListManagerHelper modlistManagerHelper) {
         this.UI_SERVICE = uiService;
         this.SERIALIZED_MIME_TYPE = serializedMimeType;
         this.SELECTIONS = selections;
-        this.MODLIST_MANAGER_VIEW = modlistManagerView;
+        this.MODLIST_MANAGER_VIEW = masterManager;
         this.MODLIST_MANAGER_HELPER = modlistManagerHelper;
     }
 
+    //TODO: We need a "Update mods" button.
     @Override
-    public ModTableRow call(TableView<Mod> modTable) {
+    public ModTableRow call(@NotNull TableView<Mod> modTable) {
         modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
         final ModTableRow row = new ModTableRow(UI_SERVICE);
 
@@ -97,7 +100,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				}
             }
             modTable.refresh();
-            UI_SERVICE.saveUserData();
+            Result<Void> updateModListActiveStateResult = UI_SERVICE.updateModListActiveMods();
+            checkResult(updateModListActiveStateResult, "Failed to update active mods. See the log for more information.");
         });
 
         final MenuItem DEACTIVATE_MODS_MENU_ITEM = new MenuItem("Deactivate selected mods");
@@ -110,19 +114,16 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 				}
             }
             modTable.refresh();
-            UI_SERVICE.saveUserData();
+            Result<Void> updateModListActiveStateResult = UI_SERVICE.updateModListActiveMods();
+            checkResult(updateModListActiveStateResult, "Failed to update active mods. See the log for more information.");
         });
 
         final MenuItem DELETE_MENU_ITEM = new MenuItem("Delete selected mods");
         DELETE_MENU_ITEM.disableProperty().bind(Bindings.isEmpty(modTable.getSelectionModel().getSelectedItems()));
-        DELETE_MENU_ITEM.setOnAction(actionEvent -> {
-            deleteMods(modTable);
-        });
+        DELETE_MENU_ITEM.setOnAction(actionEvent -> deleteMods(modTable));
 
 		final MenuItem SELECT_ALL_MENU_ITEM = new MenuItem("Select all");
-		SELECT_ALL_MENU_ITEM.setOnAction(event -> {
-			modTable.getSelectionModel().selectAll();
-		});
+		SELECT_ALL_MENU_ITEM.setOnAction(event -> modTable.getSelectionModel().selectAll());
 
         TABLE_CONTEXT_MENU.getItems().addAll(ACTIVATE_MODS_MENU_ITEM, DEACTIVATE_MODS_MENU_ITEM, WEB_BROWSE_MENU_ITEM, DELETE_MENU_ITEM, SELECT_ALL_MENU_ITEM);
 
@@ -186,7 +187,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
             if (dragEvent.getDragboard().hasContent(SERIALIZED_MIME_TYPE)) {
                 if (!row.isEmpty()) {
-                    addBorderToRow(RowBorderType.TOP, modTable, row);
+                    addBorderToRow(RowBorderType.TOP, row);
                 }
             }
             dragEvent.consume();
@@ -197,7 +198,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
             if (!row.isEmpty() && previousRow.getItem().equals(UI_SERVICE.getCurrentModList().getLast())) {
                 //We don't want to add a border if the table isn't big enough to display all mods at once since we'll end up with a double border
                 if (!modTableVerticalScrollBar.isVisible()) {
-                    addBorderToRow(RowBorderType.BOTTOM, modTable, row);
+                    addBorderToRow(RowBorderType.BOTTOM, row);
                 } else {
                     row.setBorder(null);
                 }
@@ -266,8 +267,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 					but for whatever reason the changes aren't propagating without this.
 				 */
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-                UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
-                UI_SERVICE.saveUserData();
+                //TODO: We might be able to fix this with the new memory model. Investigate.
+                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+                Result<Void> updateModListLoadPriorityResult = UI_SERVICE.updateModListLoadPriority();
+                checkResult(updateModListLoadPriorityResult, "Failed to update mod list load priority. See the log for more information.");
 
                 dragEvent.consume();
             }
@@ -287,7 +290,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         return row;
     }
 
-    private void addBorderToRow(RowBorderType rowBorderType, TableView<Mod> modTable, ModTableRow row) {
+    private void addBorderToRow(RowBorderType rowBorderType, @NotNull ModTableRow row) {
         if (!row.isEmpty() || (row.getIndex() <= UI_SERVICE.getCurrentModList().size() && UI_SERVICE.getCurrentModList().get(row.getIndex() - 1) != null)) {
             Color indicatorColor = Color.web(MODLIST_MANAGER_HELPER.getSelectedCellBorderColor(UI_SERVICE));
             Border dropIndicator;
@@ -311,7 +314,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
 			UI_SERVICE.getCurrentModList().removeAll(selectedMods);
-			UI_SERVICE.getCurrentModlistProfile().setModList(UI_SERVICE.getCurrentModList());
+			UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
 
 			int previouslyActiveModCount = 0;
 
@@ -334,7 +337,21 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 			}
 
 			UI_SERVICE.modifyActiveModCount(-previouslyActiveModCount);
-			UI_SERVICE.saveUserData();
+			Result<Void> updateResult = UI_SERVICE.updateModListProfileModList();
+            if(!updateResult.isSuccess()) {
+                UI_SERVICE.log(updateResult);
+                Popup.displaySimpleAlert("Failed to delete mod from modlist. See log for more information.", MessageType.ERROR);
+            }
 		}
 	}
+
+    private void checkResult(Result<?> result, String failMessage) {
+        if(!result.isSuccess()) {
+            UI_SERVICE.log(result);
+            Popup.displaySimpleAlert(failMessage, MessageType.ERROR);
+            throw new RuntimeException(result.getCurrentMessage());
+        } else {
+            UI_SERVICE.logPrivate(result);
+        }
+    }
 }

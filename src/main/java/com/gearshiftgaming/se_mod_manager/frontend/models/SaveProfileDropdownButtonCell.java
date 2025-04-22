@@ -14,7 +14,6 @@ import javafx.scene.control.Tooltip;
  */
 public class SaveProfileDropdownButtonCell extends SaveProfileCell {
 
-
 	public SaveProfileDropdownButtonCell(UiService uiService) {
 		super("", uiService);
 	}

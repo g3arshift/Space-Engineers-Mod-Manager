@@ -13,9 +13,6 @@ import javafx.scene.text.Text;
  */
 public class TextTruncationUtility {
 
-
-	//TODO: Have this worked based on the actual current size. SUPER FUCKING IMPORTANT.
-
 	public static String truncateWithEllipsisWithRealWidth(String text, double maxWidth) {
 		Text tempText = new Text(text);
 
@@ -38,19 +35,24 @@ public class TextTruncationUtility {
 			return text;
 		}
 
-		//TODO: We need to make this perform at O(log n). Binary search?
-		// If the text is too long, truncate it
 		String ellipsis = "...";
-		String truncatedText = text;
+		int low = 0;
+		int high = text.length();
+		int bestFit = 0;
 
-		while (tempText.getBoundsInLocal().getWidth() > maxWidth - tempText.getFont().getSize()) {
-			if (truncatedText.length() <= 1) {
-				return truncatedText;
+		while (low <= high) {
+			int mid = (low + high) / 2;
+			String candidate = text.substring(0, mid) + ellipsis;
+			tempText.setText(candidate);
+
+			if (tempText.getBoundsInLocal().getWidth() <= maxWidth) {
+				bestFit = mid; // Update best fit
+				low = mid + 1; // Try for a longer substring
+			} else {
+				high = mid - 1; // Try for a shorter substring
 			}
-			truncatedText = truncatedText.substring(0, truncatedText.length() - 1);
-			tempText.setText(truncatedText + ellipsis);
 		}
 
-		return truncatedText + ellipsis;
+		return text.substring(0, bestFit) + ellipsis;
 	}
 }

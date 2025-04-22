@@ -1,17 +1,12 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -39,16 +34,17 @@ public class ModlistFileRepository implements ModlistRepository {
 		try (BufferedReader br = new BufferedReader(new FileReader(modListFile))) {
 			String modUrl;
 			while ((modUrl = br.readLine()) != null) {
+				modUrl = modUrl.trim();
 				//Grab just the ID from the full URLs
 				if(StringUtils.isNumeric(modUrl)) {
-					modIds.add(modUrl);
+					modIds.add(modUrl.trim());
 				} else {
 					String modId = STEAM_WORKSHOP_ID_REGEX_PATTERN.matcher(modUrl).results().map(MatchResult::group).collect(Collectors.joining(""));
 
 					//Don't add blanks
 					if(!modId.isBlank()) {
 						modId = modId.substring(3);
-						modIds.add(modId);
+						modIds.add(modId.trim());
 					}
 				}
 			}
@@ -56,6 +52,7 @@ public class ModlistFileRepository implements ModlistRepository {
 		return modIds.stream().toList();
 	}
 
+	//TODO: probably should mirror the regex matching in here too. Move it out of the higher function.
 	@Override
 	public List<String> getModIoModUrls(File modListFile) throws IOException {
 		//We use a set to prevent duplicate lines from being added
@@ -64,7 +61,7 @@ public class ModlistFileRepository implements ModlistRepository {
 			String modUrl;
 			while ((modUrl = br.readLine()) != null) {
 				if(!modUrl.isBlank()) {
-					modUrlSet.add(modUrl);
+					modUrlSet.add(modUrl.trim());
 				}
 			}
 		}

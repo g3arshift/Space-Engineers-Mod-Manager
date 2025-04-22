@@ -11,7 +11,7 @@ import lombok.Getter;
  */
 @Getter
 public enum ModImportType {
-	STEAM_ID("Steam Workshop ID"),
+	STEAM_ID("Steam Workshop"),
 	STEAM_COLLECTION("Steam Collection"),
 	MOD_IO("Mod.io"),
 	EXISTING_SAVE("Existing Save"),

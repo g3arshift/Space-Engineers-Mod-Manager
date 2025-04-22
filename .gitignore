@@ -75,3 +75,5 @@ build/
 /dependency-reduced-pom.xml
 /.gradle/
 /Storage_OLD/
+/Storage/
+/Database/SEMM_Data_Schema.db
