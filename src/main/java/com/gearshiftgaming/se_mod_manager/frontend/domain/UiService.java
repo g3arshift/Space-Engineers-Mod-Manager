@@ -402,7 +402,7 @@ public class UiService {
                 modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
             }
         } else {
-            modInfoResult.addMessage(modScrapeResult.getCurrentMessage(), modScrapeResult.getType());
+            modInfoResult.addAllMessages(modScrapeResult);
         }
 
         Platform.runLater(() -> {

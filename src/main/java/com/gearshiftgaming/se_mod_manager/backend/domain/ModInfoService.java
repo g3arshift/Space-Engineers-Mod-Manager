@@ -138,16 +138,19 @@ public class ModInfoService {
                 for (Node node : nodes) {
                     Result<String> modIdResult = new Result<>();
                     if (node.hasAttr("data-panel")) { //All the nodes that have the actual info we need have this attribute
-                        try {
-                            String modId = STEAM_MOD_ID_PATTERN.matcher(node.childNodes().get(1).toString())
-                                    .results()
-                                    .map(MatchResult::group)
-                                    .collect(Collectors.joining())
-                                    .substring(3);
+                        StringBuilder modId = new StringBuilder();
+                        modId.append(STEAM_MOD_ID_PATTERN.matcher(node.childNodes().get(1).toString())
+                                .results()
+                                .map(MatchResult::group)
+                                .collect(Collectors.joining()));
+
+                        //We need to remove the id= portion of the string.
+                        if (modId.length() <= 3) {
+                            modIdResult.addMessage("Failed to grab mod ID.", ResultType.FAILED);
+                        } else {
+                            modId.replace(0, modId.length(), modId.substring(3));
                             modIdResult.addMessage("Successfully grabbed mod ID.", ResultType.SUCCESS);
-                            modIdResult.setPayload(modId);
-                        } catch (RuntimeException e) {
-                            modIdResult.addMessage(e.toString(), ResultType.FAILED);
+                            modIdResult.setPayload(modId.toString());
                         }
                         modIdScrapeResults.add(modIdResult);
                     }
@@ -170,18 +173,19 @@ public class ModInfoService {
 
         Document doc = Jsoup.connect(MOD_IO_NAME_URL + name).get();
 
-        try {
-            String modId = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR).toString())
-                    .results()
-                    .map(MatchResult::group)
-                    .toList().getLast();
-
-            if (!modId.isBlank()) {
-                modIdResult.setPayload(modId);
-                modIdResult.addMessage("Successfully scraped Mod.io Mod ID from URL.", ResultType.SUCCESS);
-            }
-        } catch (NoSuchElementException e) {
+        List<String> matches = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR).toString())
+                .results()
+                .map(MatchResult::group)
+                .toList();
+        if (matches.isEmpty()) {
             modIdResult.addMessage("Invalid Mod.io URL entered!", ResultType.INVALID);
+            return modIdResult;
+        }
+
+        String modId = matches.getLast();
+        if (!modId.isBlank()) {
+            modIdResult.setPayload(modId);
+            modIdResult.addMessage("Successfully scraped Mod.io Mod ID from URL.", ResultType.SUCCESS);
         }
 
         return modIdResult;
@@ -200,84 +204,109 @@ public class ModInfoService {
 
     private Result<String[]> scrapeSteamMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
+
+        Document modPage;
+        //Check to make sure the connection works first.
         try {
-            Document modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
-            if (modPage.title().equals("Steam Community :: Error")) { //Makes sure it's a valid link at all
-                modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
-            } else if (!modPage.select(STEAM_MOD_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Workshop")) { //Makes sure it isn't something like a screenshot
-                modScrapeResult.addMessage("Item with ID \"" + modId + "\" is not a mod.", ResultType.FAILED);
-            } else if (modPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Collections")) { //Makes sure it's not a collection
-                modScrapeResult.addMessage("\"" + modPage.title().split("Steam Workshop::")[1] + "\" is a collection, not a mod!", ResultType.FAILED);
+            modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
+        } catch (IOException e) {
+            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+            modScrapeResult.addMessage("Failed to load mod page: " + STEAM_WORKSHOP_URL + modId, ResultType.FAILED);
+            return modScrapeResult;
+        }
+
+        if (modPage.title().equals("Steam Community :: Error")) { //Makes sure it's a valid link at all
+            modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
+            return modScrapeResult;
+        }
+
+        String itemType = modPage.select(STEAM_MOD_VERIFICATION_SELECTOR)
+                .stream()
+                .findFirst()
+                .flatMap(element -> element.childNodes().stream().findFirst())
+                .map(Object::toString).orElse("");
+        if (!itemType.equals("Workshop")) { //Makes sure it isn't something like a screenshot
+            modScrapeResult.addMessage("Item with ID \"" + modId + "\" is not part of the workshop, it is part of " + itemType + ".", ResultType.FAILED);
+            return modScrapeResult;
+        }
+
+        String workshopType = modPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR)
+                .stream()
+                .findFirst()
+                .flatMap(element -> element.childNodes().stream().findFirst())
+                .map(Object::toString).orElse("");
+        if (workshopType.equals("Collections")) { //Makes sure it's not a collection
+            modScrapeResult.addMessage("\"" + modPage.title().split("Steam Workshop::")[1] + "\" is a collection, not a mod!", ResultType.FAILED);
+            return modScrapeResult;
+        }
+
+        String modName = modPage.title().contains("Workshop::") ? modPage.title().split("Workshop::")[1] : modPage.title();
+        if (!pageContainsMod(ModType.STEAM, modPage)) {
+            if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
+                modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
+                        modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
             } else {
-                //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
-                String[] modInfo = new String[4];
-                String modName = modPage.title().split("Workshop::")[1];
-                if (checkIfPageContainsMod(ModType.STEAM, modPage)) {
-                    modInfo[0] = modName;
+                modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
+            }
+            return modScrapeResult;
+        }
 
-                    Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
-                    Element modTagElement;
-                    if (!modTagElements.isEmpty()) {
-                        modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
-                    } else {
-                        modTagElement = null;
-                    }
+        //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
+        String[] modInfo = new String[4];
+        modInfo[0] = modName;
 
-                    List<String> modTags = new ArrayList<>();
-                    StringBuilder concatenatedModTags = new StringBuilder();
-                    if (modTagElement != null) {
-                        for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
-                            modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
-                        }
+        Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
+        Element modTagElement;
+        if (!modTagElements.isEmpty()) {
+            modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
+        } else {
+            modTagElement = null;
+        }
 
-                        for (int i = 0; i < modTags.size(); i++) {
-                            if (i + 1 < modTags.size()) {
-                                concatenatedModTags.append(modTags.get(i)).append(",");
-                            } else {
-                                concatenatedModTags.append(modTags.get(i));
-                            }
-                        }
-                    } else {
-                        concatenatedModTags.append("None");
-                    }
-                    modInfo[1] = concatenatedModTags.toString();
+        List<String> modTags = new ArrayList<>();
+        StringBuilder concatenatedModTags = new StringBuilder();
+        if (modTagElement != null) {
+            for (int i = 1; i < modTagElement.childNodes().size(); i += 2) {
+                modTags.add(modTagElement.childNodes().get(i).childNodes().getFirst().toString());
+            }
 
-                    modInfo[2] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
-
-                    String lastUpdated;
-                    if (modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).isEmpty()) {
-                        lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_FIRST_POSTED_SELECTOR).toString(),
-                                "<div class=\"detailsStatRight\">\n ",
-                                "\n</div>");
-                    } else {
-                        lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
-                                "<div class=\"detailsStatRight\">\n ",
-                                "\n</div>");
-                    }
-
-                    //Append a year if we don't find one. This regex looks for any four contiguous digits.
-                    Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
-                    if (!yearPattern.matcher(lastUpdated).find()) {
-                        String[] lastUpdatedParts = lastUpdated.split(" @ ");
-                        lastUpdatedParts[0] += ", " + Year.now();
-                        lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
-                    }
-                    modInfo[3] = lastUpdated;
-
-                    modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
-                    modScrapeResult.setPayload(modInfo);
+            for (int i = 0; i < modTags.size(); i++) {
+                if (i + 1 < modTags.size()) {
+                    concatenatedModTags.append(modTags.get(i)).append(",");
                 } else {
-                    if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
-                        modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
-                                modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
-                    } else {
-                        modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
-                    }
+                    concatenatedModTags.append(modTags.get(i));
                 }
             }
-        } catch (Exception e) {
-            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+        } else {
+            concatenatedModTags.append("None");
         }
+        modInfo[1] = concatenatedModTags.toString();
+
+        modInfo[2] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
+
+        String lastUpdated;
+        if (modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).isEmpty()) {
+            lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_FIRST_POSTED_SELECTOR).toString(),
+                    "<div class=\"detailsStatRight\">\n ",
+                    "\n</div>");
+        } else {
+            lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
+                    "<div class=\"detailsStatRight\">\n ",
+                    "\n</div>");
+        }
+
+        //Append a year if we don't find one. This regex looks for any four contiguous digits.
+        Pattern yearPattern = Pattern.compile("\\b\\d{4}\\b");
+        if (!yearPattern.matcher(lastUpdated).find()) {
+            String[] lastUpdatedParts = lastUpdated.split(" @ ");
+            lastUpdatedParts[0] += ", " + Year.now();
+            lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
+        }
+        modInfo[3] = lastUpdated;
+
+        modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
+        modScrapeResult.setPayload(modInfo);
+
         return modScrapeResult;
     }
 
@@ -285,137 +314,172 @@ public class ModInfoService {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
         try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
-            int retries = 0;
-            final int MAX_RETRIES = 3;
-            int delay = 1000;
-            Random random = new Random();
-            Page webPage;
-
-            webPage = browser.newContext().newPage();
-            webPage.navigate(MOD_IO_URL + modId);
-            String pageSource = "";
-            while (retries < MAX_RETRIES && StringUtils.countMatches(pageSource, "\n") < 1) {
-                try {
-                    Gson gson = new Gson();
-                    JsonObject response = gson.fromJson(StringUtils.substringBetween(webPage.content(), "<pre>", "</pre>"), JsonObject.class);
-                    if (response != null) {
-                        JsonElement element = response.get("error");
-                        String errorCode = element.getAsJsonObject().get("code").toString();
-                        if (errorCode.equals("404")) {
-                            throw new ModNotFoundException("The mod could not be found.");
-                        } else if (errorCode.equals("429")) {
-                            throw new RateLimitException("Mod.io is rate limiting you.");
-                        } else {
-                            throw new Exception("Unknown Mod.io error.");
-                        }
-                    }
-                    webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
-                    pageSource = webPage.content();
-                } catch (Exception e) {
-                    switch (e) {
-                        case RateLimitException ignored -> {
-                            retries++;
-                            if (retries < MAX_RETRIES) {
-                                //TODO: Tool around with the delay for retries AND for the separation between thread calls.
-                                Thread.sleep(delay);
-                                delay += random.nextInt(2000);
-                                webPage.reload();
-                            } else {
-                                modScrapeResult.addMessage("Mod.io is rate limiting you, please wait a little and try again later.", ResultType.FAILED);
-                            }
-                        }
-                        case ModNotFoundException ignored -> {
-                            modScrapeResult.addMessage("Mod with ID \"" + modId + "\" cannot be found.", ResultType.FAILED);
-                            return modScrapeResult;
-                        }
-                        case TimeoutError ignored ->
-                                modScrapeResult.addMessage(String.format("Connection timed out while waiting to open page for mod \"%s\".", modId), ResultType.FAILED);
-                        default -> {
-                            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
-                            return modScrapeResult;
-                        }
-                    }
-                }
-            }
+            Page webPage = browser.newContext().newPage();
+            String pageSource = fetchModIoPageContent(webPage, modId, modScrapeResult);
 
             if (!pageSource.isEmpty()) {
-                //modInfo:
-                // 0. Name
-                // 1. Tags
-                // 2. Description
-                // 3. Year
-                // 4. Month + day
-                // 5. Hour
-                String[] modInfo = new String[6];
-                Document modPage = Jsoup.parse(pageSource);
-
-                if (checkIfPageContainsMod(ModType.MOD_IO, modPage)) {
-                    String modName = modPage.title().split(" for Space Engineers - mod.io")[0];
-                    modInfo[0] = modName;
-
-                    List<Node> tagNodes = modPage.select(MOD_IO_MOD_TAGS_SELECTOR).getLast().childNodes();
-                    StringBuilder concatenatedModTags = new StringBuilder();
-                    for (int i = 1; i < tagNodes.size(); i++) {
-                        String tag = StringUtils.substringBetween(tagNodes.get(i).toString(), "<a href=\"/g/spaceengineers?tags-in=", "\"");
-                        if (i + 1 < tagNodes.size()) {
-                            concatenatedModTags.append(tag).append(",");
-                        } else {
-                            concatenatedModTags.append(tag);
-                        }
-                    }
-
-                    modInfo[1] = concatenatedModTags.toString();
-                    modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR).getFirst().childNodes().getLast().toString();
-
-                    String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
-                    String lastUpdatedQuantifier = lastUpdatedRaw.substring(lastUpdatedRaw.length() - 1);
-                    int duration = Integer.parseInt(lastUpdatedRaw.substring(0, lastUpdatedRaw.length() - 1));
-                    switch (lastUpdatedQuantifier) {
-                        case "h" -> {//Mod IO year + month + day + hour
-                            modInfo[3] = Year.now().toString();
-                            modInfo[4] = MonthDay.now().toString();
-                            modInfo[5] = LocalTime.now().minusHours(duration).toString();
-                        }
-                        case "d" -> {//Mod IO year + month + day
-                            modInfo[3] = Year.of(LocalDate.now().minusDays(duration).getYear()).toString();
-                            modInfo[4] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
-                        }
-                        case "y" -> //Mod IO year only
-                                modInfo[3] = Year.now().minusYears(duration).toString();
-                        default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
-                    }
-
+                parseModIoModInfo(pageSource, modId, modScrapeResult);
+                if (modScrapeResult.getPayload() != null) {
                     modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
-                    modScrapeResult.setPayload(modInfo);
-                } else {
-                    try {
-                        modScrapeResult.addMessage(modPage.title().split(" for Space Engineers - mod.io")[0] + " is not a mod, it is a " +
-                                StringUtils.substringBetween(Objects.requireNonNull(modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR)).childNodes().getFirst().toString(),
-                                        "<span>", "</span>") + ".", ResultType.FAILED);
-                    } catch (
-                            NullPointerException e) { //This is here because if we load a VERY wrong page we can have this throw a null.
-                        modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
-                        return modScrapeResult;
-                    }
                 }
             }
+        } catch (Exception e) {
+            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+            modScrapeResult.addMessage(String.format("Failed to scrape mod information from Mod.io for mod \"%s\". Please see the log for more information.", modId), ResultType.FAILED);
         }
         return modScrapeResult;
     }
 
+    private String fetchModIoPageContent(Page webPage, String modId, Result<String[]> scrapeResult) throws InterruptedException {
+        int retries = 0;
+        final int MAX_RETRIES = 3;
+        int delay = 1000;
+        Random random = new Random();
+        String pageSource = "";
+
+        webPage.navigate(MOD_IO_URL + modId);
+        while (retries < MAX_RETRIES && StringUtils.countMatches(pageSource, "\n") < 1) {
+            try {
+                String jsonText = StringUtils.substringBetween(webPage.content(), "<pre>", "</pre>");
+                if (jsonText != null) {
+                    JsonObject response = new Gson().fromJson(jsonText, JsonObject.class);
+                    if (response != null) {
+                        JsonElement element = response.get("error");
+                        String errorCode = element.getAsJsonObject().get("code").toString();
+                        switch (errorCode) {
+                            case "404" ->
+                                    throw new ModNotFoundException("Mod with ID \"" + modId + "\" cannot be found.");
+                            case "429" -> throw new RateLimitException("Mod.io is rate limiting you.");
+                            default -> throw new RuntimeException("Unknown Mod.io error: " + errorCode);
+                        }
+                    } else
+                        //We shouldn't ever really reach this because it is a scenario where we SOMEHOW are encountering an error, but it's not getting us a value from the webpage.
+                        retries++;
+                }
+                webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
+                pageSource = webPage.content();
+            } catch (RateLimitException e) {
+                retries++;
+                if (retries < MAX_RETRIES) {
+                    //TODO: Tool around with the delay for retries AND for the separation between thread calls.
+                    Thread.sleep(delay);
+                    delay += random.nextInt(2000);
+                    webPage.reload();
+                } else {
+                    scrapeResult.addMessage("Mod.io is rate limiting you, please wait a little and try again later.", ResultType.FAILED);
+                    return "";
+                }
+            } catch (TimeoutError e) {
+                scrapeResult.addMessage("Connection timed out while waiting to open page for mod \"" + modId + "\".", ResultType.FAILED);
+                return "";
+            } catch (Exception e) {
+                scrapeResult.addMessage(e.toString(), ResultType.FAILED);
+                return "";
+            }
+        }
+        return pageSource;
+    }
+
+    private void parseModIoModInfo(String pageSource, String modId, Result<String[]> modScrapeResult) {
+        Document modPage = Jsoup.parse(pageSource);
+        if (!pageContainsMod(ModType.MOD_IO, modPage)) {
+            String itemType = modPage.select(MOD_IO_MOD_TYPE_SELECTOR)
+                    .stream()
+                    .findFirst()
+                    .flatMap(element -> element.childNodes().stream().findFirst())
+                    .map(Object::toString).orElse("");
+            if (!itemType.isEmpty()) {
+                modScrapeResult.addMessage(modPage.title().split(" for Space Engineers - mod.io")[0] + " is not a mod, it is a " +
+                        StringUtils.substringBetween(itemType, "<span>", "</span>") + ".", ResultType.FAILED);
+            } else {
+                modScrapeResult.addMessage("Unknown error when scraping mod.io.", ResultType.FAILED);
+            }
+            return;
+        }
+
+        //modInfo:
+        // 0. Name
+        // 1. Tags
+        // 2. Description
+        // 3. Year
+        // 4. Month + day
+        // 5. Hour
+        String[] modInfo = new String[6];
+        //Get mod name
+        modInfo[0] = modPage.title().split(" for Space Engineers - mod.io")[0];
+
+        //Get mod tags
+        List<Node> tagNodes = modPage.select(MOD_IO_MOD_TAGS_SELECTOR).getLast().childNodes();
+        StringBuilder concatenatedModTags = new StringBuilder();
+        for (int i = 1; i < tagNodes.size(); i++) {
+            String tag = StringUtils.substringBetween(tagNodes.get(i).toString(), "<a href=\"/g/spaceengineers?tags-in=", "\"");
+            if (i + 1 < tagNodes.size()) {
+                concatenatedModTags.append(tag).append(",");
+            } else {
+                concatenatedModTags.append(tag);
+            }
+        }
+        modInfo[1] = concatenatedModTags.toString();
+
+        //Get mod description
+        modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR)
+                .stream()
+                .findFirst()
+                .map(element -> element.childNodes().stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining())
+                        .trim())
+                .orElse("");
+        if (modInfo[2].isEmpty()) {
+            modScrapeResult.addMessage(String.format("Failed to get description for \"%s\".", modInfo[0]), ResultType.FAILED);
+            return;
+        }
+
+        //Get mod last updated information
+        String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
+        String lastUpdatedFormatted = Optional.ofNullable(StringUtils.substringBetween(lastUpdatedRaw, "<span>", "</span>")).orElse("'");
+        if(lastUpdatedFormatted.isEmpty()) {
+            modScrapeResult.addMessage(String.format("Failed to get last updated information for \"%s\".", modInfo[0]), ResultType.FAILED);
+            return;
+        }
+        String lastUpdatedQuantifier = lastUpdatedFormatted.substring(lastUpdatedFormatted.length() - 1);
+        int duration = Integer.parseInt(lastUpdatedFormatted.substring(0, lastUpdatedFormatted.length() - 1));
+        switch (lastUpdatedQuantifier) {
+            case "h" -> {//Mod IO year + month + day + hour
+                modInfo[3] = Year.now().toString();
+                modInfo[4] = MonthDay.now().toString();
+                modInfo[5] = LocalTime.now().minusHours(duration).toString();
+            }
+            case "d" -> {//Mod IO year + month + day
+                modInfo[3] = Year.of(LocalDate.now().minusDays(duration).getYear()).toString();
+                modInfo[4] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
+            }
+            case "y" -> //Mod IO year only
+                    modInfo[3] = Year.now().minusYears(duration).toString();
+            default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
+        }
+
+        modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
+        modScrapeResult.setPayload(modInfo);
+    }
+
     //Check if the mod we're scraping is actually a workshop mod.
     //Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-    private boolean checkIfPageContainsMod(ModType modType, Document modPage) {
+    private boolean pageContainsMod(ModType modType, Document modPage) {
         if (modType == ModType.STEAM) {
-            if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
-                return (modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString().equals("Mod"));
+            Elements typeElements = modPage.select(STEAM_MOD_TYPE_SELECTOR);
+            if (!typeElements.isEmpty()) {
+                Node modTypeNode = typeElements.getFirst().childNodes().stream().findFirst().orElse(null);
+                return modTypeNode != null && modTypeNode.toString().equals("Mod");
             } else {
                 return false;
             }
         } else {
             Element element = modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR);
             if (element != null) {
-                return element.childNodes().getFirst().toString().startsWith("Mod", 6);
+                Node modTypeNode = element.childNodes().stream().findFirst().orElse(null);
+                //return element.childNodes().getFirst().toString().startsWith("Mod", 6);
+                return modTypeNode != null && modTypeNode.toString().contains("Mod");
             } else {
                 return false;
             }

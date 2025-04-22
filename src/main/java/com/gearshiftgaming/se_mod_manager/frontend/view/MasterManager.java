@@ -1306,8 +1306,9 @@ public class MasterManager {
 
             ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
             cleanupModImportUi();
-            //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping.
+            //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping. So we give it a hint to collect garbage.
             //It really, truly is, not cleaning up when it should at this point. Trust me.
+            //We've just finished scraping, the UI isn't doing anything other than having just finished a transition, and there's really nothing happening. It's a good time.
             System.gc();
         }));
 
