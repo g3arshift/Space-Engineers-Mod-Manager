@@ -1,11 +1,14 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
 import javafx.scene.control.ListCell;
 import javafx.scene.text.Text;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.MutableTriple;
+
+import java.util.UUID;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -16,7 +19,7 @@ import lombok.Getter;
  */
 
 @Getter
-public abstract class ModListCell extends ListCell<ModListProfile> {
+public abstract class ModListCell extends ListCell<MutableTriple<UUID, String, SpaceEngineersVersion>> {
     private final Text PROFILE_NAME = new Text();
 
     private final String cellStyle;
@@ -30,13 +33,13 @@ public abstract class ModListCell extends ListCell<ModListProfile> {
     }
 
     @Override
-    protected void updateItem(ModListProfile item, boolean empty) {
+    protected void updateItem(MutableTriple<UUID, String, SpaceEngineersVersion> item, boolean empty) {
         super.updateItem(item, empty);
         if(empty || item == null) {
             setGraphic(null);
             setStyle(null);
         } else {
-            PROFILE_NAME.setText(item.getProfileName());
+            PROFILE_NAME.setText(item.getMiddle());
             setGraphic(PROFILE_NAME);
 
             StringBuilder styleBuilder = new StringBuilder(cellStyle);

@@ -26,22 +26,27 @@ public abstract class Mod {
     //These are the fields required for the sandbox_config.sbc file
     //For mod.io mods we have to use an actual API here. https://docs.mod.io/support/search-by-id/
     private String id;
+    @Setter
     private String friendlyName;
+    @Setter
     private String publishedServiceName;
 
     private int loadPriority;
 
-    private List<String> categories;
+    private List<String> categories = new ArrayList<>();
+
     @Setter
     private boolean active;
 
     private String description;
 
+    @Setter
+    private List<String> modifiedPaths = new ArrayList<>();
+
     public Mod(String id) {
-        this.id = id.intern();
+        this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
-        categories = new ArrayList<>();
     }
 
     //We are intentionally forgoing copying load priority as it is a generated field
@@ -52,6 +57,17 @@ public abstract class Mod {
         this.categories = new ArrayList<>(mod.getCategories());
         this.active = mod.isActive();
         this.description = mod.getDescription();
+        this.modifiedPaths = mod.getModifiedPaths();
+    }
+
+    public Mod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description) {
+        this.id = id;
+        this.friendlyName = friendlyName;
+        this.publishedServiceName = publishedServiceName;
+        this.loadPriority = loadPriority;
+        this.categories = categories;
+        this.active = active;
+        this.description = description;
     }
 
     @Override
@@ -68,7 +84,7 @@ public abstract class Mod {
 
     @XmlAttribute
     public void setId(String id) {
-        this.id = id.intern();
+        this.id = id;
     }
 
     @XmlElementWrapper(name = "categories")
@@ -91,14 +107,6 @@ public abstract class Mod {
 
     @XmlJavaTypeAdapter(value = ModDescriptionCompacterAdapter.class)
     public void setDescription(String description) {
-        this.description = description.intern();
-    }
-
-    public void setFriendlyName(String friendlyName) {
-        this.friendlyName = friendlyName.intern();
-    }
-
-    public void setPublishedServiceName(String publishedServiceName) {
-        this.publishedServiceName = publishedServiceName.intern();
+        this.description = description;
     }
 }

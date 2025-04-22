@@ -6,10 +6,7 @@ import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
@@ -27,21 +24,21 @@ public class ModListProfile {
 
     private String profileName;
 
-    private List<Mod> modList;
+    private List<Mod> modList = new ArrayList<>();
 
     @XmlElement
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
 
+    private HashMap<String, List<Mod>> conflictTable = new HashMap<>();
+
     public ModListProfile() {
         ID = UUID.randomUUID();
-        modList = new ArrayList<>();
         profileName = "New Mod Profile";
         SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
     }
 
     public ModListProfile(SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
-        modList = new ArrayList<>();
         profileName = "New Mod Profile";
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
@@ -49,24 +46,45 @@ public class ModListProfile {
     public ModListProfile(String profileName, SpaceEngineersVersion spaceEngineersVersion) {
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
         ID = UUID.randomUUID();
-        modList = new ArrayList<>();
         this.profileName = profileName;
     }
 
     public ModListProfile(ModListProfile modListProfile) {
         this.ID = UUID.randomUUID();
         this.profileName = modListProfile.getProfileName();
-        this.modList = new ArrayList<>();
         if(modListProfile.getModList() != null){
-            for(Mod m : modListProfile.getModList()) {
+            for(int i = 0; i < modListProfile.getModList().size(); i++) {
+                Mod m = modListProfile.getModList().get(i);
                 if(m instanceof SteamMod) {
-                    this.modList.add(new SteamMod((SteamMod) m));
+                    SteamMod steamMod = new SteamMod((SteamMod) m);
+                    steamMod.setLoadPriority(i + 1);
+                    this.modList.add(steamMod);
                 } else {
-                    this.modList.add(new ModIoMod((ModIoMod) m));
+                    ModIoMod modIoMod = new ModIoMod((ModIoMod) m);
+                    modIoMod.setLoadPriority(i + 1);
+                    this.modList.add(modIoMod);
                 }
             }
         }
         SPACE_ENGINEERS_VERSION = modListProfile.getSPACE_ENGINEERS_VERSION();
+        conflictTable = new HashMap<>();
+        for(Map.Entry<String, List<Mod>> entry : modListProfile.getConflictTable().entrySet()) {
+            List<Mod> copiedModConflictList = new ArrayList<>();
+            for(Mod mod : entry.getValue()) {
+                if(mod instanceof SteamMod) {
+                    copiedModConflictList.add(new SteamMod((SteamMod) mod));
+                } else {
+                    copiedModConflictList.add(new ModIoMod((ModIoMod) mod));
+                }
+            }
+            conflictTable.put(entry.getKey(), copiedModConflictList);
+        }
+    }
+
+    public ModListProfile(UUID ID, String profileName, SpaceEngineersVersion SPACE_ENGINEERS_VERSION) {
+        this.ID = ID;
+        this.profileName = profileName;
+        this.SPACE_ENGINEERS_VERSION = SPACE_ENGINEERS_VERSION;
     }
 
     @XmlAttribute
@@ -85,6 +103,14 @@ public class ModListProfile {
         if (this == o) return true;
         if (!(o instanceof ModListProfile that)) return false;
 		return Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
+    }
+
+    public void generateConflictTable() {
+        for(Mod m : modList) {
+            for(String modifiedPath : m.getModifiedPaths()) {
+                conflictTable.computeIfAbsent(modifiedPath, k -> new ArrayList<>()).add(m);
+            }
+        }
     }
 
     @Override

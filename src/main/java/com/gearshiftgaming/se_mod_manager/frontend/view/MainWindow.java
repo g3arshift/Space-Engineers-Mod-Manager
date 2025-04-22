@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
@@ -104,6 +105,12 @@ public class MainWindow {
                     int choice = Popup.displayYesNoDialog(errorMessage, STAGE, MessageType.WARN);
                     if (choice == 1) {
                         UI_SERVICE.log("Removing save " + SAVE_PROFILES.get(i).getSaveName() + ".", MessageType.INFO);
+                        Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(i));
+                        if(!deleteResult.isSuccess()) {
+                            UI_SERVICE.log(deleteResult);
+                            Popup.displaySimpleAlert(deleteResult);
+                            break;
+                        }
                         SAVE_PROFILES.remove(i);
                         i--;
                     }
@@ -111,8 +118,6 @@ public class MainWindow {
                     SAVE_PROFILES.get(i).setSaveExists(true);
                 }
             }
-
-            UI_SERVICE.saveUserData();
         }
 
         mainWindowLayout.setOnDragOver(MODLIST_MANAGER_VIEW::handleModTableDragOver);
@@ -142,7 +147,7 @@ public class MainWindow {
                     UI_SERVICE.displayTutorial(STAGE, MODLIST_MANAGER_VIEW);
                 } else if(firstTimeSetupChoice == 0){ //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
                     UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
-                    UI_SERVICE.saveUserData();
+                    UI_SERVICE.saveUserConfiguration();
                 }
             }
         });
@@ -151,7 +156,7 @@ public class MainWindow {
     /**
      * Sets the basic properties of the window for the application, including the title bar, minimum resolutions, and listeners.
      */
-    private void setupWindow(Parent root) throws IOException {
+    private void setupWindow(Parent root) {
         this.scene = new Scene(root);
         //Prepare the scene
         int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));

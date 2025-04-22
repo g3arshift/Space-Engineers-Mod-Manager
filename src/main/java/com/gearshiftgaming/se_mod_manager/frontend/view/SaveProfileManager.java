@@ -21,14 +21,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 
 /**
@@ -265,11 +263,12 @@ public class SaveProfileManager {
 
         saveList.refresh();
         saveList.getSelectionModel().selectLast();
+        Result<Void> saveResult = UI_SERVICE.saveSaveProfile(saveProfile);
         setActive();
-//        modTableContextBar.getSaveProfileDropdown().getSelectionModel().select(saveProfile);
-//        modTableContextBar.getSaveProfileDropdown().fireEvent(new ActionEvent());
-
-        UI_SERVICE.saveUserData();
+        if(!saveResult.isSuccess()) {
+            UI_SERVICE.log(saveResult);
+            Popup.displaySimpleAlert(saveResult);
+        }
         //TODO: Switch active profile to the new profile
     }
 
@@ -283,8 +282,8 @@ public class SaveProfileManager {
                 if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
-                        Optional<ModListProfile> modlistProfile = UI_SERVICE.getMODLIST_PROFILES().stream()
-                                .filter(modlistProfile1 -> modlistProfile1.getProfileName().equals(newProfileName))
+                        Optional<MutableTriple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
+                                .filter(modlistProfile1 -> modlistProfile1.getMiddle().equals(newProfileName))
                                 .findFirst();
                         modlistProfile.ifPresent(profile -> modTableContextBar.getModProfileDropdown().getSelectionModel().select(profile));
                         importExistingModlist(selectedSave);
@@ -304,7 +303,7 @@ public class SaveProfileManager {
     }
 
     private @NotNull Thread importModlist(List<Mod> modList) {
-        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
+        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModsFromList(modList);
 
         TASK.setOnRunning(workerStateEvent -> {
             disableUserInput(true);
@@ -313,23 +312,26 @@ public class SaveProfileManager {
 
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
-            UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
-            UI_SERVICE.saveUserData();
 
-            Platform.runLater(() -> {
-                FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-                fadeTransition.setFromValue(1d);
-                fadeTransition.setToValue(0d);
-
-                fadeTransition.setOnFinished(actionEvent -> resetProgressUi());
-
-                fadeTransition.play();
-            });
+            ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
+            cleanupModImportUi();
         });
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
         thread.setDaemon(true);
         return thread;
+    }
+
+    private void cleanupModImportUi() {
+        Platform.runLater(() -> {
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+            fadeTransition.setFromValue(1d);
+            fadeTransition.setToValue(0d);
+
+            fadeTransition.setOnFinished(actionEvent -> resetProgressUi());
+
+            fadeTransition.play();
+        });
     }
 
     @FXML
@@ -377,7 +379,11 @@ public class SaveProfileManager {
             Popup.displaySimpleAlert(profileCopyResult, stage);
 
             UI_SERVICE.log(profileCopyResult);
-            UI_SERVICE.saveUserData();
+            Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
+            if(!saveResult.isSuccess()) {
+                UI_SERVICE.log(saveResult);
+                Popup.displaySimpleAlert(saveResult);
+            }
 
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
             fadeTransition.setFromValue(1d);
@@ -403,7 +409,12 @@ public class SaveProfileManager {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
                     SAVE_PROFILES.remove(profileIndex);
 
-                    UI_SERVICE.saveUserData();
+                    Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
+                    if(!deleteResult.isSuccess()) {
+                        UI_SERVICE.log(deleteResult);
+                        Popup.displaySimpleAlert(String.format("Failed to delete save profile \"%s\". See log for more details.", SAVE_PROFILES.get(profileIndex).getProfileName()), MessageType.ERROR);
+                        return;
+                    }
                     if (profileIndex > SAVE_PROFILES.size())
                         saveList.getSelectionModel().select(profileIndex - 1);
                     else
@@ -455,7 +466,11 @@ public class SaveProfileManager {
 
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
-                    UI_SERVICE.saveUserData();
+                    Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileToModify);
+                    if(!saveResult.isSuccess()) {
+                        UI_SERVICE.log(saveResult);
+                        Popup.displaySimpleAlert(saveResult);
+                    }
                 }
             } else {
                 duplicateProfileName = false;

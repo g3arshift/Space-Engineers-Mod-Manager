@@ -4,12 +4,11 @@ import atlantafx.base.theme.PrimerLight;
 import com.gearshiftgaming.se_mod_manager.backend.data.ModlistFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.UserDataFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -18,15 +17,17 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 
 /**
@@ -42,14 +43,12 @@ import java.util.Properties;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ViewController {
-    private final String HOME_PATH = System.getProperty("user.home");
-
     private final Properties PROPERTIES;
 
     private UiService uiService;
 
     //TODO: Check for file locks to prevent two copies of the app from running simultaneously
-    public ViewController(Stage stage, Logger logger) throws IOException, JAXBException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         logger.info("Started application");
 
         PROPERTIES = new Properties();
@@ -60,37 +59,50 @@ public class ViewController {
             throw (e);
         }
 
-        //TODO: We will need to replace this once we switch over to database. Probably gonna have to uncouple a lot of things, actually...
-        File userDataFile = new File(PROPERTIES.getProperty("semm.userData.default.location"));
-        StorageController storageController = new FileStorageController(new SandboxConfigFileRepository(),
-                new UserDataFileRepository(userDataFile),
-                new SaveFileRepository(),
-                userDataFile);
+        StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
+                new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
+                new SaveFileRepository());
 
-
-        Result<UserConfiguration> userConfigurationResult = storageController.getUserData();
+        Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
         UserConfiguration userConfiguration = new UserConfiguration();
 
         if (userConfigurationResult.isSuccess()) {
             userConfiguration = userConfigurationResult.getPayload();
         } else {
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-            logger.error(userConfigurationResult.getCurrentMessage());
-            if (Files.exists(Path.of("/logs"))) { //This is a hack, but it's the only way to check for a true first time setup versus a deleted config.
-                int choice = Popup.displayYesNoDialog("Failed to load existing user configuration, see log for details. " +
-                        "Would you like to create a new user configuration and continue?", MessageType.WARN);
-                if (choice == 1) {
-                    storageController.saveUserData(userConfiguration);
+            for(String message : userConfigurationResult.getMESSAGES()) {
+                logger.error(message);
+            }
+            try (Stream<Path> stream = Files.list(Path.of("./logs"))) {
+                if (stream.anyMatch(Files::isDirectory)) { //This is a hack, but it's the only way to check for a true first time setup versus a deleted config.
+                    int choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +
+                            "Would you like to create a new user configuration and continue?", MessageType.WARN);
+                    if (choice == 1) {
+                        Result<Void> dataInitializaitonResult = storageController.initializeData();
+                        if(!dataInitializaitonResult.isSuccess()) {
+                            uiService.log(dataInitializaitonResult);
+                            Popup.displaySimpleAlert(dataInitializaitonResult);
+                            throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
+                        }
+                    } else {
+                        Platform.exit();
+                        return;
+                    }
+                    //TODO: What is this really for? I THINK it's for first time startup, but I think the earlier phases capture that... Check it later.
                 } else {
-                    Platform.exit();
-                    return;
+                    Result<Void> dataInitializaitonResult = storageController.initializeData();
+                    if(!dataInitializaitonResult.isSuccess()) {
+                        uiService.log(dataInitializaitonResult);
+                        Popup.displaySimpleAlert(dataInitializaitonResult);
+                        throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
+                    }
                 }
-            } else {
-				storageController.saveUserData(userConfiguration);
             }
         }
 
-        ObservableList<ModListProfile> modListProfiles = FXCollections.observableList(userConfiguration.getModListProfiles());
+        //TODO: Go down through this to start figuring out how we're going to change over the memory model.
+        //TODO: Start by fixing this and then UI service.
+        ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
         ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 
         //Initialize the list we use to store log messages shown to the user
@@ -102,7 +114,7 @@ public class ViewController {
 
         ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
 
-        uiService = new UiService(logger, userLog, modListProfiles, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+        uiService = new UiService(logger, userLog, Integer.parseInt(PROPERTIES.getProperty("semm.ui.maxUserLogSize")), modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
         uiService.log(userConfigurationResult);
 
         setupInterface(stage);
@@ -113,7 +125,6 @@ public class ViewController {
         //This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
         //The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
         //For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
-
 
         //View for adding a new Save Profile
         final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));

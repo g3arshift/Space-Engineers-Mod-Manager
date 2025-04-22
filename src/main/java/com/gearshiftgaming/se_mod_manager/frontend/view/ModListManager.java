@@ -26,11 +26,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.MutableTriple;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -43,7 +45,7 @@ import java.util.regex.Pattern;
 //TODO: This needs refactored to share a common class with the save profile manager. They really share a LOT of stuff.
 public class ModListManager {
     @FXML
-    private ListView<ModListProfile> profileList;
+    private ListView<MutableTriple<UUID, String, SpaceEngineersVersion>> profileList;
 
     @FXML
     private Button createNewProfile;
@@ -64,7 +66,7 @@ public class ModListManager {
     private Button importModlist;
 
     @FXML
-    private Button exportModlist;
+    private Button exportModListProfile;
 
     @FXML
     private Label activeProfileName;
@@ -81,18 +83,18 @@ public class ModListManager {
 
     private ModTableContextBar modTableContextBar;
 
-    private final ObservableList<ModListProfile> MOD_PROFILES;
+    private final ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> MOD_LIST_PROFILE_DETAILS;
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
-    public ModListManager(UiService UI_SERVICE, SimpleInput PROFILE_INPUT_VIEW) {
-        this.UI_SERVICE = UI_SERVICE;
-        MOD_PROFILES = UI_SERVICE.getMODLIST_PROFILES();
+    public ModListManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
+        this.UI_SERVICE = uiService;
+        MOD_LIST_PROFILE_DETAILS = uiService.getMOD_LIST_PROFILE_DETAILS();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
         PROFILE_INPUT_VIEW.setTitle("Create Mod List");
         PROFILE_INPUT_VIEW.setInputInstructions("Mod list name");
         PROFILE_INPUT_VIEW.setEmptyTextMessage("Mod list name cannot be empty!");
-        TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
+        TUTORIAL_HIGHLIGHT_PANES = uiService.getHighlightPanes();
     }
 
 
@@ -108,7 +110,7 @@ public class ModListManager {
         stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
         stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
 
-        profileList.setItems(MOD_PROFILES);
+        profileList.setItems(MOD_LIST_PROFILE_DETAILS);
         profileList.setCellFactory(param -> new ModListManagerCell(UI_SERVICE));
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
@@ -146,24 +148,24 @@ public class ModListManager {
 
     @FXML
     private void copyProfile() {
-        ModListProfile profileToCopy = profileList.getSelectionModel().getSelectedItem();
+        MutableTriple<UUID, String, SpaceEngineersVersion> profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
-            int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", TextTruncationUtility.truncateWithEllipsis(profileToCopy.getProfileName(), 600)), stage, MessageType.WARN);
+            int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", TextTruncationUtility.truncateWithEllipsis(profileToCopy.getMiddle(), 600)), stage, MessageType.WARN);
             if (copyChoice == 1) {
                 boolean duplicateProfileName;
                 int copyIndex = 1;
                 String copyProfileName;
-                String endOfModlistName = profileToCopy.getProfileName();
+                String endOfModlistName = profileToCopy.getMiddle();
 
                 if(endOfModlistName.length() > 3) {
                     //Prepare our copy string by removing any existing copy numbers.
-                   endOfModlistName = endOfModlistName.substring(profileToCopy.getProfileName().length() - 3);
+                   endOfModlistName = endOfModlistName.substring(profileToCopy.getMiddle().length() - 3);
                 }
                 Pattern endOfModlistNameRegex = Pattern.compile("\\(([^d\\)]+)\\)");
                 if (endOfModlistNameRegex.matcher(endOfModlistName).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
-                    copyProfileName = profileToCopy.getProfileName();
+                    copyProfileName = profileToCopy.getMiddle();
                 } else {
-                    copyProfileName = String.format("%s (%d)", profileToCopy.getProfileName(), copyIndex);
+                    copyProfileName = String.format("%s (%d)", profileToCopy.getMiddle(), copyIndex);
                 }
 
                 int renameChoice = Popup.displayThreeChoiceDialog("Do you want to rename the copied profile?", stage, MessageType.INFO, "Yes", "No", "Cancel");
@@ -197,11 +199,22 @@ public class ModListManager {
                 }
 
                 if (!copyProfileName.isBlank()) {
-                    ModListProfile copyProfile = new ModListProfile(profileList.getSelectionModel().getSelectedItem());
-                    copyProfile.setProfileName(copyProfileName);
+                    MutableTriple<UUID, String, SpaceEngineersVersion> copiedProfileDetails = profileList.getSelectionModel().getSelectedItem();
+                    Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(copiedProfileDetails.getLeft());
+                    if(!copyResult.isSuccess()) {
+                        UI_SERVICE.log(copyResult);
+                        Popup.displaySimpleAlert("Failed to copy mod list, see log for more information.", MessageType.ERROR);
+                        return;
+                    }
 
-                    MOD_PROFILES.add(copyProfile);
-                    UI_SERVICE.saveUserData();
+                    ModListProfile copiedProfile = new ModListProfile(copyResult.getPayload());
+                    Result<Void> saveResult = UI_SERVICE.saveModListProfile(copiedProfile);
+                    if(!saveResult.isSuccess()) {
+                        UI_SERVICE.log(saveResult);
+                        Popup.displaySimpleAlert("Failed to save new copy of profile, see log for more information.", MessageType.ERROR);
+                        return;
+                    }
+                    MOD_LIST_PROFILE_DETAILS.add(copiedProfileDetails);
 
                     Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
                 }
@@ -214,17 +227,25 @@ public class ModListManager {
     @FXML
     private void removeProfile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            if (UI_SERVICE.getCurrentModListProfileProfile().equals(profileList.getSelectionModel().getSelectedItem())) {
+            if (UI_SERVICE.getCurrentModListProfile().getID().equals(profileList.getSelectionModel().getSelectedItem().getLeft())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
                 if (choice == 1) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                    MOD_PROFILES.remove(profileIndex);
 
-                    UI_SERVICE.saveUserData();
-                    if (profileIndex > MOD_PROFILES.size())
-                        profileList.getSelectionModel().select(MOD_PROFILES.size() - 1);
+                    //TODO:
+                    // 1. Remove mod list profile from database
+                    // 2. if success, remove details from memory.
+                    Result<Void> deleteResult = UI_SERVICE.deleteModListProfile(MOD_LIST_PROFILE_DETAILS.get(profileIndex).getLeft());
+                    if(!deleteResult.isSuccess()) {
+                        UI_SERVICE.log(deleteResult);
+                        Popup.displaySimpleAlert("Failed to delete profile, see log for more details.", MessageType.ERROR);
+                        return;
+                    }
+                    MOD_LIST_PROFILE_DETAILS.remove(profileIndex);
+                    if (profileIndex > MOD_LIST_PROFILE_DETAILS.size())
+                        profileList.getSelectionModel().select(MOD_LIST_PROFILE_DETAILS.size() - 1);
                     else
                         profileList.getSelectionModel().select(profileIndex);
                 }
@@ -237,9 +258,9 @@ public class ModListManager {
         boolean duplicateProfileName;
 
         do {
-            ModListProfile selectedProfile = profileList.getSelectionModel().getSelectedItem();
+            MutableTriple<UUID, String, SpaceEngineersVersion> selectedProfile = profileList.getSelectionModel().getSelectedItem();
             if (selectedProfile != null) {
-                PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getProfileName());
+                PROFILE_INPUT_VIEW.getInput().setText(selectedProfile.getMiddle());
                 PROFILE_INPUT_VIEW.getInput().requestFocus();
                 PROFILE_INPUT_VIEW.getInput().selectAll();
                 PROFILE_INPUT_VIEW.show(stage);
@@ -247,40 +268,47 @@ public class ModListManager {
                 String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
                 duplicateProfileName = profileNameExists(newProfileName);
 
-                if (duplicateProfileName) {
+                if(newProfileName.equals(selectedProfile.getMiddle())) {
+                    Popup.displaySimpleAlert("You have to name the profile something different!", MessageType.WARN);
+                }
+                else if (duplicateProfileName) {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
                 } else if (!newProfileName.isBlank()) {
                     //We retrieve the index here instead of the item itself as an observable list only updates when you update it, not the list underlying it.
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
-                    String originalProfileName = MOD_PROFILES.get(profileIndex).getProfileName();
-                    ModListProfile profileToModify = MOD_PROFILES.get(profileIndex);
-                    profileToModify.setProfileName(newProfileName);
+                    String originalProfileName = MOD_LIST_PROFILE_DETAILS.get(profileIndex).getMiddle();
+                    MutableTriple<UUID, String, SpaceEngineersVersion> profileToModify = MOD_LIST_PROFILE_DETAILS.get(profileIndex);
+                    profileToModify.setMiddle(newProfileName);
 
                     //We manually refresh here because the original profile won't update its name while it's selected in the list
                     profileList.refresh();
 
                     //If we don't do this then the mod profile dropdown in the main window won't show the renamed profile if we rename the active profile
                     int modProfileDropdownSelectedIndex = modTableContextBar.getModProfileDropdown().getSelectionModel().getSelectedIndex();
-                    if (modProfileDropdownSelectedIndex != MOD_PROFILES.size() - 1) {
+                    if (modProfileDropdownSelectedIndex != MOD_LIST_PROFILE_DETAILS.size() - 1) {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
-                    } else if (MOD_PROFILES.size() == 1) {
-                        MOD_PROFILES.add(new ModListProfile(SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
+                    } else if (MOD_LIST_PROFILE_DETAILS.size() == 1) {
+                        MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(UUID.randomUUID(), "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE));
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
-                        MOD_PROFILES.removeLast();
+                        MOD_LIST_PROFILE_DETAILS.removeLast();
                     } else {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectPrevious();
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.equals(UI_SERVICE.getCurrentModListProfileProfile())) {
-                        activeProfileName.setText(profileToModify.getProfileName());
+                    if (profileToModify.getLeft().equals(UI_SERVICE.getCurrentModListProfile().getID())) {
+                        activeProfileName.setText(profileToModify.getMiddle());
                     }
 
                     UI_SERVICE.log(String.format("Successfully renamed mod profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
-                    UI_SERVICE.saveUserData();
+                    Result<Void> renameSaveResult = UI_SERVICE.saveModListProfileDetails(profileToModify);
+                    if(!renameSaveResult.isSuccess()) {
+                        UI_SERVICE.log(renameSaveResult);
+                        Popup.displaySimpleAlert("Failed to rename profile, see log for more details.", MessageType.ERROR);
+                    }
                 }
             } else {
                 duplicateProfileName = false;
@@ -305,9 +333,9 @@ public class ModListManager {
 
     private void setModListActive() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            ModListProfile modListProfile = profileList.getSelectionModel().getSelectedItem();
-            modTableContextBar.getModProfileDropdown().getSelectionModel().select(modListProfile);
-            activeProfileName.setText(modListProfile.getProfileName());
+            MutableTriple<UUID, String, SpaceEngineersVersion> newCurrentProfile = profileList.getSelectionModel().getSelectedItem();
+            modTableContextBar.getModProfileDropdown().getSelectionModel().select(newCurrentProfile);
+            activeProfileName.setText(newCurrentProfile.getMiddle());
             profileList.refresh();
         }
     }
@@ -344,10 +372,9 @@ public class ModListManager {
         File savePath = importChooser.showOpenDialog(stage);
 
         if (savePath != null) {
-            Result<ModListProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<Void> modlistProfileResult = UI_SERVICE.importModlistProfile(savePath);
             if (modlistProfileResult.isSuccess()) {
-                modTableContextBar.getModProfileDropdown().getSelectionModel().select(modlistProfileResult.getPayload());
-                UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
+                modTableContextBar.getModProfileDropdown().getSelectionModel().selectLast();
                 profileList.refresh();
             }
             Popup.displaySimpleAlert(modlistProfileResult, stage);
@@ -361,10 +388,9 @@ public class ModListManager {
         }
     }
 
-    //TODO: Modify this to exclude the profile we're renaming.
     private boolean profileNameExists(String profileName) {
-        return MOD_PROFILES.stream()
-                .anyMatch(modProfile -> modProfile.getProfileName().equals(profileName));
+        return MOD_LIST_PROFILE_DETAILS.stream()
+                .anyMatch(details -> !details.getMiddle().equals(profileName));
     }
 
     public void show(Stage parentStage) {
@@ -372,7 +398,7 @@ public class ModListManager {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModListProfileProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
         Platform.enterNestedEventLoop(stage);
     }
 
@@ -392,7 +418,7 @@ public class ModListManager {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
-        activeProfileName.setText(UI_SERVICE.getCurrentModListProfileProfile().getProfileName());
+        activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("This is the Mod List Manager. Here you can manage the mod lists that you can apply to saves.");

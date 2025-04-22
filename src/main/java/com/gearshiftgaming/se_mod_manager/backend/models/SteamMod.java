@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -18,18 +19,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class SteamMod extends Mod {
 
+    //TODO: We need to store this as UTC in the DB.
     private LocalDateTime lastUpdated;
 
     public SteamMod(String id) {
         super(id);
-
-       setPublishedServiceName("Steam");
+        setPublishedServiceName("Steam");
     }
 
     public SteamMod(SteamMod mod) {
         super(mod);
         setPublishedServiceName("Steam");
         this.lastUpdated = mod.getLastUpdated();
+    }
+
+    public SteamMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, LocalDateTime lastUpdated) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description);
+        this.lastUpdated = lastUpdated;
     }
 
     @XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)

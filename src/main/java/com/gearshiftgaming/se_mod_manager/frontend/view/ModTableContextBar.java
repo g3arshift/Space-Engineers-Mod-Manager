@@ -16,11 +16,11 @@ import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
-import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -28,16 +28,15 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutableTriple;
 
 import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -89,7 +88,7 @@ public class ModTableContextBar {
 
     @FXML
     @Getter
-    private ComboBox<ModListProfile> modProfileDropdown;
+    private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
 
     @FXML
     @Getter
@@ -180,7 +179,6 @@ public class ModTableContextBar {
         saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
         saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
 
-        //TODO: do the same for the modprofile
         ChangeListener<Number> saveProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
 			String profileName = UI_SERVICE.getCurrentSaveProfile().getProfileName();
             double cellWidth = saveProfileDropdown.getButtonCell().getWidth() - 5;
@@ -188,7 +186,7 @@ public class ModTableContextBar {
         };
 
 		ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-			String profileName = UI_SERVICE.getCurrentModListProfileProfile().getProfileName();
+			String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
 			double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
 			((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
 		};
@@ -196,10 +194,15 @@ public class ModTableContextBar {
         STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
-        modProfileDropdown.setItems(UI_SERVICE.getMODLIST_PROFILES());
-        Optional<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
-        if (lastActiveModlistProfile.isPresent())
-            modProfileDropdown.getSelectionModel().select(lastActiveModlistProfile.get());
+        modProfileDropdown.setItems(UI_SERVICE.getMOD_LIST_PROFILE_DETAILS());
+        Result<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+        if (lastActiveModlistProfile.isSuccess())
+            for(MutableTriple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
+                if(details.getLeft().equals(UI_SERVICE.getUSER_CONFIGURATION().getLastActiveModProfileId())) {
+                    modProfileDropdown.getSelectionModel().select(details);
+                    break;
+                }
+            }
         else
             modProfileDropdown.getSelectionModel().selectFirst();
 
@@ -224,12 +227,12 @@ public class ModTableContextBar {
         });
         modProfileDropdown.setConverter(new StringConverter<>() {
             @Override
-            public String toString(ModListProfile modListProfile) {
-                return modListProfile.getProfileName();
+            public String toString(MutableTriple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
+                return modListProfileDetails.getMiddle();
             }
 
             @Override
-            public ModListProfile fromString(String s) {
+            public MutableTriple<UUID, String, SpaceEngineersVersion> fromString(String s) {
                 return null;
             }
         });
@@ -323,13 +326,15 @@ public class ModTableContextBar {
             }
         }
 
-        Result<Void> savedUserTheme = UI_SERVICE.saveUserData();
+        //TODO: Replace with just the user config save.
+        Result<Void> savedUserTheme = UI_SERVICE.saveUserConfiguration();
         //This fixes the selected row being the wrong color until we change selection
         MASTER_MANAGER_VIEW.getModTable().refresh();
         if (savedUserTheme.isSuccess()) {
             UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
         } else {
-            UI_SERVICE.log("Failed to save theme to user configuration.", MessageType.ERROR);
+            savedUserTheme.addMessage("Failed to save theme to user configuration.", ResultType.FAILED);
+            UI_SERVICE.log(savedUserTheme);
         }
     }
 
@@ -337,13 +342,17 @@ public class ModTableContextBar {
     private void selectModProfile() {
         clearSearchBox();
 
-        UI_SERVICE.setCurrentModListProfileProfile(modProfileDropdown.getSelectionModel().getSelectedItem());
+        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem().getLeft());
         MASTER_MANAGER_VIEW.updateModTableContents();
     }
 
     @FXML
     private void selectSaveProfile() {
-        UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+        Result<Void> saveSelectionResult = UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+        if(!saveSelectionResult.isSuccess()) {
+            UI_SERVICE.log(saveSelectionResult);
+            Popup.displaySimpleAlert("Failed to select save profile. See log for more details.", MessageType.ERROR);
+        }
     }
 
     @FXML
@@ -369,7 +378,7 @@ public class ModTableContextBar {
         if (resetChoice == 1) {
             resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
             if (resetChoice == 1) {
-                Result<Void> configResetResult = UI_SERVICE.resetUserConfig();
+                Result<Void> configResetResult = UI_SERVICE.resetData();
                 if (configResetResult.isSuccess()) {
                     Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
                     Platform.exit();

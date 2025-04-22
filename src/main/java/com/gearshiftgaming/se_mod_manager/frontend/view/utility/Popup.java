@@ -71,6 +71,7 @@ public class Popup {
 
 	/**
 	 * Displays a Yes/No dialog centered on the screen
+	 * 1 for yes, 0 for no.
 	 */
 	public static int displayYesNoDialog(String message, MessageType messageType) throws IOException {
 		Stage stage = new Stage();
@@ -289,7 +290,7 @@ public class Popup {
 				messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
 				messageIcon.setIconLiteral("ci-information-square");
 			}
-			case INVALID -> {
+			case INVALID, WARN -> {
 				messageIcon.setStyle("-fx-icon-color: -color-warning-emphasis;");
 				messageIcon.setIconLiteral("ci-warning-alt");
 			}
@@ -702,7 +703,7 @@ public class Popup {
 
 		ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
 			double stageHeight = newValue.doubleValue();
-			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - newValue.doubleValue() / 2);
+			childStage.setY(parentStage.getY() + parentStage.getHeight() / 2 - stageHeight / 2);
 		};
 
 		childStage.widthProperty().addListener(widthListener);

@@ -1,14 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataRepository;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import jakarta.xml.bind.JAXBException;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -17,31 +14,76 @@ import java.io.IOException;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public record UserDataService(UserDataRepository userDataFileRepository) {
-
-    public Result<UserConfiguration> getUserData() {
-        return userDataFileRepository.loadUserData();
+public record UserDataService(UserDataRepository userDataRepository) {
+    public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
+        return userDataRepository.saveCurrentData(userConfiguration, modListProfile, saveProfile);
     }
 
-    public Result<Void> saveUserData(UserConfiguration userConfiguration) throws IOException {
-        Result<Void> result = new Result<>();
-        if (userDataFileRepository().saveUserData(userConfiguration)) {
-            result.addMessage("Successfully saved user data.", ResultType.SUCCESS);
-        } else {
-            result.addMessage("Failed to save user data.", ResultType.FAILED);
-        }
-        return result;
+    public Result<Void> initializeData() {
+        return userDataRepository.initializeData();
     }
 
-    public Result<Void> exportModlist(ModListProfile modListProfile, File saveLocation) {
-        return userDataFileRepository.exportModlist(modListProfile, saveLocation);
+    public Result<UserConfiguration> loadStartupData() {
+        return userDataRepository.loadStartupData();
     }
 
-    public Result<ModListProfile> importModlist(File saveLocation) {
-        return userDataFileRepository.importModlist(saveLocation);
+    public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration) {
+        return userDataRepository.saveUserConfiguration(userConfiguration);
     }
 
-    public Result<Void> resetUserConfig() {
-        return userDataFileRepository.resetUserConfiguration();
+    public Result<ModListProfile> loadFirstModListProfile() {
+        return userDataRepository.loadFirstModListProfile();
+    }
+
+    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
+        return userDataRepository.loadModListProfileById(modListProfileId);
+    }
+
+    public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
+        return userDataRepository.saveModListProfileDetails(modListProfileId, modListProfileName, spaceEngineersVersion);
+    }
+
+    public Result<Void> saveModListProfile(ModListProfile modListProfile) {
+        return userDataRepository.saveModListProfile(modListProfile);
+    }
+
+    public Result<Void> deleteModListProfile(UUID modListProfileId) {
+        return userDataRepository.deleteModListProfile(modListProfileId);
+    }
+
+    public Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList) {
+        return userDataRepository.updateModListProfileModList(modListProfileId, modList);
+    }
+
+    public Result<Void> updateModListActiveMods(UUID modListProfileId, List<Mod> modList) {
+        return userDataRepository.updateModListActiveMods(modListProfileId, modList);
+    }
+
+    public Result<Void> updateModListLoadPriority(UUID modListProfileId, List<Mod> modList) {
+        return userDataRepository.updateModListLoadPriority(modListProfileId, modList);
+    }
+
+    public Result<Void> saveSaveProfile(SaveProfile saveProfile) {
+        return userDataRepository.saveSaveProfile(saveProfile);
+    }
+
+    public Result<Void> resetData() {
+        return userDataRepository.resetData();
+    }
+
+    public Result<Void> deleteSaveProfile(SaveProfile saveProfile) {
+        return userDataRepository.deleteSaveProfile(saveProfile);
+    }
+
+    public Result<Void> updateModInformation(List<Mod> modList) {
+        return userDataRepository.updateModInformation(modList);
+    }
+
+    public Result<Void> exportModlistProfile(ModListProfile modListProfile, File saveLocation) {
+        return userDataRepository.exportModListProfile(modListProfile, saveLocation);
+    }
+
+    public Result<ModListProfile> importModlistProfile(File saveLocation) {
+        return userDataRepository.importModListProfile(saveLocation);
     }
 }

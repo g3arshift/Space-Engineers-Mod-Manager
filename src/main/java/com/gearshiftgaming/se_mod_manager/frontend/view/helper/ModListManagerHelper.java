@@ -1,6 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import javafx.scene.control.TableColumn;
@@ -28,11 +31,11 @@ public class ModListManagerHelper {
         //If we are ascending or not sorted then set the load priority equal to the spot in the list, minus one.
         //If we are descending then set the load priority to its inverse position.
         if (modTable.getSortOrder().isEmpty() || modTable.getSortOrder().getFirst().getSortType().equals(TableColumn.SortType.ASCENDING)) {
-            for (int i = 0; i < uiService.getCurrentModListProfileProfile().getModList().size(); i++) {
+            for (int i = 0; i < uiService.getCurrentModListProfile().getModList().size(); i++) {
                 uiService.getCurrentModList().get(i).setLoadPriority(i + 1);
             }
         } else {
-            for (int i = 0; i < uiService.getCurrentModListProfileProfile().getModList().size(); i++) {
+            for (int i = 0; i < uiService.getCurrentModListProfile().getModList().size(); i++) {
                 uiService.getCurrentModList().get(i).setLoadPriority(getIntendedLoadPriority(modTable, i, uiService));
             }
         }
@@ -134,7 +137,7 @@ public class ModListManagerHelper {
 
         File savePath = exportChooser.showSaveDialog(STAGE);
         if (savePath != null) {
-            Result<Void> exportModlistResult = UI_SERVICE.exportModlist(UI_SERVICE.getCurrentModListProfileProfile(), savePath);
+            Result<Void> exportModlistResult = UI_SERVICE.exportModListProfile(UI_SERVICE.getCurrentModListProfile(), savePath);
             if (!exportModlistResult.isSuccess()) UI_SERVICE.log(exportModlistResult);
             Popup.displaySimpleAlert(exportModlistResult, STAGE);
         }

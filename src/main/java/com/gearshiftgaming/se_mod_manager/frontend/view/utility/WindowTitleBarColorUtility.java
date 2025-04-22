@@ -5,7 +5,6 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import javafx.application.Application;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.util.Locale;
@@ -15,9 +14,8 @@ import java.util.Locale;
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
- * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.w
  */
-@Slf4j
 public class WindowTitleBarColorUtility {
 
 	/**

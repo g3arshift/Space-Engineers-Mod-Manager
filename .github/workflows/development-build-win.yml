@@ -49,7 +49,7 @@ jobs:
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
-        run: ./gradlew makeFatJar
+        run: ./gradlew shadowJar
 
       - name: Remove unneeded browser binaries
         run: ./gradlew removeForeignOsBrowsers

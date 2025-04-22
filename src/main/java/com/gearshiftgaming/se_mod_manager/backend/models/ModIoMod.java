@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalTime;
 import java.time.MonthDay;
 import java.time.Year;
+import java.util.List;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -39,6 +40,13 @@ public class ModIoMod extends Mod {
         this.lastUpdatedYear = mod.getLastUpdatedYear();
         this.lastUpdatedMonthDay = mod.getLastUpdatedMonthDay();
         this.lastUpdatedHour = mod.getLastUpdatedHour();
+    }
+    
+    public ModIoMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, Year lastUpdatedYear, MonthDay lastUpdatedMonthDay, LocalTime lastUpdatedHour) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description);
+        this.lastUpdatedYear = lastUpdatedYear;
+        this.lastUpdatedMonthDay = lastUpdatedMonthDay;
+        this.lastUpdatedHour = lastUpdatedHour;
     }
 
     @XmlJavaTypeAdapter(value = YearAdapter.class)

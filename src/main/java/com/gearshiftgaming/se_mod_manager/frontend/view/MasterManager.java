@@ -28,10 +28,10 @@ import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.*;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -43,6 +43,7 @@ import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
@@ -57,8 +58,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -240,7 +241,7 @@ public class MasterManager {
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
-    private ComboBox<ModListProfile> modProfileDropdown;
+    private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
@@ -272,7 +273,7 @@ public class MasterManager {
     }
 
     public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-                         ComboBox<ModListProfile> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+                         ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
 
@@ -839,10 +840,9 @@ public class MasterManager {
         File savePath = importChooser.showOpenDialog(STAGE);
 
         if (savePath != null) {
-            Result<ModListProfile> modlistProfileResult = UI_SERVICE.importModlist(savePath);
+            Result<Void> modlistProfileResult = UI_SERVICE.importModlistProfile(savePath);
             if (modlistProfileResult.isSuccess()) {
-                modProfileDropdown.getSelectionModel().select(modlistProfileResult.getPayload());
-                UI_SERVICE.setLastActiveModlistProfile(modlistProfileResult.getPayload().getID());
+                modProfileDropdown.getSelectionModel().selectLast();
             }
             Popup.displaySimpleAlert(modlistProfileResult, STAGE);
         }
@@ -876,7 +876,12 @@ public class MasterManager {
             Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
 
             UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
-            UI_SERVICE.saveUserData();
+
+            Result<Void> saveConfigResult = UI_SERVICE.saveUserConfiguration();
+            if (!saveConfigResult.isSuccess()) {
+                UI_SERVICE.log(saveConfigResult);
+                Popup.displaySimpleAlert(saveConfigResult);
+            }
             runTutorialCleanup();
         }
     }
@@ -907,7 +912,7 @@ public class MasterManager {
         else
             UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
 
-        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfileProfile());
+        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
     }
 
     @FXML
@@ -1058,8 +1063,10 @@ public class MasterManager {
 				but for whatever reason the changes aren't propagating without this.
 			*/
                 //TODO: Look into why the changes don't propagate without setting it here. Indicative of a deeper issue or misunderstanding.
-                UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
-                UI_SERVICE.saveUserData();
+                //TODO: NEw memory model might fix. check.
+                UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
+
+                UI_SERVICE.updateModListLoadPriority();
             }
 
             dragEvent.consume();
@@ -1276,7 +1283,7 @@ public class MasterManager {
      * @param modList The list of mods to import
      */
     public @NotNull Thread importModsFromList(List<Mod> modList) {
-        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModlist(modList);
+        final Task<List<Result<Mod>>> TASK = UI_SERVICE.importModsFromList(modList);
 
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
@@ -1297,37 +1304,43 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
-            UI_SERVICE.getCurrentModListProfileProfile().setModList(UI_SERVICE.getCurrentModList());
-            UI_SERVICE.saveUserData();
-
-            //Reset our UI settings for the mod progress
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> {
-                disableUserInputElements(false);
-                resetModImportProgressUi();
-                Platform.runLater(() -> {
-                    if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
-                        List<String> tutorialMessages = new ArrayList<>();
-                        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
-                        tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
-                                "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
-                        tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
-                                "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
-                        Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
-                        TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
-                    }
-                });
-            });
-
-            fadeTransition.play();
+            ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
+            cleanupModImportUi();
+            //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping. So we give it a hint to collect garbage.
+            //It really, truly is, not cleaning up when it should at this point. Trust me.
+            //We've just finished scraping, the UI isn't doing anything other than having just finished a transition, and there's really nothing happening. It's a good time.
+            System.gc();
         }));
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
         thread.setDaemon(true);
         return thread;
+    }
+
+    private void cleanupModImportUi() {
+        //Reset our UI settings for the mod progress
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
+        fadeTransition.setFromValue(1d);
+        fadeTransition.setToValue(0d);
+
+        fadeTransition.setOnFinished(actionEvent -> {
+            disableUserInputElements(false);
+            resetModImportProgressUi();
+            Platform.runLater(() -> {
+                if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                    List<String> tutorialMessages = new ArrayList<>();
+                    TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
+                    tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
+                            "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
+                    tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
+                            "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
+                    Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Applying the Mod List");
+                    TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), applyModlist);
+                }
+            });
+        });
+
+        fadeTransition.play();
     }
 
     //TODO: These function names suck. Make them something like "show{name of what the UI is. Like "steam collection check panel.}.

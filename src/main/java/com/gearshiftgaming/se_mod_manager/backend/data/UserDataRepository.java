@@ -1,28 +1,54 @@
 package com.gearshiftgaming.se_mod_manager.backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
-import jakarta.xml.bind.JAXBException;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public interface UserDataRepository {
-    Result<UserConfiguration> loadUserData();
+    Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile);
 
-    boolean saveUserData(UserConfiguration userConfiguration);
+    Result<Void> initializeData();
 
-    Result<Void> exportModlist(ModListProfile modListProfile, File modlistLocation);
+    Result<UserConfiguration> loadStartupData();
 
-    Result<ModListProfile> importModlist(File modlistLocation);
+    Result<Void> saveUserConfiguration(UserConfiguration userConfiguration);
 
-    Result<Void> resetUserConfiguration();
+    Result<ModListProfile> loadFirstModListProfile();
+
+    Result<ModListProfile> loadModListProfileByName(String profileName);
+
+    Result<ModListProfile> loadModListProfileById(UUID modListProfileId);
+
+    Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion);
+
+    Result<Void> saveModListProfile(ModListProfile modListProfile);
+
+    Result<Void> deleteModListProfile(UUID modListProfileId);
+
+    Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList);
+
+    Result<Void> updateModListActiveMods(UUID modListProfileId, List<Mod> modList);
+
+    Result<Void> updateModListLoadPriority(UUID modListProfileId, List<Mod> modList);
+
+    Result<Void> saveSaveProfile(SaveProfile saveProfile);
+
+    Result<Void> deleteSaveProfile(SaveProfile saveProfile);
+
+    Result<Void> updateModInformation(List<Mod> modList);
+
+    Result<Void> exportModListProfile(ModListProfile modListProfile, File modlistLocation);
+
+    Result<ModListProfile> importModListProfile(File modlistLocation);
+
+    Result<Void> resetData();
 }
