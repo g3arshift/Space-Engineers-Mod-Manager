@@ -6,6 +6,7 @@ on:
     branches:
       - 'development/**'
       - 'gh-actions-testing'
+      - 'sqlite-testing'
 
 permissions:
   contents: read
