@@ -208,7 +208,10 @@ public class ModInfoService {
         Document modPage;
         //Check to make sure the connection works first.
         try {
-            modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
+            // Needs a fix for mod.io too.
+            modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId)
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .get();
         } catch (IOException e) {
             modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
             modScrapeResult.addMessage("Failed to load mod page: " + STEAM_WORKSHOP_URL + modId, ResultType.FAILED);
@@ -314,7 +317,9 @@ public class ModInfoService {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
         try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
-            Page webPage = browser.newContext().newPage();
+            Page webPage = browser.newContext(new Browser.NewContextOptions()
+                    .setLocale("en-US")
+                    .setExtraHTTPHeaders(Map.of("Accept-Language", "en-US,en;q=0.9"))).newPage();
             String pageSource = fetchModIoPageContent(webPage, modId, modScrapeResult);
 
             if (!pageSource.isEmpty()) {

@@ -37,6 +37,7 @@ import java.time.MonthDay;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -161,7 +162,7 @@ public class UiService {
         USER_LOG.add(logMessage);
 
         //There's no observable queue in JavaFX so we're basically mimicking that here.
-        if(USER_LOG.size() > USER_LOG_MAX_SIZE){
+        if (USER_LOG.size() > USER_LOG_MAX_SIZE) {
             USER_LOG.removeFirst();
         }
     }
@@ -383,7 +384,12 @@ public class UiService {
                         .parseCaseInsensitive()
                         .appendPattern(MOD_DATE_FORMAT)
                         .toFormatter();
-                ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
+                try {
+                    ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
+                } catch (DateTimeParseException e) {
+                    modInfoResult.addMessage(e.toString(), ResultType.FAILED);
+                    modInfoResult.addMessage("Failed to parse last updated datetime for mod.", ResultType.FAILED);
+                }
             } else {
                 ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
 
@@ -399,7 +405,8 @@ public class UiService {
             if (!duplicateModMessage.isBlank()) {
                 modInfoResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
             } else {
-                modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
+                if (modInfoResult.isSuccess())
+                    modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
             }
         } else {
             modInfoResult.addAllMessages(modScrapeResult);
@@ -629,7 +636,7 @@ public class UiService {
                 currentModListProfile = importModListProfile;
                 saveModListProfile(importModListProfile);
                 importResult = setLastActiveModlistProfile(importModListProfile.getID());
-                if(importResult.isSuccess()) {
+                if (importResult.isSuccess()) {
                     logPrivate(importResult);
                     importResult.addMessage(String.format("Successfully imported mod list profile \"%s\".", importModListProfile.getProfileName()), ResultType.SUCCESS);
                 } else
