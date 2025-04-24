@@ -57,7 +57,7 @@ jobs:
           
           if($env:VERSION_INFORMATION -eq $latestTag) {
             echo "Version $env:VERSION_INFORMATION already released. Skipping build."
-            echo "SHOULD_SKIP=true" >> $GITHUB_ENV
+            echo "SHOULD_SKIP=true" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
             exit 0
           }
 
