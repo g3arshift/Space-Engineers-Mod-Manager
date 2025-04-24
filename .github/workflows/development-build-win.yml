@@ -61,32 +61,29 @@ jobs:
             exit 0
           }
 
-      - name: Test env
-        run: echo $SHOULD_SKIP
-
       - name: Build with Gradle
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: gradle build -x test
 
       - name: Change wrapper permissions
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: ./gradlew shadowJar
 
       - name: Remove unneeded browser binaries
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: ./gradlew removeForeignOsBrowsers
 
       - name: Build Release
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: |
           jpackage --input build\libs --name "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
       - name: Archive Release
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: "zip"
@@ -94,7 +91,7 @@ jobs:
           filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: Upload Release
-        if: ${{ steps.check-version.outputs.SHOULD_SKIP != 'true' }}
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
