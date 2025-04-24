@@ -33,9 +33,6 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Build with Gradle
-        run: gradle build -x test
-
       - name: Read app version
         uses: kurt-code/gha-properties@v0.0.1
         id: read-properties
@@ -46,20 +43,44 @@ jobs:
       - name: Save app version
         run: Add-Content -Path ${env:GITHUB_ENV} -Value "VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}"
 
+      - name: Check if version is already released
+        id: check-version
+        shell: pwsh
+        run : |
+          echo "Current Version: $env:VERSION_INFORMATION"
+          
+          $latestTag = git tag --sort=-creatordate | Select-Object -First 1
+          echo "Latest Tag: $latestTag"
+          
+          if($env:VERSION_INFORMATION -eq $latestTag) {
+            echo "Version $env:VERSION_INFORMATION already released. Skipping build."
+            echo "should_skip=true" >> $GITHUB_ENV
+            exit 0
+          }
+
+      - name: Build with Gradle
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        run: gradle build -x test
+
       - name: Change wrapper permissions
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
         run: ./gradlew shadowJar
 
       - name: Remove unneeded browser binaries
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
         run: ./gradlew removeForeignOsBrowsers
 
       - name: Build Release
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
         run: |
           jpackage --input build\libs --name "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
       - name: Archive Release
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: "zip"
@@ -67,6 +88,7 @@ jobs:
           filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: Upload Release
+        if: ${{ env.SHOULD_SKIP  != 'true'}}
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
