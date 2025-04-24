@@ -33,9 +33,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public UserDataSqliteRepository(String databasePath) throws IOException {
         this.databasePath = databasePath;
 
-        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         Path databaseLocation = Path.of(databasePath);
-        if (Files.notExists(databaseLocation)) {
+        if(Files.notExists(databaseLocation)) {
             log.info("Database not found. Creating new database...");
             if (Files.notExists(databaseLocation.getParent())) {
                 log.info("Database storage folder not found. Creating folder...");
@@ -46,12 +45,12 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             createDatabase();
             initializeData();
         } else {
-            //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
             SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
         }
     }
 
     private void createDatabase() {
+        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         log.info("Creating database schema...");
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
         SQLITE_DB.useTransaction(handle -> {
