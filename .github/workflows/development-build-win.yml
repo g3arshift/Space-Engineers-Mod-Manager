@@ -49,7 +49,7 @@ jobs:
         run : |
           echo "Current Version: $env:VERSION_INFORMATION"
           
-          $latestTag = git tag --sort=-creatordate | Select-Object -First 1
+          $latestTag = git describe --tags --abbrev=0
           echo "Latest Tag: $latestTag"
           
           if($env:VERSION_INFORMATION -eq $latestTag) {
