@@ -62,28 +62,28 @@ jobs:
           }
 
       - name: Build with Gradle
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         run: gradle build -x test
 
       - name: Change wrapper permissions
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         run: ./gradlew shadowJar
 
       - name: Remove unneeded browser binaries
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         run: ./gradlew removeForeignOsBrowsers
 
       - name: Build Release
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         run: |
           jpackage --input build\libs --name "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
       - name: Archive Release
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: "zip"
@@ -91,7 +91,7 @@ jobs:
           filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: Upload Release
-        if: ${{ env.SHOULD_SKIP  != 'true'}}
+        if: ${{ steps.check-version.outputs.should_skip != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
