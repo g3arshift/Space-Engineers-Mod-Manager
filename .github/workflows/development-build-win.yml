@@ -63,7 +63,7 @@ jobs:
 
       - name: Build with Gradle
         if: ${{ env.SHOULD_SKIP != 'true' }}
-        run: gradle build -x test remoteTest
+        run: gradle build -x test
 
       - name: Change wrapper permissions
         if: ${{ env.SHOULD_SKIP != 'true' }}
@@ -72,6 +72,10 @@ jobs:
       - name: Make fat jar
         if: ${{ env.SHOULD_SKIP != 'true' }}
         run: ./gradlew shadowJar
+
+      - name: Run tests
+        if: ${{ env.SHOULD_SKIP != 'true' }}
+        run: ./gradlew remoteTest
 
       - name: Remove unneeded browser binaries
         if: ${{ env.SHOULD_SKIP != 'true' }}
