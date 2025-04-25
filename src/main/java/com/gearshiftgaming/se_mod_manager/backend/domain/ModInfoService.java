@@ -244,7 +244,7 @@ public class ModInfoService {
         }
 
         String modName = modPage.title().contains("Workshop::") ? modPage.title().split("Workshop::")[1] : modPage.title();
-        if (!pageContainsMod(ModType.STEAM, modPage)) {
+        if (pageDoesNotContainMod(ModType.STEAM, modPage)) {
             if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
                 modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
                         modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
@@ -387,7 +387,7 @@ public class ModInfoService {
 
     private void parseModIoModInfo(String pageSource, String modId, Result<String[]> modScrapeResult) {
         Document modPage = Jsoup.parse(pageSource);
-        if (!pageContainsMod(ModType.MOD_IO, modPage)) {
+        if (pageDoesNotContainMod(ModType.MOD_IO, modPage)) {
             String itemType = modPage.select(MOD_IO_MOD_TYPE_SELECTOR)
                     .stream()
                     .findFirst()
@@ -470,23 +470,23 @@ public class ModInfoService {
 
     //Check if the mod we're scraping is actually a workshop mod.
     //Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-    private boolean pageContainsMod(ModType modType, Document modPage) {
+    private boolean pageDoesNotContainMod(ModType modType, Document modPage) {
         if (modType == ModType.STEAM) {
             Elements typeElements = modPage.select(STEAM_MOD_TYPE_SELECTOR);
             if (!typeElements.isEmpty()) {
                 Node modTypeNode = typeElements.getFirst().childNodes().stream().findFirst().orElse(null);
-                return modTypeNode != null && modTypeNode.toString().equals("Mod");
+                return modTypeNode == null || !modTypeNode.toString().equals("Mod");
             } else {
-                return false;
+                return true;
             }
         } else {
             Element element = modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR);
             if (element != null) {
                 Node modTypeNode = element.childNodes().stream().findFirst().orElse(null);
                 //return element.childNodes().getFirst().toString().startsWith("Mod", 6);
-                return modTypeNode != null && modTypeNode.toString().contains("Mod");
+                return modTypeNode == null || !modTypeNode.toString().contains("Mod");
             } else {
-                return false;
+                return true;
             }
         }
     }

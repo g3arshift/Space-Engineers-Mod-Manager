@@ -361,11 +361,11 @@ public class UiService {
     }
 
     public Result<Mod> fillOutModInformation(Mod mod) throws IOException, InterruptedException {
-        Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
-        Result<Mod> modInfoResult = new Result<>();
+        Result<String[]> scrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
+        Result<Mod> infoFilloutResult = new Result<>();
 
-        if (modScrapeResult.isSuccess()) {
-            String[] modInfo = modScrapeResult.getPayload();
+        if (scrapeResult.isSuccess()) {
+            String[] modInfo = scrapeResult.getPayload();
 
             mod.setFriendlyName(modInfo[0]);
 
@@ -374,49 +374,52 @@ public class UiService {
 
             mod.setDescription(modInfo[2]);
 
-            modInfoResult.setPayload(mod);
+            infoFilloutResult.setPayload(mod);
 
             String duplicateModMessage = ModListManagerHelper.findDuplicateMod(mod, currentModList);
 
             DateTimeFormatter formatter;
-            if (mod instanceof SteamMod) {
-                formatter = new DateTimeFormatterBuilder()
-                        .parseCaseInsensitive()
-                        .appendPattern(MOD_DATE_FORMAT)
-                        .toFormatter();
-                try {
+            try {
+                if (mod instanceof SteamMod) {
+                    formatter = new DateTimeFormatterBuilder()
+                            .parseCaseInsensitive()
+                            .appendPattern(MOD_DATE_FORMAT)
+                            .toFormatter();
                     ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
-                } catch (DateTimeParseException e) {
-                    modInfoResult.addMessage(e.toString(), ResultType.FAILED);
-                    modInfoResult.addMessage("Failed to parse last updated datetime for mod.", ResultType.FAILED);
-                }
-            } else {
-                ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
+                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for mod.", ResultType.SUCCESS);
+                } else {
+                    ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
 
-                if (modInfo[4] != null) {
-                    ((ModIoMod) mod).setLastUpdatedMonthDay(MonthDay.parse(modInfo[4]));
-                }
+                    if (modInfo[4] != null) {
+                        ((ModIoMod) mod).setLastUpdatedMonthDay(MonthDay.parse(modInfo[4]));
+                    }
 
-                if (modInfo[5] != null) {
-                    ((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
+                    if (modInfo[5] != null) {
+                        ((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
+                    }
+
+                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for mod.", ResultType.SUCCESS);
                 }
+            } catch (DateTimeParseException e) {
+                infoFilloutResult.addMessage(e.toString(), ResultType.FAILED);
+                infoFilloutResult.addMessage("Failed to parse last updated datetime for mod.", ResultType.FAILED);
             }
 
             if (!duplicateModMessage.isBlank()) {
-                modInfoResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
+                infoFilloutResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
             } else {
-                if (modInfoResult.isSuccess())
-                    modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
+                if (infoFilloutResult.isSuccess())
+                    infoFilloutResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
             }
         } else {
-            modInfoResult.addAllMessages(modScrapeResult);
+            infoFilloutResult.addAllMessages(scrapeResult);
         }
 
         Platform.runLater(() -> {
             modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
             modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
         });
-        return modInfoResult;
+        return infoFilloutResult;
     }
 
     public IntegerProperty getModImportProgressNumeratorProperty() {
