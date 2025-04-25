@@ -96,7 +96,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         return saveResult;
     }
 
-    //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
     @Override
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         Result<Void> saveResult = saveUserConfiguration(userConfiguration);

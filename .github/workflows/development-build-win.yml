@@ -63,7 +63,7 @@ jobs:
 
       - name: Build with Gradle
         if: ${{ env.SHOULD_SKIP != 'true' }}
-        run: gradle build -x test
+        run: gradle build -x test remoteTest
 
       - name: Change wrapper permissions
         if: ${{ env.SHOULD_SKIP != 'true' }}

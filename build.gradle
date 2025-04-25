@@ -158,3 +158,8 @@ tasks.register('printVersionInformation') {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
+
+tasks.register('remoteTest', Test) {
+    description = "Runs all tests except for ones that won't work on GH actions."
+    exclude("**/ModInfoServiceTest.class")
+}

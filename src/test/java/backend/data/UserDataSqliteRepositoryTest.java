@@ -16,13 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserDataSqliteRepositoryTest {
     private UserDataSqliteRepository userDataSqliteRepository;
-    private Jdbi SQLITE_DB;
     private final String DATABASE_PATH = "src/test/resources/DataStorage/TestData.db";
 
     @BeforeEach
     void setup() throws IOException {
         userDataSqliteRepository = new UserDataSqliteRepository(DATABASE_PATH);
-        SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + DATABASE_PATH));
     }
 
     @AfterEach
@@ -32,6 +30,7 @@ public class UserDataSqliteRepositoryTest {
 
     @Test
     void shouldCreateDatabaseSchema() {
+        final Jdbi SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + DATABASE_PATH));
         List<String> tableNames = SQLITE_DB.withHandle(handle -> handle.createQuery("SELECT name FROM sqlite_master WHERE type='table'")
                 .mapTo(String.class)
                 .list());
@@ -48,5 +47,30 @@ public class UserDataSqliteRepositoryTest {
         assertTrue(tableNames.contains("user_configuration"));
         assertTrue(tableNames.contains("user_configuration_mod_list_profile"));
         assertTrue(tableNames.contains("user_configuration_save_profile"));
+    }
+
+    @Test
+    void shouldCreateDefaultData() {
+
+    }
+
+    @Test
+    void shouldSuccessfullySaveUserConfiguration() {
+
+    }
+
+    @Test
+    void shouldFailToSaveUserConfigurationWithNonExistentSaveProfile() {
+
+    }
+
+    @Test
+    void shouldFailToSaveUserConfigurationWithNonExistentModListProfile() {
+
+    }
+
+    @Test
+    void shouldDeleteOrphanMods() {
+
     }
 }

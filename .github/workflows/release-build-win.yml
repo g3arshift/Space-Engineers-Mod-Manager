@@ -33,9 +33,6 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Build with Gradle
-        run: gradle build -x test
-
       - name: Read app version
         uses: kurt-code/gha-properties@v0.0.1
         id: read-properties
@@ -45,6 +42,24 @@ jobs:
           keys: 'version'
       - name: Save app version
         run: Add-Content -Path ${env:GITHUB_ENV} -Value "VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}"
+
+      - name: Check if version is already released
+        id: check-version
+        shell: pwsh
+        run: |
+          echo "Current Version: $env:VERSION_INFORMATION"
+                
+          $latestTag = git describe --tags --abbrev=0
+          echo "Latest Tag: $latestTag"
+                
+          if($env:VERSION_INFORMATION -eq $latestTag) {
+            echo "Version $env:VERSION_INFORMATION already released. Skipping build."
+            echo "SHOULD_SKIP=true" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+            exit 0
+          }
+
+      - name: Build with Gradle
+        run: gradle build -x test remoteTest
 
       - name: Change wrapper permissions
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
