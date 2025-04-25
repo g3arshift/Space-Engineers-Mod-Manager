@@ -55,6 +55,26 @@ public class UserDataSqliteRepositoryTest {
     }
 
     @Test
+    void shouldLoadStartupData() {
+
+    }
+
+    @Test
+    void shouldFailToLoadStartupDataWithNoUserConfiguration() {
+        //We can do this by using our SQLITE_DB object to delete specific information.
+    }
+
+    @Test
+    void shouldFailToLoadStartupDataWithNoModListProfiles() {
+        //We can do this by using our SQLITE_DB object to delete specific information.
+    }
+
+    @Test
+    void shouldFailToLoadStartupDataWithNoSaveProfiles() {
+        //We can do this by using our SQLITE_DB object to delete specific information.
+    }
+
+    @Test
     void shouldSuccessfullySaveUserConfiguration() {
 
     }
@@ -70,7 +90,126 @@ public class UserDataSqliteRepositoryTest {
     }
 
     @Test
+    void shouldUpdateUserConfiguration() {
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
+    void shouldSaveModListProfileDetails() {
+
+    }
+
+    @Test
+    void shouldDeleteRemovedModsFromModProfile() {
+
+    }
+
+    @Test
+    void shouldUpdateModListProfileModList() {
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
+    void shouldSaveNewModListProfile() {
+
+    }
+
+    @Test
+    void shouldUpdateExistingModListProfile() {
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
+    void shouldSaveNewSaveProfile() {
+
+    }
+
+    @Test
+    void shouldUpdateExistingSaveProfile() {
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
+    void shouldAddNewModInformation() {
+    }
+
+    @Test
+    void shouldUpdateExistingModInformation() {
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
     void shouldDeleteOrphanMods() {
+
+    }
+
+    @Test
+    void shouldExportModListProfile() {
+
+    }
+
+    @Test
+    void shouldImportModListProfile() {
+
+    }
+
+    @Test
+    void shouldResetDatabase() {
+
+    }
+
+    @Test
+    void shouldLoadModListProfileByName() {
+
+    }
+
+    @Test
+    void shouldNotLoadNonExistentModListProfileByName() {
+
+    }
+
+    @Test
+    void shouldLoadModListProfileById() {
+
+    }
+
+    @Test
+    void shouldNotLoadNonExistentModListProfileById() {
+
+    }
+
+    @Test
+    void shouldLoadFirstModListProfile() {
+        //We can do this by deleting all mod list profiles and then adding a new one.
+    }
+
+    @Test
+    void shouldDeleteModListProfile() {
+
+    }
+
+    @Test
+    void shouldNotDeleteNonExistentModListProfile() {
+
+    }
+
+    @Test
+    void shouldUpdateActiveModListProfileMods() {
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
+    void shouldUpdateLoadPriorityForModListProfile(){
+        //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
+    }
+
+    @Test
+    void shouldDeleteSaveProfile() {
+
+    }
+
+    @Test
+    void shouldNotDeleteNonExistentSaveProfile() {
 
     }
 }

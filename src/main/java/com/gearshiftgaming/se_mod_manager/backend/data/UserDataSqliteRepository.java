@@ -419,8 +419,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     /**
      * Saves the mod list profile details AND the mod list for it.
      *
-     * @param modListProfile
-     * @return
+     * @param modListProfile The mod list profile we are going to save all the information for.
+     * @return The status and message of the operation.
      */
     @Override
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
