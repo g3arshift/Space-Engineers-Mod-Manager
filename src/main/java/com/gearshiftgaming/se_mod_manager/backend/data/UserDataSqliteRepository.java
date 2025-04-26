@@ -12,16 +12,17 @@ import org.apache.logging.log4j.Logger;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.core.transaction.TransactionException;
+import org.sqlite.SQLiteException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
@@ -219,8 +220,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 }
             }
             saveResult.addMessage("Successfully saved user configuration.", ResultType.SUCCESS);
-        } catch (TransactionException e) {
-            saveResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            saveResult.addMessage(getStackTrace(e), ResultType.FAILED);
             saveResult.addMessage("Failed to save user configuration.", ResultType.FAILED);
         }
         return saveResult;
@@ -409,8 +410,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .bind("modListProfileId", modListProfileId)
                     .execute());
             modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\"", modListProfileName), ResultType.SUCCESS);
-        } catch (TransactionException e) {
-            modListProfileSaveResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListProfileSaveResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListProfileSaveResult;
         }
         return modListProfileSaveResult;
@@ -448,8 +449,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     modListProfileDeleteResult.addMessage(String.format("Successfully deleted mod list profile \"%s\".", modListProfileId), ResultType.SUCCESS);
                 }
             });
-        } catch (TransactionException e) {
-            modListProfileDeleteResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListProfileDeleteResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListProfileDeleteResult;
         }
         return modListProfileDeleteResult;
@@ -498,8 +499,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
                 modListUpdateResult.addMessage(String.format("Successfully updated %s mods in the modlist.", numSuccessfullyUpdatedModListRows), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modListUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListUpdateResult;
         }
         return modListUpdateResult;
@@ -515,8 +516,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         .execute();
                 modDeletionResult.addMessage(String.format("Successfully deleted %d mods from mod list profile \"%s\".", deletedMods, modListProfileId), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modDeletionResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modDeletionResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modDeletionResult;
         }
         return modDeletionResult;
@@ -550,8 +551,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
                 modListUpdateResult.addMessage(String.format("Successfully updated %s mods in the modlist.", numSuccessfullyUpdatedMods), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modListUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListUpdateResult;
         }
 
@@ -586,8 +587,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
                 modListUpdateResult.addMessage(String.format("Successfully updated %s mods in the modlist.", numSuccessfullyUpdatedMods), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modListUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListUpdateResult;
         }
         return modListUpdateResult;
@@ -634,8 +635,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         .execute());
                 saveSaveProfileResult.addMessage(String.format("Successfully updated save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            saveSaveProfileResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            saveSaveProfileResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return saveSaveProfileResult;
         }
         return saveSaveProfileResult;
@@ -800,7 +801,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 modUpdateResult.addMessage("Successfully updated mods.", ResultType.SUCCESS);
             });
         } catch (IOException e) {
-            modUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+            modUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modUpdateResult;
         }
         return modUpdateResult;
@@ -828,7 +829,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 createDatabase();
                 resetResult.addMessage("Successfully deleted user data.", ResultType.SUCCESS);
             } catch (IOException e) {
-                resetResult.addMessage(e.toString(), ResultType.FAILED);
+                resetResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 return resetResult;
             }
         }
