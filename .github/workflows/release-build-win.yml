@@ -49,7 +49,7 @@ jobs:
         run: |
           echo "Current Version: $env:VERSION_INFORMATION"
           
-          latestTag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          $latestTag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
           echo "Latest Tag: $latestTag"
                 
           if($env:VERSION_INFORMATION -eq $latestTag) {
