@@ -79,7 +79,7 @@ public class ModImportUtility {
         try {
             existingModlistResult = UI_SERVICE.getModlistFromSave(selectedSave);
         } catch (IOException e) {
-            existingModlistResult.addMessage(e.toString(), ResultType.FAILED);
+            existingModlistResult.addMessage(getStackTrace(e), ResultType.FAILED);
         }
 
         Popup.displaySimpleAlert(existingModlistResult, STAGE);

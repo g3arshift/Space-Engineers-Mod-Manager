@@ -46,7 +46,7 @@ public class SandboxService {
 		try {
 			sandboxConfigResult = getSandboxFromFile(sandboxConfigFile);
 		} catch (IOException e) {
-			sandboxConfigResult.addMessage(e.toString(), ResultType.FAILED);
+			sandboxConfigResult.addMessage(getStackTrace(e), ResultType.FAILED);
 		}
 
 		Result<List<Mod>> modListResult = new Result<>();

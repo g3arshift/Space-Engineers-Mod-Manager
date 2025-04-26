@@ -49,7 +49,7 @@ public abstract class ModListProfileJaxbSerializer {
             bw.write(sw.toString());
             result.addMessage("Successfully exported modlist.", ResultType.SUCCESS);
         } catch (JAXBException | IOException e) {
-            result.addMessage(e.toString(), ResultType.FAILED);
+            result.addMessage(getStackTrace(e)(), ResultType.FAILED);
         }
         return result;
     }

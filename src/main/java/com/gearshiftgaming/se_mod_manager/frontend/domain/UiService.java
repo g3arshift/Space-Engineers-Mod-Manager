@@ -401,7 +401,7 @@ public class UiService {
                     infoFilloutResult.addMessage("Successfully parsed last updated datetime for mod.", ResultType.SUCCESS);
                 }
             } catch (DateTimeParseException e) {
-                infoFilloutResult.addMessage(e.toString(), ResultType.FAILED);
+                infoFilloutResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 infoFilloutResult.addMessage("Failed to parse last updated datetime for mod.", ResultType.FAILED);
             }
 
@@ -479,7 +479,7 @@ public class UiService {
                                 } else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
                                     failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
                                 } else {
-                                    failedResult.addMessage(e.toString(), ResultType.FAILED);
+                                    failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                                 }
                                 return failedResult;
                             }
@@ -492,7 +492,7 @@ public class UiService {
                         }
                     } catch (RuntimeException e) {
                         Result<Mod> failedResult = new Result<>();
-                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                         modInfoFillOutResults.add(failedResult);
                     }
                 }
@@ -513,7 +513,7 @@ public class UiService {
                     if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
                         failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
                     } else {
-                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                     }
                     failedResults.add(failedResult);
                     return failedResults;
@@ -563,7 +563,7 @@ public class UiService {
                         }
                     } catch (RuntimeException e) {
                         Result<String> failedResult = new Result<>();
-                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                         modIdResults.add(failedResult);
                     }
                 }
@@ -608,7 +608,7 @@ public class UiService {
             if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
                 failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
             } else {
-                failedResult.addMessage(e.toString(), ResultType.FAILED);
+                failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
             }
             return failedResult;
         }

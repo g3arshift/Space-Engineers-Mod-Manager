@@ -213,7 +213,7 @@ public class ModInfoService {
                     .header("Accept-Language", "en-US,en;q=0.9")
                     .get();
         } catch (IOException e) {
-            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+            modScrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
             modScrapeResult.addMessage("Failed to load mod page: " + STEAM_WORKSHOP_URL + modId, ResultType.FAILED);
             return modScrapeResult;
         }
@@ -329,7 +329,7 @@ public class ModInfoService {
                 }
             }
         } catch (Exception e) {
-            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+            modScrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
             modScrapeResult.addMessage(String.format("Failed to scrape mod information from Mod.io for mod \"%s\". Please see the log for more information.", modId), ResultType.FAILED);
         }
         return modScrapeResult;
@@ -378,7 +378,7 @@ public class ModInfoService {
                 scrapeResult.addMessage("Connection timed out while waiting to open page for mod \"" + modId + "\".", ResultType.FAILED);
                 return "";
             } catch (Exception e) {
-                scrapeResult.addMessage(e.toString(), ResultType.FAILED);
+                scrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 return "";
             }
         }
