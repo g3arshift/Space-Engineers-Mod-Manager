@@ -2,6 +2,11 @@ package backend.data;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.SQLiteConnectionFactory;
 import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.ModListProfileMapper;
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.SaveProfileMapper;
+import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfigurationMapper;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +21,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserDataSqliteRepositoryTest {
     private UserDataSqliteRepository userDataSqliteRepository;
+    Jdbi sqliteDb;
     private final String DATABASE_PATH = "src/test/resources/DataStorage/TestData.db";
 
     @BeforeEach
     void setup() throws IOException {
+        sqliteDb = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + DATABASE_PATH));
         userDataSqliteRepository = new UserDataSqliteRepository(DATABASE_PATH);
     }
 
@@ -30,8 +37,7 @@ public class UserDataSqliteRepositoryTest {
 
     @Test
     void shouldCreateDatabaseSchema() {
-        final Jdbi SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + DATABASE_PATH));
-        List<String> tableNames = SQLITE_DB.withHandle(handle -> handle.createQuery("SELECT name FROM sqlite_master WHERE type='table'")
+        List<String> tableNames = sqliteDb.withHandle(handle -> handle.createQuery("SELECT name FROM sqlite_master WHERE type='table';")
                 .mapTo(String.class)
                 .list());
         tableNames.remove("sqlite_sequence");
@@ -51,27 +57,66 @@ public class UserDataSqliteRepositoryTest {
 
     @Test
     void shouldCreateDefaultData() {
+        UserConfiguration userConfiguration = sqliteDb.withHandle(handle -> handle.createQuery("SELECT * FROM user_configuration WHERE id = 1;")
+                .map(new UserConfigurationMapper())
+                .first());
+        assertEquals("PrimerLight", userConfiguration.getUserTheme());
+        assertNull(userConfiguration.getLastModifiedSaveProfileId());
+        assertNull(userConfiguration.getLastActiveSaveProfileId());
+        assertTrue(userConfiguration.isRunFirstTimeSetup());
+        Handle handle = sqliteDb.open();
+        List<ModListProfile> modListProfiles = handle.createQuery("SELECT * FROM mod_list_profile")
+                .map(new ModListProfileMapper())
+                .list();
+        handle.close();
+        assertEquals(1, modListProfiles.size());
+        assertEquals(userConfiguration.getLastActiveModProfileId(), modListProfiles.getFirst().getID());
+        assertEquals("Default", modListProfiles.getFirst().getProfileName());
 
+        handle = sqliteDb.open();
+        List<SaveProfile> saveProfiles = handle.createQuery("SELECT * FROM save_profile")
+                .map(new SaveProfileMapper())
+                .list();
+        handle.close();
+        assertEquals(1, saveProfiles.size());
+        assertEquals("None", saveProfiles.getFirst().getProfileName());
+        assertEquals("None", saveProfiles.getFirst().getSaveName());
+        assertFalse(saveProfiles.getFirst().isSaveExists());
+        assertEquals(SaveStatus.NONE, saveProfiles.getFirst().getLastSaveStatus());
     }
 
     @Test
     void shouldLoadStartupData() {
-
+        Result<UserConfiguration> result = userDataSqliteRepository.loadStartupData();
+        assertTrue(result.isSuccess());
+        assertNotNull(result.getPayload());
     }
 
     @Test
     void shouldFailToLoadStartupDataWithNoUserConfiguration() {
-        //We can do this by using our SQLITE_DB object to delete specific information.
+        sqliteDb.useHandle(handle -> handle.createUpdate("DELETE FROM user_configuration where id = 1;").execute());
+        Result<UserConfiguration> result = userDataSqliteRepository.loadStartupData();
+        assertFalse(result.isSuccess());
+        assertNull(result.getPayload());
+        assertEquals("Failed to load user configuration.", result.getCurrentMessage());
     }
 
     @Test
     void shouldFailToLoadStartupDataWithNoModListProfiles() {
-        //We can do this by using our SQLITE_DB object to delete specific information.
+        sqliteDb.useHandle(handle -> handle.createUpdate("DELETE FROM mod_list_profile;").execute());
+        Result<UserConfiguration> result = userDataSqliteRepository.loadStartupData();
+        assertFalse(result.isSuccess());
+        assertNull(result.getPayload());
+        assertEquals("Failed to load mod list profile ID's.", result.getCurrentMessage());
     }
 
     @Test
     void shouldFailToLoadStartupDataWithNoSaveProfiles() {
-        //We can do this by using our SQLITE_DB object to delete specific information.
+        sqliteDb.useHandle(handle -> handle.createUpdate("DELETE FROM save_profile;").execute());
+        Result<UserConfiguration> result = userDataSqliteRepository.loadStartupData();
+        assertFalse(result.isSuccess());
+        assertNull(result.getPayload());
+        assertEquals("Failed to load save profiles.", result.getCurrentMessage());
     }
 
     @Test
@@ -199,7 +244,7 @@ public class UserDataSqliteRepositoryTest {
     }
 
     @Test
-    void shouldUpdateLoadPriorityForModListProfile(){
+    void shouldUpdateLoadPriorityForModListProfile() {
         //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
     }
 

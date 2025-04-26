@@ -34,7 +34,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         this.databasePath = databasePath;
 
         Path databaseLocation = Path.of(databasePath);
-        if(Files.notExists(databaseLocation)) {
+        if (Files.notExists(databaseLocation)) {
             log.info("Database not found. Creating new database...");
             if (Files.notExists(databaseLocation.getParent())) {
                 log.info("Database storage folder not found. Creating folder...");
@@ -54,8 +54,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         log.info("Creating database schema...");
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
         SQLITE_DB.useTransaction(handle -> {
-            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")){
-                if(sqlStream == null) {
+            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")) {
+                if (sqlStream == null) {
                     log.error("Could not find database schema.");
                     throw new FileNotFoundException("Resource not found: " + "Database/semm_db_base.sql");
                 }
@@ -127,9 +127,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         Result<UserConfiguration> userProfileLoadResult = new Result<>();
         UserConfiguration userConfiguration;
         try (Handle handle = SQLITE_DB.open()) {
-            userConfiguration = handle.createQuery("SELECT * from user_configuration where id = 1;")
+            userConfiguration = handle.createQuery("SELECT * FROM user_configuration WHERE id = 1;")
                     .map(new UserConfigurationMapper())
-                    .first();
+                    .findFirst().orElse(null);
             userProfileLoadResult.addMessage("Loaded user configuration from database.", ResultType.SUCCESS);
         }
         if (userConfiguration == null) {
@@ -139,7 +139,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileIds = loadAllBasicModProfileInformation();
         if (modListProfileIds.isEmpty()) {
-            userProfileLoadResult.addMessage("Failed to load mod list profile IDS.", ResultType.FAILED);
+            userProfileLoadResult.addMessage("Failed to load mod list profile ID's.", ResultType.FAILED);
             return userProfileLoadResult;
         }
         userProfileLoadResult.addMessage("Loaded mod list profile ID's.", ResultType.SUCCESS);
