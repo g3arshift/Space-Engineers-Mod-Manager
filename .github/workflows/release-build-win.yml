@@ -46,6 +46,8 @@ jobs:
       - name: Check if version is already released
         id: check-version
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Current Version: $env:VERSION_INFORMATION"
           
