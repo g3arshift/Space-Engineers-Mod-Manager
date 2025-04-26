@@ -10,6 +10,8 @@ import jakarta.xml.bind.Unmarshaller;
 
 import java.io.*;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 /**
  * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
@@ -49,7 +51,7 @@ public abstract class ModListProfileJaxbSerializer {
             bw.write(sw.toString());
             result.addMessage("Successfully exported modlist.", ResultType.SUCCESS);
         } catch (JAXBException | IOException e) {
-            result.addMessage(getStackTrace(e)(), ResultType.FAILED);
+            result.addMessage(getStackTrace(e), ResultType.FAILED);
         }
         return result;
     }

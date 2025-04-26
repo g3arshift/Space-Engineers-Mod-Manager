@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.

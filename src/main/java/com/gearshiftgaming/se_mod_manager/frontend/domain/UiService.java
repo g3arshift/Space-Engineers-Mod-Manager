@@ -44,6 +44,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
  * It holds all the relevant variables that are actual logic, such as the observable lists for save and mod profiles, as well as the current profiles.

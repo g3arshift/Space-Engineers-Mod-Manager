@@ -24,6 +24,8 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 /**
  * This is the class containing all the logic responsible for retrieving mod information for mods and a modlist.
  * In particular, this class scrapes information when adding or updating mods.
