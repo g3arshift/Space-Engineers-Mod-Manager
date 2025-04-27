@@ -14,7 +14,6 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.core.transaction.TransactionException;
-import org.sqlite.SQLiteException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -285,7 +284,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     private void loadModList(ModListProfile modListProfile, Result<ModListProfile> modListProfileResult) {
-        Result<List<Mod>> modListResult = loadModListForProfile(modListProfile.getID());
+        Result<List<Mod>> modListResult = loadModListForProfileId(modListProfile.getID());
         if (!modListResult.isSuccess()) {
             modListProfileResult.addAllMessages(modListResult);
         }
@@ -295,7 +294,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         modListProfileResult.addMessage(String.format("Successfully loaded mod profile \"%s\"", modListProfile.getProfileName()), ResultType.SUCCESS);
     }
 
-    private Result<List<Mod>> loadModListForProfile(UUID modListProfileId) {
+    private Result<List<Mod>> loadModListForProfileId(UUID modListProfileId) {
         Result<List<Mod>> modListLoadResult = new Result<>();
         try (Handle handle = SQLITE_DB.open()) {
 
@@ -405,7 +404,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 values (1, :modListProfileId);""")
                     .bind("modListProfileId", modListProfileId)
                     .execute());
-            modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\"", modListProfileName), ResultType.SUCCESS);
+            modListProfileSaveResult.addMessage(String.format("Successfully saved details for mod list profile \"%s\".", modListProfileName), ResultType.SUCCESS);
         } catch (TransactionException | UnableToExecuteStatementException e) {
             modListProfileSaveResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListProfileSaveResult;
@@ -428,6 +427,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
 
+        modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\".", modListProfile.getProfileName()), ResultType.SUCCESS);
         return modListProfileSaveResult;
     }
 
@@ -639,15 +639,17 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     @Override
-    public Result<Void> deleteSaveProfile(SaveProfile saveProfileId) {
+    public Result<Void> deleteSaveProfile(SaveProfile saveProfile) {
         //Delete the removed save profiles
         Result<Void> saveResult = new Result<>();
         SQLITE_DB.useTransaction(handle -> {
-            int countSaveProfilesDeleted = handle.execute("DELETE FROM save_profile WHERE save_profile_id NOT IN :id", saveProfileId.getID());
+            int countSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id = :id")
+                    .bind("id", saveProfile.getID())
+                    .execute();
             if (countSaveProfilesDeleted != 1) {
-                saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfileId.getProfileName()), ResultType.FAILED);
+                saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfile.getProfileName()), ResultType.FAILED);
             } else
-                saveResult.addMessage(String.format("\"%s\" successfully deleted.", saveProfileId.getProfileName()), ResultType.SUCCESS);
+                saveResult.addMessage(String.format("\"%s\" successfully deleted.", saveProfile.getProfileName()), ResultType.SUCCESS);
         });
         return saveResult;
     }
