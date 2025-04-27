@@ -228,6 +228,25 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     @Override
+    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
+        Result<ModListProfile> modListProfileResult = new Result<>();
+        Optional<ModListProfile> foundModListProfile;
+        try (Handle handle = SQLITE_DB.open()) {
+            foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE mod_list_profile_id = :profileId")
+                    .bind("profileId", modListProfileId)
+                    .map(new ModListProfileMapper())
+                    .findOne();
+        }
+        foundModListProfile.ifPresentOrElse(modListProfile -> {
+            modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+            loadModList(modListProfile, modListProfileResult);
+            modListProfileResult.setPayload(modListProfile);
+        }, () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", modListProfileId), ResultType.FAILED));
+
+        return modListProfileResult;
+    }
+
+    @Override
     public Result<ModListProfile> loadModListProfileByName(String profileName) {
         //Get our basic mod list profile information
         Result<ModListProfile> modListProfileResult = new Result<>();
@@ -238,13 +257,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .map(new ModListProfileMapper())
                     .findOne();
         }
-        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
-                () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", profileName), ResultType.FAILED));
-        if (foundModListProfile.isEmpty()) {
-            return modListProfileResult;
-        }
-
-        loadModList(foundModListProfile.get(), modListProfileResult);
+        foundModListProfile.ifPresentOrElse(modListProfile -> {
+            modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+            loadModList(modListProfile, modListProfileResult);
+            modListProfileResult.setPayload(modListProfile);
+        }, () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", profileName), ResultType.FAILED));
 
         return modListProfileResult;
     }
@@ -258,33 +275,12 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .map(new ModListProfileMapper())
                     .findFirst();
         }
-        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
-                () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
-        if (foundModListProfile.isEmpty()) {
-            return modListProfileResult;
-        }
-        loadModList(foundModListProfile.get(), modListProfileResult);
-        return modListProfileResult;
-    }
+        foundModListProfile.ifPresentOrElse(modListProfile -> {
+                    modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+                    loadModList(modListProfile, modListProfileResult);
+                    modListProfileResult.setPayload(modListProfile);
+                }, () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
 
-    @Override
-    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
-        Result<ModListProfile> modListProfileResult = new Result<>();
-        Optional<ModListProfile> foundModListProfile;
-        try (Handle handle = SQLITE_DB.open()) {
-            foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE mod_list_profile_id = :profileId")
-                    .bind("profileId", modListProfileId)
-                    .map(new ModListProfileMapper())
-                    .findOne();
-        }
-        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
-                () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", modListProfileId), ResultType.FAILED));
-        if (foundModListProfile.isEmpty()) {
-            return modListProfileResult;
-        }
-
-        loadModList(foundModListProfile.get(), modListProfileResult);
-        modListProfileResult.setPayload(foundModListProfile.get());
         return modListProfileResult;
     }
 
@@ -633,7 +629,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     VALUES (1, :saveProfileId);""")
                         .bind("saveProfileId", saveProfile.getID())
                         .execute());
-                saveSaveProfileResult.addMessage(String.format("Successfully updated save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
+                saveSaveProfileResult.addMessage(String.format("Successfully saved save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
             });
         } catch (TransactionException | UnableToExecuteStatementException e) {
             saveSaveProfileResult.addMessage(getStackTrace(e), ResultType.FAILED);
