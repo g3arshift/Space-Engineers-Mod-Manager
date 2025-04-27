@@ -57,11 +57,12 @@ public class SaveProfile {
         SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
     }
 
-    public SaveProfile(String profileName, String savePath, SpaceEngineersVersion spaceEngineersVersion) {
+    public SaveProfile(String profileName, String savePath, String saveName, SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
         this.profileName = profileName;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
+        this.saveName = saveName;
         saveExists = true;
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
