@@ -50,8 +50,7 @@ import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -114,9 +113,6 @@ public class MasterManager {
 
     @FXML
     private TableColumn<Mod, Integer> loadPriority;
-
-    @FXML
-    private TableColumn<Mod, String> modSource;
 
     @FXML
     private TableColumn<Mod, String> modCategory;
@@ -240,6 +236,10 @@ public class MasterManager {
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
+    private final Properties columnFlags = new Properties();
+
+    private File columnFlagsFile;
+
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
     private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
@@ -247,7 +247,7 @@ public class MasterManager {
 
     public MasterManager(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBar statusBar,
                          ModListManager modListManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
-                         GeneralFileInput generalFileInput) {
+                         GeneralFileInput generalFileInput) throws IOException {
         this.UI_SERVICE = uiService;
         this.STAGE = stage;
         this.USER_LOG = uiService.getUSER_LOG();
@@ -261,6 +261,13 @@ public class MasterManager {
         this.SAVE_MANAGER_VIEW = saveProfileManager;
 
         this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
+        columnFlagsFile = new File(properties.getProperty("semm.userData.trivialData.location"));
+
+        if(columnFlagsFile.exists()) {
+            try(FileInputStream in = new FileInputStream(columnFlagsFile)) {
+                columnFlags.load(in);
+            }
+        }
 
         SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
         SELECTIONS = new ArrayList<>();
@@ -432,8 +439,40 @@ public class MasterManager {
         headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 
         modTable.setFixedCellSize(modTableCellSize);
+        setupColumnToggleMenu();
     }
 
+    private void setupColumnToggleMenu() {
+        ContextMenu columnToggleMenu = new ContextMenu();
+        for (TableColumn<?, ?> column : modTable.getColumns()) {
+            if (!column.getText().equals("Mod Name") && !column.getText().equals("Priority")) {
+                CheckMenuItem menuItem = new CheckMenuItem(column.getText());
+                boolean isVisible = Boolean.parseBoolean(columnFlags.getProperty(column.getText(), "true"));
+                menuItem.setSelected(isVisible);
+                column.setVisible(isVisible);
+
+                menuItem.selectedProperty().addListener((observable, wasSelected, isNowSelected) -> {
+                    column.setVisible(isNowSelected);
+                    columnFlags.setProperty(column.getText(), Boolean.toString(isNowSelected));
+                    try {
+                        saveColumnFlags();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                columnToggleMenu.getItems().add(menuItem);
+            }
+        }
+        modTable.setOnContextMenuRequested(event -> columnToggleMenu.show(modTable, event.getScreenX(), event.getScreenY()));
+    }
+
+    private void saveColumnFlags() throws IOException {
+        try(FileOutputStream out = new FileOutputStream(columnFlagsFile)) {
+            columnFlags.store(out, "Mod table column visibility flags");
+        }
+    }
+
+    //TODO: Localize formatting.
     private @NotNull LocalDateTime getModIoLastUpdatedComparatorDate(@NotNull String dateString) {
         DateTimeFormatter formatter;
         return switch (dateString.length()) {
