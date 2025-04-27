@@ -150,6 +150,7 @@ tasks.register('generateVersionProperties') {
 }
 processResources.dependsOn generateVersionProperties
 compileJava.dependsOn generateVersionProperties
+test.dependsOn generateVersionProperties
 
 tasks.register('printVersionInformation') {
     println(version)
@@ -163,3 +164,5 @@ tasks.register('remoteTest', Test) {
     description = "Runs all tests except for ones that won't work on GH actions."
     exclude("**/ModInfoServiceTest.class")
 }
+
+remoteTest.dependsOn generateVersionProperties
