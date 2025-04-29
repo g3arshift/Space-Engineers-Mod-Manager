@@ -20,6 +20,8 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * This class is responsible for handling some preparatory and finalizing operations on importing mods into mod list profiles.
  */
 public class ModImportUtility {
 

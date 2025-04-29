@@ -6,6 +6,7 @@ import javafx.stage.Stage;
 import java.util.Objects;
 
 /**
+ * Applies window dressing icons to a given stage.
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
  * <p>
