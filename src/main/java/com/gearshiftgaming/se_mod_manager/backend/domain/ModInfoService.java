@@ -307,6 +307,18 @@ public class ModInfoService {
             lastUpdatedParts[0] += ", " + Year.now();
             lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
         }
+
+        //Normalizes our datetime input from international formatting to US.
+        if(Character.isDigit(lastUpdated.charAt(0))) {
+            String[] dateParts = lastUpdated.split(" ");
+            String day = dateParts[0];
+            String month = dateParts[1];
+            String year = dateParts[2];
+            String time = dateParts[4];
+
+            month = month.replace(",", "");
+            lastUpdated = String.format("%s %s, %s @ %s", month, day, year, time);
+        }
         modInfo[3] = lastUpdated;
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
