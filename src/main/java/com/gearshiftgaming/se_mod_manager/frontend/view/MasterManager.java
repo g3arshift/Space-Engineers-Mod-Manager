@@ -70,7 +70,6 @@ import java.util.stream.Collectors;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-//TODO: At some point a bunch of logic needs to be rewritten with guard clause format. Especially for the mod scraping.
 public class MasterManager {
     @FXML
     private ComboBox<String> modImportDropdown;
@@ -930,7 +929,8 @@ public class MasterManager {
         List<Mod> copiedModList = UI_SERVICE.getCurrentModList().stream()
                 .filter(Mod::isActive)
                 .sorted(Comparator.comparing(Mod::getLoadPriority))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                .reversed();
 
         if (copiedModList.isEmpty()) {
             int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
