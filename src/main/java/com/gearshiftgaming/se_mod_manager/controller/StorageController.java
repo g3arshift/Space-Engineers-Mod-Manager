@@ -97,13 +97,13 @@ public class StorageController {
 	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
         File sandboxConfigFile = new File(saveProfile.getSavePath());
         Result<String> modifiedSandboxConfigResult = SANDBOX_SERVICE.injectModsIntoSandboxConfig(sandboxConfigFile, modList);
-        if (modifiedSandboxConfigResult.isSuccess()) {
-            return SANDBOX_SERVICE.saveSandboxToFile(saveProfile.getSavePath(), modifiedSandboxConfigResult.getPayload());
-        } else {
+        if (!modifiedSandboxConfigResult.isSuccess()) {
             Result<Void> failedModification = new Result<>();
             failedModification.addMessage(modifiedSandboxConfigResult.getCurrentMessage(), ResultType.FAILED);
             return failedModification;
         }
+
+        return SANDBOX_SERVICE.saveSandboxConfigToFile(saveProfile.getSavePath(), modifiedSandboxConfigResult.getPayload());
     }
 
     //TODO: Space Engineers version checking. Right now "getSessionName" is setup for only SE1.

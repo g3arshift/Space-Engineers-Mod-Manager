@@ -85,7 +85,7 @@ public class SandboxService {
 		return modListResult;
 	}
 
-	public Result<Void> saveSandboxToFile(String savePath, String sandboxConfig) throws IOException {
+	public Result<Void> saveSandboxConfigToFile(String savePath, String sandboxConfig) throws IOException {
 		Result<Void> result = new Result<>();
 		if (!FilenameUtils.getExtension(savePath).equals("sbc")) {
 			result.addMessage("File extension ." + FilenameUtils.getExtension(savePath) + " not permitted. Changing to .sbc.", ResultType.SUCCESS);
@@ -161,7 +161,7 @@ public class SandboxService {
 		StringBuilder renamedSandboxConfig = new StringBuilder(sandbox);
 		renamedSandboxConfig.replace(sessionNameIndexPositions[0], sessionNameIndexPositions[1], saveProfile.getSaveName());
 
-		return saveSandboxToFile(saveProfile.getSavePath(), renamedSandboxConfig.toString());
+		return saveSandboxConfigToFile(saveProfile.getSavePath(), renamedSandboxConfig.toString());
 	}
 
 	public Result<Void> changeSandboxSessionName(String sandbox, SaveProfile saveProfile, int[] sessionNameIndexPositions) throws IOException {
@@ -170,7 +170,7 @@ public class SandboxService {
 
 		String savePath = saveProfile.getSavePath().substring(0, saveProfile.getSavePath().length() - 19) + "\\Sandbox.sbc";
 
-		return saveSandboxToFile(savePath, renamedSandboxConfig.toString());
+		return saveSandboxConfigToFile(savePath, renamedSandboxConfig.toString());
 	}
 
 	private void generateModifiedSandboxConfig(String[] sandboxContent, StringBuilder modifiedSandboxContent) {
