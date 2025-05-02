@@ -31,7 +31,6 @@ import org.apache.commons.lang3.tuple.MutableTriple;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -43,7 +42,7 @@ import java.util.regex.Pattern;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 //TODO: This needs refactored to share a common class with the save profile manager. They really share a LOT of stuff.
-public class ModListManager {
+public class ModListProfileManager {
     @FXML
     private ListView<MutableTriple<UUID, String, SpaceEngineersVersion>> profileList;
 
@@ -87,7 +86,7 @@ public class ModListManager {
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
-    public ModListManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
+    public ModListProfileManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
         this.UI_SERVICE = uiService;
         MOD_LIST_PROFILE_DETAILS = uiService.getMOD_LIST_PROFILE_DETAILS();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
@@ -98,24 +97,24 @@ public class ModListManager {
     }
 
 
-    public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
-        Scene scene = new Scene(root);
-        this.modTableContextBar = modTableContextBar;
+    public void initView(Parent root, double minWidth, double minHeight, ModTableContextBar modTableContextBar) {
         stage = new Stage();
+        this.modTableContextBar = modTableContextBar;
         stage.initModality(Modality.APPLICATION_MODAL);
 
         stage.setTitle("Mod List Manager");
         WindowDressingUtility.appendStageIcon(stage);
 
-        stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
-        stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
 
         profileList.setItems(MOD_LIST_PROFILE_DETAILS);
         profileList.setCellFactory(param -> new ModListManagerCell(UI_SERVICE));
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
+        Scene scene = new Scene(root);
         stage.setScene(scene);
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> closeWindow());
 
         UI_SERVICE.logPrivate("Successfully initialized mod profile manager.", MessageType.INFO);
     }
@@ -341,7 +340,7 @@ public class ModListManager {
     }
 
     @FXML
-    private void closeProfileWindow() {
+    private void closeWindow() {
         if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             stage.close();
             stage.setHeight(stage.getHeight() - 1);
@@ -355,10 +354,10 @@ public class ModListManager {
 
             //Reset the stage
             Parent root = stage.getScene().getRoot();
+            double minWidth = stage.getMinWidth();
+            double minHeight = stage.getMinHeight();
             stage.getScene().setRoot(new Group());
-            stage = new Stage();
-            WindowDressingUtility.appendStageIcon(stage);
-            stage.setScene(new Scene(root));
+            initView(root, minWidth, minHeight, modTableContextBar);
         }
     }
 

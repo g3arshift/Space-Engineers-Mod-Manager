@@ -143,7 +143,7 @@ public class ModTableContextBar {
 
     private final SaveProfileManager SAVE_PROFILE_MANAGER_VIEW;
 
-    private final ModListManager MOD_LIST_MANAGER_VIEW;
+    private final ModListProfileManager MOD_LIST_MANAGER_VIEW;
 
     private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
 
@@ -151,12 +151,12 @@ public class ModTableContextBar {
 
     private final Stage STAGE;
 
-    public ModTableContextBar(UiService uiService, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager, Stage stage) {
+    public ModTableContextBar(UiService uiService, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListProfileManager modListProfileManager, Stage stage) {
         this.UI_SERVICE = uiService;
         this.MASTER_MANAGER_VIEW = masterManager;
         this.STAGE = stage;
         this.SAVE_PROFILE_MANAGER_VIEW = saveProfileManager;
-        this.MOD_LIST_MANAGER_VIEW = modListManager;
+        this.MOD_LIST_MANAGER_VIEW = modListProfileManager;
     }
 
     public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {

@@ -14,6 +14,7 @@ import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -109,9 +110,8 @@ public class SaveProfileManager {
         TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
     }
 
-    public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
+    public void initView(Parent root, double minWidth, double minHeight, ModTableContextBar modTableContextBar) {
         this.modTableContextBar = modTableContextBar;
-        Scene scene = new Scene(root);
 
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -119,8 +119,8 @@ public class SaveProfileManager {
         stage.setTitle("Save Manager");
         WindowDressingUtility.appendStageIcon(stage);
 
-        stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
-        stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
 
         saveList.setItems(SAVE_PROFILES);
         saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE));
@@ -131,11 +131,17 @@ public class SaveProfileManager {
         modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
         modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
 
+        Scene scene = new Scene(root);
         stage.setScene(scene);
+        //We shouldn't be required to use this since the stage should be a modal, but it isn't working.
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE)
+                closeWindow();
+        });
 
         saveCopyMessage.setVisible(false);
 
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> closeWindow());
 
         UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
     }
@@ -477,7 +483,7 @@ public class SaveProfileManager {
     }
 
     @FXML
-    private void closeSaveWindow() {
+    private void closeWindow() {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             Platform.exitNestedEventLoop(stage, null);
             stage.close();
@@ -491,10 +497,10 @@ public class SaveProfileManager {
 
             //Reset the stage
             Parent root = stage.getScene().getRoot();
+            double minWidth = stage.getMinWidth();
+            double minHeight = stage.getMinHeight();
             stage.getScene().setRoot(new Group());
-            stage = new Stage();
-            WindowDressingUtility.appendStageIcon(stage);
-            stage.setScene(new Scene(root));
+            initView(root, minWidth, minHeight, modTableContextBar);
         }
     }
 
@@ -514,7 +520,7 @@ public class SaveProfileManager {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
-        if(Platform.isNestedLoopRunning()) {
+        if (Platform.isNestedLoopRunning()) {
             Platform.exitNestedEventLoop(stage, null);
         }
         Platform.enterNestedEventLoop(stage);

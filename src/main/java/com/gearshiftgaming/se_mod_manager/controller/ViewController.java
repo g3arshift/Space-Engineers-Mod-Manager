@@ -155,7 +155,7 @@ public class ViewController {
 
         //View for managing Mod Profiles
         final FXMLLoader MOD_LIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/mod-list-manager.fxml"));
-        final ModListManager MOD_LIST_MANAGER_VIEW = new ModListManager(uiService, MOD_PROFILE_INPUT_VIEW);
+        final ModListProfileManager MOD_LIST_MANAGER_VIEW = new ModListProfileManager(uiService, MOD_PROFILE_INPUT_VIEW);
         MOD_LIST_MANAGER_LOADER.setController(MOD_LIST_MANAGER_VIEW);
         final Parent MOD_LIST_MANAGER_ROOT = MOD_LIST_MANAGER_LOADER.load();
 
@@ -192,8 +192,8 @@ public class ViewController {
         final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
 
         //The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-        MOD_LIST_MANAGER_VIEW.initView(MOD_LIST_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
-        SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, PROPERTIES, MOD_TABLE_CONTEXT_BAR_VIEW);
+        MOD_LIST_MANAGER_VIEW.initView(MOD_LIST_MANAGER_ROOT, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), MOD_TABLE_CONTEXT_BAR_VIEW);
+        SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), MOD_TABLE_CONTEXT_BAR_VIEW);
 
         //View for the primary application window
         final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));

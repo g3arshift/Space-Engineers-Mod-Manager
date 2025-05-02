@@ -211,7 +211,7 @@ public class MasterManager {
 
     private TableHeaderRow headerRow;
 
-    private final ModListManager MOD_PROFILE_MANAGER_VIEW;
+    private final ModListProfileManager MOD_PROFILE_MANAGER_VIEW;
 
     private final SaveProfileManager SAVE_MANAGER_VIEW;
 
@@ -245,7 +245,7 @@ public class MasterManager {
     private TextField modTableSearchField;
 
     public MasterManager(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBar statusBar,
-                         ModListManager modListManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
+                         ModListProfileManager modListProfileManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
                          GeneralFileInput generalFileInput) throws IOException {
         this.UI_SERVICE = uiService;
         this.STAGE = stage;
@@ -256,7 +256,7 @@ public class MasterManager {
         this.MOD_FILE_SELECTION_VIEW = saveInput;
         this.GENERAL_FILE_SELECT_VIEW = generalFileInput;
 
-        this.MOD_PROFILE_MANAGER_VIEW = modListManager;
+        this.MOD_PROFILE_MANAGER_VIEW = modListProfileManager;
         this.SAVE_MANAGER_VIEW = saveProfileManager;
 
         this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");

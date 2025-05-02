@@ -122,7 +122,7 @@ public class UiService {
 
         KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
             switch (arrowKeyEvent.getCode()) {
-                case UP, DOWN, LEFT, RIGHT, TAB:
+                case UP, DOWN, LEFT, RIGHT, TAB, ESCAPE:
                     arrowKeyEvent.consume();
                     break;
             }
