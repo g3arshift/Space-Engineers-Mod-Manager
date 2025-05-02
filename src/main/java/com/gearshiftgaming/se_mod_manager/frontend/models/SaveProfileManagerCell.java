@@ -36,6 +36,9 @@ public class SaveProfileManagerCell extends SaveProfileCell {
 			if (!item.isSaveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
 				getPROFILE_NAME().setStrikethrough(true);
+			} else {
+				getPROFILE_NAME().setStyle("");
+				getPROFILE_NAME().setStrikethrough(false);
 			}
 
 			Tooltip.install(getREGION(), getSAVE_NAME());
