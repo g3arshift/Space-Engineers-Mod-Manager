@@ -237,7 +237,7 @@ public class MasterManager {
 
     private final Properties columnFlags = new Properties();
 
-    private File columnFlagsFile;
+    private final File columnFlagsFile;
 
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
     private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;

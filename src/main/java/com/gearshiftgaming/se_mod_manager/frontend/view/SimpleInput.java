@@ -71,7 +71,7 @@ public class SimpleInput {
         });
 
         stage.setResizable(false);
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> closeWindow());
     }
 
     @FXML
@@ -79,8 +79,7 @@ public class SimpleInput {
         if (input.getText().isEmpty() || input.getText().isBlank()) {
             Popup.displaySimpleAlert(emptyTextMessage, stage, MessageType.WARN);
         } else {
-            stage.close();
-            Platform.exitNestedEventLoop(stage, null);
+            closeWindow();
         }
     }
 
