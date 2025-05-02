@@ -402,14 +402,14 @@ public class SaveProfileManager {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
                 if (choice == 1) {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
-                    SAVE_PROFILES.remove(profileIndex);
-
                     Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
                     if (!deleteResult.isSuccess()) {
                         UI_SERVICE.log(deleteResult);
                         Popup.displaySimpleAlert(String.format("Failed to delete save profile \"%s\". See log for more details.", SAVE_PROFILES.get(profileIndex).getProfileName()), MessageType.ERROR);
                         return;
                     }
+
+                    SAVE_PROFILES.remove(profileIndex);
                     if (profileIndex > SAVE_PROFILES.size())
                         saveList.getSelectionModel().select(profileIndex - 1);
                     else
