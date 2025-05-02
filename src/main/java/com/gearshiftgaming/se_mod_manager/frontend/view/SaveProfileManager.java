@@ -493,6 +493,7 @@ public class SaveProfileManager {
             Parent root = stage.getScene().getRoot();
             stage.getScene().setRoot(new Group());
             stage = new Stage();
+            WindowDressingUtility.appendStageIcon(stage);
             stage.setScene(new Scene(root));
         }
     }
