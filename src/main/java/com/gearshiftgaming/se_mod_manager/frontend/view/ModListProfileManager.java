@@ -216,7 +216,7 @@ public class ModListProfileManager {
                         Popup.displaySimpleAlert("Failed to save new copy of profile, see log for more information.", MessageType.ERROR);
                         return;
                     }
-                    MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(originalProfileId, copyProfileName, originalProfileSpaceEngineersVersion));
+                    MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(copiedProfile.getID(), copyProfileName, originalProfileSpaceEngineersVersion));
 
                     Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
                 }
