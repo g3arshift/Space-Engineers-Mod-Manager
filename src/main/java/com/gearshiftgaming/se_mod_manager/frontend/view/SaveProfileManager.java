@@ -447,6 +447,8 @@ public class SaveProfileManager {
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (SAVE_PROFILES.size() == 1) {
                         //TODO: This is a terrible hack that does two database saves just to update a UI element and performs terribly. Fix me later.
+                        // We realistically should move the fields like the last active mod and save profile to the SEMM_settings.properties file.
+                        // OP #66
                         final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
                         SAVE_PROFILES.add(BAD_SAVE_PROFILE);
                         UI_SERVICE.saveSaveProfile(BAD_SAVE_PROFILE);

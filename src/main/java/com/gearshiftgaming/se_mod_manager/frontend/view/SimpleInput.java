@@ -74,6 +74,7 @@ public class SimpleInput {
         stage.setOnCloseRequest(windowEvent -> {
             stage.close();
             stage.setHeight(stage.getHeight() - 1);
+            System.out.println("Continue not close window, post height reduction. Size: " + stage.getHeight());
             Platform.exitNestedEventLoop(stage, null);
         });
     }
@@ -85,6 +86,7 @@ public class SimpleInput {
         } else {
             stage.close();
             stage.setHeight(stage.getHeight() - 1);
+            System.out.println("Continue not close window, post height reduction. Size: " + stage.getHeight());
             Platform.exitNestedEventLoop(stage, null);
         }
     }
@@ -94,6 +96,7 @@ public class SimpleInput {
         input.clear();
         stage.close();
         stage.setHeight(stage.getHeight() - 1);
+        System.out.println("Close window, post height reduction. Size: " + stage.getHeight());
         Platform.exitNestedEventLoop(stage, null);
     }
 
