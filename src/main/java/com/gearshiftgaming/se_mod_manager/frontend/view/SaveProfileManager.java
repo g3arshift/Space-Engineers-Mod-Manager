@@ -446,10 +446,15 @@ public class SaveProfileManager {
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (SAVE_PROFILES.size() == 1) {
-                        SAVE_PROFILES.add(new SaveProfile());
+                        //TODO: This is a terrible hack that does two database saves just to update a UI element and performs terribly. Fix me later.
+                        final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
+                        SAVE_PROFILES.add(BAD_SAVE_PROFILE);
+                        UI_SERVICE.saveSaveProfile(BAD_SAVE_PROFILE);
+
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         SAVE_PROFILES.removeLast();
+                        UI_SERVICE.deleteSaveProfile(BAD_SAVE_PROFILE);
                     } else {
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
