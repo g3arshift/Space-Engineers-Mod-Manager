@@ -224,38 +224,26 @@ public class SaveProfileManager {
                 profileNameAlreadyExists = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
                 if (profileNameAlreadyExists) {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-                } else if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
-                    addSaveProfileToListWithExistingModsPrompt(saveProfileResult, saveProfile, selectedSave);
-                } else {
-                    addSaveProfileToListWithoutMods(saveProfileResult, saveProfile);
-                }
+                } else
+                    addSaveProfileToList(saveProfileResult, saveProfile, selectedSave);
             }
         } while (profileNameAlreadyExists);
 
         return false;
     }
 
-    private void addSaveProfileToListWithExistingModsPrompt(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile, File selectedSave) {
+    private void addSaveProfileToList(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile, File selectedSave) {
         saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null)
+        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
+            UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.getFirst());
             SAVE_PROFILES.set(0, saveProfile);
-        else
+        } else
             SAVE_PROFILES.add(saveProfile);
-        displayAddExistingModsDialog(selectedSave);
-        finalizeSaveProfile(saveProfileResult, saveProfile);
-    }
 
-    private void addSaveProfileToListWithoutMods(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
-        saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null)
-            SAVE_PROFILES.set(0, saveProfile);
-        else
-            SAVE_PROFILES.add(saveProfile);
-        finalizeSaveProfile(saveProfileResult, saveProfile);
-        //TODO: Switch active profile to the new profile
-    }
+        //We don't want to display this dialog when we're in the first time setup/tutorial
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup())
+            displayAddExistingModsDialog(selectedSave);
 
-    private void finalizeSaveProfile(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
         saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
         UI_SERVICE.log(saveProfileResult);
 
@@ -264,12 +252,13 @@ public class SaveProfileManager {
         saveList.refresh();
         saveList.getSelectionModel().selectLast();
         Result<Void> saveResult = UI_SERVICE.saveSaveProfile(saveProfile);
-        setActive();
-        if(!saveResult.isSuccess()) {
+        if (!saveResult.isSuccess()) {
             UI_SERVICE.log(saveResult);
             Popup.displaySimpleAlert(saveResult);
+            return;
         }
-        //TODO: Switch active profile to the new profile
+
+        setActive();
     }
 
     //TODO: This is badly organized.
@@ -380,7 +369,7 @@ public class SaveProfileManager {
 
             UI_SERVICE.log(profileCopyResult);
             Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
-            if(!saveResult.isSuccess()) {
+            if (!saveResult.isSuccess()) {
                 UI_SERVICE.log(saveResult);
                 Popup.displaySimpleAlert(saveResult);
             }
@@ -410,7 +399,7 @@ public class SaveProfileManager {
                     SAVE_PROFILES.remove(profileIndex);
 
                     Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
-                    if(!deleteResult.isSuccess()) {
+                    if (!deleteResult.isSuccess()) {
                         UI_SERVICE.log(deleteResult);
                         Popup.displaySimpleAlert(String.format("Failed to delete save profile \"%s\". See log for more details.", SAVE_PROFILES.get(profileIndex).getProfileName()), MessageType.ERROR);
                         return;
@@ -467,7 +456,7 @@ public class SaveProfileManager {
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
                     Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileToModify);
-                    if(!saveResult.isSuccess()) {
+                    if (!saveResult.isSuccess()) {
                         UI_SERVICE.log(saveResult);
                         Popup.displaySimpleAlert(saveResult);
                     }
@@ -490,13 +479,13 @@ public class SaveProfileManager {
     @FXML
     private void closeSaveWindow() {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+            Platform.exitNestedEventLoop(stage, null);
             stage.close();
             stage.setHeight(stage.getHeight() - 1);
             saveList.getSelectionModel().clearSelection();
-            Platform.exitNestedEventLoop(stage, null);
         } else {
-            stage.close();
             Platform.exitNestedEventLoop(stage, null);
+            stage.close();
             stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
 
@@ -524,6 +513,9 @@ public class SaveProfileManager {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
+        if(Platform.isNestedLoopRunning()) {
+            Platform.exitNestedEventLoop(stage, null);
+        }
         Platform.enterNestedEventLoop(stage);
     }
 
