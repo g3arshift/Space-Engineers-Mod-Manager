@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,10 +35,10 @@ import static org.mockito.Mockito.*;
  * @author Gear Shift
  */
 
-//TODO: Make sure these are still valid
 public class SaveServiceTest {
 
 	//TODO: Write integration tests.
+	//TODO: Add a test for the failure states. We're missing a bunch of branch logic, especially for duplicate names.
 	//FIXME: Naming scheme for functions is bad.
 
 	@TempDir
@@ -73,7 +74,7 @@ public class SaveServiceTest {
 		badResult.addMessage("This is a bad result.", ResultType.FAILED);
 		when(sandboxService.getSandboxFromFile(any(File.class))).thenReturn(badResult);
 
-		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile);
+		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile, new ArrayList<>());
 		assertFalse(result.isSuccess());
 		assertEquals(ResultType.FAILED, result.getType());
 		assertEquals("This is a bad result.", result.getCurrentMessage());
@@ -86,7 +87,7 @@ public class SaveServiceTest {
 		goodResult.addMessage("This is a good result.", ResultType.SUCCESS);
 
 		when(sandboxService.getSandboxFromFile(any(File.class))).thenReturn(goodResult);
-		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile);
+		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile,  new ArrayList<>());
 
 		assertFalse(result.isSuccess());
 		assertEquals(ResultType.FAILED, result.getType());
@@ -102,7 +103,7 @@ public class SaveServiceTest {
 
 		when(sandboxService.getSandboxFromFile(any(File.class))).thenReturn(goodResult);
 
-		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile);
+		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile, new ArrayList<>());
 
 		assertFalse(result.isSuccess());
 		assertEquals(ResultType.FAILED, result.getType());
@@ -124,7 +125,7 @@ public class SaveServiceTest {
 		badResult.addMessage("This is a bad result.", ResultType.FAILED);
 		when(sandboxService.changeConfigSessionName(anyString(), any(SaveProfile.class), any(int[].class))).thenReturn(badResult);
 
-		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile);
+		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile, new ArrayList<>());
 
 		assertFalse(result.isSuccess());
 		assertEquals(ResultType.FAILED, result.getType());
@@ -158,7 +159,7 @@ public class SaveServiceTest {
 		badResult.addMessage("This is a bad result.", ResultType.FAILED);
 		when(sandboxService.changeSandboxSessionName(any(), any(SaveProfile.class), any(int[].class))).thenReturn(badResult);
 
-		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile);
+		Result<SaveProfile> result = saveService.copySaveFiles(saveProfile, new ArrayList<>());
 
 		assertFalse(result.isSuccess());
 		assertEquals(ResultType.FAILED, result.getType());
@@ -173,7 +174,7 @@ public class SaveServiceTest {
 	void shouldSuccessfullyCopyAndRenameCopiedSave() throws IOException {
 		SaveService realSaveService = new SaveService(new SaveFileRepository(), new SandboxService(new SandboxConfigFileRepository()));
 
-		Result<SaveProfile> result = realSaveService.copySaveFiles(saveProfile);
+		Result<SaveProfile> result = realSaveService.copySaveFiles(saveProfile, new ArrayList<>());
 		assertNotNull(result.getPayload());
 		SaveProfile finalSaveProfile = result.getPayload();
 

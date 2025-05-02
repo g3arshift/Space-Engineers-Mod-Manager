@@ -386,9 +386,9 @@ public class UiService {
                     formatter = new DateTimeFormatterBuilder()
                             .parseCaseInsensitive()
                             .appendPattern(MOD_DATE_FORMAT)
-                            .toFormatter();
+                            .toFormatter(Locale.ENGLISH);
                     ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
-                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for mod.", ResultType.SUCCESS);
+                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
                 } else {
                     ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
 
@@ -400,7 +400,7 @@ public class UiService {
                         ((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
                     }
 
-                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for mod.", ResultType.SUCCESS);
+                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
                 }
             } catch (DateTimeParseException e) {
                 infoFilloutResult.addMessage(getStackTrace(e), ResultType.FAILED);
