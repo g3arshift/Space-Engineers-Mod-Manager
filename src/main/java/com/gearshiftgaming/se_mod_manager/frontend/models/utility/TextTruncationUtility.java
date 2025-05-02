@@ -25,9 +25,7 @@ public class TextTruncationUtility {
 	}
 
 	public static String truncateWithEllipsis(String text, double maxWidth) {
-		Text tempText = new Text(text);
-
-		return getTruncatedText(text, maxWidth, tempText);
+		return getTruncatedText(text, maxWidth, new Text(text));
 	}
 
 	private static String getTruncatedText(String text, double maxWidth, Text tempText) {
