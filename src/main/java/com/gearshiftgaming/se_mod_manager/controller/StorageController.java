@@ -135,8 +135,8 @@ public class StorageController {
         return sandboxfileResult;
     }
 
-    public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile) throws IOException {
-        Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile);
+    public Result<SaveProfile> copySaveProfile(SaveProfile sourceSaveProfile, List<SaveProfile> saveProfileList) throws IOException {
+        Result<SaveProfile> copyResult = SAVE_SERVICE.copySaveFiles(sourceSaveProfile, saveProfileList);
         if (copyResult.isSuccess()) {
             copyResult.addMessage("Successfully copied save \"" + sourceSaveProfile.getProfileName() + "\".", ResultType.SUCCESS);
         }

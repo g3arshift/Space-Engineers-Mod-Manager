@@ -262,8 +262,8 @@ public class UiService {
         return STORAGE_CONTROLLER.applyModlist(modList, saveProfile);
     }
 
-    public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-        return STORAGE_CONTROLLER.copySaveProfile(saveProfile);
+    public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile, List<SaveProfile> saveProfileList) throws IOException {
+        return STORAGE_CONTROLLER.copySaveProfile(saveProfile, saveProfileList);
     }
 
     public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {

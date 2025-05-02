@@ -350,7 +350,7 @@ public class SaveProfileManager {
         final Task<Result<SaveProfile>> TASK = new Task<>() {
             @Override
             protected Result<SaveProfile> call() throws Exception {
-                return UI_SERVICE.copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+                return UI_SERVICE.copySaveProfile(saveList.getSelectionModel().getSelectedItem(), SAVE_PROFILES);
             }
         };
 
@@ -511,7 +511,7 @@ public class SaveProfileManager {
 
     private boolean isDuplicateProfileName(String profileName) {
         return SAVE_PROFILES.stream()
-                .anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equals(profileName.toLowerCase().trim()));
+                .anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equalsIgnoreCase(profileName.trim()));
     }
 
     public void show(Stage parentStage) {
