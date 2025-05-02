@@ -199,22 +199,25 @@ public class ModListManager {
                 }
 
                 if (!copyProfileName.isBlank()) {
-                    MutableTriple<UUID, String, SpaceEngineersVersion> copiedProfileDetails = profileList.getSelectionModel().getSelectedItem();
-                    Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(copiedProfileDetails.getLeft());
+                    MutableTriple<UUID, String, SpaceEngineersVersion> originalProfileDetails = profileList.getSelectionModel().getSelectedItem();
+                    UUID originalProfileId = originalProfileDetails.getLeft();
+                    SpaceEngineersVersion originalProfileSpaceEngineersVersion = originalProfileDetails.getRight();
+                    Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(originalProfileId);
                     if(!copyResult.isSuccess()) {
                         UI_SERVICE.log(copyResult);
-                        Popup.displaySimpleAlert("Failed to copy mod list, see log for more information.", MessageType.ERROR);
+                        Popup.displaySimpleAlert("Failed to copy mod list profile, see log for more information.", MessageType.ERROR);
                         return;
                     }
 
                     ModListProfile copiedProfile = new ModListProfile(copyResult.getPayload());
+                    copiedProfile.setProfileName(copyProfileName);
                     Result<Void> saveResult = UI_SERVICE.saveModListProfile(copiedProfile);
                     if(!saveResult.isSuccess()) {
                         UI_SERVICE.log(saveResult);
                         Popup.displaySimpleAlert("Failed to save new copy of profile, see log for more information.", MessageType.ERROR);
                         return;
                     }
-                    MOD_LIST_PROFILE_DETAILS.add(copiedProfileDetails);
+                    MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(originalProfileId, copyProfileName, originalProfileSpaceEngineersVersion));
 
                     Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
                 }
@@ -234,9 +237,6 @@ public class ModListManager {
                 if (choice == 1) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
 
-                    //TODO:
-                    // 1. Remove mod list profile from database
-                    // 2. if success, remove details from memory.
                     Result<Void> deleteResult = UI_SERVICE.deleteModListProfile(MOD_LIST_PROFILE_DETAILS.get(profileIndex).getLeft());
                     if(!deleteResult.isSuccess()) {
                         UI_SERVICE.log(deleteResult);
@@ -390,7 +390,7 @@ public class ModListManager {
 
     private boolean profileNameExists(String profileName) {
         return MOD_LIST_PROFILE_DETAILS.stream()
-                .anyMatch(details -> !details.getMiddle().equals(profileName));
+                .anyMatch(details -> details.getMiddle().equals(profileName));
     }
 
     public void show(Stage parentStage) {
@@ -399,6 +399,9 @@ public class ModListManager {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
+        if(Platform.isNestedLoopRunning()) {
+            Platform.exitNestedEventLoop(stage, null);
+        }
         Platform.enterNestedEventLoop(stage);
     }
 
