@@ -73,8 +73,6 @@ public class SimpleInput {
         stage.setResizable(false);
         stage.setOnCloseRequest(windowEvent -> {
             stage.close();
-            stage.setHeight(stage.getHeight() - 1);
-            System.out.println("Continue not close window, post height reduction. Size: " + stage.getHeight());
             Platform.exitNestedEventLoop(stage, null);
         });
     }
@@ -85,8 +83,6 @@ public class SimpleInput {
             Popup.displaySimpleAlert(emptyTextMessage, stage, MessageType.WARN);
         } else {
             stage.close();
-            stage.setHeight(stage.getHeight() - 1);
-            System.out.println("Continue not close window, post height reduction. Size: " + stage.getHeight());
             Platform.exitNestedEventLoop(stage, null);
         }
     }
@@ -95,8 +91,6 @@ public class SimpleInput {
     private void closeWindow() {
         input.clear();
         stage.close();
-        stage.setHeight(stage.getHeight() - 1);
-        System.out.println("Close window, post height reduction. Size: " + stage.getHeight());
         Platform.exitNestedEventLoop(stage, null);
     }
 

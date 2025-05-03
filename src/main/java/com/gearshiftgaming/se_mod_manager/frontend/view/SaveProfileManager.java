@@ -494,7 +494,6 @@ public class SaveProfileManager {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             Platform.exitNestedEventLoop(stage, null);
             stage.close();
-            stage.setHeight(stage.getHeight() - 1);
             saveList.getSelectionModel().clearSelection();
         } else {
             Platform.exitNestedEventLoop(stage, null);

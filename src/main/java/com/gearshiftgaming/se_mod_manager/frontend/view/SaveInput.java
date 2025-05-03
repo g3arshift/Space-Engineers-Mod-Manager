@@ -139,7 +139,6 @@ public class SaveInput {
 			Popup.displaySimpleAlert("You must select a save!", stage, MessageType.ERROR);
 		} else {
 			stage.close();
-			stage.setHeight(stage.getHeight() - 1);
 			saveName.setText(noSaveSelectedMessage);
 			Platform.exitNestedEventLoop(stage, null);
 		}
@@ -147,7 +146,6 @@ public class SaveInput {
 
 	private void cancelAddSave() {
 		stage.close();
-		stage.setHeight(stage.getHeight() - 1);
 		saveName.setText(noSaveSelectedMessage);
 		selectedSave = null;
 		Platform.exitNestedEventLoop(stage, null);

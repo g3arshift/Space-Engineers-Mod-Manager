@@ -343,7 +343,6 @@ public class ModListProfileManager {
     private void closeWindow() {
         if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             stage.close();
-            stage.setHeight(stage.getHeight() - 1);
             profileList.getSelectionModel().clearSelection();
             Platform.exitNestedEventLoop(stage, null);
         } else {

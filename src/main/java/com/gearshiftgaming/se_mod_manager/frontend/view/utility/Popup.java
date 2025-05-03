@@ -262,7 +262,6 @@ public class Popup {
 				childStage.sizeToScene();
 			} else {
 				childStage.close();
-				childStage.setHeight(childStage.getHeight() - 1);
 				Platform.exitNestedEventLoop(childStage, null);
 			}
 		});
@@ -431,21 +430,18 @@ public class Popup {
 		leftButton.setOnAction((ActionEvent event) -> {
 			choice.set(2);
 			childStage.close();
-			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
 		centerButton.setOnAction((ActionEvent event) -> {
 			choice.set(1);
 			childStage.close();
-			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
 		rightButton.setOnAction((ActionEvent event) -> {
 			choice.set(0);
 			childStage.close();
-			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
@@ -484,14 +480,12 @@ public class Popup {
 		noButton.setOnAction((ActionEvent event) -> {
 			choice.set(0);
 			childStage.close();
-			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
 		yesButton.setOnAction((ActionEvent event) -> {
 			choice.set(1);
 			childStage.close();
-			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
@@ -520,7 +514,6 @@ public class Popup {
 		quitButton.setText("OK");
 		quitButton.setOnAction((ActionEvent event) -> {
 			childStage.close();
-			childStage.setHeight(childStage.getHeight() - 1);
 			Platform.exitNestedEventLoop(childStage, null);
 		});
 
