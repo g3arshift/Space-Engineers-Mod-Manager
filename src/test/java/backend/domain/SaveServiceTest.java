@@ -178,7 +178,6 @@ public class SaveServiceTest {
 		List<SaveProfile> saveProfileList = new ArrayList<>();
 		saveProfileList.add(saveProfile);
 
-		//TODO: This is likely failing because of the new ArrayList call. We need to actually make this test better, and all the other tests in here, by using real save profiles.
 		Result<SaveProfile> result = realSaveService.copySaveFiles(saveProfile, saveProfileList);
 		assertNotNull(result.getPayload());
 		SaveProfile finalSaveProfile = result.getPayload();
