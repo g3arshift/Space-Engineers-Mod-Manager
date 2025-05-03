@@ -389,7 +389,7 @@ public class ModListProfileManager {
 
     private boolean profileNameExists(String profileName) {
         return MOD_LIST_PROFILE_DETAILS.stream()
-                .anyMatch(details -> details.getMiddle().equals(profileName));
+                .anyMatch(details -> details.getMiddle().trim().equalsIgnoreCase(profileName.trim()));
     }
 
     public void show(Stage parentStage) {

@@ -517,7 +517,7 @@ public class SaveProfileManager {
 
     private boolean isDuplicateProfileName(String profileName) {
         return SAVE_PROFILES.stream()
-                .anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equalsIgnoreCase(profileName.trim()));
+                .anyMatch(saveProfile -> saveProfile.getProfileName().trim().equalsIgnoreCase(profileName.trim()));
     }
 
     public void show(Stage parentStage) {

@@ -9,7 +9,15 @@ import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -45,13 +53,34 @@ public class WindowTitleBarColorUtility {
 
             dwmapi.DwmSetWindowAttribute(hwnd, 20, ref, WinDef.BOOL.SIZE);
 
-            //Forces a redraw of the title bar by sending a pair of messages to the window to toggle its active state.
-            final int WM_NCACTIVATE = 0x0086;
-            User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(0), new WinDef.LPARAM(0));
-            User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(1), new WinDef.LPARAM(0));
+            try {
+                //We check if we're using Windows 10 because this will make our title text dark mode and the titlebar light mode if we start in a dark mode theme, in Windows 11.
+                if (isWindows10()) {
+                    //Forces a redraw of the title bar by sending a pair of messages to the window to toggle its active state.
+                    final int WM_NCACTIVATE = 0x0086;
+                    User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(0), new WinDef.LPARAM(0));
+                    User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(1), new WinDef.LPARAM(0));
+                }
+            } catch (IOException e) {
+                log.error(getStackTrace(e));
+            }
         } else if (Platform.isLinux()) {
             //TODO: The linux equivalent
             System.out.println("Linux title bar recoloring is not currently supported.");
+        }
+    }
+
+    private static boolean isWindows10() throws IOException {
+        Process process = new ProcessBuilder("cmd.exe", "/c", "ver").start();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            return reader.lines()
+                    .filter(line -> line.contains("Microsoft Windows"))
+                    .map(line -> {
+                        Matcher m = Pattern.compile("Version \\d+\\.\\d+\\.(\\d+)").matcher(line);
+                        return m.find() ? Integer.parseInt(m.group(1)) : -1;
+                    })
+                    .filter(buildNumber -> buildNumber != -1)
+                    .anyMatch(buildNumber -> buildNumber <= 22000);
         }
     }
 }
