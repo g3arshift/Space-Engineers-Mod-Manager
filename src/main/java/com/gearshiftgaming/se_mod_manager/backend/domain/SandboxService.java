@@ -130,13 +130,19 @@ public class SandboxService {
 			sandboxContent.append("  <Mods>");
 			sandboxContent.append(System.lineSeparator());
 			for (Mod m : modList) {
+				String sanitizedFriendlyName = m.getFriendlyName()
+						.replace("&", "&amp;")
+						.replace("\"", "&quot;")
+						.replace("'", "&apos;")
+						.replace("<", "&lt;")
+						.replace(">", "&gt;");
 				String modItem = "    <ModItem FriendlyName=\"%s\">%n" +
 						"      <Name>%s.sbm</Name>%n" +
 						"      <PublishedFileId>%s</PublishedFileId>%n" +
 						"      <PublishedServiceName>%s</PublishedServiceName>%n" +
 						"    </ModItem>%n";
 
-				sandboxContent.append(String.format(modItem, m.getFriendlyName(), m.getId(), m.getId(), m.getPublishedServiceName()));
+				sandboxContent.append(String.format(modItem, sanitizedFriendlyName, m.getId(), m.getId(), m.getPublishedServiceName()));
 			}
 
 			//Append the text in the Sandbox_config that comes after the mod section
