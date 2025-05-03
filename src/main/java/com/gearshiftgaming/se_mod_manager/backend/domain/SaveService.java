@@ -50,9 +50,6 @@ public class SaveService {
 
 		if (endOfProfileNameRegex.matcher(endOfSourcePath).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
 			sourceSavePath = sourceSavePath.substring(0, sourceSavePath.lastIndexOf('(')).trim();
-//			copyProfilePath = sourceSavePath;
-//		} else {
-//			copyProfilePath = String.format("%s (%d)", sourceSavePath, copyIndex);
 		}
 
 		String copyProfilePath;
@@ -61,7 +58,6 @@ public class SaveService {
 			copyProfilePath = String.format("%s (%d)", sourceSavePath, copyIndex);
 			copyIndex++;
 		} while (Files.exists(Path.of(copyProfilePath)));
-		copyIndex--;
 
 		Result<String> sandboxConfigResult = SANDBOX_SERVICE.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));
 
@@ -82,8 +78,7 @@ public class SaveService {
 					copiedSaveProfile.setSavePath(copyProfilePath + "\\Sandbox_config.sbc");
 
 					//Change the name in our copied save's Sandbox_config and Sandbox files to match the save name.
-					String sessionName = getSessionName(sandboxConfig, copyProfilePath);
-					sessionName = Paths.get(copyProfilePath).getFileName().toString();
+					String sessionName = Paths.get(copyProfilePath).getFileName().toString();
 					copiedSaveProfile.setSaveName(sessionName);
 
 					String baseName = copiedSaveProfile.getProfileName().trim();

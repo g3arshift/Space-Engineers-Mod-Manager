@@ -309,7 +309,7 @@ public class ModInfoService {
         }
 
         //Normalizes our datetime input from international formatting to US.
-        if(Character.isDigit(lastUpdated.charAt(0))) {
+        if (Character.isDigit(lastUpdated.charAt(0))) {
             String[] dateParts = lastUpdated.split(" ");
             String day = dateParts[0];
             String month = dateParts[1];
@@ -327,7 +327,7 @@ public class ModInfoService {
         return modScrapeResult;
     }
 
-    private Result<String[]> scrapeModIoMod(String modId) throws InterruptedException {
+    private Result<String[]> scrapeModIoMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
         try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
@@ -335,6 +335,7 @@ public class ModInfoService {
                     .setLocale("en-US")
                     .setExtraHTTPHeaders(Map.of("Accept-Language", "en-US,en;q=0.9"))).newPage();
             String pageSource = fetchModIoPageContent(webPage, modId, modScrapeResult);
+
 
             if (!pageSource.isEmpty()) {
                 parseModIoModInfo(pageSource, modId, modScrapeResult);
@@ -457,10 +458,13 @@ public class ModInfoService {
         //Get mod last updated information
         String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
         String lastUpdatedFormatted = Optional.ofNullable(StringUtils.substringBetween(lastUpdatedRaw, "<span>", "</span>")).orElse("'");
-        if(lastUpdatedFormatted.isEmpty()) {
+        if (lastUpdatedFormatted.isEmpty()) {
             modScrapeResult.addMessage(String.format("Failed to get last updated information for \"%s\".", modInfo[0]), ResultType.FAILED);
             return;
         }
+
+        //TODO: We don't need to do any of this. There is literally a tag in the HTML response we get from Mod.io that isn't publicly visible. It's called "dateModified" and it's in UTC.
+        // OP #67
         String lastUpdatedQuantifier = lastUpdatedFormatted.substring(lastUpdatedFormatted.length() - 1);
         int duration = Integer.parseInt(lastUpdatedFormatted.substring(0, lastUpdatedFormatted.length() - 1));
         switch (lastUpdatedQuantifier) {

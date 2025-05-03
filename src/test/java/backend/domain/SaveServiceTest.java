@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -174,7 +175,11 @@ public class SaveServiceTest {
 	void shouldSuccessfullyCopyAndRenameCopiedSave() throws IOException {
 		SaveService realSaveService = new SaveService(new SaveFileRepository(), new SandboxService(new SandboxConfigFileRepository()));
 
-		Result<SaveProfile> result = realSaveService.copySaveFiles(saveProfile, new ArrayList<>());
+		List<SaveProfile> saveProfileList = new ArrayList<>();
+		saveProfileList.add(saveProfile);
+
+		//TODO: This is likely failing because of the new ArrayList call. We need to actually make this test better, and all the other tests in here, by using real save profiles.
+		Result<SaveProfile> result = realSaveService.copySaveFiles(saveProfile, saveProfileList);
 		assertNotNull(result.getPayload());
 		SaveProfile finalSaveProfile = result.getPayload();
 
@@ -187,8 +192,8 @@ public class SaveServiceTest {
 		assertEquals("Successfully copied profile.", result.getMESSAGES().get(1));
 
 		//Check the changes were written to the actual sandbox and sandbox_config file
-		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox_config.sbc")), "Test Save (1)"));
-		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox.sbc")), "Test Save (1)"));
+		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox_config.sbc")), "test_copy_directory (1)"));
+		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox.sbc")), "test_copy_directory (1)"));
 	}
 
 
@@ -216,7 +221,7 @@ public class SaveServiceTest {
 		ModListProfile testModListProfile = new ModListProfile();
 
 		SaveProfile testSaveProfile = new SaveProfile();
-		testSaveProfile.setSaveName("Test Save");
+		testSaveProfile.setSaveName("test_copy_directory");
 		testSaveProfile.setSavePath(testDir.toString() + "\\Sandbox_config.sbc");
 		testSaveProfile.setLastUsedModProfileId(testModListProfile.getID());
 
