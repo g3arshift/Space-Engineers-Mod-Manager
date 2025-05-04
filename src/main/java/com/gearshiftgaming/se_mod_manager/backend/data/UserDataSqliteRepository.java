@@ -275,10 +275,10 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .findFirst();
         }
         foundModListProfile.ifPresentOrElse(modListProfile -> {
-                    modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
-                    loadModList(modListProfile, modListProfileResult);
-                    modListProfileResult.setPayload(modListProfile);
-                }, () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
+            modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+            loadModList(modListProfile, modListProfileResult);
+            modListProfileResult.setPayload(modListProfile);
+        }, () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
 
         return modListProfileResult;
     }
@@ -426,6 +426,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         }
 
         modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
+
+        if (!modListProfileSaveResult.isSuccess()) {
+            modListProfileSaveResult.addMessage("Failed to save mod list profile.", ResultType.FAILED);
+            return modListProfileSaveResult;
+        }
 
         modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\".", modListProfile.getProfileName()), ResultType.SUCCESS);
         return modListProfileSaveResult;
