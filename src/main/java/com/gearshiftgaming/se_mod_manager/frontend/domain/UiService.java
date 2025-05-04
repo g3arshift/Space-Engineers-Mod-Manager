@@ -291,11 +291,13 @@ public class UiService {
         }
     }
 
-    public void setCurrentModListProfile(UUID modListProfileId) {
+    public Result<Void> setCurrentModListProfile(UUID modListProfileId) {
+        Result<Void> setResult = new Result<>();
         Result<ModListProfile> newCurrentModListProfileResult = STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
         if (!newCurrentModListProfileResult.isSuccess()) {
             log(newCurrentModListProfileResult);
-            return;
+            setResult.addAllMessages(newCurrentModListProfileResult);
+            return setResult;
         }
 
         log(newCurrentModListProfileResult.getCurrentMessage(), MessageType.INFO);
@@ -303,7 +305,8 @@ public class UiService {
         currentModListProfile = modListProfile;
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-        setLastActiveModlistProfile(modListProfile.getID());
+        setResult.addAllMessages(setLastActiveModlistProfile(modListProfile.getID()));
+        return setResult;
     }
 
     public Result<Void> setCurrentSaveProfile(SaveProfile newCurrentSaveProfile) {
@@ -637,15 +640,21 @@ public class UiService {
                 for (int i = 0; i < importModListProfile.getModList().size(); i++) {
                     importModListProfile.getModList().get(i).setLoadPriority(i + 1);
                 }
+                updateModInformation(importModListProfile.getModList());
+                Result<Void> saveModListResult = saveModListProfile(importModListProfile);
+                if(!saveModListResult.isSuccess()) {
+                    log(saveModListResult);
+                    return saveModListResult;
+                }
+
                 MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
-                currentModListProfile = importModListProfile;
-                saveModListProfile(importModListProfile);
-                importResult = setLastActiveModlistProfile(importModListProfile.getID());
+                importResult.addAllMessages(setCurrentModListProfile(importModListProfile.getID()));
                 if (importResult.isSuccess()) {
-                    logPrivate(importResult);
                     importResult.addMessage(String.format("Successfully imported mod list profile \"%s\".", importModListProfile.getProfileName()), ResultType.SUCCESS);
-                } else
+                    logPrivate(importResult);
+                } else {
                     log(importResult);
+                }
             } else
                 importResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
         }
