@@ -69,14 +69,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 throw new RuntimeException(e);
             }
         });
-        SQLITE_DB.useHandle(handle -> handle.execute("""
-                CREATE TRIGGER delete_orphan_mods
-                    AFTER DELETE ON mod_list_profile_mod
-                    FOR EACH ROW
-                    WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
-                    BEGIN
-                        DELETE FROM mod WHERE mod_id = OLD.mod_id;
-                    END;"""));
         log.info("Finished creating database schema.");
     }
 
