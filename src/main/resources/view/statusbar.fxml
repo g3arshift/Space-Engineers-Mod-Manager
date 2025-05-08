@@ -23,6 +23,7 @@
                  <Label text="Last Applied:" />
              </graphic>
          </Label>
+      <Separator orientation="VERTICAL" />
          <Region HBox.hgrow="ALWAYS" />
       <Separator orientation="VERTICAL" />
       <HBox alignment="CENTER_LEFT">
