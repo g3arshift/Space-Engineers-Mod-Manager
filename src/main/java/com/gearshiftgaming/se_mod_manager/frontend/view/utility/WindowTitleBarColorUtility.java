@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -24,7 +23,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
- * this file. If not, please write to: gearshift@gearshiftgaming.com.w
+ * this file. If not, please write to: gearshift@gearshiftgaming.com
  */
 public class WindowTitleBarColorUtility {
 

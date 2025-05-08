@@ -151,7 +151,7 @@ public class SandboxService {
 			sandboxContent.append("  <Mods />");
 		}
 
-		//TODO: It's having the issue with newlines in the last section again, but perhaps only when not saving back to OG file? Needs testing. It might not actually be an issue.
+
 		if (!sandboxContent.toString().endsWith("\n")) {
 			sandboxContent.append(System.lineSeparator());
 		}
