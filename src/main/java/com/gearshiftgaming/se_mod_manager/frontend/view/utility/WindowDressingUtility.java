@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import lombok.Getter;
 
 import java.io.InputStream;
 import java.util.*;
@@ -16,6 +17,7 @@ import java.util.*;
  */
 public class WindowDressingUtility {
 
+	@Getter
 	private static final List<Image> ICONS;
 
 	static {

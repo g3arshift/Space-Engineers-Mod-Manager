@@ -631,7 +631,6 @@ public class Popup {
     }
 
     private static HBox makeTitleBar(FontIcon messageIcon) {
-        Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
 
         Label title = new Label(switch (messageIcon.getIconLiteral()) {
             case "ci-information-square" -> "Info";
@@ -640,19 +639,19 @@ public class Popup {
             default -> "Unknown";
         });
 
-        return makeTitleBarContent(logo, title);
+        return makeTitleBarContent(title);
     }
 
     private static HBox makeTitleBar(String titleMessage) {
-        Image logo = new Image(Objects.requireNonNull(WindowDressingUtility.class.getResourceAsStream("/icons/logo_16.png")));
 
         Label title = new Label(titleMessage);
 
-        return makeTitleBarContent(logo, title);
+        return makeTitleBarContent(title);
     }
 
     @NotNull
-    private static HBox makeTitleBarContent(Image logo, Label title) {
+    private static HBox makeTitleBarContent(Label title) {
+        Image logo = WindowDressingUtility.getICONS().getLast();
         HBox titleBox = new HBox(new ImageView(logo), title);
         titleBox.setAlignment(Pos.CENTER_LEFT);
         titleBox.setPadding(new Insets(5, 0, 5, 5));
