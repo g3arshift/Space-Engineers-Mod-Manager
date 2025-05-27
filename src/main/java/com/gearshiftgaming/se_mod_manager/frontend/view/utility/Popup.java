@@ -17,6 +17,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -47,7 +48,11 @@ public class Popup {
     private static final int FONT_SIZE = 16;
     private static final int ICON_SIZE = 30;
 
-	//Prevent actual new instances of the class from being made.
+    //Reusable style strings to reduce string allocation
+    private static final String FONT_STYLE = "-fx-font-size: " + FONT_SIZE + ";";
+    private static final String BUTTON_BAR_STYLE = "-fx-background-color: -color-neutral-subtle;";
+
+    //Prevent actual new instances of the class from being made.
     private Popup() {
     }
 
@@ -60,9 +65,7 @@ public class Popup {
      * @return Returns 1 for yes, 0 for no.
      */
     public static int displayYesNoDialog(String message, Stage parentStage, MessageType messageType) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
@@ -77,9 +80,7 @@ public class Popup {
      * 1 for yes, 0 for no.
      */
     public static int displayYesNoDialog(String message, MessageType messageType) throws IOException {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
@@ -90,9 +91,7 @@ public class Popup {
     }
 
     public static <T> int displayYesNoDialog(Result<T> result) throws IOException {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(result.getCurrentMessage());
         FontIcon messageIcon = new FontIcon();
@@ -107,9 +106,7 @@ public class Popup {
      * @param parentStage The stage this popup will be centered on
      */
     public static <T> void displaySimpleAlert(Result<T> result, Stage parentStage) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(result.getCurrentMessage());
         FontIcon messageIcon = new FontIcon();
@@ -122,9 +119,7 @@ public class Popup {
      * Displays a simple alert with only one option centered on the screen, with a result being the input
      */
     public static <T> void displaySimpleAlert(Result<T> result) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(result.getCurrentMessage());
         FontIcon messageIcon = new FontIcon();
@@ -139,9 +134,7 @@ public class Popup {
      * @param parentStage The stage this popup will be centered on
      */
     public static void displaySimpleAlert(String message, Stage parentStage, MessageType messageType) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
@@ -155,9 +148,7 @@ public class Popup {
      * Displays a simple alert with only one option centered on the screen
      */
     public static void displaySimpleAlert(String message, MessageType messageType) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
@@ -174,9 +165,7 @@ public class Popup {
      * @param link    The link that will be displayed and clickable in the message
      */
     public static void displaySimpleAlert(String message, String link, MessageType messageType) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         FontIcon messageIcon = new FontIcon();
 
@@ -192,9 +181,7 @@ public class Popup {
      * @param link    The link that will be displayed and clickable in the message
      */
     public static void displayInfoMessageWithLink(String message, String link, String titleMessage, MessageType messageType) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         FontIcon messageIcon = new FontIcon();
         messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
@@ -207,9 +194,7 @@ public class Popup {
      * Displays a dialog centered on a specific stage that has three choices the user can make.
      */
     public static int displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
@@ -219,9 +204,7 @@ public class Popup {
     }
 
     public static void displayNavigationDialog(List<String> messages, Stage parentStage, MessageType messageType, String title) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        Stage stage = createStage();
 
         AtomicInteger currentStep = new AtomicInteger(0);
         Label label = new Label(messages.get(currentStep.get()));
@@ -230,6 +213,16 @@ public class Popup {
         getIconByMessageType(messageType, messageIcon);
 
         makeNavigationDialog(stage, parentStage, messages, currentStep, label, messageIcon, title);
+    }
+
+    /**
+     * Creates a stage with common settings to reduce code duplication
+     */
+    private static Stage createStage() {
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initStyle(StageStyle.UNDECORATED);
+        return stage;
     }
 
     private static void makeNavigationDialog(Stage childStage, Stage parentStage, List<String> messages, AtomicInteger currentStep, Label label, FontIcon messageIcon, String title) {
@@ -241,8 +234,8 @@ public class Popup {
     }
 
     private static HBox makeNavigationBar(Stage childStage, List<String> messages, AtomicInteger currentStep, Label label) {
-        Button backButton = new Button("Back");
-        Button nextButton = new Button("Next");
+        Button backButton = createButton("Back", 80d, 36d);
+        Button nextButton = createButton("Next", 80d, 36d);
         backButton.setDisable(true);
 
         backButton.setOnAction((ActionEvent event) -> {
@@ -264,26 +257,11 @@ public class Popup {
                 label.setText(messages.get(currentStep.get()));
                 childStage.sizeToScene();
             } else {
-                childStage.close();
-                Platform.exitNestedEventLoop(childStage, null);
+                cleanupAndClose(childStage);
             }
         });
 
-        backButton.setMinWidth(80d);
-        backButton.setMinHeight(36d);
-        backButton.setMaxHeight(36d);
-
-        nextButton.setMinWidth(80d);
-        nextButton.setMinHeight(36d);
-        nextButton.setMaxHeight(36d);
-
-        HBox buttonBar = new HBox(backButton, nextButton);
-        buttonBar.setPadding(new Insets(5, 5, 5, 5));
-        buttonBar.setStyle("-fx-background-color: -color-neutral-subtle;");
-        buttonBar.setAlignment(Pos.CENTER);
-        buttonBar.setSpacing(10);
-
-        return buttonBar;
+        return createButtonBar(Pos.CENTER, 10, backButton, nextButton);
     }
 
     private static <T> void setResultWindowDressing(Result<T> result, FontIcon messageIcon) {
@@ -423,13 +401,9 @@ public class Popup {
     }
 
     private static HBox makeThreeChoiceBar(AtomicInteger choice, Stage childStage, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
-        Button leftButton = new Button();
-        Button centerButton = new Button();
-        Button rightButton = new Button();
-
-        leftButton.setText(leftButtonMessage);
-        centerButton.setText(centerButtonMessage);
-        rightButton.setText(rightButtonMessage);
+        Button leftButton = createButton(leftButtonMessage, 80d, 36d);
+        Button centerButton = createButton(centerButtonMessage, 80d, 36d);
+        Button rightButton = createButton(rightButtonMessage, 80d, 36d);
 
         leftButton.setOnAction((ActionEvent event) -> {
             choice.set(2);
@@ -449,90 +423,63 @@ public class Popup {
             Platform.exitNestedEventLoop(childStage, null);
         });
 
-        leftButton.setMinWidth(80d);
-        leftButton.setMinHeight(36d);
-        leftButton.setMaxHeight(36d);
-
-        centerButton.setMinWidth(80d);
-        centerButton.setMinHeight(36d);
-        centerButton.setMaxHeight(36d);
-
-        rightButton.setMinWidth(80d);
-        rightButton.setMinHeight(36d);
-        rightButton.setMaxHeight(36d);
-
         rightButton.setCancelButton(true);
 
-        HBox buttonBar = new HBox(leftButton, centerButton, rightButton);
-
-        buttonBar.setPadding(new Insets(5, 5, 5, 5));
-        buttonBar.setStyle("-fx-background-color: -color-neutral-subtle;");
-        buttonBar.setAlignment(Pos.CENTER_RIGHT);
-        buttonBar.setSpacing(10);
-
-        return buttonBar;
+        return createButtonBar(Pos.CENTER_RIGHT, 10, leftButton, centerButton, rightButton);
     }
 
 
     private static HBox makeYesNoBar(AtomicInteger choice, Stage childStage) {
-        Button noButton = new Button();
-        Button yesButton = new Button();
-
-        noButton.setText("No");
-        yesButton.setText("Yes");
+        Button noButton = createButton("No", 80d, 36d);
+        Button yesButton = createButton("Yes", 80d, 36d);
 
         noButton.setOnAction((ActionEvent event) -> {
             choice.set(0);
-            childStage.close();
-            Platform.exitNestedEventLoop(childStage, null);
+            cleanupAndClose(childStage);
         });
 
         yesButton.setOnAction((ActionEvent event) -> {
             choice.set(1);
-            childStage.close();
-            Platform.exitNestedEventLoop(childStage, null);
+            cleanupAndClose(childStage);
         });
-
-        noButton.setMinWidth(80d);
-        noButton.setMinHeight(36d);
-        noButton.setMaxHeight(36d);
-
-        yesButton.setMinWidth(80d);
-        yesButton.setMinHeight(36d);
-        yesButton.setMaxHeight(36d);
 
         noButton.setCancelButton(true);
 
-        HBox buttonBar = new HBox(yesButton, noButton);
-
-        buttonBar.setPadding(new Insets(5, 5, 5, 5));
-        buttonBar.setStyle("-fx-background-color: -color-neutral-subtle;");
-        buttonBar.setAlignment(Pos.CENTER_RIGHT);
-        buttonBar.setSpacing(10);
-
-        return buttonBar;
+        return createButtonBar(Pos.CENTER_RIGHT, 10, yesButton, noButton);
     }
 
     private static HBox makeOkBar(Stage childStage) {
-        Button quitButton = new Button();
-        quitButton.setText("OK");
-        quitButton.setOnAction((ActionEvent event) -> {
-            childStage.close();
-            Platform.exitNestedEventLoop(childStage, null);
-        });
-
-        quitButton.setMinWidth(80d);
-        quitButton.setMinHeight(36d);
-        quitButton.setMaxHeight(36d);
-
+        Button quitButton = createButton("OK", 80d, 36d);
+        quitButton.setOnAction((ActionEvent event) -> cleanupAndClose(childStage));
         quitButton.setCancelButton(true);
         quitButton.setDefaultButton(true);
 
-        HBox buttonBar = new HBox(quitButton);
+        return createButtonBar(Pos.CENTER, 0, quitButton);
+    }
+
+    private static Button createButton(String text, double minWidth, double minHeight) {
+        Button button = new Button(text);
+        button.setMinWidth(minWidth);
+        button.setMinHeight(minHeight);
+        button.setMaxHeight(minHeight);
+        return button;
+    }
+
+    private static HBox createButtonBar(Pos alignment, double spacing, Button... buttons) {
+        HBox buttonBar = new HBox(buttons);
         buttonBar.setPadding(new Insets(5, 5, 5, 5));
-        buttonBar.setStyle("-fx-background-color: -color-neutral-subtle;");
-        buttonBar.setAlignment(Pos.CENTER);
+        buttonBar.setStyle(BUTTON_BAR_STYLE);
+        buttonBar.setAlignment(alignment);
+        buttonBar.setSpacing(spacing);
         return buttonBar;
+    }
+
+    /**
+     * Centralized cleanup and close method to ensure proper resource cleanup
+     */
+    private static void cleanupAndClose(Stage stage) {
+        stage.close();
+        Platform.exitNestedEventLoop(stage, null);
     }
 
     //Creates a dialog box message
@@ -551,7 +498,7 @@ public class Popup {
 
     @NotNull
     private static HBox getDialogBox(Label label, FontIcon messageIcon) {
-        label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+        label.setStyle(FONT_STYLE);
         messageIcon.getStyleClass().clear();
         messageIcon.setIconSize(ICON_SIZE);
         label.setWrapText(true);
@@ -571,7 +518,7 @@ public class Popup {
         messageIcon.setIconSize(ICON_SIZE);
 
         Label label = new Label(message);
-        label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+        label.setStyle(FONT_STYLE);
         label.setWrapText(true);
 
         HBox dialogBox = createErrorLinkBox(link, messageIcon, label);
@@ -589,7 +536,7 @@ public class Popup {
         messageIcon.setIconSize(ICON_SIZE);
 
         Label label = new Label(message);
-        label.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+        label.setStyle(FONT_STYLE);
         label.setWrapText(true);
 
         HBox dialogBox = createErrorLinkBox(link, messageIcon, titleMessage, label);
@@ -608,7 +555,7 @@ public class Popup {
     @NotNull
     private static HBox createErrorLinkBoxContent(String link, FontIcon messageIcon, Label label, HBox hBox) {
         Hyperlink hyperlink = new Hyperlink("bugreport.spaceengineersmodmanager.com");
-        hyperlink.setStyle("-fx-font-size: " + FONT_SIZE + ";");
+        hyperlink.setStyle(FONT_STYLE);
 
         hyperlink.setOnAction(actionEvent -> {
             try {
@@ -631,27 +578,21 @@ public class Popup {
     }
 
     private static HBox makeTitleBar(FontIcon messageIcon) {
-
         Label title = new Label(switch (messageIcon.getIconLiteral()) {
             case "ci-information-square" -> "Info";
             case "ci-warning-alt" -> "Warning";
             case "ci-warning-square" -> "Error";
             default -> "Unknown";
         });
-
-        return makeTitleBarContent(title);
+        return makeTitleBarContent(WindowDressingUtility.getICONS().getLast(), title);
     }
 
     private static HBox makeTitleBar(String titleMessage) {
-
-        Label title = new Label(titleMessage);
-
-        return makeTitleBarContent(title);
+        return makeTitleBarContent(WindowDressingUtility.getICONS().getLast(), new Label(titleMessage));
     }
 
     @NotNull
-    private static HBox makeTitleBarContent(Label title) {
-        Image logo = WindowDressingUtility.getICONS().getLast();
+    private static HBox makeTitleBarContent(Image logo, Label title) {
         HBox titleBox = new HBox(new ImageView(logo), title);
         titleBox.setAlignment(Pos.CENTER_LEFT);
         titleBox.setPadding(new Insets(5, 0, 5, 5));
@@ -711,7 +652,11 @@ public class Popup {
         });
 
         childStage.show();
-        buttonBar.getChildren().getLast().requestFocus();
+
+        //Prevents a null exception if we somehow have an empty button bar
+        if (!buttonBar.getChildren().isEmpty()) {
+            buttonBar.getChildren().getLast().requestFocus();
+        }
         WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
         Platform.enterNestedEventLoop(childStage);
     }
@@ -719,15 +664,11 @@ public class Popup {
     private static void createPopup(Stage childStage, HBox dialogBox, HBox buttonBar) {
         prepareStage(childStage, dialogBox, buttonBar);
 
-        //Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
-        ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
-            childStage.setX((screenBounds.getWidth() - childStage.getWidth()) / 2);
-        };
-        ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> {
-            childStage.setY((screenBounds.getHeight() - childStage.getHeight()) / 2);
-        };
+        //Center the alert in the middle of the computer screen by using listeners that will fire off when the window is created.
+        ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> childStage.setX((screenBounds.getWidth() - childStage.getWidth()) / 2);
+        ChangeListener<Number> heightListener = (observable, oldValue, newValue) -> childStage.setY((screenBounds.getHeight() - childStage.getHeight()) / 2);
 
         childStage.widthProperty().addListener(widthListener);
         childStage.heightProperty().addListener(heightListener);
@@ -739,20 +680,22 @@ public class Popup {
         });
 
         childStage.show();
-        buttonBar.getChildren().getLast().requestFocus();
+
+        //Prevents a null exception if we somehow have an empty button bar
+        if (!buttonBar.getChildren().isEmpty()) {
+            buttonBar.getChildren().getLast().requestFocus();
+        }
         WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
         Platform.enterNestedEventLoop(childStage);
     }
 
     private static void prepareStage(Stage childStage, HBox dialogBox, HBox buttonBar) {
         VBox contents = new VBox(dialogBox, buttonBar);
-        Color borderColor;
 
-        if (Application.getUserAgentStylesheet().contains("light")) {
-            borderColor = Color.BLACK;
-        } else {
-            borderColor = Color.web("39393a");
-        }
+        Color borderColor = Application.getUserAgentStylesheet().contains("light")
+                ? Color.BLACK
+                : Color.web("39393a");
+
 
         contents.setBorder(new Border(new BorderStroke(borderColor, borderColor, borderColor, borderColor,
                 BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID,
@@ -762,6 +705,29 @@ public class Popup {
         Scene scene = new Scene(contents);
         WindowDressingUtility.appendStageIcon(childStage);
         childStage.setResizable(false);
+
+//        try {
+//            if (WindowsVersionUtility.isWindows11()) {
+//                Rectangle clippingRectangle = new Rectangle();
+//                clippingRectangle.setArcWidth(30);
+//                clippingRectangle.setArcHeight(30);
+//                contents.setClip(clippingRectangle);
+//
+//                ChangeListener<Number> widthClipListener = (observable, oldValue, newValue) -> clippingRectangle.setWidth(newValue.doubleValue());
+//                ChangeListener<Number> heightClipListener = (observable, oldValue, newValue) -> clippingRectangle.setHeight(newValue.doubleValue());
+//                childStage.widthProperty().addListener(widthClipListener);
+//                childStage.heightProperty().addListener(heightClipListener);
+//
+//                childStage.setOnShown(e -> {
+//                    childStage.widthProperty().removeListener(widthClipListener);
+//                    childStage.heightProperty().removeListener(heightClipListener);
+//                });
+//
+//                scene.setFill(Color.TRANSPARENT);
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
         childStage.setScene(scene);
     }

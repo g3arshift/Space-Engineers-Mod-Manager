@@ -39,7 +39,7 @@ public class WindowTitleBarColorUtility {
             val dwmapi = Dwmapi.INSTANCE;
             WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, stage.getTitle());
             if (hwnd == null) {
-                log.error("Failed to find SEMM window. Cannot recolor titlebar.");
+                log.error("Failed to find SEMM window. Cannot recolor title bar.");
                 return;
             }
 
@@ -54,7 +54,7 @@ public class WindowTitleBarColorUtility {
 
             try {
                 //We check if we're using Windows 10 because this will make our title text dark mode and the titlebar light mode if we start in a dark mode theme, in Windows 11.
-                if (isWindows10()) {
+                if (WindowsVersionUtility.isWindows10()) {
                     //Forces a redraw of the title bar by sending a pair of messages to the window to toggle its active state.
                     final int WM_NCACTIVATE = 0x0086;
                     User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(0), new WinDef.LPARAM(0));
@@ -66,20 +66,6 @@ public class WindowTitleBarColorUtility {
         } else if (Platform.isLinux()) {
             //TODO: The linux equivalent
             System.out.println("Linux title bar recoloring is not currently supported.");
-        }
-    }
-
-    private static boolean isWindows10() throws IOException {
-        Process process = new ProcessBuilder("cmd.exe", "/c", "ver").start();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            return reader.lines()
-                    .filter(line -> line.contains("Microsoft Windows"))
-                    .map(line -> {
-                        Matcher m = Pattern.compile("Version \\d+\\.\\d+\\.(\\d+)").matcher(line);
-                        return m.find() ? Integer.parseInt(m.group(1)) : -1;
-                    })
-                    .filter(buildNumber -> buildNumber != -1)
-                    .anyMatch(buildNumber -> buildNumber <= 22000);
         }
     }
 }
