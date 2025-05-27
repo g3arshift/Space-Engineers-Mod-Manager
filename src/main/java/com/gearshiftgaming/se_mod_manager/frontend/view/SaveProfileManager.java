@@ -62,7 +62,7 @@ public class SaveProfileManager {
     private Label activeProfileName;
 
     @FXML
-    private Button closeSaveWindow;
+    private Button closeWindow;
 
     @FXML
     private StackPane modImportProgressPanel;
@@ -186,8 +186,8 @@ public class SaveProfileManager {
                                     "For this tutorial we'll skip that step and manually add mods instead.");
                             tutorialMessages.add("Let's head back to the mod list manager. Press the \"Close\" button.");
                             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
-                            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeSaveWindow);
-                            closeSaveWindow.requestFocus();
+                            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeWindow);
+                            closeWindow.requestFocus();
                         }
                     } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
                         Popup.displaySimpleAlert(saveProfileResult);

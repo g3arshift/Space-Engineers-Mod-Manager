@@ -71,7 +71,7 @@ public class ModListProfileManager {
     private Label activeProfileName;
 
     @FXML
-    private Button closeProfileWindow;
+    private Button closeWindow;
 
     @Getter
     private Stage stage;
@@ -325,8 +325,8 @@ public class ModListProfileManager {
             profileList.getSelectionModel().selectFirst();
             tutorialMessages.add("Now that we have a new mod list profile let's close the mod list manager so we can add a save profile. Press the \"Close\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
-            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeProfileWindow);
-            closeProfileWindow.requestFocus();
+            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeWindow);
+            closeWindow.requestFocus();
         }
     }
 
