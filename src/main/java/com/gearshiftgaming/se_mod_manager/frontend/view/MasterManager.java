@@ -951,7 +951,7 @@ public class MasterManager {
         else
             UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
 
-        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
+        STATUS_BAR_VIEW.update();
     }
 
     @FXML

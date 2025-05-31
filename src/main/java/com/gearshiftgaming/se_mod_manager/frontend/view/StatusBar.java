@@ -1,14 +1,12 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -53,39 +51,7 @@ public class StatusBar {
 	}
 
 	public void initView() {
-		Optional<SaveProfile> lastUsedSaveProfile = findLastModifiedSaveProfileId();
-		if (lastUsedSaveProfile.isPresent()) {
-			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
-
-			//Set the text for the last time this profile was saved
-			if (UI_SERVICE.getCurrentSaveProfile().getLastSaved() == null || UI_SERVICE.getCurrentSaveProfile().getLastSaved().isEmpty()) {
-				lastInjected.setText("Never");
-			} else {
-				lastInjected.setText(UI_SERVICE.getCurrentSaveProfile().getLastSaved());
-			}
-
-			lastSaveModifiedName.setText(lastUsedSaveProfile.get().getProfileName());
-			Optional <MutableTriple<UUID, String, SpaceEngineersVersion>> lastAppliedModlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
-							.filter(modlistProfileDetails -> modlistProfileDetails.getLeft().equals(lastUsedSaveProfile.get().getLastUsedModProfileId()))
-									.findFirst();
-
-			lastAppliedModlistProfile.ifPresentOrElse(modlistProfileDetails -> lastModlistAppliedName.setText(modlistProfileDetails.getMiddle()),
-					() -> lastModlistAppliedName.setText("None"));
-
-			updateSaveStatus(UI_SERVICE.getCurrentSaveProfile());
-		} else {
-			this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
-
-			lastInjected.setText("Never");
-
-			lastSaveModifiedName.setText("None");
-
-			lastModlistAppliedName.setText("None");
-
-			saveStatus.setText("None");
-			saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
-		}
-
+		loadStatusBarInfo();
 		UI_SERVICE.logPrivate("Successfully initialized status bar.", MessageType.INFO);
 	}
 
@@ -114,22 +80,34 @@ public class StatusBar {
 		lastInjected.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d',' yyyy '@' h:mma")));
 	}
 
-	private Optional<SaveProfile> findLastModifiedSaveProfileId() {
-		Optional<SaveProfile> lastUsedSaveProfile = Optional.empty();
-		if (UI_SERVICE.getUSER_CONFIGURATION().getLastModifiedSaveProfileId() != null) {
-			UUID lastUsedSaveProfileId = UI_SERVICE.getUSER_CONFIGURATION().getLastModifiedSaveProfileId();
-
-			lastUsedSaveProfile = UI_SERVICE.getSAVE_PROFILES().stream()
-					.filter(saveProfile -> saveProfile.getID().equals(lastUsedSaveProfileId))
-					.findFirst();
-		}
-		return lastUsedSaveProfile;
+	private void updateLastModifiedBy() {
+		lastModlistAppliedName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
 	}
 
-	public void update(SaveProfile saveProfile, ModListProfile modListProfile) {
-		updateSaveStatus(saveProfile);
+	public void update() {
+		updateSaveStatus(UI_SERVICE.getCurrentSaveProfile());
 		updateLastInjected();
-		lastModlistAppliedName.setText(modListProfile.getProfileName());
-		lastSaveModifiedName.setText(saveProfile.getProfileName());
+		updateLastModifiedBy();
+		lastModlistAppliedName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
+		lastSaveModifiedName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
+	}
+
+	//TODO: This isn't working right.
+	// 1. When changing save profiles it always shows the CURRENT mod list profile as the last modlist applied.
+	// 2. When changing save profiles it always shows the most recent applied mod list time as the one applied. It actually saves this to DB too.
+	public void loadStatusBarInfo() {
+		SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
+		this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
+		if (currentSaveProfile.getLastSaveStatus() != SaveStatus.NONE) {
+			updateSaveStatus(currentSaveProfile);
+			updateLastModifiedBy();
+			lastInjected.setText(currentSaveProfile.getLastSaved() != null ? currentSaveProfile.getLastSaved() : "Never");
+		} else {
+			lastInjected.setText("Never");
+			lastSaveModifiedName.setText("None");
+			lastModlistAppliedName.setText("None");
+			saveStatus.setText("None");
+			saveStatus.setStyle(statusBaseStyling += "-fx-border-color: -color-neutral-emphasis;");
+		}
 	}
 }

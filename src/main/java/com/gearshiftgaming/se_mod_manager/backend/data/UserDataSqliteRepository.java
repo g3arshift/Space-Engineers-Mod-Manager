@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jdbi.v3.core.statement.Slf4JSqlLogger;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.core.transaction.TransactionException;
 
@@ -385,7 +386,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :profileName,
                                     :spaceEngineersVersion)
                                 ON CONFLICT (mod_list_profile_id) DO UPDATE SET
-                                    profile_name = CASE WHEN mod_list_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""")
+                                    profile_name = CASE WHEN mod_list_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""")
                     .bind("id", modListProfileId)
                     .bind("profileName", modListProfileName)
                     .bind("spaceEngineersVersion", spaceEngineersVersion)
@@ -473,8 +474,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :loadPriority,
                                 :active)
                             ON CONFLICT (mod_id, mod_list_profile_id) DO UPDATE SET
-                                load_priority = CASE WHEN mod_list_profile_mod.load_priority != excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
-                                active = CASE WHEN mod_list_profile_mod.active != excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""");
+                                load_priority = CASE WHEN mod_list_profile_mod.load_priority IS DISTINCT FROM excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
+                                active = CASE WHEN mod_list_profile_mod.active IS DISTINCT FROM excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""");
                 for (Mod mod : modList) {
                     modListProfileModBatch.bind("id", mod.getId())
                             .bind("modListProfileId", modListProfileId)
@@ -526,7 +527,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         SET active = :active
                         WHERE mod_id = :modId
                         AND mod_list_profile_id = :modListProfileId
-                        AND active != :active;""");
+                        AND active IS DISTINCT FROM :active;""");
 
                 for (Mod mod : modList) {
                     updateActiveModsBatch.bind("modId", mod.getId())
@@ -562,7 +563,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         SET load_priority = :loadPriority
                         WHERE mod_id = :modId
                         AND mod_list_profile_id = :modListProfileId
-                        AND load_priority != :loadPriority;""");
+                        AND load_priority IS DISTINCT FROM :loadPriority;""");
                 for (Mod mod : modList) {
                     updateModsLoadPriorityBatch.bind("modId", mod.getId())
                             .bind("modListProfileId", modListProfileId)
@@ -608,19 +609,20 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :profileName,
                                     :saveName,
                                     :savePath,
-                                    :lastUsedModProfileId,
+                                    :lastUsedModListProfileId,
                                     :lastSaveStatus,
                                     :lastSaved,
                                     :saveExists,
                                     :SPACE_ENGINEERS_VERSION)
                                 ON CONFLICT (save_profile_id) DO UPDATE SET
-                                    profile_name = CASE WHEN save_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
-                                    last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id  != excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
-                                    last_save_status = CASE WHEN save_profile.last_save_status != excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
-                                    last_saved = CASE WHEN save_profile.last_saved != excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
-                                    save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""")
+                                    profile_name = CASE WHEN save_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
+                                    last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id IS DISTINCT FROM excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
+                                    last_save_status = CASE WHEN save_profile.last_save_status IS DISTINCT FROM excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
+                                    last_saved = CASE WHEN save_profile.last_saved IS DISTINCT FROM excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
+                                    save_exists = CASE WHEN save_profile.save_exists IS DISTINCT FROM excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""")
                         .bindBean(saveProfile)
                         .execute();
+
                 SQLITE_DB.useTransaction(handle1 -> handle.createUpdate("""
                                 INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
                                     VALUES (1, :saveProfileId);""")
@@ -674,8 +676,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :publishedServiceName,
                                 :description)
                             ON CONFLICT (mod_id) DO UPDATE SET
-                                friendly_name = CASE WHEN mod.friendly_name != excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
-                                description = CASE WHEN mod.description != excluded.description THEN excluded.description ELSE mod.description END;""");
+                                friendly_name = CASE WHEN mod.friendly_name IS DISTINCT FROM excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
+                                description = CASE WHEN mod.description IS DISTINCT FROM excluded.description THEN excluded.description ELSE mod.description END;""");
 
                 //Upsert the mod categories table but only for info that's changed
                 PreparedBatch modCategoriesBatch = handle.prepareBatch("""
@@ -686,7 +688,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :id,
                                 :category)
                             ON CONFLICT (mod_id, category) DO UPDATE SET
-                                category = CASE WHEN mod_category.category != excluded.category THEN excluded.category ELSE mod_category.category END;""");
+                                category = CASE WHEN mod_category.category IS DISTINCT FROM excluded.category THEN excluded.category ELSE mod_category.category END;""");
 
                 //Upsert the steam mods table but only for info that's changed
                 PreparedBatch steamModsBatch = handle.prepareBatch("""
@@ -697,7 +699,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :id,
                                 :lastUpdated)
                             ON CONFLICT (mod_id) DO UPDATE SET
-                                last_updated = CASE WHEN steam_mod.last_updated != excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""");
+                                last_updated = CASE WHEN steam_mod.last_updated IS DISTINCT FROM excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""");
 
                 //Upsert the mod io mods table but only for info that's changed
                 PreparedBatch modIoModsBatch = handle.prepareBatch("""
@@ -712,9 +714,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :lastUpdatedMonthDay,
                                 :lastUpdatedHour)
                             ON CONFLICT (mod_id) DO UPDATE SET
-                                last_updated_year = CASE WHEN modio_mod.last_updated_year != excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
-                                last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day != excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
-                                last_updated_hour = CASE WHEN modio_mod.last_updated_hour != last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""");
+                                last_updated_year = CASE WHEN modio_mod.last_updated_year IS DISTINCT FROM excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
+                                last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day IS DISTINCT FROM excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
+                                last_updated_hour = CASE WHEN modio_mod.last_updated_hour IS DISTINCT FROM last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""");
 
                 //Upsert the mod modified paths table but only for info that's changed
                 PreparedBatch modifiedPathsBatch = handle.prepareBatch("""
@@ -725,7 +727,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :id,
                                 :modifiedPath)
                             ON CONFLICT (mod_id, modified_path) DO UPDATE SET
-                                modified_path = CASE WHEN mod_modified_path.modified_path != excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""");
+                                modified_path = CASE WHEN mod_modified_path.modified_path IS DISTINCT FROM excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""");
 
                 int countExpectedSteamModsUpdated = 0, countExpectedModIoModsUpdated = 0;
                 for (Mod mod : modList) {

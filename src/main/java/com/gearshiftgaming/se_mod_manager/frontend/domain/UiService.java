@@ -682,7 +682,7 @@ public class UiService {
     }
 
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
-        currentSaveProfile.setLastUsedModProfileId(currentModListProfile.getID());
+        currentSaveProfile.setLastUsedModListProfileId(currentModListProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
         Result<Void> saveResult = saveSaveProfile(currentSaveProfile);

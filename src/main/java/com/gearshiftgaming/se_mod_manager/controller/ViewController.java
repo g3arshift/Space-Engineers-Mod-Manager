@@ -187,7 +187,7 @@ public class ViewController {
 
         //View for the menubar section of the main window
         final FXMLLoader MOD_TABLE_CONTEXT_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
-        final ModTableContextBar MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBar(uiService, MASTER_MANAGER_VIEW, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW, stage);
+        final ModTableContextBar MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBar(uiService, MASTER_MANAGER_VIEW, STATUS_BAR_VIEW, stage);
         MOD_TABLE_CONTEXT_BAR_LOADER.setController(MOD_TABLE_CONTEXT_BAR_VIEW);
         final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
 
