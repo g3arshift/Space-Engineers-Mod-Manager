@@ -25,15 +25,14 @@
          </Label>
       <Separator orientation="VERTICAL" />
          <Region HBox.hgrow="ALWAYS" />
-      <Separator orientation="VERTICAL" />
       <HBox alignment="CENTER_LEFT">
          <children>
-            <Label fx:id="lastSaveModifiedName">
+            <Label fx:id="lastSaveModifiedName" visible="false">
                <graphic>
                   <Label text="Last Save Modified:" />
                </graphic>
             </Label>
-            <Separator orientation="VERTICAL" />
+            <Separator orientation="VERTICAL" visible="false" />
          </children>
       </HBox>
          <Label fx:id="saveStatus">
