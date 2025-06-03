@@ -15,10 +15,7 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.MonthDay;
-import java.time.Year;
+import java.time.*;
 import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -327,10 +324,12 @@ public class ModInfoService {
         return modScrapeResult;
     }
 
+    //TODO: OP #67. As a part of it, we need to rewrite all the scraping functionality to parse based on our returned value, not just HTML.
     private Result<String[]> scrapeModIoMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
-        try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
+        try (Playwright scraper = Playwright.create();
+             Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
             Page webPage = browser.newContext(new Browser.NewContextOptions()
                     .setLocale("en-US")
                     .setExtraHTTPHeaders(Map.of("Accept-Language", "en-US,en;q=0.9"))).newPage();
@@ -463,24 +462,32 @@ public class ModInfoService {
             return;
         }
 
-        //TODO: We don't need to do any of this. There is literally a tag in the HTML response we get from Mod.io that isn't publicly visible. It's called "dateModified" and it's in UTC.
-        // OP #67
-        String lastUpdatedQuantifier = lastUpdatedFormatted.substring(lastUpdatedFormatted.length() - 1);
-        int duration = Integer.parseInt(lastUpdatedFormatted.substring(0, lastUpdatedFormatted.length() - 1));
-        switch (lastUpdatedQuantifier) {
-            case "h" -> {//Mod IO year + month + day + hour
-                modInfo[3] = Year.now().toString();
-                modInfo[4] = MonthDay.now().toString();
-                modInfo[5] = LocalTime.now().minusHours(duration).toString();
-            }
-            case "d" -> {//Mod IO year + month + day
-                modInfo[3] = Year.of(LocalDate.now().minusDays(duration).getYear()).toString();
-                modInfo[4] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
-            }
-            case "y" -> //Mod IO year only
-                    modInfo[3] = Year.now().minusYears(duration).toString();
-            default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
+        //This is awful and terrible but Mod.io does some very annoying things with how it returns data.
+        //Find the script tag that contains the JSON-LD for the news article, because for some reason that's where mod.io stuffed the lastUpdated tag.
+        //CSS style selector for the data we want
+        Element newsArticleScript = modPage.selectFirst("script[type='application/ld+json']#NewsArticle");
+
+        if (newsArticleScript == null || newsArticleScript.childNodeSize() == 0) {
+            modScrapeResult.addMessage(String.format("Failed to get last updated date for \"%s\"", modInfo[0]), ResultType.FAILED);
+            return;
         }
+
+        String jsonContent = newsArticleScript.childNodes().getFirst().toString();
+        JsonObject newsArticleJson = new Gson().fromJson(jsonContent, JsonObject.class);
+        if(!newsArticleJson.has("dateModified")) {
+            modScrapeResult.addMessage(String.format("Could not find dateModified for \"%s\"", modInfo[0]), ResultType.FAILED);
+            return;
+        }
+
+        LocalDateTime lastUpdated = LocalDateTime.ofInstant(
+                Instant.parse(newsArticleJson.get("dateModified").getAsString()),
+                ZoneId.systemDefault());
+
+        modInfo[3] = String.valueOf(lastUpdated.getYear());
+        //We originally used a MonthDay here so the rest of the application expects that format. As a result, we need to prepend a 0 if the month value or day value is < 10.
+        modInfo[4] = String.format("--%s%s-%s%s", lastUpdated.getMonthValue() < 10 ? "0" : "", lastUpdated.getMonthValue(),
+                lastUpdated.getDayOfMonth() < 10 ? "0" : "", lastUpdated.getDayOfMonth());
+        modInfo[5] = String.format("%s:%s:%s", lastUpdated.getHour(), lastUpdated.getMinute(), lastUpdated.getSecond());
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);

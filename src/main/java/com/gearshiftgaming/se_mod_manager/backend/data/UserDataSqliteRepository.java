@@ -345,8 +345,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
             modListLoadResult.addMessage("Successfully grabbed all mod data. Fetching modified paths...", ResultType.SUCCESS);
 
-            Map<String, List<String>> modifiedPathsMap = handle.createQuery("""
-                            SELECT * from mod_modified_path WHERE mod_id IN (<modIds>);""")
+            Map<String, List<String>> modifiedPathsMap = handle.createQuery("SELECT * from mod_modified_path WHERE mod_id IN (<modIds>);")
                     .bindList("modIds", modListIds)
                     .reduceRows(new LinkedHashMap<>(), (map, row) -> {
                         String modId = row.getColumn("mod_id", String.class);

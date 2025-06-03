@@ -262,8 +262,8 @@ public class MasterManager {
         this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
         columnFlagsFile = new File(properties.getProperty("semm.userData.trivialData.location"));
 
-        if(columnFlagsFile.exists()) {
-            try(FileInputStream in = new FileInputStream(columnFlagsFile)) {
+        if (columnFlagsFile.exists()) {
+            try (FileInputStream in = new FileInputStream(columnFlagsFile)) {
                 columnFlags.load(in);
             }
         }
@@ -375,17 +375,11 @@ public class MasterManager {
                     return new SimpleStringProperty("Unknown");
                 }
             } else if (cellData.getValue() instanceof ModIoMod modIoMod) {
-                StringBuilder lastUpdated = new StringBuilder();
-                if (modIoMod.getLastUpdatedMonthDay() != null) {
-                    lastUpdated.append(modIoMod.getLastUpdatedMonthDay().format(DateTimeFormatter.ofPattern("MMM d"))).append(", ");
-                }
+                String lastUpdated = modIoMod.getLastUpdatedMonthDay().format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
+                        modIoMod.getLastUpdatedYear() +
+                        " @ " + modIoMod.getLastUpdatedHour().format(DateTimeFormatter.ofPattern("hh:mm a"));
 
-                lastUpdated.append(modIoMod.getLastUpdatedYear());
-
-                if (modIoMod.getLastUpdatedHour() != null) {
-                    lastUpdated.append(" @ ").append(modIoMod.getLastUpdatedHour().format(DateTimeFormatter.ofPattern("ha")));
-                }
-                return new SimpleStringProperty(lastUpdated.toString());
+                return new SimpleStringProperty(lastUpdated);
             } else {
                 return new SimpleStringProperty("Unknown");
             }
@@ -466,7 +460,7 @@ public class MasterManager {
     }
 
     private void saveColumnFlags() throws IOException {
-        try(FileOutputStream out = new FileOutputStream(columnFlagsFile)) {
+        try (FileOutputStream out = new FileOutputStream(columnFlagsFile)) {
             columnFlags.store(out, "Mod table column visibility flags");
         }
     }

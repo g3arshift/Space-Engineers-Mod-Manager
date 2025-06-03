@@ -223,7 +223,7 @@ public class ModInfoServiceTest {
         Result<String[]> goodResult = modInfoService.scrapeModInformation(new ModIoMod(goodModIoId));
         assertTrue(goodResult.isSuccess());
         assertEquals("Multi-Function Survival Kit with Sifter", goodResult.getPayload()[0]);
-        assertEquals("Block,NoScripts", goodResult.getPayload()[1]);
+        assertEquals("Mod,Block,NoScripts", goodResult.getPayload()[1]);
         assertEquals("""
                 <!----><div id="" class="tw-absolute tw--top-20 tw-h-px tw-w-full" style="z-index: -1;"></div><!----><div class="tw-w-full tw-global--border-radius tw-relative tw-rounded-tr-none tw-border-transparent">
                  <div class="">
@@ -237,8 +237,7 @@ public class ModInfoServiceTest {
                  </div><!---->
                 </div>""", goodResult.getPayload()[2]);
         assertEquals("2024", goodResult.getPayload()[3]);
-        //TODO: Reenable after we rewrite datetime scraping
-        //assertEquals("--06-24", goodResult.getPayload()[4]);
-        assertNull(goodResult.getPayload()[5]);
+        assertEquals("--06-24", goodResult.getPayload()[4]);
+        assertEquals("11:30:31", goodResult.getPayload()[5]);
     }
 }
