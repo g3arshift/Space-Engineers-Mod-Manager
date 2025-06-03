@@ -6,6 +6,7 @@ on:
     branches:
       - 'development/**'
       - 'gh-actions-testing'
+      - 'sqlite-testing'
 
 permissions:
   contents: read
@@ -19,6 +20,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -32,9 +36,6 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Build with Gradle
-        run: gradle build -x test
-
       - name: Read app version
         uses: kurt-code/gha-properties@v0.0.1
         id: read-properties
@@ -45,20 +46,50 @@ jobs:
       - name: Save app version
         run: Add-Content -Path ${env:GITHUB_ENV} -Value "VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}"
 
+      - name: Check if version is already released
+        id: check-version
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run : |
+          echo "Current Version: $env:VERSION_INFORMATION"
+          
+          $latestTag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          echo "Latest Tag: $latestTag"
+          
+          if($env:VERSION_INFORMATION -eq $latestTag) {
+            echo "Version $env:VERSION_INFORMATION already released. Skipping build."
+            echo "SHOULD_SKIP=true" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+            exit 0
+          }
+
+      - name: Build with Gradle
+        if: ${{ env.SHOULD_SKIP != 'true' }}
+        run: gradle build -x test
+
       - name: Change wrapper permissions
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: powershell Set-ExecutionPolicy Unrestricted -Scope Process -Force; ./gradlew.bat
 
       - name: Make fat jar
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: ./gradlew shadowJar
 
+      - name: Run tests
+        if: ${{ env.SHOULD_SKIP != 'true' }}
+        run: ./gradlew remoteTest
+
       - name: Remove unneeded browser binaries
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: ./gradlew removeForeignOsBrowsers
 
       - name: Build Release
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         run: |
           jpackage --input build\libs --name "Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}" --main-jar Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar --main-class com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager --type app-image --app-version ${{ env.VERSION_INFORMATION }} --icon "src\main\resources\icons\logo.ico" --vendor "Gear Shift Gaming"
 
       - name: Archive Release
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: "zip"
@@ -66,6 +97,7 @@ jobs:
           filename: "SEMM-v${{ env.VERSION_INFORMATION }}-win.zip"
 
       - name: Upload Release
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
@@ -73,4 +105,4 @@ jobs:
           files: |
             Space Engineers Mod Manager-v${{ env.VERSION_INFORMATION }}/SEMM-v${{ env.VERSION_INFORMATION }}-win.zip
             build/libs/Space-Engineers-Mod-Manager-${{ env.VERSION_INFORMATION }}.jar
-          body: "To use, extract the .zip folder to a directory and run the executable. Alternatively, you can download the .jar file and run standalone. Running the .exe will not require Java to be installed, but running the .jar will require Java21 and JavaFX."
+          body: "To use, extract the .zip folder to a directory and run the executable. Alternatively, you can download the .jar file and run standalone. You don't have to have Java installed for the .exe to run, but running the .jar will require Java21 and JavaFX."

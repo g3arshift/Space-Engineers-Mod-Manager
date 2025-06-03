@@ -16,7 +16,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 
 //TODO: Replace real paths with mocks
@@ -109,6 +108,7 @@ public class SandboxServiceTest {
         assertEquals("Incorrect file type selected. Please select a .sbc file.", result.getCurrentMessage());
     }
 
+    //TODO: We need to have our mod injection tests now also check for the Sandbox.sbc file injection.
 
     @Test
     void shouldSuccessfullyInjectModsToConfigWithAlreadyExistingMods() throws IOException {
@@ -126,21 +126,21 @@ public class SandboxServiceTest {
 
     @Test
     void shouldSuccessfullySaveConfigFile() throws IOException {
-        Result<Void> result = service.saveSandboxToFile(tempDir.getPath() + "/Sandbox_config.sbc", fakeConfig);
+        Result<Void> result = service.saveSandboxConfigToFile(tempDir.getPath() + "/Sandbox_config.sbc", fakeConfig);
         assertTrue(result.isSuccess());
         assertEquals("Successfully saved sandbox config.", result.getCurrentMessage());
     }
 
     @Test
     void shouldAppendExtensionToSavePathWithIncorrectExtensionAndWriteCorrectly() throws IOException {
-        Result<Void> result = service.saveSandboxToFile(tempDir.getPath() + "/Sandbox_config.txt", "Save this config!");
+        Result<Void> result = service.saveSandboxConfigToFile(tempDir.getPath() + "/Sandbox_config.txt", "Save this config!");
         assertTrue(result.isSuccess());
         assertEquals("File extension .txt not permitted. Changing to .sbc.", result.getMESSAGES().getFirst());
     }
 
     @Test
     void savingSandboxConfigWillNotAcceptFilePathWithIllegalCharacters() throws IOException {
-        Result<Void> result = service.saveSandboxToFile(illegalSavePath, "Save this config!");
+        Result<Void> result = service.saveSandboxConfigToFile(illegalSavePath, "Save this config!");
         assertFalse(result.isSuccess());
         assertEquals("Save path or name contains invalid characters.", result.getCurrentMessage());
     }

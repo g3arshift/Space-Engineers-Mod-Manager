@@ -8,12 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -36,34 +37,27 @@ public class SaveService {
 	}
 
 	//TODO: Rewrite with guard clauses
-	public Result<SaveProfile> copySaveFiles(SaveProfile sourceSaveProfile) throws IOException {
+	public Result<SaveProfile> copySaveFiles(SaveProfile sourceSaveProfile, List<SaveProfile> saveProfileList) throws IOException {
 		Result<SaveProfile> result = new Result<>();
 
 		//Gets the path without Sandbox_config.sbc at the end
 		String sourceSavePath = sourceSaveProfile.getSavePath().substring(0, sourceSaveProfile.getSavePath().length() - 19);
 
 		//Checks if our intended save path already exists, and if it does, create a new name.
-		boolean pathHasDuplicate;
-		int copyIndex = 1;
-		String copyProfilePath;
 
 		String endOfSourcePath = sourceSavePath.substring(sourceSaveProfile.getProfileName().length() - 3);
 		Pattern endOfProfileNameRegex = Pattern.compile("\\(([^d\\)]+)\\)");
 
 		if (endOfProfileNameRegex.matcher(endOfSourcePath).find()) { //Check if it ends with a (Number), so we can know if it was already a duplicate.
-			copyProfilePath = sourceSavePath;
-		} else {
-			copyProfilePath = String.format("%s (%d)", sourceSavePath, copyIndex);
+			sourceSavePath = sourceSavePath.substring(0, sourceSavePath.lastIndexOf('(')).trim();
 		}
 
+		String copyProfilePath;
+		int copyIndex = 1;
 		do {
-			pathHasDuplicate = Files.exists(Path.of(copyProfilePath));
-			if (pathHasDuplicate) {
-				copyIndex++;
-			}
-			int copyIndexStringLength = 2 + (String.valueOf(copyIndex).length());
-			copyProfilePath = String.format("%s (%d)", copyProfilePath.substring(0, copyProfilePath.length() - copyIndexStringLength).trim(), copyIndex);
-		} while (pathHasDuplicate);
+			copyProfilePath = String.format("%s (%d)", sourceSavePath, copyIndex);
+			copyIndex++;
+		} while (Files.exists(Path.of(copyProfilePath)));
 
 		Result<String> sandboxConfigResult = SANDBOX_SERVICE.getSandboxFromFile(new File(sourceSavePath + "\\Sandbox_config.sbc"));
 
@@ -84,13 +78,22 @@ public class SaveService {
 					copiedSaveProfile.setSavePath(copyProfilePath + "\\Sandbox_config.sbc");
 
 					//Change the name in our copied save's Sandbox_config and Sandbox files to match the save name.
-					String sessionName = getSessionName(sandboxConfig, copyProfilePath);
-					sessionName = getProfileName(copyIndex, endOfProfileNameRegex, sessionName);
+					String sessionName = Paths.get(copyProfilePath).getFileName().toString();
 					copiedSaveProfile.setSaveName(sessionName);
 
-					String profileName = copiedSaveProfile.getProfileName();
-					profileName = getProfileName(copyIndex, endOfProfileNameRegex, profileName);
-					copiedSaveProfile.setProfileName(profileName);
+					String baseName = copiedSaveProfile.getProfileName().trim();
+					int profileCopyIndex = 0;
+					String newProfileName;
+
+					boolean duplicateProfileName;
+					do {
+						newProfileName = profileCopyIndex == 0 ? baseName : String.format("%s (%d)", baseName, profileCopyIndex);
+						String finalProfileName = newProfileName;
+						duplicateProfileName = saveProfileList.stream().anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equalsIgnoreCase(finalProfileName.trim()));
+						profileCopyIndex++;
+					} while (duplicateProfileName);
+
+					copiedSaveProfile.setProfileName(newProfileName);
 
 					//Change the name in our copied save's Sandbox_config file to match the save name.
 					Result<Void> sandboxConfigNameChangeResult = changeSandboxConfigSessionName(sandboxConfig, copiedSaveProfile);
@@ -127,17 +130,6 @@ public class SaveService {
 			result.addMessage(sandboxConfigResult);
 		}
 		return result;
-	}
-
-	@NotNull
-	private String getProfileName(int copyIndex, Pattern endOfProfileNameRegex, String profileName) {
-		String profileNameEnd = profileName.substring(profileName.length() - 3);
-		if (endOfProfileNameRegex.matcher(profileNameEnd).find()) { //Contains a (number) end
-			profileName = String.format("%s (%d)", profileName.substring(0, profileName.length() - 3).trim(), copyIndex);
-		} else {
-			profileName = String.format("%s (%d)", profileName, copyIndex);
-		}
-		return profileName;
 	}
 
 	public String getSessionName(String sandboxConfig, String saveDestinationPath) {

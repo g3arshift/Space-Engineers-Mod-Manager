@@ -12,16 +12,17 @@ import org.apache.logging.log4j.Logger;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jdbi.v3.core.statement.Slf4JSqlLogger;
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.core.transaction.TransactionException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 //TODO: look into parallelizing this.
 public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
@@ -33,7 +34,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public UserDataSqliteRepository(String databasePath) throws IOException {
         this.databasePath = databasePath;
 
-        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         Path databaseLocation = Path.of(databasePath);
         if (Files.notExists(databaseLocation)) {
             log.info("Database not found. Creating new database...");
@@ -46,17 +46,17 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             createDatabase();
             initializeData();
         } else {
-            //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
             SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
         }
     }
 
     private void createDatabase() {
+        //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         log.info("Creating database schema...");
         SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
         SQLITE_DB.useTransaction(handle -> {
-            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")){
-                if(sqlStream == null) {
+            try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")) {
+                if (sqlStream == null) {
                     log.error("Could not find database schema.");
                     throw new FileNotFoundException("Resource not found: " + "Database/semm_db_base.sql");
                 }
@@ -70,14 +70,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 throw new RuntimeException(e);
             }
         });
-        SQLITE_DB.useHandle(handle -> handle.execute("""
-                CREATE TRIGGER delete_orphan_mods
-                    AFTER DELETE ON mod_list_profile_mod
-                    FOR EACH ROW
-                    WHEN NOT EXISTS (SELECT 1 FROM mod_list_profile_mod WHERE mod_id = OLD.mod_id)
-                    BEGIN
-                        DELETE FROM mod WHERE mod_id = OLD.mod_id;
-                    END;"""));
         log.info("Finished creating database schema.");
     }
 
@@ -97,7 +89,6 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         return saveResult;
     }
 
-    //TODO: Oh god the testing. We need to really test the conditionals for updates in particular
     @Override
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         Result<Void> saveResult = saveUserConfiguration(userConfiguration);
@@ -129,9 +120,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         Result<UserConfiguration> userProfileLoadResult = new Result<>();
         UserConfiguration userConfiguration;
         try (Handle handle = SQLITE_DB.open()) {
-            userConfiguration = handle.createQuery("SELECT * from user_configuration where id = 1;")
+            userConfiguration = handle.createQuery("SELECT * FROM user_configuration WHERE id = 1;")
                     .map(new UserConfigurationMapper())
-                    .first();
+                    .findFirst().orElse(null);
             userProfileLoadResult.addMessage("Loaded user configuration from database.", ResultType.SUCCESS);
         }
         if (userConfiguration == null) {
@@ -141,7 +132,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileIds = loadAllBasicModProfileInformation();
         if (modListProfileIds.isEmpty()) {
-            userProfileLoadResult.addMessage("Failed to load mod list profile IDS.", ResultType.FAILED);
+            userProfileLoadResult.addMessage("Failed to load mod list profile ID's.", ResultType.FAILED);
             return userProfileLoadResult;
         }
         userProfileLoadResult.addMessage("Loaded mod list profile ID's.", ResultType.SUCCESS);
@@ -221,11 +212,30 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 }
             }
             saveResult.addMessage("Successfully saved user configuration.", ResultType.SUCCESS);
-        } catch (TransactionException e) {
-            saveResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            saveResult.addMessage(getStackTrace(e), ResultType.FAILED);
             saveResult.addMessage("Failed to save user configuration.", ResultType.FAILED);
         }
         return saveResult;
+    }
+
+    @Override
+    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
+        Result<ModListProfile> modListProfileResult = new Result<>();
+        Optional<ModListProfile> foundModListProfile;
+        try (Handle handle = SQLITE_DB.open()) {
+            foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE mod_list_profile_id = :profileId")
+                    .bind("profileId", modListProfileId)
+                    .map(new ModListProfileMapper())
+                    .findOne();
+        }
+        foundModListProfile.ifPresentOrElse(modListProfile -> {
+            modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+            loadModList(modListProfile, modListProfileResult);
+            modListProfileResult.setPayload(modListProfile);
+        }, () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", modListProfileId), ResultType.FAILED));
+
+        return modListProfileResult;
     }
 
     @Override
@@ -239,13 +249,11 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .map(new ModListProfileMapper())
                     .findOne();
         }
-        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
-                () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", profileName), ResultType.FAILED));
-        if (foundModListProfile.isEmpty()) {
-            return modListProfileResult;
-        }
-
-        loadModList(foundModListProfile.get(), modListProfileResult);
+        foundModListProfile.ifPresentOrElse(modListProfile -> {
+            modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+            loadModList(modListProfile, modListProfileResult);
+            modListProfileResult.setPayload(modListProfile);
+        }, () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", profileName), ResultType.FAILED));
 
         return modListProfileResult;
     }
@@ -259,38 +267,17 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .map(new ModListProfileMapper())
                     .findFirst();
         }
-        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
-                () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
-        if (foundModListProfile.isEmpty()) {
-            return modListProfileResult;
-        }
-        loadModList(foundModListProfile.get(), modListProfileResult);
-        return modListProfileResult;
-    }
+        foundModListProfile.ifPresentOrElse(modListProfile -> {
+            modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS);
+            loadModList(modListProfile, modListProfileResult);
+            modListProfileResult.setPayload(modListProfile);
+        }, () -> modListProfileResult.addMessage("Failed to find first mod list profile.", ResultType.FAILED));
 
-    @Override
-    public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
-        Result<ModListProfile> modListProfileResult = new Result<>();
-        Optional<ModListProfile> foundModListProfile;
-        try (Handle handle = SQLITE_DB.open()) {
-            foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE mod_list_profile_id = :profileId")
-                    .bind("profileId", modListProfileId)
-                    .map(new ModListProfileMapper())
-                    .findOne();
-        }
-        foundModListProfile.ifPresentOrElse(modListProfile1 -> modListProfileResult.addMessage("Found mod list profile.", ResultType.SUCCESS),
-                () -> modListProfileResult.addMessage(String.format("Failed to find mod list profile \"%s\".", modListProfileId), ResultType.FAILED));
-        if (foundModListProfile.isEmpty()) {
-            return modListProfileResult;
-        }
-
-        loadModList(foundModListProfile.get(), modListProfileResult);
-        modListProfileResult.setPayload(foundModListProfile.get());
         return modListProfileResult;
     }
 
     private void loadModList(ModListProfile modListProfile, Result<ModListProfile> modListProfileResult) {
-        Result<List<Mod>> modListResult = loadModListForProfile(modListProfile.getID());
+        Result<List<Mod>> modListResult = loadModListForProfileId(modListProfile.getID());
         if (!modListResult.isSuccess()) {
             modListProfileResult.addAllMessages(modListResult);
         }
@@ -300,7 +287,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         modListProfileResult.addMessage(String.format("Successfully loaded mod profile \"%s\"", modListProfile.getProfileName()), ResultType.SUCCESS);
     }
 
-    private Result<List<Mod>> loadModListForProfile(UUID modListProfileId) {
+    private Result<List<Mod>> loadModListForProfileId(UUID modListProfileId) {
         Result<List<Mod>> modListLoadResult = new Result<>();
         try (Handle handle = SQLITE_DB.open()) {
 
@@ -358,8 +345,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
             modListLoadResult.addMessage("Successfully grabbed all mod data. Fetching modified paths...", ResultType.SUCCESS);
 
-            Map<String, List<String>> modifiedPathsMap = handle.createQuery("""
-                            SELECT * from mod_modified_path WHERE mod_id IN (<modIds>);""")
+            Map<String, List<String>> modifiedPathsMap = handle.createQuery("SELECT * from mod_modified_path WHERE mod_id IN (<modIds>);")
                     .bindList("modIds", modListIds)
                     .reduceRows(new LinkedHashMap<>(), (map, row) -> {
                         String modId = row.getColumn("mod_id", String.class);
@@ -399,7 +385,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :profileName,
                                     :spaceEngineersVersion)
                                 ON CONFLICT (mod_list_profile_id) DO UPDATE SET
-                                    profile_name = CASE WHEN mod_list_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""")
+                                    profile_name = CASE WHEN mod_list_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""")
                     .bind("id", modListProfileId)
                     .bind("profileName", modListProfileName)
                     .bind("spaceEngineersVersion", spaceEngineersVersion)
@@ -410,9 +396,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 values (1, :modListProfileId);""")
                     .bind("modListProfileId", modListProfileId)
                     .execute());
-            modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\"", modListProfileName), ResultType.SUCCESS);
-        } catch (TransactionException e) {
-            modListProfileSaveResult.addMessage(e.toString(), ResultType.FAILED);
+            modListProfileSaveResult.addMessage(String.format("Successfully saved details for mod list profile \"%s\".", modListProfileName), ResultType.SUCCESS);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListProfileSaveResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListProfileSaveResult;
         }
         return modListProfileSaveResult;
@@ -421,8 +407,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     /**
      * Saves the mod list profile details AND the mod list for it.
      *
-     * @param modListProfile
-     * @return
+     * @param modListProfile The mod list profile we are going to save all the information for.
+     * @return The status and message of the operation.
      */
     @Override
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
@@ -433,6 +419,12 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
         modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
 
+        if (!modListProfileSaveResult.isSuccess()) {
+            modListProfileSaveResult.addMessage("Failed to save mod list profile.", ResultType.FAILED);
+            return modListProfileSaveResult;
+        }
+
+        modListProfileSaveResult.addMessage(String.format("Successfully saved mod list profile \"%s\".", modListProfile.getProfileName()), ResultType.SUCCESS);
         return modListProfileSaveResult;
     }
 
@@ -450,8 +442,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     modListProfileDeleteResult.addMessage(String.format("Successfully deleted mod list profile \"%s\".", modListProfileId), ResultType.SUCCESS);
                 }
             });
-        } catch (TransactionException e) {
-            modListProfileDeleteResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListProfileDeleteResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListProfileDeleteResult;
         }
         return modListProfileDeleteResult;
@@ -481,8 +473,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :loadPriority,
                                 :active)
                             ON CONFLICT (mod_id, mod_list_profile_id) DO UPDATE SET
-                                load_priority = CASE WHEN mod_list_profile_mod.load_priority != excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
-                                active = CASE WHEN mod_list_profile_mod.active != excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""");
+                                load_priority = CASE WHEN mod_list_profile_mod.load_priority IS DISTINCT FROM excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
+                                active = CASE WHEN mod_list_profile_mod.active IS DISTINCT FROM excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""");
                 for (Mod mod : modList) {
                     modListProfileModBatch.bind("id", mod.getId())
                             .bind("modListProfileId", modListProfileId)
@@ -500,8 +492,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
                 modListUpdateResult.addMessage(String.format("Successfully updated %s mods in the modlist.", numSuccessfullyUpdatedModListRows), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modListUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListUpdateResult;
         }
         return modListUpdateResult;
@@ -517,8 +509,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         .execute();
                 modDeletionResult.addMessage(String.format("Successfully deleted %d mods from mod list profile \"%s\".", deletedMods, modListProfileId), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modDeletionResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modDeletionResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modDeletionResult;
         }
         return modDeletionResult;
@@ -534,7 +526,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         SET active = :active
                         WHERE mod_id = :modId
                         AND mod_list_profile_id = :modListProfileId
-                        AND active != :active;""");
+                        AND active IS DISTINCT FROM :active;""");
 
                 for (Mod mod : modList) {
                     updateActiveModsBatch.bind("modId", mod.getId())
@@ -552,8 +544,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
                 modListUpdateResult.addMessage(String.format("Successfully updated %s mods in the modlist.", numSuccessfullyUpdatedMods), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modListUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListUpdateResult;
         }
 
@@ -570,7 +562,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                         SET load_priority = :loadPriority
                         WHERE mod_id = :modId
                         AND mod_list_profile_id = :modListProfileId
-                        AND load_priority != :loadPriority;""");
+                        AND load_priority IS DISTINCT FROM :loadPriority;""");
                 for (Mod mod : modList) {
                     updateModsLoadPriorityBatch.bind("modId", mod.getId())
                             .bind("modListProfileId", modListProfileId)
@@ -588,8 +580,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
                 modListUpdateResult.addMessage(String.format("Successfully updated %s mods in the modlist.", numSuccessfullyUpdatedMods), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            modListUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            modListUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modListUpdateResult;
         }
         return modListUpdateResult;
@@ -616,43 +608,46 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :profileName,
                                     :saveName,
                                     :savePath,
-                                    :lastUsedModProfileId,
+                                    :lastUsedModListProfileId,
                                     :lastSaveStatus,
                                     :lastSaved,
                                     :saveExists,
                                     :SPACE_ENGINEERS_VERSION)
                                 ON CONFLICT (save_profile_id) DO UPDATE SET
-                                    profile_name = CASE WHEN save_profile.profile_name != excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
-                                    last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id  != excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
-                                    last_save_status = CASE WHEN save_profile.last_save_status != excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
-                                    last_saved = CASE WHEN save_profile.last_saved != excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
-                                    save_exists = CASE WHEN save_profile.save_exists != excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""")
+                                    profile_name = CASE WHEN save_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
+                                    last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id IS DISTINCT FROM excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
+                                    last_save_status = CASE WHEN save_profile.last_save_status IS DISTINCT FROM excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
+                                    last_saved = CASE WHEN save_profile.last_saved IS DISTINCT FROM excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
+                                    save_exists = CASE WHEN save_profile.save_exists IS DISTINCT FROM excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""")
                         .bindBean(saveProfile)
                         .execute();
+
                 SQLITE_DB.useTransaction(handle1 -> handle.createUpdate("""
                                 INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
                                     VALUES (1, :saveProfileId);""")
                         .bind("saveProfileId", saveProfile.getID())
                         .execute());
-                saveSaveProfileResult.addMessage(String.format("Successfully updated save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
+                saveSaveProfileResult.addMessage(String.format("Successfully saved save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
             });
-        } catch (TransactionException e) {
-            saveSaveProfileResult.addMessage(e.toString(), ResultType.FAILED);
+        } catch (TransactionException | UnableToExecuteStatementException e) {
+            saveSaveProfileResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return saveSaveProfileResult;
         }
         return saveSaveProfileResult;
     }
 
     @Override
-    public Result<Void> deleteSaveProfile(SaveProfile saveProfileId) {
+    public Result<Void> deleteSaveProfile(SaveProfile saveProfile) {
         //Delete the removed save profiles
         Result<Void> saveResult = new Result<>();
         SQLITE_DB.useTransaction(handle -> {
-            int countSaveProfilesDeleted = handle.execute("DELETE FROM save_profile WHERE save_profile_id NOT IN :id", saveProfileId.getID());
+            int countSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id = :id")
+                    .bind("id", saveProfile.getID())
+                    .execute();
             if (countSaveProfilesDeleted != 1) {
-                saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfileId.getProfileName()), ResultType.FAILED);
+                saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfile.getProfileName()), ResultType.FAILED);
             } else
-                saveResult.addMessage(String.format("\"%s\" successfully deleted.", saveProfileId.getProfileName()), ResultType.SUCCESS);
+                saveResult.addMessage(String.format("\"%s\" successfully deleted.", saveProfile.getProfileName()), ResultType.SUCCESS);
         });
         return saveResult;
     }
@@ -680,8 +675,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :publishedServiceName,
                                 :description)
                             ON CONFLICT (mod_id) DO UPDATE SET
-                                friendly_name = CASE WHEN mod.friendly_name != excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
-                                description = CASE WHEN mod.description != excluded.description THEN excluded.description ELSE mod.description END;""");
+                                friendly_name = CASE WHEN mod.friendly_name IS DISTINCT FROM excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
+                                description = CASE WHEN mod.description IS DISTINCT FROM excluded.description THEN excluded.description ELSE mod.description END;""");
 
                 //Upsert the mod categories table but only for info that's changed
                 PreparedBatch modCategoriesBatch = handle.prepareBatch("""
@@ -692,7 +687,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :id,
                                 :category)
                             ON CONFLICT (mod_id, category) DO UPDATE SET
-                                category = CASE WHEN mod_category.category != excluded.category THEN excluded.category ELSE mod_category.category END;""");
+                                category = CASE WHEN mod_category.category IS DISTINCT FROM excluded.category THEN excluded.category ELSE mod_category.category END;""");
 
                 //Upsert the steam mods table but only for info that's changed
                 PreparedBatch steamModsBatch = handle.prepareBatch("""
@@ -703,7 +698,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :id,
                                 :lastUpdated)
                             ON CONFLICT (mod_id) DO UPDATE SET
-                                last_updated = CASE WHEN steam_mod.last_updated != excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""");
+                                last_updated = CASE WHEN steam_mod.last_updated IS DISTINCT FROM excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""");
 
                 //Upsert the mod io mods table but only for info that's changed
                 PreparedBatch modIoModsBatch = handle.prepareBatch("""
@@ -718,9 +713,9 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :lastUpdatedMonthDay,
                                 :lastUpdatedHour)
                             ON CONFLICT (mod_id) DO UPDATE SET
-                                last_updated_year = CASE WHEN modio_mod.last_updated_year != excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
-                                last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day != excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
-                                last_updated_hour = CASE WHEN modio_mod.last_updated_hour != last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""");
+                                last_updated_year = CASE WHEN modio_mod.last_updated_year IS DISTINCT FROM excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
+                                last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day IS DISTINCT FROM excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
+                                last_updated_hour = CASE WHEN modio_mod.last_updated_hour IS DISTINCT FROM last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""");
 
                 //Upsert the mod modified paths table but only for info that's changed
                 PreparedBatch modifiedPathsBatch = handle.prepareBatch("""
@@ -731,7 +726,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 :id,
                                 :modifiedPath)
                             ON CONFLICT (mod_id, modified_path) DO UPDATE SET
-                                modified_path = CASE WHEN mod_modified_path.modified_path != excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""");
+                                modified_path = CASE WHEN mod_modified_path.modified_path IS DISTINCT FROM excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""");
 
                 int countExpectedSteamModsUpdated = 0, countExpectedModIoModsUpdated = 0;
                 for (Mod mod : modList) {
@@ -802,7 +797,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 modUpdateResult.addMessage("Successfully updated mods.", ResultType.SUCCESS);
             });
         } catch (IOException e) {
-            modUpdateResult.addMessage(e.toString(), ResultType.FAILED);
+            modUpdateResult.addMessage(getStackTrace(e), ResultType.FAILED);
             return modUpdateResult;
         }
         return modUpdateResult;
@@ -830,7 +825,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 createDatabase();
                 resetResult.addMessage("Successfully deleted user data.", ResultType.SUCCESS);
             } catch (IOException e) {
-                resetResult.addMessage(e.toString(), ResultType.FAILED);
+                resetResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 return resetResult;
             }
         }

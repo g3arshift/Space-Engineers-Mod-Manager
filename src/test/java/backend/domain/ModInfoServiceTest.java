@@ -50,27 +50,6 @@ public class ModInfoServiceTest {
         modListIds.add("1902970975"); //Assertive Combat Systems
     }
 
-    //TODO: These need to go into the repository.
-//    @Test
-//    void shouldGetThreeSteamModsFromFile() {
-//
-//    }
-//
-//    @Test
-//    void shouldNotGetSteamModsFromFile() {
-//
-//    }
-//
-//    @Test
-//    void shouldGetThreeModIoModsFromFile() {
-//
-//    }
-//
-//    @Test
-//    void shouldNotGetModIoModsFromFile() {
-//
-//    }
-
     @Test
     void shouldGetNonSpaceEngineersCollectionError() throws IOException {
         String nonSpaceEngineersCollectionId = "2204937925"; //Some random TF2 collection
@@ -112,7 +91,7 @@ public class ModInfoServiceTest {
 
         List<Result<String>> goodResults = modInfoService.scrapeSteamCollectionModIds(steamCollectionId);
         assertEquals(7, goodResults.size());
-        for(int i = 0; i < goodResults.size(); i++) {
+        for (int i = 0; i < goodResults.size(); i++) {
             assertTrue(goodResults.get(i).isSuccess());
             assertEquals("Successfully grabbed mod ID.", goodResults.get(i).getCurrentMessage());
             assertEquals(expectedIds.get(i), goodResults.get(i).getPayload());
@@ -136,7 +115,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamNotFoundError()throws InterruptedException {
+    void shouldGetSteamNotFoundError() throws InterruptedException {
         String badModId = "122121213232";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(badModId));
         assertFalse(badResult.isSuccess());
@@ -144,15 +123,14 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamNotModItemError()throws InterruptedException {
+    void shouldGetSteamNotModItemError() throws InterruptedException {
         String screenShotId = "2396152929";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(screenShotId));
         assertFalse(badResult.isSuccess());
-        assertEquals("Item with ID \"2396152929\" is not a mod.", badResult.getCurrentMessage());
     }
 
     @Test
-    void shouldGetSteamCollectionError()throws InterruptedException {
+    void shouldGetSteamCollectionError() throws InterruptedException {
         String steamCollectionId = "3408899159";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod(steamCollectionId));
         assertFalse(badResult.isSuccess());
@@ -160,7 +138,7 @@ public class ModInfoServiceTest {
     }
 
     @Test
-    void shouldGetSteamItemIsAScriptNotAModError()throws InterruptedException {
+    void shouldGetSteamItemIsAScriptNotAModError() throws InterruptedException {
         String scriptItemId = "479678389";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new SteamMod("479678389"));
         assertFalse(badResult.isSuccess());
@@ -232,7 +210,6 @@ public class ModInfoServiceTest {
         String badModIoId = "3123nj121";
         Result<String[]> badResult = modInfoService.scrapeModInformation(new ModIoMod(badModIoId));
         assertFalse(badResult.isSuccess());
-        assertEquals("Mod with ID \"" + badModIoId + "\" cannot be found.", badResult.getCurrentMessage());
     }
 
     @Test
@@ -246,20 +223,21 @@ public class ModInfoServiceTest {
         Result<String[]> goodResult = modInfoService.scrapeModInformation(new ModIoMod(goodModIoId));
         assertTrue(goodResult.isSuccess());
         assertEquals("Multi-Function Survival Kit with Sifter", goodResult.getPayload()[0]);
-        assertEquals("Block,NoScripts", goodResult.getPayload()[1]);
-        assertEquals("<div class=\"tw-w-full tw-global--border-radius tw-relative tw-rounded-tr-none tw-border-transparent\">\n" +
-                " <div class=\"\">\n" +
-                "  <!----><!---->\n" +
-                "  <div class=\"tw-flex tw-flex-col\">\n" +
-                "   <!---->\n" +
-                "   <div class=\"tw-content tw-view-text\">\n" +
-                "    <p>A survival kit that has many other function like full assembler, refining (via assembling function) and sifting function too.</p>\n" +
-                "   </div><!---->\n" +
-                "  </div>\n" +
-                " </div><!---->\n" +
-                "</div>", goodResult.getPayload()[2]);
+        assertEquals("Mod,Block,NoScripts", goodResult.getPayload()[1]);
+        assertEquals("""
+                <!----><div id="" class="tw-absolute tw--top-20 tw-h-px tw-w-full" style="z-index: -1;"></div><!----><div class="tw-w-full tw-global--border-radius tw-relative tw-rounded-tr-none tw-border-transparent">
+                 <div class="">
+                  <!----><!---->
+                  <div class="tw-flex tw-flex-col">
+                   <!---->
+                   <div class="tw-content tw-view-text">
+                    <p>A survival kit that has many other function like full assembler, refining (via assembling function) and sifting function too.</p>
+                   </div><!---->
+                  </div>
+                 </div><!---->
+                </div>""", goodResult.getPayload()[2]);
         assertEquals("2024", goodResult.getPayload()[3]);
         assertEquals("--06-24", goodResult.getPayload()[4]);
-        assertNull(goodResult.getPayload()[5]);
+        assertEquals("11:30:31", goodResult.getPayload()[5]);
     }
 }

@@ -14,6 +14,7 @@ import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -61,7 +62,7 @@ public class SaveProfileManager {
     private Label activeProfileName;
 
     @FXML
-    private Button closeSaveWindow;
+    private Button closeWindow;
 
     @FXML
     private StackPane modImportProgressPanel;
@@ -109,9 +110,8 @@ public class SaveProfileManager {
         TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
     }
 
-    public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
+    public void initView(Parent root, double minWidth, double minHeight, ModTableContextBar modTableContextBar) {
         this.modTableContextBar = modTableContextBar;
-        Scene scene = new Scene(root);
 
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -119,8 +119,8 @@ public class SaveProfileManager {
         stage.setTitle("Save Manager");
         WindowDressingUtility.appendStageIcon(stage);
 
-        stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
-        stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
 
         saveList.setItems(SAVE_PROFILES);
         saveList.setCellFactory(param -> new SaveProfileManagerCell(UI_SERVICE));
@@ -131,11 +131,17 @@ public class SaveProfileManager {
         modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
         modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
 
+        Scene scene = new Scene(root);
         stage.setScene(scene);
+        //We shouldn't be required to use this since the stage should be a modal, but it isn't working.
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE)
+                closeWindow();
+        });
 
         saveCopyMessage.setVisible(false);
 
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> closeWindow());
 
         UI_SERVICE.logPrivate("Successfully initialized save manager.", MessageType.INFO);
     }
@@ -180,8 +186,8 @@ public class SaveProfileManager {
                                     "For this tutorial we'll skip that step and manually add mods instead.");
                             tutorialMessages.add("Let's head back to the mod list manager. Press the \"Close\" button.");
                             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Save Profiles");
-                            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeSaveWindow);
-                            closeSaveWindow.requestFocus();
+                            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeWindow);
+                            closeWindow.requestFocus();
                         }
                     } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
                         Popup.displaySimpleAlert(saveProfileResult);
@@ -224,38 +230,26 @@ public class SaveProfileManager {
                 profileNameAlreadyExists = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
                 if (profileNameAlreadyExists) {
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-                } else if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
-                    addSaveProfileToListWithExistingModsPrompt(saveProfileResult, saveProfile, selectedSave);
-                } else {
-                    addSaveProfileToListWithoutMods(saveProfileResult, saveProfile);
-                }
+                } else
+                    addSaveProfileToList(saveProfileResult, saveProfile, selectedSave);
             }
         } while (profileNameAlreadyExists);
 
         return false;
     }
 
-    private void addSaveProfileToListWithExistingModsPrompt(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile, File selectedSave) {
+    private void addSaveProfileToList(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile, File selectedSave) {
         saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null)
+        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null) {
+            UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.getFirst());
             SAVE_PROFILES.set(0, saveProfile);
-        else
+        } else
             SAVE_PROFILES.add(saveProfile);
-        displayAddExistingModsDialog(selectedSave);
-        finalizeSaveProfile(saveProfileResult, saveProfile);
-    }
 
-    private void addSaveProfileToListWithoutMods(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
-        saveProfile.setProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-        if (SAVE_PROFILES.size() == 1 && SAVE_PROFILES.getFirst().getSaveName().equals("None") && SAVE_PROFILES.getFirst().getProfileName().equals("None") && SAVE_PROFILES.getFirst().getSavePath() == null)
-            SAVE_PROFILES.set(0, saveProfile);
-        else
-            SAVE_PROFILES.add(saveProfile);
-        finalizeSaveProfile(saveProfileResult, saveProfile);
-        //TODO: Switch active profile to the new profile
-    }
+        //We don't want to display this dialog when we're in the first time setup/tutorial
+        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup())
+            displayAddExistingModsDialog(selectedSave);
 
-    private void finalizeSaveProfile(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile) {
         saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
         UI_SERVICE.log(saveProfileResult);
 
@@ -264,12 +258,13 @@ public class SaveProfileManager {
         saveList.refresh();
         saveList.getSelectionModel().selectLast();
         Result<Void> saveResult = UI_SERVICE.saveSaveProfile(saveProfile);
-        setActive();
-        if(!saveResult.isSuccess()) {
+        if (!saveResult.isSuccess()) {
             UI_SERVICE.log(saveResult);
             Popup.displaySimpleAlert(saveResult);
+            return;
         }
-        //TODO: Switch active profile to the new profile
+
+        setActive();
     }
 
     //TODO: This is badly organized.
@@ -355,7 +350,7 @@ public class SaveProfileManager {
         final Task<Result<SaveProfile>> TASK = new Task<>() {
             @Override
             protected Result<SaveProfile> call() throws Exception {
-                return UI_SERVICE.copySaveProfile(saveList.getSelectionModel().getSelectedItem());
+                return UI_SERVICE.copySaveProfile(saveList.getSelectionModel().getSelectedItem(), SAVE_PROFILES);
             }
         };
 
@@ -380,7 +375,7 @@ public class SaveProfileManager {
 
             UI_SERVICE.log(profileCopyResult);
             Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
-            if(!saveResult.isSuccess()) {
+            if (!saveResult.isSuccess()) {
                 UI_SERVICE.log(saveResult);
                 Popup.displaySimpleAlert(saveResult);
             }
@@ -407,14 +402,14 @@ public class SaveProfileManager {
                 int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
                 if (choice == 1) {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
-                    SAVE_PROFILES.remove(profileIndex);
-
                     Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
-                    if(!deleteResult.isSuccess()) {
+                    if (!deleteResult.isSuccess()) {
                         UI_SERVICE.log(deleteResult);
                         Popup.displaySimpleAlert(String.format("Failed to delete save profile \"%s\". See log for more details.", SAVE_PROFILES.get(profileIndex).getProfileName()), MessageType.ERROR);
                         return;
                     }
+
+                    SAVE_PROFILES.remove(profileIndex);
                     if (profileIndex > SAVE_PROFILES.size())
                         saveList.getSelectionModel().select(profileIndex - 1);
                     else
@@ -451,10 +446,17 @@ public class SaveProfileManager {
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                     } else if (SAVE_PROFILES.size() == 1) {
-                        SAVE_PROFILES.add(new SaveProfile());
+                        //TODO: This is a terrible hack that does two database saves just to update a UI element and performs terribly. Fix me later.
+                        // We realistically should move the fields like the last active mod and save profile to the SEMM_settings.properties file.
+                        // OP #66
+                        final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
+                        SAVE_PROFILES.add(BAD_SAVE_PROFILE);
+                        UI_SERVICE.saveSaveProfile(BAD_SAVE_PROFILE);
+
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         SAVE_PROFILES.removeLast();
+                        UI_SERVICE.deleteSaveProfile(BAD_SAVE_PROFILE);
                     } else {
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectPrevious();
                         modTableContextBar.getSaveProfileDropdown().getSelectionModel().selectNext();
@@ -467,7 +469,7 @@ public class SaveProfileManager {
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
                     Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileToModify);
-                    if(!saveResult.isSuccess()) {
+                    if (!saveResult.isSuccess()) {
                         UI_SERVICE.log(saveResult);
                         Popup.displaySimpleAlert(saveResult);
                     }
@@ -488,23 +490,23 @@ public class SaveProfileManager {
     }
 
     @FXML
-    private void closeSaveWindow() {
+    private void closeWindow() {
         if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+            Platform.exitNestedEventLoop(stage, null);
             stage.close();
-            stage.setHeight(stage.getHeight() - 1);
             saveList.getSelectionModel().clearSelection();
-            Platform.exitNestedEventLoop(stage, null);
         } else {
-            stage.close();
             Platform.exitNestedEventLoop(stage, null);
+            stage.close();
             stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
 
             //Reset the stage
             Parent root = stage.getScene().getRoot();
+            double minWidth = stage.getMinWidth();
+            double minHeight = stage.getMinHeight();
             stage.getScene().setRoot(new Group());
-            stage = new Stage();
-            stage.setScene(new Scene(root));
+            initView(root, minWidth, minHeight, modTableContextBar);
         }
     }
 
@@ -515,7 +517,7 @@ public class SaveProfileManager {
 
     private boolean isDuplicateProfileName(String profileName) {
         return SAVE_PROFILES.stream()
-                .anyMatch(saveProfile -> saveProfile.getProfileName().toLowerCase().trim().equals(profileName.toLowerCase().trim()));
+                .anyMatch(saveProfile -> saveProfile.getProfileName().trim().equalsIgnoreCase(profileName.trim()));
     }
 
     public void show(Stage parentStage) {
@@ -524,6 +526,9 @@ public class SaveProfileManager {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
+        if (Platform.isNestedLoopRunning()) {
+            Platform.exitNestedEventLoop(stage, null);
+        }
         Platform.enterNestedEventLoop(stage);
     }
 

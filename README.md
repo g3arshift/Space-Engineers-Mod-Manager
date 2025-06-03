@@ -23,7 +23,7 @@ Currently tested on Windows 10 and 11. It functions with Linux but there are min
 
 Gear Shift - Developer
 
-Kevanddev - QA/Testing
+[Kevanddev](https://github.com/Kevanddev) - QA/Testing
 
 Payday Park - Tutorial Language
 

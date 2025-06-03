@@ -15,14 +15,13 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.MonthDay;
-import java.time.Year;
+import java.time.*;
 import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
  * This is the class containing all the logic responsible for retrieving mod information for mods and a modlist.
@@ -208,9 +207,12 @@ public class ModInfoService {
         Document modPage;
         //Check to make sure the connection works first.
         try {
-            modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId).get();
+            // Needs a fix for mod.io too.
+            modPage = Jsoup.connect(STEAM_WORKSHOP_URL + modId)
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .get();
         } catch (IOException e) {
-            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+            modScrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
             modScrapeResult.addMessage("Failed to load mod page: " + STEAM_WORKSHOP_URL + modId, ResultType.FAILED);
             return modScrapeResult;
         }
@@ -241,7 +243,7 @@ public class ModInfoService {
         }
 
         String modName = modPage.title().contains("Workshop::") ? modPage.title().split("Workshop::")[1] : modPage.title();
-        if (!pageContainsMod(ModType.STEAM, modPage)) {
+        if (pageDoesNotContainMod(ModType.STEAM, modPage)) {
             if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
                 modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
                         modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
@@ -302,6 +304,18 @@ public class ModInfoService {
             lastUpdatedParts[0] += ", " + Year.now();
             lastUpdated = lastUpdatedParts[0] + " @ " + lastUpdatedParts[1];
         }
+
+        //Normalizes our datetime input from international formatting to US.
+        if (Character.isDigit(lastUpdated.charAt(0))) {
+            String[] dateParts = lastUpdated.split(" ");
+            String day = dateParts[0];
+            String month = dateParts[1];
+            String year = dateParts[2];
+            String time = dateParts[4];
+
+            month = month.replace(",", "");
+            lastUpdated = String.format("%s %s, %s @ %s", month, day, year, time);
+        }
         modInfo[3] = lastUpdated;
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
@@ -310,12 +324,17 @@ public class ModInfoService {
         return modScrapeResult;
     }
 
-    private Result<String[]> scrapeModIoMod(String modId) throws InterruptedException {
+    //TODO: OP #67. As a part of it, we need to rewrite all the scraping functionality to parse based on our returned value, not just HTML.
+    private Result<String[]> scrapeModIoMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
-        try (Playwright scraper = Playwright.create(); Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
-            Page webPage = browser.newContext().newPage();
+        try (Playwright scraper = Playwright.create();
+             Browser browser = scraper.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setChromiumSandbox(false))) {
+            Page webPage = browser.newContext(new Browser.NewContextOptions()
+                    .setLocale("en-US")
+                    .setExtraHTTPHeaders(Map.of("Accept-Language", "en-US,en;q=0.9"))).newPage();
             String pageSource = fetchModIoPageContent(webPage, modId, modScrapeResult);
+
 
             if (!pageSource.isEmpty()) {
                 parseModIoModInfo(pageSource, modId, modScrapeResult);
@@ -324,7 +343,7 @@ public class ModInfoService {
                 }
             }
         } catch (Exception e) {
-            modScrapeResult.addMessage(e.toString(), ResultType.FAILED);
+            modScrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
             modScrapeResult.addMessage(String.format("Failed to scrape mod information from Mod.io for mod \"%s\". Please see the log for more information.", modId), ResultType.FAILED);
         }
         return modScrapeResult;
@@ -373,7 +392,7 @@ public class ModInfoService {
                 scrapeResult.addMessage("Connection timed out while waiting to open page for mod \"" + modId + "\".", ResultType.FAILED);
                 return "";
             } catch (Exception e) {
-                scrapeResult.addMessage(e.toString(), ResultType.FAILED);
+                scrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 return "";
             }
         }
@@ -382,7 +401,7 @@ public class ModInfoService {
 
     private void parseModIoModInfo(String pageSource, String modId, Result<String[]> modScrapeResult) {
         Document modPage = Jsoup.parse(pageSource);
-        if (!pageContainsMod(ModType.MOD_IO, modPage)) {
+        if (pageDoesNotContainMod(ModType.MOD_IO, modPage)) {
             String itemType = modPage.select(MOD_IO_MOD_TYPE_SELECTOR)
                     .stream()
                     .findFirst()
@@ -438,26 +457,37 @@ public class ModInfoService {
         //Get mod last updated information
         String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
         String lastUpdatedFormatted = Optional.ofNullable(StringUtils.substringBetween(lastUpdatedRaw, "<span>", "</span>")).orElse("'");
-        if(lastUpdatedFormatted.isEmpty()) {
+        if (lastUpdatedFormatted.isEmpty()) {
             modScrapeResult.addMessage(String.format("Failed to get last updated information for \"%s\".", modInfo[0]), ResultType.FAILED);
             return;
         }
-        String lastUpdatedQuantifier = lastUpdatedFormatted.substring(lastUpdatedFormatted.length() - 1);
-        int duration = Integer.parseInt(lastUpdatedFormatted.substring(0, lastUpdatedFormatted.length() - 1));
-        switch (lastUpdatedQuantifier) {
-            case "h" -> {//Mod IO year + month + day + hour
-                modInfo[3] = Year.now().toString();
-                modInfo[4] = MonthDay.now().toString();
-                modInfo[5] = LocalTime.now().minusHours(duration).toString();
-            }
-            case "d" -> {//Mod IO year + month + day
-                modInfo[3] = Year.of(LocalDate.now().minusDays(duration).getYear()).toString();
-                modInfo[4] = MonthDay.from(LocalDate.now().minusDays(duration)).toString();
-            }
-            case "y" -> //Mod IO year only
-                    modInfo[3] = Year.now().minusYears(duration).toString();
-            default -> throw new IllegalStateException("Unexpected value: " + lastUpdatedQuantifier);
+
+        //This is awful and terrible but Mod.io does some very annoying things with how it returns data.
+        //Find the script tag that contains the JSON-LD for the news article, because for some reason that's where mod.io stuffed the lastUpdated tag.
+        //CSS style selector for the data we want
+        Element newsArticleScript = modPage.selectFirst("script[type='application/ld+json']#NewsArticle");
+
+        if (newsArticleScript == null || newsArticleScript.childNodeSize() == 0) {
+            modScrapeResult.addMessage(String.format("Failed to get last updated date for \"%s\"", modInfo[0]), ResultType.FAILED);
+            return;
         }
+
+        String jsonContent = newsArticleScript.childNodes().getFirst().toString();
+        JsonObject newsArticleJson = new Gson().fromJson(jsonContent, JsonObject.class);
+        if(!newsArticleJson.has("dateModified")) {
+            modScrapeResult.addMessage(String.format("Could not find dateModified for \"%s\"", modInfo[0]), ResultType.FAILED);
+            return;
+        }
+
+        LocalDateTime lastUpdated = LocalDateTime.ofInstant(
+                Instant.parse(newsArticleJson.get("dateModified").getAsString()),
+                ZoneId.systemDefault());
+
+        modInfo[3] = String.valueOf(lastUpdated.getYear());
+        //We originally used a MonthDay here so the rest of the application expects that format. As a result, we need to prepend a 0 if the month value or day value is < 10.
+        modInfo[4] = String.format("--%s%s-%s%s", lastUpdated.getMonthValue() < 10 ? "0" : "", lastUpdated.getMonthValue(),
+                lastUpdated.getDayOfMonth() < 10 ? "0" : "", lastUpdated.getDayOfMonth());
+        modInfo[5] = String.format("%s:%s:%s", lastUpdated.getHour(), lastUpdated.getMinute(), lastUpdated.getSecond());
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);
@@ -465,23 +495,23 @@ public class ModInfoService {
 
     //Check if the mod we're scraping is actually a workshop mod.
     //Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-    private boolean pageContainsMod(ModType modType, Document modPage) {
+    private boolean pageDoesNotContainMod(ModType modType, Document modPage) {
         if (modType == ModType.STEAM) {
             Elements typeElements = modPage.select(STEAM_MOD_TYPE_SELECTOR);
             if (!typeElements.isEmpty()) {
                 Node modTypeNode = typeElements.getFirst().childNodes().stream().findFirst().orElse(null);
-                return modTypeNode != null && modTypeNode.toString().equals("Mod");
+                return modTypeNode == null || !modTypeNode.toString().equals("Mod");
             } else {
-                return false;
+                return true;
             }
         } else {
             Element element = modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR);
             if (element != null) {
                 Node modTypeNode = element.childNodes().stream().findFirst().orElse(null);
                 //return element.childNodes().getFirst().toString().startsWith("Mod", 6);
-                return modTypeNode != null && modTypeNode.toString().contains("Mod");
+                return modTypeNode == null || !modTypeNode.toString().contains("Mod");
             } else {
-                return false;
+                return true;
             }
         }
     }

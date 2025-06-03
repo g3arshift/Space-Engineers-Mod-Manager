@@ -37,11 +37,14 @@ import java.time.MonthDay;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
  * All the UI logic passes through here, and is the endpoint that the UI uses to connect to the rest of the system.
@@ -119,7 +122,7 @@ public class UiService {
 
         KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
             switch (arrowKeyEvent.getCode()) {
-                case UP, DOWN, LEFT, RIGHT, TAB:
+                case UP, DOWN, LEFT, RIGHT, TAB, ESCAPE:
                     arrowKeyEvent.consume();
                     break;
             }
@@ -161,7 +164,7 @@ public class UiService {
         USER_LOG.add(logMessage);
 
         //There's no observable queue in JavaFX so we're basically mimicking that here.
-        if(USER_LOG.size() > USER_LOG_MAX_SIZE){
+        if (USER_LOG.size() > USER_LOG_MAX_SIZE) {
             USER_LOG.removeFirst();
         }
     }
@@ -259,8 +262,8 @@ public class UiService {
         return STORAGE_CONTROLLER.applyModlist(modList, saveProfile);
     }
 
-    public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile) throws IOException {
-        return STORAGE_CONTROLLER.copySaveProfile(saveProfile);
+    public Result<SaveProfile> copySaveProfile(SaveProfile saveProfile, List<SaveProfile> saveProfileList) throws IOException {
+        return STORAGE_CONTROLLER.copySaveProfile(saveProfile, saveProfileList);
     }
 
     public Result<SaveProfile> getSaveProfile(File sandboxConfigFile) throws IOException {
@@ -288,11 +291,13 @@ public class UiService {
         }
     }
 
-    public void setCurrentModListProfile(UUID modListProfileId) {
+    public Result<Void> setCurrentModListProfile(UUID modListProfileId) {
+        Result<Void> setResult = new Result<>();
         Result<ModListProfile> newCurrentModListProfileResult = STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
         if (!newCurrentModListProfileResult.isSuccess()) {
             log(newCurrentModListProfileResult);
-            return;
+            setResult.addAllMessages(newCurrentModListProfileResult);
+            return setResult;
         }
 
         log(newCurrentModListProfileResult.getCurrentMessage(), MessageType.INFO);
@@ -300,7 +305,8 @@ public class UiService {
         currentModListProfile = modListProfile;
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-        setLastActiveModlistProfile(modListProfile.getID());
+        setResult.addAllMessages(setLastActiveModlistProfile(modListProfile.getID()));
+        return setResult;
     }
 
     public Result<Void> setCurrentSaveProfile(SaveProfile newCurrentSaveProfile) {
@@ -360,11 +366,11 @@ public class UiService {
     }
 
     public Result<Mod> fillOutModInformation(Mod mod) throws IOException, InterruptedException {
-        Result<String[]> modScrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
-        Result<Mod> modInfoResult = new Result<>();
+        Result<String[]> scrapeResult = MOD_INFO_CONTROLLER.fillOutModInformation(mod);
+        Result<Mod> infoFilloutResult = new Result<>();
 
-        if (modScrapeResult.isSuccess()) {
-            String[] modInfo = modScrapeResult.getPayload();
+        if (scrapeResult.isSuccess()) {
+            String[] modInfo = scrapeResult.getPayload();
 
             mod.setFriendlyName(modInfo[0]);
 
@@ -373,43 +379,52 @@ public class UiService {
 
             mod.setDescription(modInfo[2]);
 
-            modInfoResult.setPayload(mod);
+            infoFilloutResult.setPayload(mod);
 
             String duplicateModMessage = ModListManagerHelper.findDuplicateMod(mod, currentModList);
 
             DateTimeFormatter formatter;
-            if (mod instanceof SteamMod) {
-                formatter = new DateTimeFormatterBuilder()
-                        .parseCaseInsensitive()
-                        .appendPattern(MOD_DATE_FORMAT)
-                        .toFormatter();
-                ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
-            } else {
-                ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
+            try {
+                if (mod instanceof SteamMod) {
+                    formatter = new DateTimeFormatterBuilder()
+                            .parseCaseInsensitive()
+                            .appendPattern(MOD_DATE_FORMAT)
+                            .toFormatter(Locale.ENGLISH);
+                    ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
+                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
+                } else {
+                    ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
 
-                if (modInfo[4] != null) {
-                    ((ModIoMod) mod).setLastUpdatedMonthDay(MonthDay.parse(modInfo[4]));
-                }
+                    if (modInfo[4] != null) {
+                        ((ModIoMod) mod).setLastUpdatedMonthDay(MonthDay.parse(modInfo[4]));
+                    }
 
-                if (modInfo[5] != null) {
-                    ((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
+                    if (modInfo[5] != null) {
+                        ((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
+                    }
+
+                    infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
                 }
+            } catch (DateTimeParseException e) {
+                infoFilloutResult.addMessage(getStackTrace(e), ResultType.FAILED);
+                infoFilloutResult.addMessage("Failed to parse last updated datetime for mod.", ResultType.FAILED);
             }
 
             if (!duplicateModMessage.isBlank()) {
-                modInfoResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
+                infoFilloutResult.addMessage(duplicateModMessage, ResultType.REQUIRES_ADJUDICATION);
             } else {
-                modInfoResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
+                if (infoFilloutResult.isSuccess())
+                    infoFilloutResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully scraped.", ResultType.SUCCESS);
             }
         } else {
-            modInfoResult.addAllMessages(modScrapeResult);
+            infoFilloutResult.addAllMessages(scrapeResult);
         }
 
         Platform.runLater(() -> {
             modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
             modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
         });
-        return modInfoResult;
+        return infoFilloutResult;
     }
 
     public IntegerProperty getModImportProgressNumeratorProperty() {
@@ -469,7 +484,7 @@ public class UiService {
                                 } else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
                                     failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
                                 } else {
-                                    failedResult.addMessage(e.toString(), ResultType.FAILED);
+                                    failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                                 }
                                 return failedResult;
                             }
@@ -482,7 +497,7 @@ public class UiService {
                         }
                     } catch (RuntimeException e) {
                         Result<Mod> failedResult = new Result<>();
-                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                         modInfoFillOutResults.add(failedResult);
                     }
                 }
@@ -503,7 +518,7 @@ public class UiService {
                     if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
                         failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
                     } else {
-                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                     }
                     failedResults.add(failedResult);
                     return failedResults;
@@ -553,7 +568,7 @@ public class UiService {
                         }
                     } catch (RuntimeException e) {
                         Result<String> failedResult = new Result<>();
-                        failedResult.addMessage(e.toString(), ResultType.FAILED);
+                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
                         modIdResults.add(failedResult);
                     }
                 }
@@ -598,7 +613,7 @@ public class UiService {
             if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
                 failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
             } else {
-                failedResult.addMessage(e.toString(), ResultType.FAILED);
+                failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
             }
             return failedResult;
         }
@@ -625,15 +640,21 @@ public class UiService {
                 for (int i = 0; i < importModListProfile.getModList().size(); i++) {
                     importModListProfile.getModList().get(i).setLoadPriority(i + 1);
                 }
+                updateModInformation(importModListProfile.getModList());
+                Result<Void> saveModListResult = saveModListProfile(importModListProfile);
+                if(!saveModListResult.isSuccess()) {
+                    log(saveModListResult);
+                    return saveModListResult;
+                }
+
                 MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
-                currentModListProfile = importModListProfile;
-                saveModListProfile(importModListProfile);
-                importResult = setLastActiveModlistProfile(importModListProfile.getID());
-                if(importResult.isSuccess()) {
-                    logPrivate(importResult);
+                importResult.addAllMessages(setCurrentModListProfile(importModListProfile.getID()));
+                if (importResult.isSuccess()) {
                     importResult.addMessage(String.format("Successfully imported mod list profile \"%s\".", importModListProfile.getProfileName()), ResultType.SUCCESS);
-                } else
+                    logPrivate(importResult);
+                } else {
                     log(importResult);
+                }
             } else
                 importResult.addMessage(String.format("Mod profile \"%s\" already exists!", modlistProfileResult.getPayload().getProfileName()), ResultType.INVALID);
         }
@@ -661,7 +682,7 @@ public class UiService {
     }
 
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
-        currentSaveProfile.setLastUsedModProfileId(currentModListProfile.getID());
+        currentSaveProfile.setLastUsedModListProfileId(currentModListProfile.getID());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
         Result<Void> saveResult = saveSaveProfile(currentSaveProfile);

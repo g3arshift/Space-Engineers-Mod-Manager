@@ -34,7 +34,7 @@ public class SaveProfile {
     @Setter
     private String savePath;
 
-    private UUID lastUsedModProfileId;
+    private UUID lastUsedModListProfileId;
 
     @Setter
     private SaveStatus lastSaveStatus;
@@ -57,11 +57,12 @@ public class SaveProfile {
         SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
     }
 
-    public SaveProfile(String profileName, String savePath, SpaceEngineersVersion spaceEngineersVersion) {
+    public SaveProfile(String profileName, String savePath, String saveName, SpaceEngineersVersion spaceEngineersVersion) {
         ID = UUID.randomUUID();
         this.profileName = profileName;
         this.lastSaveStatus = SaveStatus.NONE;
         this.savePath = savePath;
+        this.saveName = saveName;
         saveExists = true;
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
     }
@@ -80,15 +81,15 @@ public class SaveProfile {
         this.profileName = saveProfile.getProfileName();
         this.saveName = saveProfile.getSaveName();
         this.savePath = saveProfile.getSavePath();
-        this.lastUsedModProfileId = saveProfile.getLastUsedModProfileId();
+        this.lastUsedModListProfileId = saveProfile.getLastUsedModListProfileId();
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
         this.saveExists = saveProfile.isSaveExists();
         this.SPACE_ENGINEERS_VERSION = saveProfile.getSPACE_ENGINEERS_VERSION();
     }
 
-    public void setLastUsedModProfileId(UUID lastUsedModProfileId) {
-        this.lastUsedModProfileId = lastUsedModProfileId;
+    public void setLastUsedModListProfileId(UUID lastUsedModListProfileId) {
+        this.lastUsedModListProfileId = lastUsedModListProfileId;
         lastSaved = getCurrentTime();
     }
 
@@ -110,11 +111,11 @@ public class SaveProfile {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SaveProfile that)) return false;
-		return saveExists == that.saveExists && Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModProfileId, that.lastUsedModProfileId) && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
+		return saveExists == that.saveExists && Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(saveName, that.saveName) && Objects.equals(savePath, that.savePath) && Objects.equals(lastUsedModListProfileId, that.lastUsedModListProfileId) && lastSaveStatus == that.lastSaveStatus && Objects.equals(lastSaved, that.lastSaved);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ID, profileName, saveName, savePath, lastUsedModProfileId, lastSaveStatus, lastSaved, saveExists);
+        return Objects.hash(ID, profileName, saveName, savePath, lastUsedModListProfileId, lastSaveStatus, lastSaved, saveExists);
     }
 }

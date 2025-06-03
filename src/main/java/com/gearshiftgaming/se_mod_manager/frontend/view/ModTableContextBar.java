@@ -141,9 +141,7 @@ public class ModTableContextBar {
 
     private final MasterManager MASTER_MANAGER_VIEW;
 
-    private final SaveProfileManager SAVE_PROFILE_MANAGER_VIEW;
-
-    private final ModListManager MOD_LIST_MANAGER_VIEW;
+    private final StatusBar STATUS_BAR_VIEW;
 
     private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
 
@@ -151,12 +149,11 @@ public class ModTableContextBar {
 
     private final Stage STAGE;
 
-    public ModTableContextBar(UiService uiService, MasterManager masterManager, SaveProfileManager saveProfileManager, ModListManager modListManager, Stage stage) {
+    public ModTableContextBar(UiService uiService, MasterManager masterManager, StatusBar statusBar, Stage stage) {
         this.UI_SERVICE = uiService;
         this.MASTER_MANAGER_VIEW = masterManager;
+        this.STATUS_BAR_VIEW = statusBar;
         this.STAGE = stage;
-        this.SAVE_PROFILE_MANAGER_VIEW = saveProfileManager;
-        this.MOD_LIST_MANAGER_VIEW = modListManager;
     }
 
     public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -352,7 +349,8 @@ public class ModTableContextBar {
         if(!saveSelectionResult.isSuccess()) {
             UI_SERVICE.log(saveSelectionResult);
             Popup.displaySimpleAlert("Failed to select save profile. See log for more details.", MessageType.ERROR);
-        }
+        } else
+            STATUS_BAR_VIEW.loadStatusBarInfo();
     }
 
     @FXML

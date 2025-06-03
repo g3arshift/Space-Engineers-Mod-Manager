@@ -8,26 +8,8 @@
 
 <HBox alignment="CENTER_LEFT" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
      <children>
-         <Label fx:id="lastInjected">
-             <graphic>
-                 <Label text="Last Applied:" />
-             </graphic>
-         </Label>
-      <Separator orientation="VERTICAL" />
       <HBox alignment="CENTER_LEFT">
          <children>
-            <Label fx:id="lastSaveModifiedName">
-               <graphic>
-                  <Label text="Last Save Modified:" />
-               </graphic>
-            </Label>
-            <Separator orientation="VERTICAL" />
-         </children>
-      </HBox>
-         <Region HBox.hgrow="ALWAYS" />
-      <HBox alignment="CENTER_LEFT">
-         <children>
-            <Separator orientation="VERTICAL" />
             <Label fx:id="lastModlistAppliedName">
                <graphic>
                   <Label text="Last Modlist Applied:" />
@@ -36,9 +18,26 @@
          </children>
       </HBox>
       <Separator orientation="VERTICAL" />
+         <Label fx:id="lastInjected">
+             <graphic>
+                 <Label text="Last Applied:" />
+             </graphic>
+         </Label>
+      <Separator orientation="VERTICAL" />
+         <Region HBox.hgrow="ALWAYS" />
+      <HBox alignment="CENTER_LEFT">
+         <children>
+            <Label fx:id="lastSaveModifiedName" visible="false">
+               <graphic>
+                  <Label text="Last Save Modified:" />
+               </graphic>
+            </Label>
+            <Separator orientation="VERTICAL" visible="false" />
+         </children>
+      </HBox>
          <Label fx:id="saveStatus">
              <graphic>
-                 <Label text="Status:" />
+                 <Label text="Save Status:" />
              </graphic>
          </Label>
      </children>

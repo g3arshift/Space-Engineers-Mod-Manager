@@ -1,9 +1,9 @@
 create table mod
 (
-    mod_id                 TEXT                  not null
+    mod_id                 TEXT not null
         primary key,
-    friendly_name          TEXT                  not null,
-    published_service_name TEXT                  not null,
+    friendly_name          TEXT not null,
+    published_service_name TEXT not null,
     description            text
 )
     strict;
@@ -35,16 +35,16 @@ create index mod_list_profile_profile_name
 
 create table mod_list_profile_mod
 (
-    mod_list_profile_id text    not null
+    mod_list_profile_id text                  not null
         constraint mod_list_profile_mod_mod_list_profile_mod_list_profile_id_fk
             references mod_list_profile
             on delete cascade,
-    mod_id              text    not null
+    mod_id              text                  not null
         constraint mod_list_profile_mod_mod_mod_id_fk
             references mod
             on delete cascade,
-    load_priority       integer not null,
-    active                 integer default false not null,
+    load_priority       integer               not null,
+    active              integer default false not null,
     constraint mod_list_profile_mod_pk
         primary key (mod_id, mod_list_profile_id)
 )
@@ -196,3 +196,39 @@ create index user_configuration_save_profile_user_configuration_id_index
 
 create index user_configuration_save_profile_user_configuration_id_save_profile_id_index
     on user_configuration_save_profile (user_configuration_id, save_profile_id);
+
+-- Create a trigger to delete mods no longer used in any mod list
+CREATE TRIGGER delete_orphan_mods
+    AFTER DELETE
+    ON mod_list_profile_mod
+    FOR EACH ROW
+    WHEN NOT EXISTS (SELECT 1
+                     FROM mod_list_profile_mod
+                     WHERE mod_id = OLD.mod_id)
+BEGIN
+    DELETE FROM mod WHERE mod_id = OLD.mod_id;
+END;
+
+-- Prevent a mod from being a modio_mod if it's already a steam_mod
+CREATE TRIGGER enforce_modio_exclusivity
+    BEFORE INSERT
+    ON modio_mod
+    FOR EACH ROW
+    WHEN EXISTS (SELECT 1
+                 FROM steam_mod
+                 WHERE mod_id = NEW.mod_id)
+BEGIN
+    SELECT RAISE(ABORT, 'Mod cannot be both modio and steam');
+END;
+
+-- Prevent a mod from being a steam_mod if it's already a modio_mod
+CREATE TRIGGER enforce_steam_exclusivity
+    BEFORE INSERT
+    ON steam_mod
+    FOR EACH ROW
+    WHEN EXISTS (SELECT 1
+                 FROM modio_mod
+                 WHERE mod_id = NEW.mod_id)
+BEGIN
+    SELECT RAISE(ABORT, 'Mod cannot be both modio and steam');
+END;

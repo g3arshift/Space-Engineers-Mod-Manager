@@ -31,7 +31,6 @@ import org.apache.commons.lang3.tuple.MutableTriple;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -43,7 +42,7 @@ import java.util.regex.Pattern;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 //TODO: This needs refactored to share a common class with the save profile manager. They really share a LOT of stuff.
-public class ModListManager {
+public class ModListProfileManager {
     @FXML
     private ListView<MutableTriple<UUID, String, SpaceEngineersVersion>> profileList;
 
@@ -72,7 +71,7 @@ public class ModListManager {
     private Label activeProfileName;
 
     @FXML
-    private Button closeProfileWindow;
+    private Button closeWindow;
 
     @Getter
     private Stage stage;
@@ -87,7 +86,7 @@ public class ModListManager {
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
-    public ModListManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
+    public ModListProfileManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
         this.UI_SERVICE = uiService;
         MOD_LIST_PROFILE_DETAILS = uiService.getMOD_LIST_PROFILE_DETAILS();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
@@ -98,24 +97,24 @@ public class ModListManager {
     }
 
 
-    public void initView(Parent root, Properties properties, ModTableContextBar modTableContextBar) {
-        Scene scene = new Scene(root);
-        this.modTableContextBar = modTableContextBar;
+    public void initView(Parent root, double minWidth, double minHeight, ModTableContextBar modTableContextBar) {
         stage = new Stage();
+        this.modTableContextBar = modTableContextBar;
         stage.initModality(Modality.APPLICATION_MODAL);
 
         stage.setTitle("Mod List Manager");
         WindowDressingUtility.appendStageIcon(stage);
 
-        stage.setMinWidth(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")));
-        stage.setMinHeight(Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")));
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
 
         profileList.setItems(MOD_LIST_PROFILE_DETAILS);
         profileList.setCellFactory(param -> new ModListManagerCell(UI_SERVICE));
         profileList.setStyle("-fx-background-color: -color-bg-default;");
 
+        Scene scene = new Scene(root);
         stage.setScene(scene);
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> closeWindow());
 
         UI_SERVICE.logPrivate("Successfully initialized mod profile manager.", MessageType.INFO);
     }
@@ -199,22 +198,25 @@ public class ModListManager {
                 }
 
                 if (!copyProfileName.isBlank()) {
-                    MutableTriple<UUID, String, SpaceEngineersVersion> copiedProfileDetails = profileList.getSelectionModel().getSelectedItem();
-                    Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(copiedProfileDetails.getLeft());
+                    MutableTriple<UUID, String, SpaceEngineersVersion> originalProfileDetails = profileList.getSelectionModel().getSelectedItem();
+                    UUID originalProfileId = originalProfileDetails.getLeft();
+                    SpaceEngineersVersion originalProfileSpaceEngineersVersion = originalProfileDetails.getRight();
+                    Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(originalProfileId);
                     if(!copyResult.isSuccess()) {
                         UI_SERVICE.log(copyResult);
-                        Popup.displaySimpleAlert("Failed to copy mod list, see log for more information.", MessageType.ERROR);
+                        Popup.displaySimpleAlert("Failed to copy mod list profile, see log for more information.", MessageType.ERROR);
                         return;
                     }
 
                     ModListProfile copiedProfile = new ModListProfile(copyResult.getPayload());
+                    copiedProfile.setProfileName(copyProfileName);
                     Result<Void> saveResult = UI_SERVICE.saveModListProfile(copiedProfile);
                     if(!saveResult.isSuccess()) {
                         UI_SERVICE.log(saveResult);
                         Popup.displaySimpleAlert("Failed to save new copy of profile, see log for more information.", MessageType.ERROR);
                         return;
                     }
-                    MOD_LIST_PROFILE_DETAILS.add(copiedProfileDetails);
+                    MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(copiedProfile.getID(), copyProfileName, originalProfileSpaceEngineersVersion));
 
                     Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
                 }
@@ -234,9 +236,6 @@ public class ModListManager {
                 if (choice == 1) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
 
-                    //TODO:
-                    // 1. Remove mod list profile from database
-                    // 2. if success, remove details from memory.
                     Result<Void> deleteResult = UI_SERVICE.deleteModListProfile(MOD_LIST_PROFILE_DETAILS.get(profileIndex).getLeft());
                     if(!deleteResult.isSuccess()) {
                         UI_SERVICE.log(deleteResult);
@@ -326,8 +325,8 @@ public class ModListManager {
             profileList.getSelectionModel().selectFirst();
             tutorialMessages.add("Now that we have a new mod list profile let's close the mod list manager so we can add a save profile. Press the \"Close\" button.");
             Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Managing Mod Lists");
-            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeProfileWindow);
-            closeProfileWindow.requestFocus();
+            TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, stage.getWidth(), stage.getHeight(), closeWindow);
+            closeWindow.requestFocus();
         }
     }
 
@@ -341,10 +340,9 @@ public class ModListManager {
     }
 
     @FXML
-    private void closeProfileWindow() {
+    private void closeWindow() {
         if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
             stage.close();
-            stage.setHeight(stage.getHeight() - 1);
             profileList.getSelectionModel().clearSelection();
             Platform.exitNestedEventLoop(stage, null);
         } else {
@@ -355,9 +353,10 @@ public class ModListManager {
 
             //Reset the stage
             Parent root = stage.getScene().getRoot();
+            double minWidth = stage.getMinWidth();
+            double minHeight = stage.getMinHeight();
             stage.getScene().setRoot(new Group());
-            stage = new Stage();
-            stage.setScene(new Scene(root));
+            initView(root, minWidth, minHeight, modTableContextBar);
         }
     }
 
@@ -390,7 +389,7 @@ public class ModListManager {
 
     private boolean profileNameExists(String profileName) {
         return MOD_LIST_PROFILE_DETAILS.stream()
-                .anyMatch(details -> !details.getMiddle().equals(profileName));
+                .anyMatch(details -> details.getMiddle().trim().equalsIgnoreCase(profileName.trim()));
     }
 
     public void show(Stage parentStage) {
@@ -399,6 +398,9 @@ public class ModListManager {
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
+        if(Platform.isNestedLoopRunning()) {
+            Platform.exitNestedEventLoop(stage, null);
+        }
         Platform.enterNestedEventLoop(stage);
     }
 

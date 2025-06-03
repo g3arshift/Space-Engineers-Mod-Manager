@@ -31,12 +31,12 @@ public class ModIoMod extends Mod {
 
     public ModIoMod(String id) {
         super(id);
-        setPublishedServiceName("Mod.io");
+        setPublishedServiceName("mod.io");
     }
 
     public ModIoMod(ModIoMod mod) {
         super(mod);
-        setPublishedServiceName("Mod.io");
+        setPublishedServiceName("mod.io");
         this.lastUpdatedYear = mod.getLastUpdatedYear();
         this.lastUpdatedMonthDay = mod.getLastUpdatedMonthDay();
         this.lastUpdatedHour = mod.getLastUpdatedHour();

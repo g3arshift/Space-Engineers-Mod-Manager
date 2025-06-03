@@ -12,12 +12,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ * <p>
+ * This class is responsible for handling some preparatory and finalizing operations on importing mods into mod list profiles.
  */
 public class ModImportUtility {
 
@@ -79,7 +83,7 @@ public class ModImportUtility {
         try {
             existingModlistResult = UI_SERVICE.getModlistFromSave(selectedSave);
         } catch (IOException e) {
-            existingModlistResult.addMessage(e.toString(), ResultType.FAILED);
+            existingModlistResult.addMessage(getStackTrace(e), ResultType.FAILED);
         }
 
         Popup.displaySimpleAlert(existingModlistResult, STAGE);

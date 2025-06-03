@@ -73,7 +73,7 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.8.0.4'
+version = '0.8.0.12'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
@@ -150,6 +150,8 @@ tasks.register('generateVersionProperties') {
 }
 processResources.dependsOn generateVersionProperties
 compileJava.dependsOn generateVersionProperties
+shadowJar.dependsOn generateVersionProperties
+test.dependsOn generateVersionProperties
 
 tasks.register('printVersionInformation') {
     println(version)
@@ -158,3 +160,10 @@ tasks.register('printVersionInformation') {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
+
+tasks.register('remoteTest', Test) {
+    description = "Runs all tests except for ones that won't work on GH actions."
+    exclude("**/ModInfoServiceTest.class")
+}
+
+remoteTest.dependsOn generateVersionProperties

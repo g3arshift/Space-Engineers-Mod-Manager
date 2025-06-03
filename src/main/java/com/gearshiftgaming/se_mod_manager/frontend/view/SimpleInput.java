@@ -17,12 +17,12 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
+/**
+ * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
 public class SimpleInput {
 
@@ -71,7 +71,10 @@ public class SimpleInput {
         });
 
         stage.setResizable(false);
-        stage.setOnCloseRequest(windowEvent -> Platform.exitNestedEventLoop(stage, null));
+        stage.setOnCloseRequest(windowEvent -> {
+            stage.close();
+            Platform.exitNestedEventLoop(stage, null);
+        });
     }
 
     @FXML
@@ -88,7 +91,6 @@ public class SimpleInput {
     private void closeWindow() {
         input.clear();
         stage.close();
-        stage.setHeight(stage.getHeight() - 1);
         Platform.exitNestedEventLoop(stage, null);
     }
 

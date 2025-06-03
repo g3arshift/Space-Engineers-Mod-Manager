@@ -50,8 +50,7 @@ import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLAnchorElement;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -71,7 +70,6 @@ import java.util.stream.Collectors;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-//TODO: At some point a bunch of logic needs to be rewritten with guard clause format. Especially for the mod scraping.
 public class MasterManager {
     @FXML
     private ComboBox<String> modImportDropdown;
@@ -114,9 +112,6 @@ public class MasterManager {
 
     @FXML
     private TableColumn<Mod, Integer> loadPriority;
-
-    @FXML
-    private TableColumn<Mod, String> modSource;
 
     @FXML
     private TableColumn<Mod, String> modCategory;
@@ -216,7 +211,7 @@ public class MasterManager {
 
     private TableHeaderRow headerRow;
 
-    private final ModListManager MOD_PROFILE_MANAGER_VIEW;
+    private final ModListProfileManager MOD_PROFILE_MANAGER_VIEW;
 
     private final SaveProfileManager SAVE_MANAGER_VIEW;
 
@@ -240,14 +235,18 @@ public class MasterManager {
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
+    private final Properties columnFlags = new Properties();
+
+    private final File columnFlagsFile;
+
     //These three are here purely so we can enable and disable them when we add mods to prevent user interaction from breaking things.
     private ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown;
     private ComboBox<SaveProfile> saveProfileDropdown;
     private TextField modTableSearchField;
 
     public MasterManager(@NotNull UiService uiService, Stage stage, @NotNull Properties properties, StatusBar statusBar,
-                         ModListManager modListManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
-                         GeneralFileInput generalFileInput) {
+                         ModListProfileManager modListProfileManager, SaveProfileManager saveProfileManager, SimpleInput modImportInputView, SaveInput saveInput,
+                         GeneralFileInput generalFileInput) throws IOException {
         this.UI_SERVICE = uiService;
         this.STAGE = stage;
         this.USER_LOG = uiService.getUSER_LOG();
@@ -257,10 +256,17 @@ public class MasterManager {
         this.MOD_FILE_SELECTION_VIEW = saveInput;
         this.GENERAL_FILE_SELECT_VIEW = generalFileInput;
 
-        this.MOD_PROFILE_MANAGER_VIEW = modListManager;
+        this.MOD_PROFILE_MANAGER_VIEW = modListProfileManager;
         this.SAVE_MANAGER_VIEW = saveProfileManager;
 
         this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
+        columnFlagsFile = new File(properties.getProperty("semm.userData.trivialData.location"));
+
+        if (columnFlagsFile.exists()) {
+            try (FileInputStream in = new FileInputStream(columnFlagsFile)) {
+                columnFlags.load(in);
+            }
+        }
 
         SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
         SELECTIONS = new ArrayList<>();
@@ -369,17 +375,11 @@ public class MasterManager {
                     return new SimpleStringProperty("Unknown");
                 }
             } else if (cellData.getValue() instanceof ModIoMod modIoMod) {
-                StringBuilder lastUpdated = new StringBuilder();
-                if (modIoMod.getLastUpdatedMonthDay() != null) {
-                    lastUpdated.append(modIoMod.getLastUpdatedMonthDay().format(DateTimeFormatter.ofPattern("MMM d"))).append(", ");
-                }
+                String lastUpdated = modIoMod.getLastUpdatedMonthDay().format(DateTimeFormatter.ofPattern("MMM d")) + ", " +
+                        modIoMod.getLastUpdatedYear() +
+                        " @ " + modIoMod.getLastUpdatedHour().format(DateTimeFormatter.ofPattern("hh:mm a"));
 
-                lastUpdated.append(modIoMod.getLastUpdatedYear());
-
-                if (modIoMod.getLastUpdatedHour() != null) {
-                    lastUpdated.append(" @ ").append(modIoMod.getLastUpdatedHour().format(DateTimeFormatter.ofPattern("ha")));
-                }
-                return new SimpleStringProperty(lastUpdated.toString());
+                return new SimpleStringProperty(lastUpdated);
             } else {
                 return new SimpleStringProperty("Unknown");
             }
@@ -432,8 +432,40 @@ public class MasterManager {
         headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
 
         modTable.setFixedCellSize(modTableCellSize);
+        setupColumnToggleMenu();
     }
 
+    private void setupColumnToggleMenu() {
+        ContextMenu columnToggleMenu = new ContextMenu();
+        for (TableColumn<?, ?> column : modTable.getColumns()) {
+            if (!column.getText().equals("Mod Name") && !column.getText().equals("Priority")) {
+                CheckMenuItem menuItem = new CheckMenuItem(column.getText());
+                boolean isVisible = Boolean.parseBoolean(columnFlags.getProperty(column.getText(), "true"));
+                menuItem.setSelected(isVisible);
+                column.setVisible(isVisible);
+
+                menuItem.selectedProperty().addListener((observable, wasSelected, isNowSelected) -> {
+                    column.setVisible(isNowSelected);
+                    columnFlags.setProperty(column.getText(), Boolean.toString(isNowSelected));
+                    try {
+                        saveColumnFlags();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                columnToggleMenu.getItems().add(menuItem);
+            }
+        }
+        modTable.setOnContextMenuRequested(event -> columnToggleMenu.show(modTable, event.getScreenX(), event.getScreenY()));
+    }
+
+    private void saveColumnFlags() throws IOException {
+        try (FileOutputStream out = new FileOutputStream(columnFlagsFile)) {
+            columnFlags.store(out, "Mod table column visibility flags");
+        }
+    }
+
+    //TODO: Localize formatting.
     private @NotNull LocalDateTime getModIoLastUpdatedComparatorDate(@NotNull String dateString) {
         DateTimeFormatter formatter;
         return switch (dateString.length()) {
@@ -891,7 +923,8 @@ public class MasterManager {
         List<Mod> copiedModList = UI_SERVICE.getCurrentModList().stream()
                 .filter(Mod::isActive)
                 .sorted(Comparator.comparing(Mod::getLoadPriority))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                .reversed();
 
         if (copiedModList.isEmpty()) {
             int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
@@ -912,7 +945,7 @@ public class MasterManager {
         else
             UI_SERVICE.getCurrentSaveProfile().setLastSaveStatus(SaveStatus.FAILED);
 
-        STATUS_BAR_VIEW.update(UI_SERVICE.getCurrentSaveProfile(), UI_SERVICE.getCurrentModListProfile());
+        STATUS_BAR_VIEW.update();
     }
 
     @FXML
