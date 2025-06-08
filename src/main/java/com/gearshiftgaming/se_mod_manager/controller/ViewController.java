@@ -20,11 +20,15 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -60,7 +64,7 @@ public class ViewController {
         }
 
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
-                new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.location") + ".db"),
+                new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.path") + ".db"),
                 new SaveFileRepository());
 
         Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
@@ -70,7 +74,7 @@ public class ViewController {
             userConfiguration = userConfigurationResult.getPayload();
         } else {
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-            for(String message : userConfigurationResult.getMESSAGES()) {
+            for (String message : userConfigurationResult.getMESSAGES()) {
                 logger.error(message);
             }
             try (Stream<Path> stream = Files.list(Path.of("./logs"))) {
@@ -79,7 +83,7 @@ public class ViewController {
                             "Would you like to create a new user configuration and continue?", MessageType.WARN);
                     if (choice == 1) {
                         Result<Void> dataInitializaitonResult = storageController.initializeData();
-                        if(!dataInitializaitonResult.isSuccess()) {
+                        if (!dataInitializaitonResult.isSuccess()) {
                             uiService.log(dataInitializaitonResult);
                             Popup.displaySimpleAlert(dataInitializaitonResult);
                             throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
@@ -91,7 +95,7 @@ public class ViewController {
                     //TODO: What is this really for? I THINK it's for first time startup, but I think the earlier phases capture that... Check it later.
                 } else {
                     Result<Void> dataInitializaitonResult = storageController.initializeData();
-                    if(!dataInitializaitonResult.isSuccess()) {
+                    if (!dataInitializaitonResult.isSuccess()) {
                         uiService.log(dataInitializaitonResult);
                         Popup.displaySimpleAlert(dataInitializaitonResult);
                         throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
@@ -100,8 +104,6 @@ public class ViewController {
             }
         }
 
-        //TODO: Go down through this to start figuring out how we're going to change over the memory model.
-        //TODO: Start by fixing this and then UI service.
         ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails = FXCollections.observableList(userConfiguration.getModListProfilesBasicInfo());
         ObservableList<SaveProfile> saveProfiles = FXCollections.observableList(userConfiguration.getSaveProfiles());
 

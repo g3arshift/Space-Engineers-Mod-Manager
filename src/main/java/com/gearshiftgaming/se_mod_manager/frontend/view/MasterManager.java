@@ -148,9 +148,6 @@ public class MasterManager {
     private ProgressBar modImportProgressBar;
 
     @FXML
-    private ProgressIndicator modImportProgressIndicator;
-
-    @FXML
     private Label modImportProgressActionName;
 
     @FXML
@@ -260,7 +257,7 @@ public class MasterManager {
         this.SAVE_MANAGER_VIEW = saveProfileManager;
 
         this.STEAM_MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
-        columnFlagsFile = new File(properties.getProperty("semm.userData.trivialData.location"));
+        columnFlagsFile = new File(properties.getProperty("semm.userData.trivialData.path"));
 
         if (columnFlagsFile.exists()) {
             try (FileInputStream in = new FileInputStream(columnFlagsFile)) {

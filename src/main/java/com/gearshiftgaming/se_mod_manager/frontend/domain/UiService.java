@@ -89,6 +89,7 @@ public class UiService {
     @Getter
     private final IntegerProperty activeModCount;
 
+    //TODO: In the future, rewrite the mod import stuff to be self-contained in another service class. See ToolManagerService as an example.
     @Setter
     private IntegerProperty modImportProgressNumerator;
 
@@ -429,7 +430,7 @@ public class UiService {
 
     public IntegerProperty getModImportProgressNumeratorProperty() {
         if (this.modImportProgressNumerator == null) {
-            this.modImportProgressNumerator = new SimpleIntegerProperty(0);
+            this.modImportProgressNumerator = new SimpleIntegerProperty(-1);
         }
         return this.modImportProgressNumerator;
     }
@@ -439,9 +440,9 @@ public class UiService {
     }
 
     public IntegerProperty getModImportProgressDenominatorProperty() {
-        if (this.modImportProgressDenominator == null) {
-            this.modImportProgressDenominator = new SimpleIntegerProperty(0);
-        }
+        if (this.modImportProgressDenominator == null)
+            this.modImportProgressDenominator = new SimpleIntegerProperty(-1);
+
         return this.modImportProgressDenominator;
     }
 
@@ -450,9 +451,8 @@ public class UiService {
     }
 
     public DoubleProperty getModImportProgressPercentageProperty() {
-        if (modImportProgressPercentage == null) {
+        if (modImportProgressPercentage == null)
             modImportProgressPercentage = new SimpleDoubleProperty(0d);
-        }
         return modImportProgressPercentage;
     }
 
@@ -642,7 +642,7 @@ public class UiService {
                 }
                 updateModInformation(importModListProfile.getModList());
                 Result<Void> saveModListResult = saveModListProfile(importModListProfile);
-                if(!saveModListResult.isSuccess()) {
+                if (!saveModListResult.isSuccess()) {
                     log(saveModListResult);
                     return saveModListResult;
                 }
@@ -736,5 +736,9 @@ public class UiService {
         }
 
         return panes;
+    }
+
+    public void setupTools() {
+
     }
 }
