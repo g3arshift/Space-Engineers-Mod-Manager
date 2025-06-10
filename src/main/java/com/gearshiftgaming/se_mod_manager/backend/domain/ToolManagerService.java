@@ -1,31 +1,31 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ProgressIndicator;
-import lombok.Setter;
+import javafx.concurrent.Task;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
  * This class is designed to manage the downloading of all tools and utilities required for the application to function.
- * It additionally manages the UI elements for this process, used in conjunction with a MasterManager where they will be displayed.
+ * It additionally contains all the UI logic surrounding the display elements shown when downloading a tool during initial setup.
  * <p>
  * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
  * You may use, distribute, and modify this code under the terms of the GPL3 license.
@@ -35,65 +35,60 @@ import java.util.Properties;
  */
 public class ToolManagerService {
 
-    @Setter
-    private IntegerProperty downloadNumerator;
-
-    @Setter
-    private IntegerProperty downloadDenominator;
-
-    @Setter
-    private DoubleProperty downloadPercentage;
-
-    private ProgressBar downloadProgressBar;
-
-    private ProgressIndicator downloadProgressWheel;
-
-    private Label toolNamePrefix;
-
-    private Label toolName;
-
-    private final MasterManager MASTER_MANAGER;
-
     private final UiService UI_SERVICE;
 
     private final String STEAM_CMD_PATH;
 
     private final String STEAM_CMD_SOURCE_LOCATION;
 
-    public ToolManagerService(Properties properties, MasterManager masterManager, UiService uiService) {
+    public ToolManagerService(Properties properties, UiService uiService) {
         STEAM_CMD_PATH = properties.getProperty("semm.steam.steamcmd.folder.path");
         STEAM_CMD_SOURCE_LOCATION = properties.getProperty("semm.steam.steamcmd.download.source");
-        this.MASTER_MANAGER = masterManager;
         this.UI_SERVICE = uiService;
-
-        downloadNumerator = new SimpleIntegerProperty(-1);
-        downloadDenominator = new SimpleIntegerProperty(-1);
-        downloadPercentage = new SimpleDoubleProperty(0d);
-        toolNamePrefix = new Label();
-        toolName = new Label();
-        downloadProgressBar = new ProgressBar();
-        downloadProgressWheel = new ProgressIndicator();
     }
 
     //TODO: Need to call all this from UI service and master manager
-    private void setupTools() throws IOException {
-        //TODO: Display some UI thing here.
+    //TODO: We need some sort of logic around checking to make sure the download isn't frozen, that the connection hasn't broken, and add a timeout + retries, and a popup if it fails to download.
+    //TODO: This should return, and be, a task.
+    public Task<Result<Void>> setupTools() throws IOException {
+        return new Task<>() {
+            @Override
+            protected Result<Void> call() throws Exception {
+                Path steamCmdPath = Path.of(STEAM_CMD_PATH);
+                //Make the base directories we need if they don't exist
+                if (Files.notExists(steamCmdPath)) {
+                    Files.createDirectories(steamCmdPath);
+                }
 
-        Path steamCmdPath = Path.of(STEAM_CMD_PATH);
-        //Make the base directories we need if they don't exist
-        if (Files.notExists(steamCmdPath)) {
-            Files.createDirectories(steamCmdPath);
-        }
+                Result<Void> toolSetupResult;
+                //Check if we already have steam CMD downloaded. If it isn't, download it.
+                UI_SERVICE.log("Downloading required tools...", MessageType.INFO);
+                if (Files.notExists(Path.of(STEAM_CMD_PATH + "/steamcmd.exe"))) {
+                    UI_SERVICE.log("Downloading Steam CMD...", MessageType.INFO);
+                    //TODO: Add some handling logic here to make sure it can be resumed.
+                    URL steamDownloadUrl = Paths.get(STEAM_CMD_SOURCE_LOCATION).toUri().toURL();
+                    long remoteSteamCmdFileSize = getSteamCmdRemoteSize(steamDownloadUrl);
+                    toolSetupResult = downloadSteamCmd(steamDownloadUrl,
+                            STEAM_CMD_PATH,
+                            remoteSteamCmdFileSize,
+                            this::updateProgress,
+                            this::updateMessage);
 
-        //Check if we already have steam CMD downloaded. If it isn't, download it.
-        if (Files.notExists(Path.of(STEAM_CMD_PATH + "/steamcmd.exe"))) {
-            //TODO: Add some handling logic here to make sure it can be resumed.
-            //TODO: We should probably create a custom "downloadBox" class for the UI that has a numerator and denominator we can bind values to.
-            URL steamDownloadUrl = Paths.get(STEAM_CMD_SOURCE_LOCATION).toUri().toURL();
-            long remoteSteamCmdFileSize = getSteamCmdRemoteSize(steamDownloadUrl);
-            downloadSteamCmd(steamDownloadUrl, STEAM_CMD_PATH, remoteSteamCmdFileSize);
-        }
+                    if (toolSetupResult.isSuccess())
+                        UI_SERVICE.log("Successfully downloaded Steam CMD.", MessageType.INFO);
+                    else
+                        UI_SERVICE.log("Failed to download Steam CMD.", MessageType.ERROR);
+                } else {
+                    toolSetupResult = new Result<>();
+                    toolSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
+                }
 
+                //Add a final message to the download chain if everything succeeded. If it isn't, we just want to log the failure from the more specific method.
+                if (toolSetupResult.isSuccess())
+                    toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
+                return toolSetupResult;
+            }
+        };
     }
 
     /**
@@ -126,16 +121,32 @@ public class ToolManagerService {
      * @param downloadLocation The location we want to save the SteamCMD zip file to.
      * @return Whether the download is finished or not
      */
-    //TODO: Examine this to see if we need to return a value
-    private void downloadSteamCmd(URL steamCmdUrl, String downloadLocation, long remoteFileSize) {
+    private Result<Void> downloadSteamCmd(URL steamCmdUrl, String downloadLocation, long remoteFileSize, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) {
+        Result<Void> downloadResult = new Result<>();
         File outputFile = new File(downloadLocation);
-        long existingFileSize = outputFile.exists() ? outputFile.length() : 0;
 
-        //If our file on disk is smaller than the remote, resume the download at the byte location we stopped.
-        if (existingFileSize < remoteFileSize) {
+        //TODO: Replace with property values and consts in the class.
+        int maxRetries = 3;
+        int retryCount = 0;
+        int connectTimeout = 5000; // 5 seconds
+        int readTimeout = 10000; // 10 seconds
+
+        while (retryCount < maxRetries) {
+            long existingFileSize = outputFile.exists() ? outputFile.length() : 0;
+
+            //TODO: We should also do "updateMessage" as a retry message using text like "Retrying... (1/3)" or something, if we have to retry.
+            //If our file on disk is smaller than the remote, resume the download at the byte location we stopped.
+            //We include this to have the retries function. If the outer condition from the setupTools is removed, this can cause issues with downloading steam CMD when already downloaded.
+            if (existingFileSize >= remoteFileSize) {
+                downloadResult.addMessage("SteamCMD already downloaded.", ResultType.SUCCESS);
+                return downloadResult;
+            }
+
             HttpURLConnection httpConnection = null;
             try {
                 httpConnection = (HttpURLConnection) steamCmdUrl.openConnection();
+                httpConnection.setConnectTimeout(connectTimeout);
+                httpConnection.setReadTimeout(readTimeout);
 
                 if (existingFileSize > 0) {
                     //Request the remaining data we're missing
@@ -153,19 +164,44 @@ public class ToolManagerService {
 
                     byte[] buffer = new byte[8192];
                     int bytesRead;
+                    long totalBytesDownloaded = existingFileSize;
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
                         raf.write(buffer, 0, bytesRead);
+                        totalBytesDownloaded += bytesRead;
+
+                        //Get the largest common denominator for the file size and use that to create the update message
+                        int divisor;
+                        String divisorName;
+                        if (remoteFileSize >= 1000000000) {  //Gigabyte
+                            divisor = 1000000000;
+                            divisorName = "GB";
+                        } else if (remoteFileSize < 999999999 && remoteFileSize >= 1000000) { //Megabyte
+                            divisor = 1000000;
+                            divisorName = "MB";
+                        } else { //Kilobyte
+                            divisor = 1000;
+                            divisorName = "KB";
+                        }
+                        messageUpdater.accept(String.format("%d%s/%d%s", totalBytesDownloaded / divisor, divisorName, remoteFileSize / divisor, divisorName));
+                        progressUpdater.accept(totalBytesDownloaded, remoteFileSize);
                     }
 
-                    UI_SERVICE.log("Successfully downloaded SteamCMD.", MessageType.INFO);
+                    downloadResult.addMessage("Successfully downloaded SteamCMD.", ResultType.SUCCESS);
                 }
+            } catch (SocketTimeoutException e) {
+                messageUpdater.accept(String.format("Retrying... (%d/%d)", retryCount, maxRetries));
+                retryCount++;
+                if (retryCount < maxRetries)
+                    downloadResult.addMessage("Download failed, retrying... Attempt " + retryCount, ResultType.WARN);
+                else
+                    downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
             } finally {
                 if (httpConnection != null)
                     httpConnection.disconnect();
             }
-        } else
-            UI_SERVICE.log("SteamCMD already downloaded.", MessageType.WARN);
+        }
+        return downloadResult;
     }
 }

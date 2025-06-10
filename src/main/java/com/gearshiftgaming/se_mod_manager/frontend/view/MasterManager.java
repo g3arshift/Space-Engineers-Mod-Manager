@@ -352,6 +352,9 @@ public class MasterManager {
         modDescription.setOnDragOver(dragEvent -> {
         });
 
+        //TODO: Call the tool manager setup.
+        //TODO: We want to grab the UI portion and overlay it on our center table, and also disable all buttons while download is in progress.
+        // When the task is done call a standard fade and on the end of the transition remove it from the manager.
         UI_SERVICE.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
     }
 

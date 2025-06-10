@@ -460,6 +460,8 @@ public class UiService {
         return modImportProgressPercentage.get();
     }
 
+    //TODO: We need to rewrite most of this stuff using the UI property values to work with updating progress instead. Doing it as it is now violates the architecture rules.
+    //TODO: Do the same for the actual UI message parts. We don't need labels for everything, just change the text via  updateMessage in the task.
     public Task<List<Result<Mod>>> importModsFromList(List<Mod> modList) {
         List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
         return new Task<>() {
