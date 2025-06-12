@@ -10,6 +10,7 @@ package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
@@ -34,6 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
@@ -170,6 +172,7 @@ class ToolManagerServiceTest {
         List<Double> progress = new CopyOnWriteArrayList<>();
         CountDownLatch doneLatch = new CountDownLatch(1);
 
+        //Add the listeners so our lists get updated properly when the task updates
         setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
         setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
         setupTask.setOnSucceeded(e -> doneLatch.countDown());
@@ -184,18 +187,19 @@ class ToolManagerServiceTest {
         assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
         Result<Void> result = setupTask.get();
 
-        //Assert we don't have an empty list of messages or progress updates
+        //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be successful");
+        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type.");
+        assertEquals(5, result.getMESSAGES().size(), "Result messages were:\n" + String.join("\n", result.getMESSAGES()));
+
+        //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
-        assertEquals("768KB/768KB", messages.getLast());
-        assertEquals(1.0, progress.getLast());
+        assertEquals("768KB/768KB", messages.getLast(), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
 
-        //For sanity's sake, print the messages to console for debugging.
-        System.out.println("Update Messages:");
-        messages.forEach(System.out::println);
-
-        System.out.println("Progress Messages:");
-        progress.forEach(p -> System.out.printf("%.2f%n", p));
+        //Verify the file saved properly.
+        assertEquals(768000, new File(steamCmdLocalPath).length());
     }
 }
