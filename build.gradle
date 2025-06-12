@@ -65,11 +65,6 @@ dependencies {
     api libs.org.apache.maven.plugins.maven.jlink.plugin
     api libs.org.apache.commons.commons.compress
     api libs.org.iq80.snappy.snappy
-    //Jetty upgrades to resolve CVE-2024-6763 from wiremock.
-    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-http
-    implementation group: 'org.eclipse.jetty', name: 'jetty-http', version: '12.0.22'
-    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-    implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '12.0.22'
     // https://mvnrepository.com/artifact/org.wiremock/wiremock
     //JSON Small and Fast Parser upgrade to resolve CVE-2024-57699 from wiremock.
     // https://mvnrepository.com/artifact/net.minidev/json-smart
