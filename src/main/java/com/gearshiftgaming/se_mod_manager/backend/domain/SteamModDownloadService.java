@@ -7,8 +7,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,10 +37,10 @@ public class SteamModDownloadService implements ModDownloadService{
     private final boolean STEAMCMD_VALIDATE_DOWNLOADS;
 
     public SteamModDownloadService(Properties properties) {
-        this.STEAMCMD_DOWNLOAD_TIMEOUT_MINUTES = properties.getProperty("semm.steam.download.timeout.minutes", "10");
+        this.STEAMCMD_DOWNLOAD_TIMEOUT_MINUTES = properties.getProperty("semm.steam.mod.download.timeout.minutes", "10");
         this.STEAM_WORKSHOP_CONTENT_PATH = properties.getProperty("semm.steam.workshop.content.path", getSteamWorkshopPath());
-        this.STEAMCMD_PATH = properties.getProperty("semm.steam.steamcmd.folder.path", getSteamCmdPath());
-        this.STEAMCMD_VALIDATE_DOWNLOADS = Boolean.parseBoolean(properties.getProperty("semm.steam.download.validate", "true"));
+        this.STEAMCMD_PATH = properties.getProperty("semm.steam.cmd.localPath", getSteamCmdPath());
+        this.STEAMCMD_VALIDATE_DOWNLOADS = Boolean.parseBoolean(properties.getProperty("semm.steam.mod.download.validate", "true"));
     }
 
     /**
@@ -220,7 +218,7 @@ public class SteamModDownloadService implements ModDownloadService{
     }
 
     private String getSteamWorkshopPath() {
-        //TODO: I think we can do this better to check OS type.
+        //TODO: We can do this better to check OS type.
         //TODO: We can do the entire path check better by running the command running the command "REG QUERY HKLM\SOFTWARE\Wow6432Node\Valve\Steam /v InstallPath"
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {

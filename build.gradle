@@ -65,6 +65,8 @@ dependencies {
     api libs.org.apache.maven.plugins.maven.jlink.plugin
     api libs.org.apache.commons.commons.compress
     api libs.org.iq80.snappy.snappy
+    // https://mvnrepository.com/artifact/org.wiremock/wiremock
+    testImplementation group: 'org.wiremock', name: 'wiremock', version: '3.13.0'
     testImplementation libs.org.junit.jupiter.junit.jupiter
     testImplementation libs.org.testfx.testfx.core
     testImplementation libs.org.jetbrains.kotlin.kotlin.test
