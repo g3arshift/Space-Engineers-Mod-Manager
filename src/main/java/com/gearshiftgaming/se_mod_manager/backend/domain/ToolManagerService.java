@@ -18,6 +18,8 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static com.gearshiftgaming.se_mod_manager.backend.domain.utility.ZipUtility.extractZipArchive;
+import static com.gearshiftgaming.se_mod_manager.backend.domain.utility.ZipUtility.isZip;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
@@ -88,7 +90,6 @@ public class ToolManagerService {
                     //Get the largest common denominator for the file size and use that to create the update message
                     int divisor;
                     String divisorName;
-
                     if (remoteSteamCmdFileSize <= 999999) { //Kilobyte
                         divisor = 1000;
                         divisorName = "KB";
@@ -121,12 +122,12 @@ public class ToolManagerService {
                     return toolSetupResult;
 
                 //Read the file signature of our downloaded file to make sure it's a .zip
-                if (!downloadedFileIsZip()) {
+                if (!isZip(new File(steamCmdLocalPath))) {
                     toolSetupResult.addMessage("Downloaded file is not a .zip file.", ResultType.FAILED);
                     return toolSetupResult;
                 }
 
-                extractZipArchive(steamDownloadPath);
+                extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
 
                 //Add a final message to the download chain if everything succeeded
                 toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
@@ -239,50 +240,5 @@ public class ToolManagerService {
             }
         }
         return downloadResult;
-    }
-
-    //Checks the first four bytes of the file to confirm what we've downloaded is actually a .zip.
-    private boolean downloadedFileIsZip() throws IOException {
-        byte[] buffer = new byte[4];
-        boolean isZip = false;
-        try (InputStream is = new FileInputStream(steamCmdLocalPath)) {
-            //Zip signature is "50 4b 03 04"
-            if (is.read(buffer) != buffer.length) {
-                isZip = buffer[0] == (byte) 0x50 &&
-                        buffer[1] == (byte) 0x4B &&
-                        buffer[2] == (byte) 0x03 &&
-                        buffer[3] == (byte) 0x04;
-            }
-        }
-        return isZip;
-    }
-
-    private static void extractZipArchive(Path steamDownloadPath) throws IOException {
-        Path unzipPath = steamDownloadPath.getParent();
-        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(steamDownloadPath))) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                Path outputPath = unzipPath.resolve(entry.getName()).normalize();
-
-                //Prevent zip slip vulnerability
-                if (!outputPath.startsWith(unzipPath))
-                    throw new IOException("Entry is outside of the target directory: " + entry.getName());
-
-                if (entry.isDirectory())
-                    Files.createDirectories(outputPath);
-                else {
-                    if (outputPath.getParent() != null)
-                        Files.createDirectories(outputPath.getParent());
-
-                    try (OutputStream os = Files.newOutputStream(outputPath)) {
-                        byte[] buffer = new byte[8192];
-                        int len;
-                        while ((len = zis.read(buffer)) > 0)
-                            os.write(buffer, 0, len);
-                    }
-                }
-            }
-            zis.closeEntry();
-        }
     }
 }

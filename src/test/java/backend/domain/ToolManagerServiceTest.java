@@ -17,14 +17,13 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -36,6 +35,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
@@ -91,15 +94,14 @@ class ToolManagerServiceTest {
     void cleanup() throws IOException {
         //Delete the download so we can test fresh
         String testDataToDeletePath = "./Tools/Test";
-        if(Files.exists(Path.of(testDataToDeletePath)))
+        if (Files.exists(Path.of(testDataToDeletePath)))
             FileUtils.deleteDirectory(new File(testDataToDeletePath));
     }
 
     @Test
-    void shouldDownloadFakeSteamCmdAfterRetryingAndFailToUnzip(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
+    void shouldDownloadFakeSteamCmdAfterRetrying(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
         //Setup
-        byte[] fakeSteamCmdZip = new byte[1024 * 750]; //768KB file. We want at least this since steam CMD is usually close to this size
-        new Random().nextBytes(fakeSteamCmdZip);
+        byte[] fakeSteamCmdZip = createFakeZipFile("steamcmd.exe", 1024 * 768); //This is about the real size of the actual steamcmd.zip
         String steamCmdPath = "/steamcmd.zip";
 
         // HEAD request always returns Content-Length
@@ -183,23 +185,50 @@ class ToolManagerServiceTest {
         taskThread.setDaemon(true);
         taskThread.start();
 
-        //Pause the test until our task is done
+        //Pause the test until our task is done, but give it a timeout.
         assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
         Result<Void> result = setupTask.get();
 
         //Check we get both the expected number and type of messages from our result
-        assertFalse(result.isSuccess(), "Download result should be a failure since we downloaded a fake zip");
-        assertEquals("Downloaded file is not a .zip file.", result.getCurrentMessage());
-        assertEquals(ResultType.FAILED, result.getType(), "Result is the wrong type, should be SUCCESS.");
+        assertTrue(result.isSuccess(), "Download result should be a success");
+        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
         assertEquals(5, result.getMESSAGES().size(), "Result messages were:\n" + String.join("\n", result.getMESSAGES()));
 
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
-        assertEquals("768KB/768KB", messages.getLast(), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(String.format("%sKB/%sKB", fakeSteamCmdZip.length / 1000, fakeSteamCmdZip.length / 1000), messages.getLast(), "Update messages were:\n" + String.join("\n", messages));
         assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
 
         //Verify the file saved properly.
-        assertEquals(768000, new File(steamCmdLocalPath).length());
+        assertEquals(fakeSteamCmdZip.length, new File(steamCmdLocalPath).length());
+
+        //TODO: Implement the unzip test.
+    }
+
+    private static byte[] createFakeZipFile(String entryInZipName, int uncompressedSize) throws IOException {
+        byte[] fakeZip = new byte[uncompressedSize];
+        new Random().nextBytes(fakeZip);
+
+        //Write our zip file to a byte array
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        try(ZipOutputStream zos = new ZipOutputStream(byteOut)) {
+            ZipEntry entry = new ZipEntry(entryInZipName);
+            // Calculate CRC32 for the entry
+            CRC32 crc = new CRC32();
+            crc.update(fakeZip);
+
+            // Set the entry properties for a valid ZIP
+            entry.setSize(fakeZip.length);
+            entry.setCrc(crc.getValue());
+            entry.setMethod(ZipEntry.DEFLATED);
+
+            zos.putNextEntry(entry);
+            zos.write(fakeZip);
+            zos.closeEntry();
+        }
+
+        return byteOut.toByteArray();
     }
 }
