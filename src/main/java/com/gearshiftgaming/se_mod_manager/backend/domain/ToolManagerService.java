@@ -6,10 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.concurrent.Task;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -18,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
@@ -80,7 +79,7 @@ public class ToolManagerService {
                     uiService.log("Downloading Steam CMD...", MessageType.INFO);
                     URL steamDownloadUrl = new URI(steamCmdSourceLocation).toURL();
                     long remoteSteamCmdFileSize = getSteamCmdRemoteSize(steamDownloadUrl);
-                    if(remoteSteamCmdFileSize == -1) {
+                    if (remoteSteamCmdFileSize == -1) {
                         toolSetupResult = new Result<>();
                         toolSetupResult.addMessage("Failed to get size of SteamCMD.", ResultType.FAILED);
                         return toolSetupResult;
@@ -90,7 +89,7 @@ public class ToolManagerService {
                     int divisor;
                     String divisorName;
 
-                    if(remoteSteamCmdFileSize <= 999999) { //Kilobyte
+                    if (remoteSteamCmdFileSize <= 999999) { //Kilobyte
                         divisor = 1000;
                         divisorName = "KB";
                     } else if (remoteSteamCmdFileSize <= 999999999) { //Megabyte
@@ -118,10 +117,19 @@ public class ToolManagerService {
                     toolSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
                 }
 
-                //Add a final message to the download chain if everything succeeded. If it isn't, we just want to log the failure from the more specific method.
-                if (toolSetupResult.isSuccess())
-                    toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
-                //TODO: unzip the download.
+                if (!toolSetupResult.isSuccess())
+                    return toolSetupResult;
+
+                //Read the file signature of our downloaded file to make sure it's a .zip
+                if (!downloadedFileIsZip()) {
+                    toolSetupResult.addMessage("Downloaded file is not a .zip file.", ResultType.FAILED);
+                    return toolSetupResult;
+                }
+
+                extractZipArchive(steamDownloadPath);
+
+                //Add a final message to the download chain if everything succeeded
+                toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
                 return toolSetupResult;
             }
         };
@@ -182,7 +190,7 @@ public class ToolManagerService {
                 }
 
                 int responseCode = httpConnection.getResponseCode();
-                if(responseCode < 200 || responseCode >= 300) {
+                if (responseCode < 200 || responseCode >= 300) {
                     String errorMessage = String.format("Received HTTP response code %d from server.", responseCode);
                     uiService.log(errorMessage, MessageType.ERROR);
                     throw new ToolDownloadFailedException(errorMessage);
@@ -209,11 +217,10 @@ public class ToolManagerService {
                         progressUpdater.accept(totalBytesDownloaded, remoteFileSize);
                     }
 
-                    if(totalBytesDownloaded == remoteFileSize) {
+                    if (totalBytesDownloaded == remoteFileSize) {
                         downloadResult.addMessage("Successfully downloaded SteamCMD.", ResultType.SUCCESS);
                         retryCount = 99;
-                    }
-                    else 
+                    } else
                         throw new ToolDownloadFailedException("Download of SteamCMD was interrupted mid download and was unable to complete.");
                 }
             } catch (SocketTimeoutException | ToolDownloadFailedException e) {
@@ -222,8 +229,7 @@ public class ToolManagerService {
                 if (retryCount <= maxRetries) {
                     downloadResult.addMessage("SteamCMD download failed, retrying... Attempt " + retryCount, ResultType.WARN);
                     Thread.sleep(retryDelay);
-                }
-                else
+                } else
                     downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
             } catch (IOException e) {
                 downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
@@ -233,5 +239,50 @@ public class ToolManagerService {
             }
         }
         return downloadResult;
+    }
+
+    //Checks the first four bytes of the file to confirm what we've downloaded is actually a .zip.
+    private boolean downloadedFileIsZip() throws IOException {
+        byte[] buffer = new byte[4];
+        boolean isZip = false;
+        try (InputStream is = new FileInputStream(steamCmdLocalPath)) {
+            //Zip signature is "50 4b 03 04"
+            if (is.read(buffer) != buffer.length) {
+                isZip = buffer[0] == (byte) 0x50 &&
+                        buffer[1] == (byte) 0x4B &&
+                        buffer[2] == (byte) 0x03 &&
+                        buffer[3] == (byte) 0x04;
+            }
+        }
+        return isZip;
+    }
+
+    private static void extractZipArchive(Path steamDownloadPath) throws IOException {
+        Path unzipPath = steamDownloadPath.getParent();
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(steamDownloadPath))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                Path outputPath = unzipPath.resolve(entry.getName()).normalize();
+
+                //Prevent zip slip vulnerability
+                if (!outputPath.startsWith(unzipPath))
+                    throw new IOException("Entry is outside of the target directory: " + entry.getName());
+
+                if (entry.isDirectory())
+                    Files.createDirectories(outputPath);
+                else {
+                    if (outputPath.getParent() != null)
+                        Files.createDirectories(outputPath.getParent());
+
+                    try (OutputStream os = Files.newOutputStream(outputPath)) {
+                        byte[] buffer = new byte[8192];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0)
+                            os.write(buffer, 0, len);
+                    }
+                }
+            }
+            zis.closeEntry();
+        }
     }
 }

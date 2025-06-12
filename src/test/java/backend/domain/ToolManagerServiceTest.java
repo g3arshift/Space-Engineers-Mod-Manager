@@ -96,7 +96,7 @@ class ToolManagerServiceTest {
     }
 
     @Test
-    void shouldDownloadRegularSteamCmdAfterRetryingWithFakeWebServer(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
+    void shouldDownloadFakeSteamCmdAfterRetryingAndFailToUnzip(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
         //Setup
         byte[] fakeSteamCmdZip = new byte[1024 * 750]; //768KB file. We want at least this since steam CMD is usually close to this size
         new Random().nextBytes(fakeSteamCmdZip);
@@ -188,9 +188,9 @@ class ToolManagerServiceTest {
         Result<Void> result = setupTask.get();
 
         //Check we get both the expected number and type of messages from our result
-        assertTrue(result.isSuccess(), "Download result should be successful");
-        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
-        assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type.");
+        assertFalse(result.isSuccess(), "Download result should be a failure since we downloaded a fake zip");
+        assertEquals("Downloaded file is not a .zip file.", result.getCurrentMessage());
+        assertEquals(ResultType.FAILED, result.getType(), "Result is the wrong type, should be SUCCESS.");
         assertEquals(5, result.getMESSAGES().size(), "Result messages were:\n" + String.join("\n", result.getMESSAGES()));
 
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
