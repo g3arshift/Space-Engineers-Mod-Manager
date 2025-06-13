@@ -168,8 +168,10 @@ tasks.withType(Test).configureEach {
 
 tasks.register('remoteTest', Test) {
     description = "Runs all tests except for ones that won't work on GH actions."
-    exclude("**/ModInfoServiceTest.class")
-    exclude("com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerServiceTest.shouldAddSteamCmd")
+    filter {
+        exclude("**/ModInfoServiceTest.class")
+        excludeTestsMatching "*.ToolManagerServiceTest.shouldDownloadSteamCmd"
+    }
 }
 
 remoteTest.dependsOn generateVersionProperties
