@@ -62,7 +62,7 @@ public class ZipUtility {
                 Path outputPath = normalizedDestination.resolve(entry.getName()).normalize();
 
                 //Prevent zip slip vulnerability
-                if (!outputPath.startsWith(destinationPath))
+                if (!outputPath.startsWith(normalizedDestination))
                     throw new IOException("Zip slip! Entry is outside of the target directory: " + entry.getName());
 
                 if (entry.isDirectory())
