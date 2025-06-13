@@ -98,10 +98,35 @@ class ToolManagerServiceTest {
             FileUtils.deleteDirectory(new File(testDataToDeletePath));
     }
 
+
+    /**
+     * Tests that the SteamCMD ZIP file can be successfully downloaded and extracted
+     * using the {@link ToolManagerService}, even when multiple download attempts fail before succeeding.
+     * <p>This test simulates the following behavior using WireMock:</p>
+     * <ol>
+     *   <li>Initial HEAD request returns the correct Content-Length and headers.</li>
+     *   <li>The first GET request returns a partial ZIP file (simulating a truncated response).</li>
+     *   <li>Two subsequent retry attempts to resume the download fail with HTTP 500 errors.</li>
+     *   <li>The final retry succeeds with a 206 Partial Content response containing the remainder of the file.</li>
+     * </ol>
+     * <p>The test then verifies that:</p>
+     * <ul>
+     *   <li>The overall tool setup task completes successfully.</li>
+     *   <li>The result is of type {@code SUCCESS} and contains the correct final message.</li>
+     *   <li>Progress and message updates are tracked and reach expected final values.</li>
+     *   <li>The ZIP file is saved to disk with the correct size.</li>
+     *   <li>The ZIP file is extracted, and the expected file (steamcmd.exe) exists with the correct size.</li>
+     * </ul>
+     * @param wireMockRuntimeInfo Injected WireMock runtime information used to configure the mock HTTP server.
+     * @throws IOException if an I/O error occurs during the test
+     * @throws InterruptedException if the test thread is interrupted while waiting for the setup task to complete
+     * @throws ExecutionException if the setup task throws an exception during execution
+     */
     @Test
     void shouldDownloadFakeSteamCmdAfterRetrying(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
         //Setup
-        byte[] fakeSteamCmdZip = createFakeZipFile("steamcmd.exe", 1024 * 768); //This is about the real size of the actual steamcmd.zip
+        int fileSize = 1024 * 768;
+        byte[] fakeSteamCmdZip = createFakeZipFile("steamcmd.exe", fileSize); //This is about the real size of the actual steamcmd.zip
         String steamCmdPath = "/steamcmd.zip";
 
         // HEAD request always returns Content-Length
@@ -204,7 +229,10 @@ class ToolManagerServiceTest {
         //Verify the file saved properly.
         assertEquals(fakeSteamCmdZip.length, new File(steamCmdLocalPath).length());
 
-        //TODO: Implement the unzip test.
+        //Verify our zip file extracted properly
+        Path extractedZipPath = Path.of(Path.of(steamCmdLocalPath).getParent() + "/steamcmd.exe");
+        assertTrue(Files.exists(extractedZipPath));
+        assertEquals(fileSize, Files.size(extractedZipPath));
     }
 
     private static byte[] createFakeZipFile(String entryInZipName, int uncompressedSize) throws IOException {

@@ -54,11 +54,12 @@ public class ZipUtility {
             return -1;
 
         int entriesExtracted = 0;
+        Path normalizedDestination = destinationPath.toAbsolutePath().normalize();
         try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFilePath))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 entriesExtracted++;
-                Path outputPath = destinationPath.resolve(entry.getName()).normalize();
+                Path outputPath = normalizedDestination.resolve(entry.getName()).normalize();
 
                 //Prevent zip slip vulnerability
                 if (!outputPath.startsWith(destinationPath))

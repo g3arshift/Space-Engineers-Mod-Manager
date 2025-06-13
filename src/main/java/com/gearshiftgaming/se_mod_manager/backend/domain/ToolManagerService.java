@@ -15,8 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import static com.gearshiftgaming.se_mod_manager.backend.domain.utility.ZipUtility.extractZipArchive;
 import static com.gearshiftgaming.se_mod_manager.backend.domain.utility.ZipUtility.isZip;
@@ -59,7 +57,7 @@ public class ToolManagerService {
         this.retryDelay = retryDelay;
     }
 
-    //TODO: Need to call all this from UI service and master manager
+    //TODO: Need to call all this from UI service and the UI part from master manager
     public Task<Result<Void>> setupTools() {
         return new Task<>() {
             @Override
@@ -160,9 +158,15 @@ public class ToolManagerService {
 
     /**
      * Download SteamCMD with a resumable HTTP Connection.
-     *
+     * @param steamCmdUrl The URL at which steamCMD can be downloaded from.
      * @param downloadLocation The location we want to save the SteamCMD zip file to.
-     * @return Whether the download is finished or not
+     * @param remoteFileSize The size of the SteamCMD.zip on the remote server
+     * @param divisor The number we will divide the byte count for remote file size and downloaded byte count by when we create the update message for the task.
+     * @param divisorName The string displayed next to the update message's divided byte count. EG: 768KB where the divisor name is KB.
+     * @param progressUpdater Callback method for Task.updateProgress().
+     * @param messageUpdater Callback method for Task.updateMessage().
+     * @return Whether the download is finished or not.
+     * @throws InterruptedException if any thread has interrupted the current thread. The interrupted status of the current thread is cleared when this exception is thrown.
      */
     private Result<Void> downloadSteamCmd(URL steamCmdUrl, String downloadLocation, long remoteFileSize, int divisor, String divisorName, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws InterruptedException {
         Result<Void> downloadResult = new Result<>();
@@ -229,6 +233,7 @@ public class ToolManagerService {
                 messageUpdater.accept(String.format("Retrying... (%d/%d)", retryCount, maxRetries));
                 if (retryCount <= maxRetries) {
                     downloadResult.addMessage("SteamCMD download failed, retrying... Attempt " + retryCount, ResultType.WARN);
+                    //Wait the specified time of our retry delay before retrying the download.
                     Thread.sleep(retryDelay);
                 } else
                     downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
