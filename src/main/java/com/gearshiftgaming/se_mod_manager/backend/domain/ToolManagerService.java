@@ -5,6 +5,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.concurrent.Task;
+import lombok.Getter;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -46,6 +47,12 @@ public class ToolManagerService {
 
     private final int retryDelay;
 
+    @Getter
+    private int divisor;
+
+    @Getter
+    private String divisorName;
+
 
     public ToolManagerService(UiService uiService, String steamCmdLocalPath, String steamCmdSourceLocation, int maxRetries, int connectionTimeout, int readTimeout, int retryDelay) {
         this.uiService = uiService;
@@ -85,19 +92,7 @@ public class ToolManagerService {
                         return toolSetupResult;
                     }
 
-                    //Get the largest common denominator for the file size and use that to create the update message
-                    int divisor;
-                    String divisorName;
-                    if (remoteSteamCmdFileSize <= 999999) { //Kilobyte
-                        divisor = 1000;
-                        divisorName = "KB";
-                    } else if (remoteSteamCmdFileSize <= 999999999) { //Megabyte
-                        divisor = 1000000;
-                        divisorName = "MB";
-                    } else { //Gigabyte
-                        divisor = 1000000000;
-                        divisorName = "GB";
-                    }
+                    getFileSizeDivisor(remoteSteamCmdFileSize);
 
                     toolSetupResult = downloadSteamCmd(steamDownloadUrl,
                             steamCmdLocalPath,
@@ -245,5 +240,19 @@ public class ToolManagerService {
             }
         }
         return downloadResult;
+    }
+
+    private void getFileSizeDivisor(long remoteFileSize) {
+        //Get the largest common denominator for the file size and use that to create the update message
+        if (remoteFileSize <= 999999) { //Kilobyte
+            divisor = 1000;
+            divisorName = "KB";
+        } else if (remoteFileSize <= 999999999) { //Megabyte
+            divisor = 1000000;
+            divisorName = "MB";
+        } else { //Gigabyte
+            divisor = 1000000000;
+            divisorName = "GB";
+        }
     }
 }

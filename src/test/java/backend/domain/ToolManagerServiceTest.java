@@ -17,7 +17,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -67,6 +65,55 @@ class ToolManagerServiceTest {
 
     private int retryDelay;
 
+    private List<String> messages;
+    private List<Double> progress;
+    private CountDownLatch doneLatch;
+
+    private static byte[] createFakeZipFile(String entryInZipName, int uncompressedSize) throws IOException {
+        byte[] fakeZip = new byte[uncompressedSize];
+        new Random().nextBytes(fakeZip);
+
+        //Write our zip file to a byte array
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(byteOut)) {
+            ZipEntry entry = new ZipEntry(entryInZipName);
+            // Calculate CRC32 for the entry
+            CRC32 crc = new CRC32();
+            crc.update(fakeZip);
+
+            // Set the entry properties for a valid ZIP
+            entry.setSize(fakeZip.length);
+            entry.setCrc(crc.getValue());
+            entry.setMethod(ZipEntry.DEFLATED);
+
+            zos.putNextEntry(entry);
+            zos.write(fakeZip);
+            zos.closeEntry();
+        }
+        return byteOut.toByteArray();
+    }
+
+    /**
+     * Returns true if the file has an .exe file signature (4D 5A for first two bytes)
+     * @param exeFile is the file we are checking
+     * @return true if the file is an .exe, and false if it is not or does not exist
+     * @throws IOException when we fail to read the file or our buffer of the read bytes is empty.
+     */
+    private static boolean isExe(File exeFile) throws IOException {
+        if (!exeFile.exists())
+            return false;
+
+        byte[] buffer = new byte[2];
+        boolean isExe = false;
+        try (InputStream is = new FileInputStream(exeFile)) {
+            //Exe signature is "4D 5A"
+            if (is.read(buffer) == buffer.length) {
+                isExe = buffer[0] == (byte) 0x4D && buffer[1] == (byte) 0x5A;
+            }
+        }
+        return isExe;
+    }
+
     @BeforeAll
     static void initJfx() {
         CountDownLatch latch = new CountDownLatch(1);
@@ -88,6 +135,10 @@ class ToolManagerServiceTest {
         connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
         readTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout"));
         retryDelay = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.delay"));
+
+        messages = new CopyOnWriteArrayList<>();
+        progress = new CopyOnWriteArrayList<>();
+        doneLatch = new CountDownLatch(1);
     }
 
     @AfterEach
@@ -117,10 +168,11 @@ class ToolManagerServiceTest {
      *   <li>The ZIP file is saved to disk with the correct size.</li>
      *   <li>The ZIP file is extracted, and the expected file (steamcmd.exe) exists with the correct size.</li>
      * </ul>
+     *
      * @param wireMockRuntimeInfo Injected WireMock runtime information used to configure the mock HTTP server.
-     * @throws IOException if an I/O error occurs during the test
+     * @throws IOException          if an I/O error occurs during the test
      * @throws InterruptedException if the test thread is interrupted while waiting for the setup task to complete
-     * @throws ExecutionException if the setup task throws an exception during execution
+     * @throws ExecutionException   if the setup task throws an exception during execution
      */
     @Test
     void shouldDownloadFakeSteamCmdAfterRetrying(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
@@ -194,11 +246,6 @@ class ToolManagerServiceTest {
         toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
         Task<Result<Void>> setupTask = toolManagerService.setupTools();
 
-        //Track our updates from the task
-        List<String> messages = new CopyOnWriteArrayList<>();
-        List<Double> progress = new CopyOnWriteArrayList<>();
-        CountDownLatch doneLatch = new CountDownLatch(1);
-
         //Add the listeners so our lists get updated properly when the task updates
         setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
         setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
@@ -235,28 +282,50 @@ class ToolManagerServiceTest {
         assertEquals(fileSize, Files.size(extractedZipPath));
     }
 
-    private static byte[] createFakeZipFile(String entryInZipName, int uncompressedSize) throws IOException {
-        byte[] fakeZip = new byte[uncompressedSize];
-        new Random().nextBytes(fakeZip);
+    @Test
+    void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException {
+        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
+        Task<Result<Void>> setupTask = toolManagerService.setupTools();
 
-        //Write our zip file to a byte array
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        try(ZipOutputStream zos = new ZipOutputStream(byteOut)) {
-            ZipEntry entry = new ZipEntry(entryInZipName);
-            // Calculate CRC32 for the entry
-            CRC32 crc = new CRC32();
-            crc.update(fakeZip);
+        //Add the listeners so our lists get updated properly when the task updates
+        setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
+        setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
+        setupTask.setOnSucceeded(e -> doneLatch.countDown());
+        setupTask.setOnFailed(e -> doneLatch.countDown());
 
-            // Set the entry properties for a valid ZIP
-            entry.setSize(fakeZip.length);
-            entry.setCrc(crc.getValue());
-            entry.setMethod(ZipEntry.DEFLATED);
+        //Run the task
+        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
+        taskThread.setDaemon(true);
+        taskThread.start();
 
-            zos.putNextEntry(entry);
-            zos.write(fakeZip);
-            zos.closeEntry();
-        }
+        //Pause the test until our task is done, but give it a timeout.
+        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
+        Result<Void> result = setupTask.get();
 
-        return byteOut.toByteArray();
+        //Check we get both the expected number and type of messages from our result
+        assertTrue(result.isSuccess(), "Download result should be a success");
+        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
+        assertEquals(2, result.getMESSAGES().size(), "Result messages were:\n" + String.join("\n", result.getMESSAGES()));
+
+        //Check we both don't have an empty list of messages and that it's giving us the last expected final message
+        assertFalse(messages.isEmpty(), "Should have updated messages");
+        assertFalse(progress.isEmpty());
+        File steamCmdDownload = new File(Path.of(steamCmdLocalPath).toString());
+        //Verify our messages are the correct value for the length.
+        assertEquals(String.format("%d%s/%d%s", steamCmdDownload.length() / toolManagerService.getDivisor(),
+                toolManagerService.getDivisorName(),
+                steamCmdDownload.length() / toolManagerService.getDivisor(),
+                toolManagerService.getDivisorName()), messages.getLast(), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
+
+
+        //Verify the file downloaded properly.
+        assertTrue(steamCmdDownload.exists());
+        assertEquals(steamCmdDownload.length(), new File(steamCmdLocalPath).length());
+
+        //Verify our zip file extracted properly
+        Path extractedZipPath = Path.of(Path.of(steamCmdLocalPath).getParent() + "/steamcmd.exe");
+        assertTrue(Files.exists(extractedZipPath));
     }
 }
