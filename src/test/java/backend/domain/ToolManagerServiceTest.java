@@ -69,6 +69,10 @@ class ToolManagerServiceTest {
     private List<Double> progress;
     private CountDownLatch doneLatch;
 
+    private int fakeFileSize;
+    private byte[] fakeSteamCmdZip;
+    private String fakeSteamCmdResourcePath;
+
     private static byte[] createFakeZipFile(String entryInZipName, int uncompressedSize) throws IOException {
         byte[] fakeZip = new byte[uncompressedSize];
         new Random().nextBytes(fakeZip);
@@ -139,6 +143,11 @@ class ToolManagerServiceTest {
         messages = new CopyOnWriteArrayList<>();
         progress = new CopyOnWriteArrayList<>();
         doneLatch = new CountDownLatch(1);
+
+        //Setup
+        fakeFileSize = 1024 * 768;
+        fakeSteamCmdZip = createFakeZipFile("steamcmd.exe", fakeFileSize); //This is about the real size of the actual steamcmd.zip
+        fakeSteamCmdResourcePath = "/steamcmd.zip";
     }
 
     @AfterEach
@@ -176,14 +185,9 @@ class ToolManagerServiceTest {
      */
     @Test
     void shouldDownloadFakeSteamCmdAfterRetrying(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, InterruptedException, ExecutionException {
-        //Setup
-        int fileSize = 1024 * 768;
-        byte[] fakeSteamCmdZip = createFakeZipFile("steamcmd.exe", fileSize); //This is about the real size of the actual steamcmd.zip
-        String steamCmdPath = "/steamcmd.zip";
-
         // HEAD request always returns Content-Length
         wireMockRuntimeInfo.getWireMock().register(
-                request("HEAD", urlEqualTo(steamCmdPath))
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Length", String.valueOf(fakeSteamCmdZip.length))
@@ -195,7 +199,7 @@ class ToolManagerServiceTest {
         int cutoff = 375000;
         byte[] partialData = Arrays.copyOfRange(fakeSteamCmdZip, 0, cutoff);
         wireMockRuntimeInfo.getWireMock().register(
-                get(urlEqualTo(steamCmdPath))
+                get(urlEqualTo(fakeSteamCmdResourcePath))
                         .inScenario("RetryDownload")
                         .whenScenarioStateIs(STARTED)
                         .willReturn(aResponse()
@@ -207,7 +211,7 @@ class ToolManagerServiceTest {
 
         //Simulate a failure when we try to restart the download
         wireMockRuntimeInfo.getWireMock().register(
-                get(urlEqualTo(steamCmdPath))
+                get(urlEqualTo(fakeSteamCmdResourcePath))
                         .inScenario("RetryDownload")
                         .whenScenarioStateIs("PartialFailed")
                         .withHeader("Range", matching("bytes=\\d+-"))
@@ -218,7 +222,7 @@ class ToolManagerServiceTest {
 
         //Simulates second failure when we try to restart the download
         wireMockRuntimeInfo.getWireMock().register(
-                get(urlEqualTo(steamCmdPath))
+                get(urlEqualTo(fakeSteamCmdResourcePath))
                         .inScenario("RetryDownload")
                         .whenScenarioStateIs("RetryFailedOnce")
                         .withHeader("Range", matching("bytes=\\d+-"))
@@ -230,7 +234,7 @@ class ToolManagerServiceTest {
         //Final successful retry - resume with partial content
         byte[] remainingData = Arrays.copyOfRange(fakeSteamCmdZip, cutoff, fakeSteamCmdZip.length);
         wireMockRuntimeInfo.getWireMock().register(
-                get(urlEqualTo(steamCmdPath))
+                get(urlEqualTo(fakeSteamCmdResourcePath))
                         .inScenario("RetryDownload")
                         .whenScenarioStateIs("FinalAttempt")
                         .withHeader("Range", matching("bytes=\\d+-"))
@@ -240,8 +244,7 @@ class ToolManagerServiceTest {
                                 .withBody(remainingData))  // rest of the file
         );
 
-        // Use WireMock URL
-        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + steamCmdPath;
+        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
 
         toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
         Task<Result<Void>> setupTask = toolManagerService.setupTools();
@@ -279,7 +282,7 @@ class ToolManagerServiceTest {
         //Verify our zip file extracted properly
         Path extractedZipPath = Path.of(Path.of(steamCmdLocalPath).getParent() + "/steamcmd.exe");
         assertTrue(Files.exists(extractedZipPath));
-        assertEquals(fileSize, Files.size(extractedZipPath));
+        assertEquals(fakeFileSize, Files.size(extractedZipPath));
     }
 
     @Test
@@ -328,4 +331,97 @@ class ToolManagerServiceTest {
         Path extractedZipPath = Path.of(Path.of(steamCmdLocalPath).getParent() + "/steamcmd.exe");
         assertTrue(Files.exists(extractedZipPath));
     }
+
+    @Test
+    void shouldStartButThenFailToDownloadFakeSteamCmd(WireMockRuntimeInfo wireMockRuntimeInfo) throws ExecutionException, InterruptedException {
+        // HEAD request always returns Content-Length
+        wireMockRuntimeInfo.getWireMock().register(
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Length", String.valueOf(fakeSteamCmdZip.length))
+                                .withHeader("Accept-Ranges", "bytes")
+                                .withHeader("Content-Type", "application/zip"))
+        );
+
+        //Initial download request that fails halfway through.
+        int cutoff = 375000;
+        byte[] partialData = Arrays.copyOfRange(fakeSteamCmdZip, 0, cutoff);
+        wireMockRuntimeInfo.getWireMock().register(
+                get(urlEqualTo(fakeSteamCmdResourcePath))
+                        .inScenario("RetryDownload")
+                        .whenScenarioStateIs(STARTED)
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/zip")
+                                .withBody(partialData))  // first part only
+                        .willSetStateTo("FullFailed")
+        );
+
+        wireMockRuntimeInfo.getWireMock().register(
+                get(urlEqualTo(fakeSteamCmdResourcePath))
+                        .inScenario("RetryDownload")
+                        .whenScenarioStateIs("FullFailed")
+                        .withHeader("Range", matching("bytes=\\d+-"))
+                        .willReturn(aResponse()
+                                .withStatus(500))
+        );
+
+        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
+
+        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
+        Task<Result<Void>> setupTask = toolManagerService.setupTools();
+
+        //Add the listeners so our lists get updated properly when the task updates
+        setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
+        setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
+        setupTask.setOnSucceeded(e -> doneLatch.countDown());
+        setupTask.setOnFailed(e -> doneLatch.countDown());
+
+        //Run the task
+        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
+        taskThread.setDaemon(true);
+        taskThread.start();
+
+        //Pause the test until our task is done, but give it a timeout.
+        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
+        Result<Void> result = setupTask.get();
+
+        //Check that we failed the way we expected
+        assertFalse(result.isSuccess(), "Download result should be a failure.");
+        assertEquals("com.gearshiftgaming.se_mod_manager.backend.domain.ToolDownloadFailedException: Received HTTP response code 500 from server.", result.getCurrentMessage().split("\n")[0].trim());
+
+        //Check that we tried the correct number of times to redownload steamCMD
+        assertEquals(maxRetries + 1, result.getMESSAGES().size());
+        for(int i = 0; i < maxRetries; i++) {
+            assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMESSAGES().get(i));
+        }
+
+        //Check we both don't have an empty list of messages and that it's giving us the last expected final message
+        assertFalse(messages.isEmpty(), "Should have updated messages");
+        assertFalse(progress.isEmpty());
+        assertEquals(String.format("Retrying... (%d/%d)", maxRetries, maxRetries), messages.getLast());
+        //TODO: expected final message for progress
+    }
+
+    @Test
+    void shouldTimeOutConnection() {
+
+    }
+
+    @Test
+    void shouldFailToGetSizeOfFakeSteamCmd() {
+
+    }
+
+    @Test
+    void downloadedFileShouldNotBeZip() {
+
+    }
+
+    @Test
+    void steamCmdShouldAlreadyBeDownloaded() {
+
+    }
+
 }
