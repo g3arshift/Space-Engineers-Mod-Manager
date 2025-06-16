@@ -163,7 +163,7 @@ public class ToolManagerService {
      * @return Whether the download is finished or not.
      * @throws InterruptedException if any thread has interrupted the current thread. The interrupted status of the current thread is cleared when this exception is thrown.
      */
-    private Result<Void> downloadSteamCmd(URL steamCmdUrl, String downloadLocation, long remoteFileSize, int divisor, String divisorName, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws InterruptedException {
+    private Result<Void> downloadSteamCmd(URL steamCmdUrl, String downloadLocation, long remoteFileSize, int divisor, String divisorName, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws InterruptedException, IOException {
         Result<Void> downloadResult = new Result<>();
         File outputFile = new File(downloadLocation);
 
@@ -230,8 +230,10 @@ public class ToolManagerService {
                     downloadResult.addMessage("SteamCMD download failed, retrying... Attempt " + retryCount, ResultType.WARN);
                     //Wait the specified time of our retry delay before retrying the download.
                     Thread.sleep(retryDelay);
-                } else
+                } else {
+                    Files.deleteIfExists(Path.of(steamCmdLocalPath));
                     downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
+                }
             } catch (IOException e) {
                 downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
             } finally {
