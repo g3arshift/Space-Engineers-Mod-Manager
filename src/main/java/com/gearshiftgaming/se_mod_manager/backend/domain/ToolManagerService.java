@@ -224,11 +224,9 @@ public class ToolManagerService {
                         throw new ToolDownloadFailedException("Download of SteamCMD was interrupted mid download and was unable to complete.");
                 }
             } catch (SocketTimeoutException | ToolDownloadFailedException e) {
-                //TODO: Investigate this with shouldStartButThenFailToDownloadFakeSteamCmd test
-                // We are retrying one too many times. Might just need to remove the <= and make it <
                 retryCount++;
-                messageUpdater.accept(String.format("Retrying... (%d/%d)", retryCount, maxRetries));
                 if (retryCount <= maxRetries) {
+                    messageUpdater.accept(String.format("Retrying... (%d/%d)", retryCount, maxRetries));
                     downloadResult.addMessage("SteamCMD download failed, retrying... Attempt " + retryCount, ResultType.WARN);
                     //Wait the specified time of our retry delay before retrying the download.
                     Thread.sleep(retryDelay);
