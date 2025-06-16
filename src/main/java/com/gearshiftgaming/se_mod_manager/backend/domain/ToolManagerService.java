@@ -80,20 +80,31 @@ public class ToolManagerService {
                 }
 
                 Result<Void> toolSetupResult;
+                StringBuilder downloadMessage = new StringBuilder();
+                downloadMessage.append("Downloading required tools...");
+                uiService.log(downloadMessage.toString(), MessageType.INFO);
+                updateMessage(downloadMessage.toString());
+
                 //Check if we already have steam CMD downloaded. If it isn't, download it.
-                uiService.log("Downloading required tools...", MessageType.INFO);
                 if (Files.notExists(Path.of(steamCmdLocalPath + "/steamcmd.exe"))) {
                     uiService.log("Downloading Steam CMD...", MessageType.INFO);
                     URL steamDownloadUrl = new URI(steamCmdSourceLocation).toURL();
-                    long remoteSteamCmdFileSize = getSteamCmdRemoteSize(steamDownloadUrl);
+
+                    //Get the size of the steamcmd.zip we're downloading
+                    long remoteSteamCmdFileSize = getRemoteFileSize(steamDownloadUrl);
                     if (remoteSteamCmdFileSize == -1) {
                         toolSetupResult = new Result<>();
                         toolSetupResult.addMessage("Failed to get size of SteamCMD.", ResultType.FAILED);
                         return toolSetupResult;
                     }
 
+                    //Get the divisor and divisor name we're using based on the remote file size
                     getFileSizeDivisor(remoteSteamCmdFileSize);
 
+                    downloadMessage.setLength(0);
+                    downloadMessage.append("Downloading SteamCMD...");
+                    updateMessage(downloadMessage.toString());
+                    //Download SteamCMD
                     toolSetupResult = downloadSteamCmd(steamDownloadUrl,
                             steamCmdLocalPath,
                             remoteSteamCmdFileSize,
@@ -102,10 +113,17 @@ public class ToolManagerService {
                             this::updateProgress,
                             this::updateMessage);
 
-                    if (toolSetupResult.isSuccess())
-                        uiService.log("Successfully downloaded Steam CMD.", MessageType.INFO);
-                    else
-                        uiService.log("Failed to download Steam CMD.", MessageType.ERROR);
+                    if (toolSetupResult.isSuccess()) {
+                        downloadMessage.setLength(0);
+                        downloadMessage.append("Successfully downloaded Steam CMD.");
+                        uiService.log(downloadMessage.toString(), MessageType.INFO);
+                    }
+                    else {
+                        downloadMessage.setLength(0);
+                        downloadMessage.append("Failed to download Steam CMD.");
+                        uiService.log(downloadMessage.toString(), MessageType.ERROR);
+                    }
+                    updateMessage(downloadMessage.toString());
                 } else {
                     toolSetupResult = new Result<>();
                     toolSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
@@ -130,17 +148,17 @@ public class ToolManagerService {
     }
 
     /**
-     * Gets the size of the SteamCMD zip file on the remote server.
+     * Gets the size of a file on a remote server by using HEAD requests.
      *
-     * @param steamCmdUrl The location we will download SteamCMD from.
-     * @return The size of the SteamCMD zip on the remote server.
+     * @param remoteFileUrl The location we will download our file from.
+     * @return The size of the file on the remote server.
      */
-    private long getSteamCmdRemoteSize(URL steamCmdUrl) throws IOException {
+    private long getRemoteFileSize(URL remoteFileUrl) throws IOException {
         HttpURLConnection sizeCheckConnection = null;
 
         //Get the size of the remote file
         try {
-            sizeCheckConnection = (HttpURLConnection) steamCmdUrl.openConnection();
+            sizeCheckConnection = (HttpURLConnection) remoteFileUrl.openConnection();
             sizeCheckConnection.setRequestMethod("HEAD");
         } finally {
             //Make sure our connection is closed if it was opened.
