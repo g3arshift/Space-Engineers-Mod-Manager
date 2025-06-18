@@ -8,10 +8,7 @@ import javafx.concurrent.Task;
 import lombok.Getter;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
@@ -71,13 +68,11 @@ public class ToolManagerService {
             protected Result<Void> call() throws Exception {
                 //Make the base directories and file we need if they don't exist
                 Path steamDownloadPath = Path.of(steamCmdLocalPath);
-                if (Files.notExists(steamDownloadPath)) {
+                if (Files.notExists(steamDownloadPath))
                     Files.createDirectories(steamDownloadPath.getParent());
-                }
 
-                if (Files.notExists(steamDownloadPath)) {
+                if (Files.notExists(steamDownloadPath))
                     Files.createFile(steamDownloadPath);
-                }
 
                 Result<Void> toolSetupResult;
                 StringBuilder downloadMessage = new StringBuilder();
@@ -85,63 +80,14 @@ public class ToolManagerService {
                 uiService.log(downloadMessage.toString(), MessageType.INFO);
                 updateMessage(downloadMessage.toString());
 
-                //Check if we already have steam CMD downloaded. If it isn't, download it.
-                if (Files.notExists(Path.of(steamCmdLocalPath + "/steamcmd.exe"))) {
-                    uiService.log("Downloading Steam CMD...", MessageType.INFO);
-                    URL steamDownloadUrl = new URI(steamCmdSourceLocation).toURL();
-
-                    //Get the size of the steamcmd.zip we're downloading
-                    long remoteSteamCmdFileSize = getRemoteFileSize(steamDownloadUrl);
-                    if (remoteSteamCmdFileSize == -1) {
-                        toolSetupResult = new Result<>();
-                        toolSetupResult.addMessage("Failed to get size of SteamCMD.", ResultType.FAILED);
-                        return toolSetupResult;
-                    }
-
-                    //Get the divisor and divisor name we're using based on the remote file size
-                    getFileSizeDivisor(remoteSteamCmdFileSize);
-
-                    downloadMessage.setLength(0);
-                    downloadMessage.append("Downloading SteamCMD...");
-                    updateMessage(downloadMessage.toString());
-                    //Download SteamCMD
-                    toolSetupResult = downloadSteamCmd(steamDownloadUrl,
-                            steamCmdLocalPath,
-                            remoteSteamCmdFileSize,
-                            divisor,
-                            divisorName,
-                            this::updateProgress,
-                            this::updateMessage);
-
-                    if (toolSetupResult.isSuccess()) {
-                        downloadMessage.setLength(0);
-                        downloadMessage.append("Successfully downloaded Steam CMD.");
-                        uiService.log(downloadMessage.toString(), MessageType.INFO);
-                    }
-                    else {
-                        downloadMessage.setLength(0);
-                        downloadMessage.append("Failed to download Steam CMD.");
-                        uiService.log(downloadMessage.toString(), MessageType.ERROR);
-                    }
-                    updateMessage(downloadMessage.toString());
-                } else {
-                    toolSetupResult = new Result<>();
-                    toolSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
-                }
-
-                if (!toolSetupResult.isSuccess())
-                    return toolSetupResult;
-
-                //Read the file signature of our downloaded file to make sure it's a .zip
-                if (!isZip(new File(steamCmdLocalPath))) {
-                    toolSetupResult.addMessage("Downloaded file is not a .zip file.", ResultType.FAILED);
-                    return toolSetupResult;
-                }
-
-                extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
+                //Download and extract SteamCMD.
+                toolSetupResult = downloadSteamCmd(downloadMessage, this::updateProgress, this::updateMessage);
+                if (toolSetupResult.isSuccess())
+                    extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
 
                 //Add a final message to the download chain if everything succeeded
-                toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
+                if (toolSetupResult.isSuccess())
+                    toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
                 return toolSetupResult;
             }
         };
@@ -169,19 +115,75 @@ public class ToolManagerService {
         return sizeCheckConnection.getContentLengthLong();
     }
 
+    private Result<Void> downloadSteamCmd(StringBuilder downloadMessage, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws IOException, InterruptedException, URISyntaxException {
+        Result<Void> steamCmdSetupResult;
+
+        //Check if we already have steam CMD downloaded. If it isn't, download it.
+        if (Files.exists((Path.of(steamCmdLocalPath + "/steamcmd.exe")))) {
+            steamCmdSetupResult = new Result<>();
+            steamCmdSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
+            return steamCmdSetupResult;
+        }
+
+        uiService.log("Downloading Steam CMD...", MessageType.INFO);
+        URL steamDownloadUrl = new URI(steamCmdSourceLocation).toURL();
+
+        //Get the size of the steamcmd.zip we're downloading
+        long remoteSteamCmdFileSize = getRemoteFileSize(steamDownloadUrl);
+        if (remoteSteamCmdFileSize == -1) {
+            steamCmdSetupResult = new Result<>();
+            setNewStringBuilderMessage(downloadMessage, "Failed to get size of SteamCMD.");
+            steamCmdSetupResult.addMessage(downloadMessage.toString(), ResultType.FAILED);
+            return steamCmdSetupResult;
+        }
+
+        //Get the divisor and divisor name we're using based on the remote file size
+        getFileSizeDivisor(remoteSteamCmdFileSize);
+
+        setNewStringBuilderMessage(downloadMessage, "Downloading SteamCMD...");
+        messageUpdater.accept(downloadMessage.toString());
+        //Download SteamCMD
+        steamCmdSetupResult = downloadFileWithResumeAndRetries(steamDownloadUrl,
+                steamCmdLocalPath,
+                "SteamCMD",
+                remoteSteamCmdFileSize,
+                progressUpdater,
+                messageUpdater);
+
+        if (steamCmdSetupResult.isSuccess()) {
+            setNewStringBuilderMessage(downloadMessage, "Successfully downloaded Steam CMD.");
+            uiService.log(downloadMessage.toString(), MessageType.INFO);
+        } else {
+            setNewStringBuilderMessage(downloadMessage, "Failed to download Steam CMD.");
+            uiService.log(downloadMessage.toString(), MessageType.ERROR);
+        }
+        messageUpdater.accept(downloadMessage.toString());
+
+        if (steamCmdSetupResult.isSuccess() && !isZip(new File(steamCmdLocalPath))) {
+            steamCmdSetupResult.addMessage("Downloaded SteamCMD file is not a .zip file.", ResultType.FAILED);
+        }
+
+        return steamCmdSetupResult;
+    }
+
+    private static void setNewStringBuilderMessage(StringBuilder downloadMessage, String message) {
+        downloadMessage.setLength(0);
+        downloadMessage.append(message);
+    }
+
     /**
-     * Download SteamCMD with a resumable HTTP Connection.
-     * @param steamCmdUrl The URL at which steamCMD can be downloaded from.
-     * @param downloadLocation The location we want to save the SteamCMD zip file to.
-     * @param remoteFileSize The size of the SteamCMD.zip on the remote server
-     * @param divisor The number we will divide the byte count for remote file size and downloaded byte count by when we create the update message for the task.
-     * @param divisorName The string displayed next to the update message's divided byte count. EG: 768KB where the divisor name is KB.
-     * @param progressUpdater Callback method for Task.updateProgress().
-     * @param messageUpdater Callback method for Task.updateMessage().
+     * Download a file with a resumable HTTP Connection and retry the connection after a set time if it is interrupted.
+     *
+     * @param steamCmdUrl      The URL at which the remote file can be downloaded from.
+     * @param downloadLocation The location we want to save the file to.
+     * @param toolName         The name of the tool we're downloading.
+     * @param remoteFileSize   The size of the file on the remote server
+     * @param progressUpdater  Callback method for Task.updateProgress().
+     * @param messageUpdater   Callback method for Task.updateMessage().
      * @return Whether the download is finished or not.
      * @throws InterruptedException if any thread has interrupted the current thread. The interrupted status of the current thread is cleared when this exception is thrown.
      */
-    private Result<Void> downloadSteamCmd(URL steamCmdUrl, String downloadLocation, long remoteFileSize, int divisor, String divisorName, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws InterruptedException, IOException {
+    private Result<Void> downloadFileWithResumeAndRetries(URL steamCmdUrl, String downloadLocation, String toolName, long remoteFileSize, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws InterruptedException, IOException {
         Result<Void> downloadResult = new Result<>();
         File outputFile = new File(downloadLocation);
 
@@ -192,7 +194,7 @@ public class ToolManagerService {
             //If our file on disk is smaller than the remote, resume the download at the byte location we stopped.
             //We include this to have the retries function. If the outer condition from the setupTools is removed, this can cause issues with downloading steam CMD when already downloaded.
             if (existingFileSize >= remoteFileSize) {
-                downloadResult.addMessage("SteamCMD already downloaded.", ResultType.SUCCESS);
+                downloadResult.addMessage(String.format("%s is already downloaded.", toolName), ResultType.SUCCESS);
                 return downloadResult;
             }
 
@@ -236,16 +238,16 @@ public class ToolManagerService {
                     }
 
                     if (totalBytesDownloaded == remoteFileSize) {
-                        downloadResult.addMessage("Successfully downloaded SteamCMD.", ResultType.SUCCESS);
+                        downloadResult.addMessage(String.format("Successfully downloaded %s", toolName), ResultType.SUCCESS);
                         retryCount = 99;
                     } else
-                        throw new ToolDownloadFailedException("Download of SteamCMD was interrupted mid download and was unable to complete.");
+                        throw new ToolDownloadFailedException(String.format("Download of %s was interrupted mid download and was unable to complete.", toolName));
                 }
             } catch (SocketTimeoutException | ToolDownloadFailedException e) {
                 retryCount++;
                 if (retryCount <= maxRetries) {
                     messageUpdater.accept(String.format("Retrying... (%d/%d)", retryCount, maxRetries));
-                    downloadResult.addMessage("SteamCMD download failed, retrying... Attempt " + retryCount, ResultType.WARN);
+                    downloadResult.addMessage(String.format("%s download failed, retrying... Attempt %d", toolName, retryCount), ResultType.WARN);
                     //Wait the specified time of our retry delay before retrying the download.
                     Thread.sleep(retryDelay);
                 } else {
