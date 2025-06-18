@@ -61,6 +61,7 @@ public class ToolManagerService {
         this.retryDelay = retryDelay;
     }
 
+    //TODO: Add support for chunked downloads
     //TODO: Need to call all this from UI service and the UI part from master manager
     public Task<Result<Void>> setupTools() {
         return new Task<>() {
