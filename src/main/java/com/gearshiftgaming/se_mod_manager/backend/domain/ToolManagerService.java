@@ -117,7 +117,7 @@ public class ToolManagerService {
             Files.createFile(steamDownloadPath);
 
         //Check if we already have steam CMD downloaded. If it isn't, download it.
-        if (Files.exists((Path.of(steamCmdZipPath + "/steamcmd.exe")))) {
+        if (Files.exists(Path.of(steamCmdZipPath).getParent().resolve("steamcmd.exe"))) {
             steamCmdSetupResult = new Result<>();
             steamCmdSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
             return steamCmdSetupResult;
