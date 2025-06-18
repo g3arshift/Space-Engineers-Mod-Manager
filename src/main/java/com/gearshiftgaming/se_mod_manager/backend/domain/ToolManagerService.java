@@ -66,14 +66,6 @@ public class ToolManagerService {
         return new Task<>() {
             @Override
             protected Result<Void> call() throws Exception {
-                //Make the base directories and file we need if they don't exist
-                Path steamDownloadPath = Path.of(steamCmdLocalPath);
-                if (Files.notExists(steamDownloadPath))
-                    Files.createDirectories(steamDownloadPath.getParent());
-
-                if (Files.notExists(steamDownloadPath))
-                    Files.createFile(steamDownloadPath);
-
                 Result<Void> toolSetupResult;
                 StringBuilder downloadMessage = new StringBuilder();
                 downloadMessage.append("Downloading required tools...");
@@ -82,8 +74,6 @@ public class ToolManagerService {
 
                 //Download and extract SteamCMD.
                 toolSetupResult = downloadSteamCmd(downloadMessage, this::updateProgress, this::updateMessage);
-                if (toolSetupResult.isSuccess())
-                    extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
 
                 //Add a final message to the download chain if everything succeeded
                 if (toolSetupResult.isSuccess())
@@ -118,6 +108,14 @@ public class ToolManagerService {
     private Result<Void> downloadSteamCmd(StringBuilder downloadMessage, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws IOException, InterruptedException, URISyntaxException {
         Result<Void> steamCmdSetupResult;
 
+        //Make the base directories and file we need if they don't exist
+        Path steamDownloadPath = Path.of(steamCmdLocalPath);
+        if (Files.notExists(steamDownloadPath))
+            Files.createDirectories(steamDownloadPath.getParent());
+
+        if (Files.notExists(steamDownloadPath))
+            Files.createFile(steamDownloadPath);
+
         //Check if we already have steam CMD downloaded. If it isn't, download it.
         if (Files.exists((Path.of(steamCmdLocalPath + "/steamcmd.exe")))) {
             steamCmdSetupResult = new Result<>();
@@ -142,6 +140,7 @@ public class ToolManagerService {
 
         setNewStringBuilderMessage(downloadMessage, "Downloading SteamCMD...");
         messageUpdater.accept(downloadMessage.toString());
+
         //Download SteamCMD
         steamCmdSetupResult = downloadFileWithResumeAndRetries(steamDownloadUrl,
                 steamCmdLocalPath,
@@ -150,25 +149,29 @@ public class ToolManagerService {
                 progressUpdater,
                 messageUpdater);
 
-        if (steamCmdSetupResult.isSuccess()) {
-            setNewStringBuilderMessage(downloadMessage, "Successfully downloaded Steam CMD.");
-            uiService.log(downloadMessage.toString(), MessageType.INFO);
-        } else {
+        if (!steamCmdSetupResult.isSuccess()) {
             setNewStringBuilderMessage(downloadMessage, "Failed to download Steam CMD.");
             uiService.log(downloadMessage.toString(), MessageType.ERROR);
+            messageUpdater.accept(downloadMessage.toString());
+            return steamCmdSetupResult;
         }
+
+        setNewStringBuilderMessage(downloadMessage, "Successfully downloaded Steam CMD.");
+        uiService.log(downloadMessage.toString(), MessageType.INFO);
         messageUpdater.accept(downloadMessage.toString());
 
-        if (steamCmdSetupResult.isSuccess() && !isZip(new File(steamCmdLocalPath))) {
+        //Check that we've actually downloaded a .zip file by checking the first four bytes.
+        if (!isZip(new File(steamCmdLocalPath))) {
             steamCmdSetupResult.addMessage("Downloaded SteamCMD file is not a .zip file.", ResultType.FAILED);
+            return steamCmdSetupResult;
         }
 
-        return steamCmdSetupResult;
-    }
+        int extractedFileCount = extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
 
-    private static void setNewStringBuilderMessage(StringBuilder downloadMessage, String message) {
-        downloadMessage.setLength(0);
-        downloadMessage.append(message);
+        if (extractedFileCount == 0)
+            steamCmdSetupResult.addMessage("Failed to extract steamcmd.exe from .zip.", ResultType.FAILED);
+
+        return steamCmdSetupResult;
     }
 
     /**
@@ -276,5 +279,10 @@ public class ToolManagerService {
             divisor = 1000000000;
             divisorName = "GB";
         }
+    }
+
+    private static void setNewStringBuilderMessage(StringBuilder downloadMessage, String message) {
+        downloadMessage.setLength(0);
+        downloadMessage.append(message);
     }
 }
