@@ -32,7 +32,7 @@ public class ToolManagerService {
 
     private final UiService uiService;
 
-    private final String steamCmdLocalPath;
+    private final String steamCmdZipPath;
 
     private final String steamCmdSourceLocation;
 
@@ -51,9 +51,9 @@ public class ToolManagerService {
     private String divisorName;
 
 
-    public ToolManagerService(UiService uiService, String steamCmdLocalPath, String steamCmdSourceLocation, int maxRetries, int connectionTimeout, int readTimeout, int retryDelay) {
+    public ToolManagerService(UiService uiService, String steamCmdZipPath, String steamCmdSourceLocation, int maxRetries, int connectionTimeout, int readTimeout, int retryDelay) {
         this.uiService = uiService;
-        this.steamCmdLocalPath = steamCmdLocalPath;
+        this.steamCmdZipPath = steamCmdZipPath;
         this.steamCmdSourceLocation = steamCmdSourceLocation;
         this.maxRetries = maxRetries;
         this.connectionTimeout = connectionTimeout;
@@ -109,7 +109,7 @@ public class ToolManagerService {
         Result<Void> steamCmdSetupResult;
 
         //Make the base directories and file we need if they don't exist
-        Path steamDownloadPath = Path.of(steamCmdLocalPath);
+        Path steamDownloadPath = Path.of(steamCmdZipPath);
         if (Files.notExists(steamDownloadPath))
             Files.createDirectories(steamDownloadPath.getParent());
 
@@ -117,7 +117,7 @@ public class ToolManagerService {
             Files.createFile(steamDownloadPath);
 
         //Check if we already have steam CMD downloaded. If it isn't, download it.
-        if (Files.exists((Path.of(steamCmdLocalPath + "/steamcmd.exe")))) {
+        if (Files.exists((Path.of(steamCmdZipPath + "/steamcmd.exe")))) {
             steamCmdSetupResult = new Result<>();
             steamCmdSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
             return steamCmdSetupResult;
@@ -143,7 +143,7 @@ public class ToolManagerService {
 
         //Download SteamCMD
         steamCmdSetupResult = downloadFileWithResumeAndRetries(steamDownloadUrl,
-                steamCmdLocalPath,
+                steamCmdZipPath,
                 "SteamCMD",
                 remoteSteamCmdFileSize,
                 progressUpdater,
@@ -161,7 +161,7 @@ public class ToolManagerService {
         messageUpdater.accept(downloadMessage.toString());
 
         //Check that we've actually downloaded a .zip file by checking the first four bytes.
-        if (!isZip(new File(steamCmdLocalPath))) {
+        if (!isZip(new File(steamCmdZipPath))) {
             steamCmdSetupResult.addMessage("Downloaded SteamCMD file is not a .zip file.", ResultType.FAILED);
             return steamCmdSetupResult;
         }
@@ -254,7 +254,7 @@ public class ToolManagerService {
                     //Wait the specified time of our retry delay before retrying the download.
                     Thread.sleep(retryDelay);
                 } else {
-                    Files.deleteIfExists(Path.of(steamCmdLocalPath));
+                    Files.deleteIfExists(Path.of(steamCmdZipPath));
                     downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 }
             } catch (IOException e) {
@@ -269,14 +269,14 @@ public class ToolManagerService {
 
     private void getFileSizeDivisor(long remoteFileSize) {
         //Get the largest common denominator for the file size and use that to create the update message
-        if (remoteFileSize <= 999999) { //Kilobyte
-            divisor = 1000;
+        if (remoteFileSize <= 999999) { //Kibibyte
+            divisor = 1024;
             divisorName = "KB";
-        } else if (remoteFileSize <= 999999999) { //Megabyte
-            divisor = 1000000;
+        } else if (remoteFileSize <= 999999999) { //Mebibyte
+            divisor = 1048576;
             divisorName = "MB";
-        } else { //Gigabyte
-            divisor = 1000000000;
+        } else { //Gibibyte
+            divisor = 1073741824;
             divisorName = "GB";
         }
     }
