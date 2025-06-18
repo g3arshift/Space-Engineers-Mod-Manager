@@ -1,13 +1,5 @@
 package backend.domain;
 
-/**
- * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
- * You may use, distribute, and modify this code under the terms of the GPL3 license.
- * <p>
- * You should have received a copy of the GPL3 license with
- * this file. If not, please write to: gearshift@gearshiftgaming.com.
- */
-
 import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
@@ -40,20 +32,25 @@ import java.util.zip.ZipOutputStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
+/**
+ * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute, and modify this code under the terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ */
 @WireMockTest
 class ToolManagerServiceTest {
 
     private ToolManagerService toolManagerService;
 
-    private String steamCmdLocalPath;
+    private String steamCmdZipPath;
 
     private String steamCmdSourceLocation;
 
@@ -118,6 +115,28 @@ class ToolManagerServiceTest {
         return isExe;
     }
 
+    private Result<Void> runDownload(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {
+        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
+
+        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
+        Task<Result<Void>> setupTask = toolManagerService.setupTools();
+
+        //Add the listeners so our lists get updated properly when the task updates
+        setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
+        setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
+        setupTask.setOnSucceeded(e -> doneLatch.countDown());
+        setupTask.setOnFailed(e -> doneLatch.countDown());
+
+        //Run the task
+        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
+        taskThread.setDaemon(true);
+        taskThread.start();
+
+        //Pause the test until our task is done, but give it a timeout.
+        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
+        return setupTask.get();
+    }
+
     @BeforeAll
     static void initJfx() {
         CountDownLatch latch = new CountDownLatch(1);
@@ -133,7 +152,7 @@ class ToolManagerServiceTest {
             properties.load(input);
         }
 
-        steamCmdLocalPath = properties.getProperty("semm.steam.cmd.localPath");
+        steamCmdZipPath = properties.getProperty("semm.steam.cmd.localPath");
         steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.download.source");
         maxRetries = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit"));
         connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
@@ -244,25 +263,7 @@ class ToolManagerServiceTest {
                                 .withBody(remainingData))  // rest of the file
         );
 
-        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
-
-        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
-        Task<Result<Void>> setupTask = toolManagerService.setupTools();
-
-        //Add the listeners so our lists get updated properly when the task updates
-        setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
-        setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
-        setupTask.setOnSucceeded(e -> doneLatch.countDown());
-        setupTask.setOnFailed(e -> doneLatch.countDown());
-
-        //Run the task
-        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
-        taskThread.setDaemon(true);
-        taskThread.start();
-
-        //Pause the test until our task is done, but give it a timeout.
-        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
-        Result<Void> result = setupTask.get();
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
 
         //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be a success");
@@ -270,24 +271,53 @@ class ToolManagerServiceTest {
         assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
         assertEquals(5, result.getMESSAGES().size(), "Result messages were:\n" + String.join("\n", result.getMESSAGES()));
 
+        //Check that we tried the correct number of times to redownload steamCMD
+        assertEquals(maxRetries + 2, result.getMESSAGES().size());
+        for(int i = 0; i < maxRetries; i++) {
+            assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMESSAGES().get(i));
+        }
+
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
-        assertEquals(String.format("%sKB/%sKB", fakeSteamCmdZip.length / 1000, fakeSteamCmdZip.length / 1000), messages.getLast(), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(String.format("%sKB/%sKB", fakeSteamCmdZip.length / 1024, fakeSteamCmdZip.length / 1024), messages.get(messages.size() - 2), "Update messages were:\n" + String.join("\n", messages));
         assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
 
         //Verify the file saved properly.
-        assertEquals(fakeSteamCmdZip.length, new File(steamCmdLocalPath).length());
+        assertEquals(fakeSteamCmdZip.length, new File(steamCmdZipPath).length());
 
         //Verify our zip file extracted properly
-        Path extractedZipPath = Path.of(Path.of(steamCmdLocalPath).getParent() + "/steamcmd.exe");
+        Path extractedZipPath = Path.of(Path.of(steamCmdZipPath).getParent() + "/steamcmd.exe");
         assertTrue(Files.exists(extractedZipPath));
         assertEquals(fakeFileSize, Files.size(extractedZipPath));
     }
 
+    /**
+     * Verifies that the SteamCMD setup process completes successfully using {@link ToolManagerService#setupTools()}.
+     * <p>
+     * This test simulates a full download-and-extract operation and ensures:
+     * <ul>
+     *   <li>The SteamCMD ZIP is downloaded if not already present</li>
+     *   <li>Progress and message updates occur correctly during the download</li>
+     *   <li>The final {@link Result} indicates success with the correct messages</li>
+     *   <li>The ZIP file is extracted correctly, and key files (e.g., steamcmd.exe) exist</li>
+     * </ul>
+     * <p>
+     * The download runs asynchronously on a virtual thread. The test waits up to 60 seconds for completion and uses a latch to detect when the task finishes.
+     * Assertions are made on:
+     * <ul>
+     *   <li>Download result status and message contents</li>
+     *   <li>Progress and message update lists</li>
+     *   <li>File system checks for the downloaded ZIP and extracted contents</li>
+     * </ul>
+     * <p>
+     * @throws InterruptedException if the current thread is interrupted while waiting for the task to finish
+     * @throws ExecutionException if the task throws an exception during execution
+     * @throws IOException if an I/O error occurs while verifying downloaded or extracted files
+     */
     @Test
-    void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException {
-        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
+    void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException, IOException {
+        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
         Task<Result<Void>> setupTask = toolManagerService.setupTools();
 
         //Add the listeners so our lists get updated properly when the task updates
@@ -314,26 +344,50 @@ class ToolManagerServiceTest {
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
-        File steamCmdDownload = new File(Path.of(steamCmdLocalPath).toString());
+        File steamCmdDownload = new File(Path.of(steamCmdZipPath).toString());
         //Verify our messages are the correct value for the length.
         assertEquals(String.format("%d%s/%d%s", steamCmdDownload.length() / toolManagerService.getDivisor(),
                 toolManagerService.getDivisorName(),
                 steamCmdDownload.length() / toolManagerService.getDivisor(),
-                toolManagerService.getDivisorName()), messages.getLast(), "Update messages were:\n" + String.join("\n", messages));
+                toolManagerService.getDivisorName()), messages.get(messages.size() - 2), "Update messages were:\n" + String.join("\n", messages));
         assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
 
 
         //Verify the file downloaded properly.
         assertTrue(steamCmdDownload.exists());
-        assertEquals(steamCmdDownload.length(), new File(steamCmdLocalPath).length());
+        assertEquals(steamCmdDownload.length(), new File(steamCmdZipPath).length());
 
         //Verify our zip file extracted properly
-        Path extractedZipPath = Path.of(Path.of(steamCmdLocalPath).getParent() + "/steamcmd.exe");
+        Path extractedZipPath = Path.of(Path.of(steamCmdZipPath).getParent() + "/steamcmd.exe");
         assertTrue(Files.exists(extractedZipPath));
+        assertTrue(isExe(new File(extractedZipPath.toString())));
     }
 
+    /**
+     * Tests the {@code ToolManagerService}'s behavior when a partial download of SteamCMD fails and all retry attempts are unsuccessful.
+     * <p>
+     * This test simulates a scenario using WireMock where:
+     * <ul>
+     *   <li>A valid {@code HEAD} request returns expected headers including {@code Content-Length}</li>
+     *   <li>The initial {@code GET} request begins successfully but returns only part of the file</li>
+     *   <li>All subsequent ranged {@code GET} requests to resume the download fail with HTTP 500</li>
+     * </ul>
+     *<p>
+     * Assertions verify that:
+     * <ul>
+     *   <li>The result is a failure, with a message indicating the HTTP 500 error</li>
+     *   <li>The retry logic performs the correct number of attempts</li>
+     *   <li>User-facing messages reflect each retry attempt and the final failure</li>
+     *   <li>Progress updates were made and include a partial progress value (e.g., 0.48)</li>
+     *   <li>The messages and progress lists are populated as expected</li>
+     * </ul>
+     * @param wireMockRuntimeInfo injected by the test framework to provide runtime access to the WireMock server
+     * @throws ExecutionException if an exception occurs during asynchronous task execution
+     * @throws InterruptedException if the thread waiting for the result is interrupted
+     * @throws IOException if an I/O error occurs during partial file creation or verification
+     */
     @Test
-    void shouldStartButThenFailToDownloadFakeSteamCmd(WireMockRuntimeInfo wireMockRuntimeInfo) throws ExecutionException, InterruptedException {
+    void shouldStartButThenFailToDownloadFakeSteamCmd(WireMockRuntimeInfo wireMockRuntimeInfo) throws ExecutionException, InterruptedException, IOException {
         // HEAD request always returns Content-Length
         wireMockRuntimeInfo.getWireMock().register(
                 request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
@@ -367,25 +421,7 @@ class ToolManagerServiceTest {
                                 .withStatus(500))
         );
 
-        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
-
-        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdLocalPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
-        Task<Result<Void>> setupTask = toolManagerService.setupTools();
-
-        //Add the listeners so our lists get updated properly when the task updates
-        setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
-        setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
-        setupTask.setOnSucceeded(e -> doneLatch.countDown());
-        setupTask.setOnFailed(e -> doneLatch.countDown());
-
-        //Run the task
-        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
-        taskThread.setDaemon(true);
-        taskThread.start();
-
-        //Pause the test until our task is done, but give it a timeout.
-        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
-        Result<Void> result = setupTask.get();
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
 
         //Check that we failed the way we expected
         assertFalse(result.isSuccess(), "Download result should be a failure.");
@@ -400,28 +436,205 @@ class ToolManagerServiceTest {
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
-        assertEquals(String.format("Retrying... (%d/%d)", maxRetries, maxRetries), messages.getLast());
-        //TODO: expected final message for progress
+        assertEquals("Failed to download Steam CMD.", messages.getLast());
+        assertEquals("0.48",String.format("%.2f", progress.getLast()));
+    }
+
+    /**
+     * Tests the behavior of {@code ToolManagerService} when the connection repeatedly fails with HTTP 500 errors, simulating a scenario where the server is consistently unavailable.
+     * <p>
+     * This test uses WireMock to simulate:
+     * <ul>
+     *   <li>A successful {@code HEAD} request providing expected file metadata</li>
+     *   <li>Repeated {@code GET} requests that always fail with HTTP 500</li>
+     * </ul>
+     *<p>
+     * Verifies that:
+     * <ul>
+     *   <li>The download fails with a {@code ToolDownloadFailedException} due to server error</li>
+     *   <li>No partial or incomplete file is left on disk</li>
+     *   <li>The retry mechanism attempts the download the expected number of times ({@code maxRetries})</li>
+     *   <li>The user-facing retry messages match the expected format for each attempt</li>
+     * </ul>
+     *
+     * @param wireMockRuntimeInfo runtime info for WireMock, injected by the test framework
+     * @throws InterruptedException if the thread waiting for task completion is interrupted
+     * @throws ExecutionException if an exception occurs during asynchronous task execution
+     */
+    @Test
+    void shouldTimeOutConnection(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {
+
+        // HEAD request always returns Content-Length
+        wireMockRuntimeInfo.getWireMock().register(
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Length", String.valueOf(fakeSteamCmdZip.length))
+                                .withHeader("Accept-Ranges", "bytes")
+                                .withHeader("Content-Type", "application/zip"))
+        );
+
+        wireMockRuntimeInfo.getWireMock().register(
+                get(urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(500))
+        );
+
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
+
+        //Check it failed how we expected
+        assertFalse(result.isSuccess());
+        assertTrue(Files.notExists(Path.of(steamCmdZipPath)));
+        assertEquals("com.gearshiftgaming.se_mod_manager.backend.domain.ToolDownloadFailedException: Received HTTP response code 500 from server.", result.getCurrentMessage().split("\n")[0].trim());
+
+        //Check that we tried the correct number of times to redownload steamCMD
+        assertEquals(maxRetries + 1, result.getMESSAGES().size());
+        for(int i = 0; i < maxRetries; i++) {
+            assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMESSAGES().get(i));
+        }
+    }
+
+    /**
+     * Tests the behavior of {@code ToolManagerService} when the initial {@code HEAD} request to determine the size of the SteamCMD file fails with an HTTP 500 error.
+     * <p>
+     * This simulates a server-side failure during the metadata fetch phase,
+     * before the download even begins.
+     * <p>
+     * Verifies that:
+     * <ul>
+     *   <li>The service correctly interprets the failure and does not proceed with the download</li>
+     *   <li>The result indicates failure and provides the expected user-facing error message</li>
+     * </ul>
+     * <p>
+     * @param wireMockRuntimeInfo runtime info for WireMock, injected by the test framework
+     * @throws InterruptedException if the thread waiting for the result is interrupted
+     * @throws ExecutionException if an exception occurs during asynchronous task execution
+     */
+    @Test
+    void shouldFailToGetSizeOfFakeSteamCmd(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {
+        //HEAD request fails to get size of file
+        wireMockRuntimeInfo.getWireMock().register(
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(500))
+        );
+
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
+
+        //Check we failed the way we expected
+        assertFalse(result.isSuccess());
+        assertEquals("Failed to get size of SteamCMD.", result.getCurrentMessage());
     }
 
     @Test
-    void shouldTimeOutConnection() {
+    void downloadedFileShouldNotBeZip(WireMockRuntimeInfo wireMockRuntimeInfo) throws ExecutionException, InterruptedException {
+        //Just give it some random bytes. We just need to trigger not zip check
+        byte[] notZipFile = new byte[fakeFileSize];
+        new Random().nextBytes(notZipFile);
 
+        // HEAD request always returns Content-Length
+        wireMockRuntimeInfo.getWireMock().register(
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Length", String.valueOf(notZipFile.length))
+                                .withHeader("Accept-Ranges", "bytes")
+                                .withHeader("Content-Type", "application/zip"))
+        );
+
+        wireMockRuntimeInfo.getWireMock().register(
+                get(urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/zip")
+                                .withHeader("Content-Length", String.valueOf(fakeFileSize))
+                                .withBody(notZipFile))
+        );
+
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
+
+        assertFalse(result.isSuccess());
+        assertEquals("Downloaded SteamCMD file is not a .zip file.", result.getCurrentMessage());
+
+        //Check we both don't have an empty list of messages and that it's giving us the last expected final message
+        assertFalse(messages.isEmpty(), "Should have updated messages");
+        assertFalse(progress.isEmpty());
+        assertEquals(String.format("%sKB/%sKB", fakeSteamCmdZip.length / 1024, fakeSteamCmdZip.length / 1024), messages.get(messages.size() - 2), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
+
+        assertTrue(Files.exists(Path.of(steamCmdZipPath)));
     }
 
     @Test
-    void shouldFailToGetSizeOfFakeSteamCmd() {
+    void downloadFileWithoutHeaderRequest(WireMockRuntimeInfo wireMockRuntimeInfo) throws ExecutionException, InterruptedException, IOException {
+        // HEAD request always returns Content-Length
+        wireMockRuntimeInfo.getWireMock().register(
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Length", String.valueOf(fakeSteamCmdZip.length))
+                                .withHeader("Accept-Ranges", "bytes")
+                                .withHeader("Content-Type", "application/zip"))
+        );
 
+        wireMockRuntimeInfo.getWireMock().register(
+                get(urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/zip")
+                                .withBody(fakeSteamCmdZip))
+        );
+
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
+
+        //Check we get both the expected number and type of messages from our result
+        assertTrue(result.isSuccess(), "Download result should be a success");
+        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
+        assertEquals(2, result.getMESSAGES().size(), "Result messages were:\n" + String.join("\n", result.getMESSAGES()));
+
+        //Check we both don't have an empty list of messages and that it's giving us the last expected final message
+        assertFalse(messages.isEmpty(), "Should have updated messages");
+        assertFalse(progress.isEmpty(), "Should have progress messages");
+        assertEquals(String.format("%sKB/%sKB", fakeSteamCmdZip.length / 1024, fakeSteamCmdZip.length / 1024), messages.get(messages.size() - 2), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
+
+        //Verify the file saved properly.
+        assertEquals(fakeSteamCmdZip.length, new File(steamCmdZipPath).length());
+
+        //Verify our zip file extracted properly
+        Path extractedZipPath = Path.of(Path.of(steamCmdZipPath).getParent() + "/steamcmd.exe");
+        assertTrue(Files.exists(extractedZipPath));
+        assertEquals(fakeFileSize, Files.size(extractedZipPath));
     }
 
     @Test
-    void downloadedFileShouldNotBeZip() {
+    void steamCmdShouldAlreadyBeDownloaded(WireMockRuntimeInfo wireMockRuntimeInfo) throws IOException, ExecutionException, InterruptedException {
+        String fakeExePath = String.valueOf(Path.of(steamCmdZipPath).getParent().resolve("steamcmd.exe"));
+        Files.createDirectories(Path.of(steamCmdZipPath).getParent());
 
+        byte[] fakeExe = new byte[fakeFileSize];
+        new Random().nextBytes(fakeExe);
+
+        try (FileOutputStream out = new FileOutputStream(fakeExePath)) {
+            out.write(fakeExe);
+        }
+
+        // HEAD request always returns Content-Length
+        wireMockRuntimeInfo.getWireMock().register(
+                request("HEAD", urlEqualTo(fakeSteamCmdResourcePath))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Length", String.valueOf(fakeSteamCmdZip.length))
+                                .withHeader("Accept-Ranges", "bytes")
+                                .withHeader("Content-Type", "application/zip"))
+        );
+
+        Result<Void> result = runDownload(wireMockRuntimeInfo);
+
+        assertTrue(result.isSuccess());
+        assertEquals(2, result.getMESSAGES().size());
+        assertEquals("Steam CMD already installed. Skipping.", result.getMESSAGES().getFirst());
+        assertEquals("Successfully downloaded all required tools.", result.getMESSAGES().getLast());
     }
-
-    @Test
-    void steamCmdShouldAlreadyBeDownloaded() {
-
-    }
-
 }
