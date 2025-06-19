@@ -24,26 +24,26 @@ public class Result<T> {
     @Setter
     private T payload;
 
-    private final ArrayList<String> MESSAGES = new ArrayList<>();
+    private final ArrayList<String> messages = new ArrayList<>();
 
     public Result() {
         this.type = ResultType.NOT_INITIALIZED;
     }
 
     public void addMessage(String message, ResultType type) {
-        MESSAGES.add(message);
+        messages.add(message);
         this.type = type;
     }
 
     public void addMessage(Result<?> result) {
-        this.MESSAGES.add(result.getCurrentMessage());
+        this.messages.add(result.getCurrentMessage());
         this.type = result.getType();
     }
 
     //TODO: We really ought to rework this and associate a type with EACH message, not globally for the class.
     public void addAllMessages(Result<?> result) {
         this.type = result.getType();
-        for(String message : result.getMESSAGES()) {
+        for(String message : result.getMessages()) {
             this.addMessage(message, result.getType());
         }
     }
@@ -53,6 +53,6 @@ public class Result<T> {
     }
 
     public String getCurrentMessage() {
-        return MESSAGES.getLast();
+        return messages.getLast();
     }
 }

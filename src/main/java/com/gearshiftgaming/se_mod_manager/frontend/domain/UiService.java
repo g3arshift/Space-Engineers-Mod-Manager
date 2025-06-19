@@ -178,7 +178,7 @@ public class UiService {
             case CANCELLED, NOT_INITIALIZED, FAILED -> messageType = MessageType.ERROR;
             default -> messageType = MessageType.INFO;
         }
-        for (String message : result.getMESSAGES()) {
+        for (String message : result.getMessages()) {
             log(message, messageType);
         }
     }
@@ -198,7 +198,7 @@ public class UiService {
     }
 
     public <T> void logPrivate(@NotNull Result<T> result) {
-        for (String message : result.getMESSAGES()) {
+        for (String message : result.getMessages()) {
             switch (result.getType()) {
                 case SUCCESS, CANCELLED -> LOGGER.info(message);
                 case INVALID, WARN -> LOGGER.warn(message);
@@ -431,7 +431,7 @@ public class UiService {
 
     public IntegerProperty getModImportProgressNumeratorProperty() {
         if (this.modImportProgressNumerator == null) {
-            this.modImportProgressNumerator = new SimpleIntegerProperty(-1);
+            this.modImportProgressNumerator = new SimpleIntegerProperty(0);
         }
         return this.modImportProgressNumerator;
     }
@@ -442,7 +442,7 @@ public class UiService {
 
     public IntegerProperty getModImportProgressDenominatorProperty() {
         if (this.modImportProgressDenominator == null)
-            this.modImportProgressDenominator = new SimpleIntegerProperty(-1);
+            this.modImportProgressDenominator = new SimpleIntegerProperty(0);
 
         return this.modImportProgressDenominator;
     }

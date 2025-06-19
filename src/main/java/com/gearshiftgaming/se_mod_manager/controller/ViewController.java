@@ -20,15 +20,11 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
-import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -74,7 +70,7 @@ public class ViewController {
             userConfiguration = userConfigurationResult.getPayload();
         } else {
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-            for (String message : userConfigurationResult.getMESSAGES()) {
+            for (String message : userConfigurationResult.getMessages()) {
                 logger.error(message);
             }
             try (Stream<Path> stream = Files.list(Path.of("./logs"))) {

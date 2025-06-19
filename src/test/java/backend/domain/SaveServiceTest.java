@@ -187,8 +187,8 @@ public class SaveServiceTest {
 		assertEquals(saveProfile.getSaveName() + " (1)", finalSaveProfile.getSaveName());
 		assertEquals( testDir + " (1)\\Sandbox_config.sbc", finalSaveProfile.getSavePath());
 
-		assertEquals("Save directory successfully copied.", result.getMESSAGES().get(0));
-		assertEquals("Successfully copied profile.", result.getMESSAGES().get(1));
+		assertEquals("Save directory successfully copied.", result.getMessages().get(0));
+		assertEquals("Successfully copied profile.", result.getMessages().get(1));
 
 		//Check the changes were written to the actual sandbox and sandbox_config file
 		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox_config.sbc")), "test_copy_directory (1)"));

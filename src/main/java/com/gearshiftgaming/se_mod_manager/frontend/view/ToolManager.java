@@ -46,7 +46,9 @@ public class ToolManager {
         downloadProgressWheel = new ProgressIndicator();
 
         toolDownloadWindow = new StackPane();
-        //TODO: We need to setup our values and settings, esp for stuff like `the pane.
+
+        toolBlankingPane.setOpacity(0.4);
+        //TODO: We need to setup our values and settings, esp for stuff like the pane.
     }
 
     private DoubleProperty getDownloadPercentageProperty() {
