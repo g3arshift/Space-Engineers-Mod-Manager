@@ -266,12 +266,12 @@ class ToolManagerServiceTest {
 
         //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be a success");
-        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals("Successfully downloaded SteamCMD", result.getCurrentMessage());
         assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
-        assertEquals(5, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
+        assertEquals(4, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
 
         //Check that we tried the correct number of times to redownload steamCMD
-        assertEquals(maxRetries + 2, result.getMessages().size());
+        assertEquals(maxRetries + 1, result.getMessages().size());
         for(int i = 0; i < maxRetries; i++) {
             assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMessages().get(i));
         }
@@ -336,9 +336,9 @@ class ToolManagerServiceTest {
 
         //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be a success");
-        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals("Successfully downloaded SteamCMD", result.getCurrentMessage());
         assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
-        assertEquals(2, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
+        assertEquals(1, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
 
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
@@ -588,9 +588,9 @@ class ToolManagerServiceTest {
 
         //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be a success");
-        assertEquals("Successfully downloaded all required tools.", result.getCurrentMessage());
+        assertEquals("Successfully downloaded SteamCMD", result.getCurrentMessage());
         assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
-        assertEquals(2, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
+        assertEquals(1, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
 
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
@@ -632,8 +632,7 @@ class ToolManagerServiceTest {
         Result<Void> result = runDownload(wireMockRuntimeInfo);
 
         assertTrue(result.isSuccess());
-        assertEquals(2, result.getMessages().size());
+        assertEquals(1, result.getMessages().size());
         assertEquals("Steam CMD already installed. Skipping.", result.getMessages().getFirst());
-        assertEquals("Successfully downloaded all required tools.", result.getMessages().getLast());
     }
 }

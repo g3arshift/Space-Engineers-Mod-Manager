@@ -61,6 +61,8 @@ public class ToolManagerService {
         this.retryDelay = retryDelay;
     }
 
+    //TODO: We need to do some linux specific stuff, check the official steamcmd page for it. https://developer.valvesoftware.com/wiki/SteamCMD
+    // This is also a decent resource to start from: https://forum.moddingcommunity.com/t/how-to-download-run-steamcmd/190
     //TODO: Add support for chunked downloads
     public Task<Result<Void>> setupSteamCmd() {
         return new Task<>() {
@@ -140,13 +142,13 @@ public class ToolManagerService {
                 messageUpdater);
 
         if (steamCmdSetupResult.isFailure()) {
-            setNewStringBuilderMessage(downloadMessage, "Failed to download Steam CMD.");
+            setNewStringBuilderMessage(downloadMessage, "SteamCMD download failed!");
             uiService.log(downloadMessage.toString(), MessageType.ERROR);
             messageUpdater.accept(downloadMessage.toString());
             return steamCmdSetupResult;
         }
 
-        setNewStringBuilderMessage(downloadMessage, "Successfully downloaded Steam CMD.");
+        setNewStringBuilderMessage(downloadMessage, "SteamCMD downloaded!");
         uiService.log(downloadMessage.toString(), MessageType.INFO);
         messageUpdater.accept(downloadMessage.toString());
 

@@ -40,17 +40,12 @@ public class ToolManager {
     @Getter
     private StackPane toolDownloadProgressPanel;
 
-    public void initView(ReadOnlyStringProperty updateMessage, ReadOnlyDoubleProperty updateProgress) {
-        toolDownloadMessage = new Label();
+    public void bindProgressAndUpdateValues(ReadOnlyStringProperty updateMessage, ReadOnlyDoubleProperty updateProgress) {
         toolDownloadMessage.textProperty().bind(updateMessage);
-
-        toolDownloadProgressBar = new ProgressBar();
         toolDownloadProgressBar.progressProperty().bind(updateProgress);
     }
 
     public void setToolNameText(String newToolName) {
-        if(toolName == null)
-            toolName = new Label();
         toolName.setText(newToolName);
     }
 

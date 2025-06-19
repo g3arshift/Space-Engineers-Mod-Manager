@@ -193,10 +193,16 @@ public class ViewController {
         MOD_LIST_MANAGER_VIEW.initView(MOD_LIST_MANAGER_ROOT, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), MOD_TABLE_CONTEXT_BAR_VIEW);
         SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), MOD_TABLE_CONTEXT_BAR_VIEW);
 
+        //View for the tool manager that gets attached to the primary app window
+        final FXMLLoader TOOL_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/tool-manager.fxml"));
+        final ToolManager TOOL_MANAGER_VIEW = new ToolManager();
+        TOOL_MANAGER_LOADER.setController(TOOL_MANAGER_VIEW);
+        TOOL_MANAGER_LOADER.load();
+
         //View for the primary application window
         final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
         final MainWindow MAIN_WINDOW_VIEW = new MainWindow(PROPERTIES, stage,
-                MOD_TABLE_CONTEXT_BAR_VIEW, MASTER_MANAGER_VIEW, STATUS_BAR_VIEW, uiService);
+                MOD_TABLE_CONTEXT_BAR_VIEW, MASTER_MANAGER_VIEW, STATUS_BAR_VIEW, TOOL_MANAGER_VIEW, uiService);
         MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
         final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
         MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MASTER_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
