@@ -79,7 +79,7 @@ public class ViewController {
                             "Would you like to create a new user configuration and continue?", MessageType.WARN);
                     if (choice == 1) {
                         Result<Void> dataInitializaitonResult = storageController.initializeData();
-                        if (!dataInitializaitonResult.isSuccess()) {
+                        if (dataInitializaitonResult.isFailure()) {
                             uiService.log(dataInitializaitonResult);
                             Popup.displaySimpleAlert(dataInitializaitonResult);
                             throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());
@@ -91,7 +91,7 @@ public class ViewController {
                     //TODO: What is this really for? I THINK it's for first time startup, but I think the earlier phases capture that... Check it later.
                 } else {
                     Result<Void> dataInitializaitonResult = storageController.initializeData();
-                    if (!dataInitializaitonResult.isSuccess()) {
+                    if (dataInitializaitonResult.isFailure()) {
                         uiService.log(dataInitializaitonResult);
                         Popup.displaySimpleAlert(dataInitializaitonResult);
                         throw new RuntimeException(dataInitializaitonResult.getCurrentMessage());

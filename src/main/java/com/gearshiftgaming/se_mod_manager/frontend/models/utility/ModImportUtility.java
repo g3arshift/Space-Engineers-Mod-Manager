@@ -134,14 +134,14 @@ public class ModImportUtility {
 
         UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
         Result<Void> updateResult = UI_SERVICE.updateModInformation(successfullyScrapedMods);
-        if (!updateResult.isSuccess()) {
+        if (updateResult.isFailure()) {
             UI_SERVICE.log(updateResult);
             Popup.displaySimpleAlert(updateResult);
             return;
         }
 
         updateResult.addAllMessages(UI_SERVICE.saveCurrentModListProfile());
-        if (!updateResult.isSuccess()) {
+        if (updateResult.isFailure()) {
             UI_SERVICE.log(updateResult);
             Popup.displaySimpleAlert(updateResult);
             return;

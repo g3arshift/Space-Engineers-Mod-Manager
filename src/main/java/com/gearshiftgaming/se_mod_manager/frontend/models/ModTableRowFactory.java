@@ -338,7 +338,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
 			UI_SERVICE.modifyActiveModCount(-previouslyActiveModCount);
 			Result<Void> updateResult = UI_SERVICE.updateModListProfileModList();
-            if(!updateResult.isSuccess()) {
+            if(updateResult.isFailure()) {
                 UI_SERVICE.log(updateResult);
                 Popup.displaySimpleAlert("Failed to delete mod from modlist. See log for more information.", MessageType.ERROR);
             }
@@ -346,7 +346,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 	}
 
     private void checkResult(Result<?> result, String failMessage) {
-        if(!result.isSuccess()) {
+        if(result.isFailure()) {
             UI_SERVICE.log(result);
             Popup.displaySimpleAlert(failMessage, MessageType.ERROR);
             throw new RuntimeException(result.getCurrentMessage());

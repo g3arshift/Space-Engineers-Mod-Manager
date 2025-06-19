@@ -346,7 +346,7 @@ public class ModTableContextBar {
     @FXML
     private void selectSaveProfile() {
         Result<Void> saveSelectionResult = UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
-        if(!saveSelectionResult.isSuccess()) {
+        if(saveSelectionResult.isFailure()) {
             UI_SERVICE.log(saveSelectionResult);
             Popup.displaySimpleAlert("Failed to select save profile. See log for more details.", MessageType.ERROR);
         } else

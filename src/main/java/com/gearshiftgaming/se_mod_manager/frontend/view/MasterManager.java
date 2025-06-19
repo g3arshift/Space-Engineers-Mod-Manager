@@ -98,6 +98,10 @@ public class MasterManager {
 
     @FXML
     @Getter
+    private StackPane mainViewStack;
+
+    @FXML
+    @Getter
     private TableView<Mod> modTable;
 
     @FXML
@@ -177,14 +181,14 @@ public class MasterManager {
     @Getter
     private boolean mainViewSplitDividerVisible = true;
 
-    private final DataFormat SERIALIZED_MIME_TYPE;
+    private final DataFormat serializedMimeType;
 
     private ListChangeListener<TableColumn<Mod, ?>> sortListener;
 
     @Getter
     private Timeline scrollTimeline;
 
-    private final List<Mod> SELECTIONS;
+    private final List<Mod> selections;
 
     @Getter
     @Setter
@@ -265,8 +269,8 @@ public class MasterManager {
             }
         }
 
-        SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
-        SELECTIONS = new ArrayList<>();
+        serializedMimeType = new DataFormat("application/x-java-serialized-object");
+        selections = new ArrayList<>();
 
         filteredModList = new FilteredList<>(UI_SERVICE.getCurrentModList(), mod -> true);
 
@@ -361,7 +365,7 @@ public class MasterManager {
     private void setupModTable(int modTableCellSize) {
         //Format the appearance, styling, and menu`s of our table cells, rows, and columns
         modTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, SERIALIZED_MIME_TYPE, SELECTIONS, this, MODLIST_MANAGER_HELPER));
+        modTable.setRowFactory(new ModTableRowFactory(UI_SERVICE, serializedMimeType, selections, this, MODLIST_MANAGER_HELPER));
 
         modName.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
         modName.setCellFactory(param -> new ModNameCell(UI_SERVICE));
@@ -910,7 +914,7 @@ public class MasterManager {
             UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
 
             Result<Void> saveConfigResult = UI_SERVICE.saveUserConfiguration();
-            if (!saveConfigResult.isSuccess()) {
+            if (saveConfigResult.isFailure()) {
                 UI_SERVICE.log(saveConfigResult);
                 Popup.displaySimpleAlert(saveConfigResult);
             }
@@ -1067,7 +1071,7 @@ public class MasterManager {
 
         actions.setBorder(null);
 
-        if (dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+        if (dragboard.hasContent(serializedMimeType)) {
             //I'd love to get a class level reference of this, but we need to progressively get it as the view changes
 
             if (modTableVerticalScrollBar == null) {
@@ -1075,13 +1079,13 @@ public class MasterManager {
             }
 
             if (modTableVerticalScrollBar.getValue() == modTableVerticalScrollBar.getMax()) {
-                for (Mod m : SELECTIONS) {
+                for (Mod m : selections) {
                     UI_SERVICE.getCurrentModList().remove(m);
                 }
 
                 modTable.getSelectionModel().clearSelection();
 
-                for (Mod m : SELECTIONS) {
+                for (Mod m : selections) {
                     UI_SERVICE.getCurrentModList().add(m);
                     modTable.getSelectionModel().select(UI_SERVICE.getCurrentModList().size() - 1);
                 }
@@ -1376,8 +1380,7 @@ public class MasterManager {
         fadeTransition.play();
     }
 
-    //TODO: These function names suck. Make them something like "show{name of what the UI is. Like "steam collection check panel.}.
-    private void disableUserInputElements(boolean shouldDisable) {
+    protected void disableUserInputElements(boolean shouldDisable) {
         modImportDropdown.setDisable(shouldDisable);
         manageModProfiles.setDisable(shouldDisable);
         manageSaveProfiles.setDisable(shouldDisable);

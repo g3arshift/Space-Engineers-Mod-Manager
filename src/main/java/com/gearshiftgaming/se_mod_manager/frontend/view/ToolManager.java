@@ -1,15 +1,17 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.fxml.FXML;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import lombok.Setter;
+import lombok.Getter;
 
 /**
  * This class contains all the UI logic surrounding the display elements shown when downloading a tool during initial setup.
@@ -22,42 +24,42 @@ import lombok.Setter;
  */
 public class ToolManager {
 
-    @Setter
-    private DoubleProperty downloadPercentage;
+    @FXML
+    private ProgressBar toolDownloadProgressBar;
 
-    private ProgressBar downloadProgressBar;
+    @FXML
+    private ProgressIndicator toolDownloadProgressWheel;
 
-    private ProgressIndicator downloadProgressWheel;
-
-    private Label toolNamePrefix;
-
+    @FXML
     private Label toolName;
 
-    private Pane toolBlankingPane;
+    @FXML
+    private Label toolDownloadMessage;
 
-    private StackPane toolDownloadWindow;
+    @FXML
+    @Getter
+    private StackPane toolDownloadProgressPanel;
 
-    public ToolManager() {
-        downloadPercentage = new SimpleDoubleProperty(0d);
-        toolNamePrefix = new Label();
-        toolName = new Label();
-        toolBlankingPane = new Pane();
-        downloadProgressBar = new ProgressBar();
-        downloadProgressWheel = new ProgressIndicator();
+    public void initView(ReadOnlyStringProperty updateMessage, ReadOnlyDoubleProperty updateProgress) {
+        toolDownloadMessage = new Label();
+        toolDownloadMessage.textProperty().bind(updateMessage);
 
-        toolDownloadWindow = new StackPane();
-
-        toolBlankingPane.setOpacity(0.4);
-        //TODO: We need to setup our values and settings, esp for stuff like the pane.
+        toolDownloadProgressBar = new ProgressBar();
+        toolDownloadProgressBar.progressProperty().bind(updateProgress);
     }
 
-    private DoubleProperty getDownloadPercentageProperty() {
-        if(downloadPercentage == null)
-            downloadPercentage = new SimpleDoubleProperty(0d);
-        return downloadPercentage;
+    public void setToolNameText(String newToolName) {
+        if(toolName == null)
+            toolName = new Label();
+        toolName.setText(newToolName);
     }
 
-    private Double getDownloadPercentage() {
-        return downloadPercentage.get();
+    public void setAllDownloadsCompleteState() {
+        toolDownloadProgressWheel.setVisible(false);
+    }
+
+    public void setDefaultState() {
+        setToolNameText("Tool Name");
+        toolDownloadProgressWheel.setVisible(true);
     }
 }

@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
 import atlantafx.base.theme.Theme;
+import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
@@ -109,7 +110,7 @@ public class UiService {
     // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
     public UiService(Logger LOGGER, @NotNull ObservableList<LogMessage> USER_LOG, int userLogMaxSize,
                      @NotNull ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails, @NotNull ObservableList<SaveProfile> SAVE_PROFILES,
-                     StorageController storageController, ModInfoController modInfoController, UserConfiguration USER_CONFIGURATION, @NotNull Properties properties) {
+                     StorageController storageController, ModInfoController modInfoController, UserConfiguration userConfiguration, @NotNull Properties properties) {
 
         this.LOGGER = LOGGER;
         this.MOD_INFO_CONTROLLER = modInfoController;
@@ -118,7 +119,7 @@ public class UiService {
         this.MOD_LIST_PROFILE_DETAILS = modListProfileDetails;
         this.SAVE_PROFILES = SAVE_PROFILES;
         this.STORAGE_CONTROLLER = storageController;
-        this.USER_CONFIGURATION = USER_CONFIGURATION;
+        this.USER_CONFIGURATION = userConfiguration;
 
         this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
 
@@ -127,22 +128,23 @@ public class UiService {
                 case UP, DOWN, LEFT, RIGHT, TAB, ESCAPE:
                     arrowKeyEvent.consume();
                     break;
+                default: log("Failed to initialize UiService keyboard button navigation disabler.", MessageType.ERROR);
             }
         };
 
         //Load our last active mod list profile, or at least the first one.
         Result<ModListProfile> modListProfileResult = getLastActiveModlistProfile();
-        if (!modListProfileResult.isSuccess()) {
+        if (modListProfileResult.isFailure()) {
             log("No previously chosen modlist detected.", MessageType.INFO);
             modListProfileResult = storageController.loadFirstModListProfile();
-            if (!modListProfileResult.isSuccess()) {
+            if (modListProfileResult.isFailure()) {
                 log(modListProfileResult);
                 Popup.displaySimpleAlert(String.format("Fatal error!\n%s", modListProfileResult.getCurrentMessage()), MessageType.ERROR);
                 throw new RuntimeException(modListProfileResult.getCurrentMessage());
             }
         }
         currentModListProfile = modListProfileResult.getPayload();
-        if (!modListProfileResult.isSuccess()) {
+        if (modListProfileResult.isFailure()) {
             logPrivate(modListProfileResult);
             log(modListProfileResult.getCurrentMessage(), MessageType.ERROR);
             throw new MissingDefaultModListProfileException();
@@ -171,6 +173,10 @@ public class UiService {
         }
     }
 
+    /**
+     * Logs all messages in a result object.
+     * @param result is the object we will be logging.
+     */
     public <T> void log(@NotNull Result<T> result) {
         MessageType messageType;
         switch (result.getType()) {
@@ -296,7 +302,7 @@ public class UiService {
     public Result<Void> setCurrentModListProfile(UUID modListProfileId) {
         Result<Void> setResult = new Result<>();
         Result<ModListProfile> newCurrentModListProfileResult = STORAGE_CONTROLLER.loadModListProfileById(modListProfileId);
-        if (!newCurrentModListProfileResult.isSuccess()) {
+        if (newCurrentModListProfileResult.isFailure()) {
             log(newCurrentModListProfileResult);
             setResult.addAllMessages(newCurrentModListProfileResult);
             return setResult;
@@ -645,7 +651,7 @@ public class UiService {
                 }
                 updateModInformation(importModListProfile.getModList());
                 Result<Void> saveModListResult = saveModListProfile(importModListProfile);
-                if (!saveModListResult.isSuccess()) {
+                if (saveModListResult.isFailure()) {
                     log(saveModListResult);
                     return saveModListResult;
                 }
@@ -689,14 +695,14 @@ public class UiService {
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
         USER_CONFIGURATION.setLastModifiedSaveProfileId(currentSaveProfile.getID());
         Result<Void> saveResult = saveSaveProfile(currentSaveProfile);
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             log(saveResult);
             Popup.displaySimpleAlert(saveResult);
             return;
         }
 
         saveResult = saveUserConfiguration();
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             log(saveResult);
             Popup.displaySimpleAlert(saveResult);
         }

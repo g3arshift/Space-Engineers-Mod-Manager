@@ -80,7 +80,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         Result<Void> saveResult = saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
         userConfiguration.setLastActiveModProfileId(modListProfile.getID());
         saveResult.addAllMessages(saveUserConfiguration(userConfiguration));
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             log.error("Failed to initialize database data!");
             log.error(saveResult.getCurrentMessage());
         } else {
@@ -92,22 +92,22 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<Void> saveCurrentData(UserConfiguration userConfiguration, ModListProfile modListProfile, SaveProfile saveProfile) {
         Result<Void> saveResult = saveUserConfiguration(userConfiguration);
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             return saveResult;
         }
 
         saveResult.addAllMessages(saveModListProfile(modListProfile));
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             return saveResult;
         }
 
         saveResult.addAllMessages(saveSaveProfile(saveProfile));
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             return saveResult;
         }
 
         saveResult.addAllMessages(updateModInformation(modListProfile.getModList()));
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             return saveResult;
         }
 
@@ -206,7 +206,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     .execute());
             for (MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
                 Result<Void> detailsSaveResult = saveModListProfileDetails(details.getLeft(), details.getMiddle(), details.getRight());
-                if (!detailsSaveResult.isSuccess()) {
+                if (detailsSaveResult.isFailure()) {
                     saveResult.addAllMessages(detailsSaveResult);
                     throw new TransactionException(detailsSaveResult.getCurrentMessage());
                 }
@@ -278,7 +278,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
     private void loadModList(ModListProfile modListProfile, Result<ModListProfile> modListProfileResult) {
         Result<List<Mod>> modListResult = loadModListForProfileId(modListProfile.getID());
-        if (!modListResult.isSuccess()) {
+        if (modListResult.isFailure()) {
             modListProfileResult.addAllMessages(modListResult);
         }
 
@@ -413,13 +413,13 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
         Result<Void> modListProfileSaveResult = saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
-        if (!modListProfileSaveResult.isSuccess()) {
+        if (modListProfileSaveResult.isFailure()) {
             return modListProfileSaveResult;
         }
 
         modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
 
-        if (!modListProfileSaveResult.isSuccess()) {
+        if (modListProfileSaveResult.isFailure()) {
             modListProfileSaveResult.addMessage("Failed to save mod list profile.", ResultType.FAILED);
             return modListProfileSaveResult;
         }
@@ -454,7 +454,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> updateModListProfileModList(UUID modListProfileId, List<Mod> modList) {
         //Delete any removed mods first.
         Result<Void> modListUpdateResult = deleteModProfileRemovedMods(modListProfileId, modList);
-        if (!modListUpdateResult.isSuccess()) {
+        if (modListUpdateResult.isFailure()) {
             return modListUpdateResult;
         }
 

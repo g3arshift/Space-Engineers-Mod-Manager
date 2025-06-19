@@ -97,7 +97,7 @@ public class StorageController {
 	public Result<Void> applyModlist(List<Mod> modList, SaveProfile saveProfile) throws IOException {
         File sandboxConfigFile = new File(saveProfile.getSavePath());
         Result<String> modifiedSandboxConfigResult = SANDBOX_SERVICE.injectModsIntoSandboxConfig(sandboxConfigFile, modList);
-        if (!modifiedSandboxConfigResult.isSuccess()) {
+        if (modifiedSandboxConfigResult.isFailure()) {
             Result<Void> failedModification = new Result<>();
             failedModification.addMessage(modifiedSandboxConfigResult.getCurrentMessage(), ResultType.FAILED);
             return failedModification;
@@ -110,7 +110,7 @@ public class StorageController {
     public Result<SaveProfile> getSpaceEngineersOneSaveProfile(File sandboxConfigFile) throws IOException {
         Result<SaveProfile> saveProfileResult = new Result<>();
         Result<String> sandboxFileResult = SANDBOX_SERVICE.getSandboxFromFile(sandboxConfigFile);
-        if (!sandboxFileResult.isSuccess()) {
+        if (sandboxFileResult.isFailure()) {
             saveProfileResult.addMessage(sandboxFileResult.getCurrentMessage(), sandboxFileResult.getType());
             return saveProfileResult;
         }
@@ -164,7 +164,7 @@ public class StorageController {
             ModListProfile modListProfile = new ModListProfile();
             userConfiguration.setLastActiveModProfileId(modListProfile.getID());
             Result<Void> saveResult = USER_DATA_SERVICE.saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
-            if(!saveResult.isSuccess()) {
+            if(saveResult.isFailure()) {
                 log.error(saveResult.getCurrentMessage());
                 throw new RuntimeException(saveResult.getCurrentMessage());
             }

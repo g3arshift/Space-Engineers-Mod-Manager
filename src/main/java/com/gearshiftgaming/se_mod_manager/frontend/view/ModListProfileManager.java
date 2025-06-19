@@ -202,7 +202,7 @@ public class ModListProfileManager {
                     UUID originalProfileId = originalProfileDetails.getLeft();
                     SpaceEngineersVersion originalProfileSpaceEngineersVersion = originalProfileDetails.getRight();
                     Result<ModListProfile> copyResult = UI_SERVICE.loadModListProfileById(originalProfileId);
-                    if(!copyResult.isSuccess()) {
+                    if(copyResult.isFailure()) {
                         UI_SERVICE.log(copyResult);
                         Popup.displaySimpleAlert("Failed to copy mod list profile, see log for more information.", MessageType.ERROR);
                         return;
@@ -211,7 +211,7 @@ public class ModListProfileManager {
                     ModListProfile copiedProfile = new ModListProfile(copyResult.getPayload());
                     copiedProfile.setProfileName(copyProfileName);
                     Result<Void> saveResult = UI_SERVICE.saveModListProfile(copiedProfile);
-                    if(!saveResult.isSuccess()) {
+                    if(saveResult.isFailure()) {
                         UI_SERVICE.log(saveResult);
                         Popup.displaySimpleAlert("Failed to save new copy of profile, see log for more information.", MessageType.ERROR);
                         return;
@@ -237,7 +237,7 @@ public class ModListProfileManager {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
 
                     Result<Void> deleteResult = UI_SERVICE.deleteModListProfile(MOD_LIST_PROFILE_DETAILS.get(profileIndex).getLeft());
-                    if(!deleteResult.isSuccess()) {
+                    if(deleteResult.isFailure()) {
                         UI_SERVICE.log(deleteResult);
                         Popup.displaySimpleAlert("Failed to delete profile, see log for more details.", MessageType.ERROR);
                         return;
@@ -304,7 +304,7 @@ public class ModListProfileManager {
                     UI_SERVICE.log(String.format("Successfully renamed mod profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
                     Result<Void> renameSaveResult = UI_SERVICE.saveModListProfileDetails(profileToModify);
-                    if(!renameSaveResult.isSuccess()) {
+                    if(renameSaveResult.isFailure()) {
                         UI_SERVICE.log(renameSaveResult);
                         Popup.displaySimpleAlert("Failed to rename profile, see log for more details.", MessageType.ERROR);
                     }

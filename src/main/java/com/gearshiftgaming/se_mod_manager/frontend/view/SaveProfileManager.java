@@ -258,7 +258,7 @@ public class SaveProfileManager {
         saveList.refresh();
         saveList.getSelectionModel().selectLast();
         Result<Void> saveResult = UI_SERVICE.saveSaveProfile(saveProfile);
-        if (!saveResult.isSuccess()) {
+        if (saveResult.isFailure()) {
             UI_SERVICE.log(saveResult);
             Popup.displaySimpleAlert(saveResult);
             return;
@@ -375,7 +375,7 @@ public class SaveProfileManager {
 
             UI_SERVICE.log(profileCopyResult);
             Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
-            if (!saveResult.isSuccess()) {
+            if (saveResult.isFailure()) {
                 UI_SERVICE.log(saveResult);
                 Popup.displaySimpleAlert(saveResult);
             }
@@ -403,7 +403,7 @@ public class SaveProfileManager {
                 if (choice == 1) {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
                     Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
-                    if (!deleteResult.isSuccess()) {
+                    if (deleteResult.isFailure()) {
                         UI_SERVICE.log(deleteResult);
                         Popup.displaySimpleAlert(String.format("Failed to delete save profile \"%s\". See log for more details.", SAVE_PROFILES.get(profileIndex).getProfileName()), MessageType.ERROR);
                         return;
@@ -469,7 +469,7 @@ public class SaveProfileManager {
                     UI_SERVICE.log(String.format("Successfully renamed save profile \"%s\" to \"%s\".", originalProfileName, newProfileName), MessageType.INFO);
                     PROFILE_INPUT_VIEW.getInput().clear();
                     Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileToModify);
-                    if (!saveResult.isSuccess()) {
+                    if (saveResult.isFailure()) {
                         UI_SERVICE.log(saveResult);
                         Popup.displaySimpleAlert(saveResult);
                     }

@@ -52,6 +52,10 @@ public class Result<T> {
         return type == ResultType.SUCCESS || type == ResultType.WARN;
     }
 
+    public boolean isFailure() {
+        return type == ResultType.SUCCESS || type == ResultType.WARN;
+    }
+
     public String getCurrentMessage() {
         return messages.getLast();
     }

@@ -62,24 +62,12 @@ public class ToolManagerService {
     }
 
     //TODO: Add support for chunked downloads
-    //TODO: Need to call all this from UI service and the UI part from master manager
-    public Task<Result<Void>> setupTools() {
+    public Task<Result<Void>> setupSteamCmd() {
         return new Task<>() {
             @Override
             protected Result<Void> call() throws Exception {
-                Result<Void> toolSetupResult;
-                StringBuilder downloadMessage = new StringBuilder();
-                downloadMessage.append("Downloading required tools...");
-                uiService.log(downloadMessage.toString(), MessageType.INFO);
-                updateMessage(downloadMessage.toString());
-
                 //Download and extract SteamCMD.
-                toolSetupResult = downloadSteamCmd(downloadMessage, this::updateProgress, this::updateMessage);
-
-                //Add a final message to the download chain if everything succeeded
-                if (toolSetupResult.isSuccess())
-                    toolSetupResult.addMessage("Successfully downloaded all required tools.", ResultType.SUCCESS);
-                return toolSetupResult;
+                return downloadSteamCmd(this::updateProgress, this::updateMessage);
             }
         };
     }
@@ -106,7 +94,8 @@ public class ToolManagerService {
         return sizeCheckConnection.getContentLengthLong();
     }
 
-    private Result<Void> downloadSteamCmd(StringBuilder downloadMessage, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws IOException, InterruptedException, URISyntaxException {
+    private Result<Void> downloadSteamCmd(BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws IOException, InterruptedException, URISyntaxException {
+        StringBuilder downloadMessage = new StringBuilder();
         Result<Void> steamCmdSetupResult;
 
         //Make the base directories and file we need if they don't exist
@@ -118,7 +107,7 @@ public class ToolManagerService {
             Files.createFile(steamDownloadPath);
 
         //Check if we already have steam CMD downloaded. If it isn't, download it.
-        if (Files.exists(Path.of(steamCmdZipPath).getParent().resolve("steamcmd.exe"))) {
+        if (Files.exists(steamDownloadPath.getParent().resolve("steamcmd.exe"))) {
             steamCmdSetupResult = new Result<>();
             steamCmdSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
             return steamCmdSetupResult;
@@ -150,7 +139,7 @@ public class ToolManagerService {
                 progressUpdater,
                 messageUpdater);
 
-        if (!steamCmdSetupResult.isSuccess()) {
+        if (steamCmdSetupResult.isFailure()) {
             setNewStringBuilderMessage(downloadMessage, "Failed to download Steam CMD.");
             uiService.log(downloadMessage.toString(), MessageType.ERROR);
             messageUpdater.accept(downloadMessage.toString());

@@ -119,7 +119,7 @@ class ToolManagerServiceTest {
         steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
 
         toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
-        Task<Result<Void>> setupTask = toolManagerService.setupTools();
+        Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         //Add the listeners so our lists get updated properly when the task updates
         setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
@@ -129,7 +129,6 @@ class ToolManagerServiceTest {
 
         //Run the task
         Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
-        taskThread.setDaemon(true);
         taskThread.start();
 
         //Pause the test until our task is done, but give it a timeout.
@@ -293,7 +292,7 @@ class ToolManagerServiceTest {
     }
 
     /**
-     * Verifies that the SteamCMD setup process completes successfully using {@link ToolManagerService#setupTools()}.
+     * Verifies that the SteamCMD setup process completes successfully using {@link ToolManagerService#setupSteamCmd()}.
      * <p>
      * This test simulates a full download-and-extract operation and ensures:
      * <ul>
@@ -318,7 +317,7 @@ class ToolManagerServiceTest {
     @Test
     void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException, IOException {
         toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
-        Task<Result<Void>> setupTask = toolManagerService.setupTools();
+        Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         //Add the listeners so our lists get updated properly when the task updates
         setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
