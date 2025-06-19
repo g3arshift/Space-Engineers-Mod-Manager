@@ -53,7 +53,7 @@ public class Result<T> {
     }
 
     public boolean isFailure() {
-        return type == ResultType.SUCCESS || type == ResultType.WARN;
+        return !isSuccess();
     }
 
     public String getCurrentMessage() {
