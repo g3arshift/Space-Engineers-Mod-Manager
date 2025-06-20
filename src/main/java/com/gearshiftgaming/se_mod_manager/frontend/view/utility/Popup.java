@@ -184,10 +184,24 @@ public class Popup {
         Stage stage = createStage();
 
         FontIcon messageIcon = new FontIcon();
-        messageIcon.setStyle("-fx-icon-color: -color-accent-emphasis;");
-        messageIcon.setIconLiteral("ci-information-square");
+        getIconByMessageType(messageType, messageIcon);
 
         simpleAlert(stage, message, link, titleMessage, messageIcon);
+    }
+
+    /**
+     * Displays a simple alert with only one option centered on the stage, with a clickable link for the end of the error message and a custom title message.
+     *
+     * @param message The message itself
+     * @param link    The link that will be displayed and clickable in the message
+     */
+    public static void displayInfoMessageWithLink(String message, String link, String titleMessage, Stage parentStage, MessageType messageType) {
+        Stage stage = createStage();
+
+        FontIcon messageIcon = new FontIcon();
+        getIconByMessageType(messageType, messageIcon);
+
+        simpleAlert(stage, parentStage, message, link, titleMessage, messageIcon);
     }
 
     /**
@@ -342,6 +356,21 @@ public class Popup {
         HBox buttonBar = makeOkBar(childStage);
 
         createPopup(childStage, dialogBox, buttonBar);
+    }
+
+    /**
+     * Creates a simple alert centered on the stage, with a clickable link and a customized title message.
+     *
+     * @param childStage The stage popup will use for its own display
+     * @param link       The link that will be displayed and clickable in the message
+     */
+    private static void simpleAlert(Stage childStage, Stage parentStage, String message, String link, String titleMessage, FontIcon messageIcon) {
+        HBox dialogBox = makeErrorDialogWithLink(message, link, titleMessage, messageIcon);
+
+        //Setup our button
+        HBox buttonBar = makeOkBar(childStage);
+
+        createPopup(childStage, parentStage, dialogBox, buttonBar);
     }
 
     /**
