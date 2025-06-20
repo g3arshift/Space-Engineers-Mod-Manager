@@ -1,10 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
 import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
-import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
@@ -188,23 +185,23 @@ public class MainWindow {
         MASTER_MANAGER_VIEW.getMainViewStack().getChildren().add(toolManagerWindow);
 
         //Download SteamCMD.
-        Task<Result<Void>> steamCmdSetupTask = TOOL_MANAGER_SERVICE.setupSteamCmd();
+        //TODO: Wrap this in another task so we can just staple on additional tasks for additional tools.
+        Task<Result<Void>> toolSetupTask = TOOL_MANAGER_SERVICE.setupSteamCmd();
         TOOL_MANAGER_VIEW.setToolNameText("SteamCMD");
 
-        steamCmdSetupTask.setOnRunning(event1 -> {
+        toolSetupTask.setOnRunning(event1 -> {
             MASTER_MANAGER_VIEW.disableUserInputElements(true);
-            TOOL_MANAGER_VIEW.bindProgressAndUpdateValues(steamCmdSetupTask.messageProperty(), steamCmdSetupTask.progressProperty());
+            TOOL_MANAGER_VIEW.bindProgressAndUpdateValues(toolSetupTask.messageProperty(), toolSetupTask.progressProperty());
         });
         //When the task is finished log our result, display the last message from it, and fade it out.
-        steamCmdSetupTask.setOnSucceeded(event1 -> {
-            Result<Void> steamCmdSetupResult = steamCmdSetupTask.getValue();
+        toolSetupTask.setOnSucceeded(event1 -> {
+            Result<Void> steamCmdSetupResult = toolSetupTask.getValue();
             UI_SERVICE.log(steamCmdSetupResult);
 
-            //TODO: Test this by just forcing it to fail here
             if (steamCmdSetupResult.isFailure()) {
                 Popup.displayInfoMessageWithLink("Failed to download SteamCMD. SEMM requires SteamCMD to run. " +
                                 "Please submit your log file at the following link.",
-                        "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", MessageType.ERROR);
+                        "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", STAGE, MessageType.ERROR);
                 Platform.exit();
                 return;
             }
@@ -227,7 +224,7 @@ public class MainWindow {
         });
 
         //Start the download on a background thread
-        Thread.ofVirtual().start(steamCmdSetupTask);
+        Thread.ofVirtual().start(toolSetupTask);
     }
 
     /**
