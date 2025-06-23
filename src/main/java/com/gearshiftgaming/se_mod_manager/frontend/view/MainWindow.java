@@ -181,10 +181,17 @@ public class MainWindow {
         // We want to skip the steps that exist. If they all exist, just skip this entirely.
         //Download all the required tools we need for SEMM to function
         UI_SERVICE.log("Downloading required tools...", MessageType.INFO);
+
+        //Download SteamCMD.
+        //TODO: Genericize
+        if(Files.exists(Path.of(PROPERTIES.getProperty("semm.steam.cmd.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
+            UI_SERVICE.log("SteamCMD already installed.", MessageType.INFO);
+            return;
+        }
+
         StackPane toolManagerWindow = TOOL_MANAGER_VIEW.getToolDownloadProgressPanel();
         MASTER_MANAGER_VIEW.getMainViewStack().getChildren().add(toolManagerWindow);
 
-        //Download SteamCMD.
         //TODO: Wrap this in another task so we can just staple on additional tasks for additional tools.
         Task<Result<Void>> toolSetupTask = TOOL_MANAGER_SERVICE.setupSteamCmd();
         TOOL_MANAGER_VIEW.setToolNameText("SteamCMD");
