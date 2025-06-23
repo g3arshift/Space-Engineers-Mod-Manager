@@ -435,7 +435,7 @@ class ToolManagerServiceTest {
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
-        assertEquals("Failed to download Steam CMD.", messages.getLast());
+        assertEquals("SteamCMD download failed!", messages.getLast());
         assertEquals("0.48",String.format("%.2f", progress.getLast()));
     }
 
