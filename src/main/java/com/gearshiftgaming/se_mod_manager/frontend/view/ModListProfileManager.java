@@ -396,7 +396,7 @@ public class ModListProfileManager {
         profileList.refresh();
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
-        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
         if(Platform.isNestedLoopRunning()) {
             Platform.exitNestedEventLoop(stage, null);
@@ -419,7 +419,7 @@ public class ModListProfileManager {
         profileList.refresh();
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
-        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentModListProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();

@@ -17,7 +17,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -686,7 +684,7 @@ public class Popup {
         if (!buttonBar.getChildren().isEmpty()) {
             buttonBar.getChildren().getLast().requestFocus();
         }
-        WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(childStage);
         Platform.enterNestedEventLoop(childStage);
     }
 
@@ -714,7 +712,7 @@ public class Popup {
         if (!buttonBar.getChildren().isEmpty()) {
             buttonBar.getChildren().getLast().requestFocus();
         }
-        WindowTitleBarColorUtility.SetWindowsTitleBar(childStage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(childStage);
         Platform.enterNestedEventLoop(childStage);
     }
 

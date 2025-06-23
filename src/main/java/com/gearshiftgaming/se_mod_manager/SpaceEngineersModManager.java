@@ -4,7 +4,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
-import jakarta.xml.bind.JAXBException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -42,7 +41,7 @@ public class SpaceEngineersModManager extends Application {
 
 		primaryStage.show();
 
-		WindowTitleBarColorUtility.SetWindowsTitleBar(primaryStage);
+		WindowTitleBarColorUtility.setWindowsTitleBar(primaryStage);
 	}
 
 	//Log the error that caused our stacktrace to the log, and shutdown the application.

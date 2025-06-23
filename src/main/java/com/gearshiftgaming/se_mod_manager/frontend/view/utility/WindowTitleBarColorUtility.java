@@ -9,12 +9,8 @@ import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
@@ -29,12 +25,14 @@ public class WindowTitleBarColorUtility {
 
     private static final Logger log = LoggerFactory.getLogger(WindowTitleBarColorUtility.class);
 
+    private WindowTitleBarColorUtility() {}
+
     /**
      * Sets the Windows title bar appearance based on the application's stylesheet.
      *
      * @param stage The JavaFX Stage whose title bar appearance is to be modified.
      */
-    public static void SetWindowsTitleBar(Stage stage) {
+    public static void setWindowsTitleBar(Stage stage) {
         if (Platform.isWindows()) {
             val dwmapi = Dwmapi.INSTANCE;
             WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, stage.getTitle());

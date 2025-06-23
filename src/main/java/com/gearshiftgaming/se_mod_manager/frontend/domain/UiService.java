@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.MonthDay;
@@ -103,7 +104,10 @@ public class UiService {
     private final String MOD_DATE_FORMAT;
 
     @Getter
-    final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
+    private final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
+
+    @Getter
+    private final Path spaceEngineersDiskPath;
 
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
@@ -160,6 +164,8 @@ public class UiService {
         //A little bit of duplication, but the order of construction is a bit different from setCurrentModProfile
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
+
+        spaceEngineersDiskPath = getSpaceEngineersLocalInstallPath();
     }
 
     public void log(String message, MessageType messageType) {
@@ -746,7 +752,7 @@ public class UiService {
         return panes;
     }
 
-    public void setupTools() {
-
+    private Path getSpaceEngineersLocalInstallPath() {
+        if
     }
 }

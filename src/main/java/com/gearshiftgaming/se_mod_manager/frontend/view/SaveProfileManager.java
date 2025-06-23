@@ -524,7 +524,7 @@ public class SaveProfileManager {
         saveList.refresh();
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
-        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
         if (Platform.isNestedLoopRunning()) {
             Platform.exitNestedEventLoop(stage, null);
@@ -579,7 +579,7 @@ public class SaveProfileManager {
         saveList.refresh();
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
-        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(stage);
         activeProfileName.setText(UI_SERVICE.getCurrentSaveProfile().getProfileName());
 
         List<String> tutorialMessages = new ArrayList<>();

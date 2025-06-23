@@ -141,7 +141,6 @@ public class MainWindow {
 
         mainWindowLayout.setOnDragOver(MASTER_MANAGER_VIEW::handleModTableDragOver);
 
-
         //TODO: REMOVE FOR FULL RELEASE
         //TODO: BE REALLY SURE TO REMOVE FOR FULL RELEASE
         //TODO: YOU BETTER REMOVE THIS FOR FULL RELEASE

@@ -98,7 +98,7 @@ public class SimpleInput {
         stage.show();
         WindowPositionUtility.centerStageOnStage(stage, parentStage);
         input.requestFocus();
-        WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
+        WindowTitleBarColorUtility.setWindowsTitleBar(stage);
         Platform.enterNestedEventLoop(stage);
     }
 

@@ -319,7 +319,7 @@ public class ModTableContextBar {
                 String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
                 MASTER_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
-                WindowTitleBarColorUtility.SetWindowsTitleBar(STAGE);
+                WindowTitleBarColorUtility.setWindowsTitleBar(STAGE);
             }
         }
 

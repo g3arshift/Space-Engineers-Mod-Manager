@@ -137,7 +137,7 @@ public class GeneralFileInput {
 	public void show(Stage parentStage) {
 		stage.show();
 		WindowPositionUtility.centerStageOnStage(stage, parentStage);
-		WindowTitleBarColorUtility.SetWindowsTitleBar(stage);
+		WindowTitleBarColorUtility.setWindowsTitleBar(stage);
 		Platform.enterNestedEventLoop(stage);
 	}
 
