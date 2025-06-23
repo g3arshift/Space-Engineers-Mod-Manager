@@ -104,7 +104,7 @@ public class SaveProfileManager {
 
     public SaveProfileManager(UiService UI_SERVICE, SaveInput saveInput, SimpleInput simpleInput) {
         this.UI_SERVICE = UI_SERVICE;
-        SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
+        SAVE_PROFILES = UI_SERVICE.getSaveProfiles();
         this.SAVE_INPUT_VIEW = saveInput;
         this.PROFILE_INPUT_VIEW = simpleInput;
         TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
@@ -153,7 +153,7 @@ public class SaveProfileManager {
         boolean duplicateSavePath;
         Result<SaveProfile> saveProfileResult = new Result<>();
 
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
             do {
                 duplicateSavePath = false;
@@ -222,7 +222,7 @@ public class SaveProfileManager {
             PROFILE_INPUT_VIEW.show(stage);
             String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
             if (newProfileName.isBlank()) {
-                if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
                     Popup.displaySimpleAlert("You have to add a profile with a name!", stage, MessageType.WARN);
                     profileNameAlreadyExists = true;
                 }
@@ -247,7 +247,7 @@ public class SaveProfileManager {
             SAVE_PROFILES.add(saveProfile);
 
         //We don't want to display this dialog when we're in the first time setup/tutorial
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup())
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup())
             displayAddExistingModsDialog(selectedSave);
 
         saveProfileResult.addMessage("Successfully added profile " + saveProfile.getSaveName() + " to save list.", ResultType.SUCCESS);
@@ -277,7 +277,7 @@ public class SaveProfileManager {
                 if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
-                        Optional<MutableTriple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
+                        Optional<MutableTriple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getModListProfileDetails().stream()
                                 .filter(modlistProfile1 -> modlistProfile1.getMiddle().equals(newProfileName))
                                 .findFirst();
                         modlistProfile.ifPresent(profile -> modTableContextBar.getModProfileDropdown().getSelectionModel().select(profile));
@@ -491,7 +491,7 @@ public class SaveProfileManager {
 
     @FXML
     private void closeWindow() {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             Platform.exitNestedEventLoop(stage, null);
             stage.close();
             saveList.getSelectionModel().clearSelection();

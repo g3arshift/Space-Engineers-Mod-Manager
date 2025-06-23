@@ -26,7 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
-import java.util.concurrent.Future;
 
 /**
  * This represents the main window of the application, with a border pane at its core.
@@ -81,7 +80,7 @@ public class MainWindow {
     public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ToolManager toolManager, UiService uiService) {
         this.STAGE = stage;
         this.PROPERTIES = properties;
-        this.USER_CONFIGURATION = uiService.getUSER_CONFIGURATION();
+        this.USER_CONFIGURATION = uiService.getUserConfiguration();
         this.UI_SERVICE = uiService;
         this.CONTEXT_BAR_VIEW = modTableContextBar;
         this.MASTER_MANAGER_VIEW = masterManager;
@@ -108,39 +107,40 @@ public class MainWindow {
         mainWindowLayout.setCenter(modlistManagerRoot);
         mainWindowLayout.setBottom(statusBarRoot);
 
-        final ObservableList<SaveProfile> SAVE_PROFILES = UI_SERVICE.getSAVE_PROFILES();
+        final ObservableList<SaveProfile> saveProfiles = UI_SERVICE.getSaveProfiles();
 
         //Prompt the user to remove any saves that no longer exist on the file system.
-        if (SAVE_PROFILES.size() != 1 &&
-                !SAVE_PROFILES.getFirst().getSaveName().equals("None") &&
-                !SAVE_PROFILES.getFirst().getProfileName().equals("None") &&
-                SAVE_PROFILES.getFirst().getSavePath() != null) {
-            for (int i = 0; i < SAVE_PROFILES.size(); i++) {
-                if (Files.notExists(Path.of(SAVE_PROFILES.get(i).getSavePath()))) {
-                    SAVE_PROFILES.get(i).setSaveExists(false);
-                    String errorMessage = "The save associated with the profile \"" + SAVE_PROFILES.get(i).getProfileName() + "\" was not found. Do you want " +
+        if (saveProfiles.size() != 1 &&
+                !saveProfiles.getFirst().getSaveName().equals("None") &&
+                !saveProfiles.getFirst().getProfileName().equals("None") &&
+                saveProfiles.getFirst().getSavePath() != null) {
+            for (int i = 0; i < saveProfiles.size(); i++) {
+                if (Files.notExists(Path.of(saveProfiles.get(i).getSavePath()))) {
+                    saveProfiles.get(i).setSaveExists(false);
+                    String errorMessage = "The save associated with the profile \"" + saveProfiles.get(i).getProfileName() + "\" was not found. Do you want " +
                             "to remove this profile from the managed saves?";
-                    UI_SERVICE.log("Save \"" + SAVE_PROFILES.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
+                    UI_SERVICE.log("Save \"" + saveProfiles.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
 
                     int choice = Popup.displayYesNoDialog(errorMessage, STAGE, MessageType.WARN);
                     if (choice == 1) {
-                        UI_SERVICE.log("Removing save " + SAVE_PROFILES.get(i).getSaveName() + ".", MessageType.INFO);
-                        Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(i));
+                        UI_SERVICE.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
+                        Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(saveProfiles.get(i));
                         if (deleteResult.isFailure()) {
                             UI_SERVICE.log(deleteResult);
                             Popup.displaySimpleAlert(deleteResult);
                             break;
                         }
-                        SAVE_PROFILES.remove(i);
+                        saveProfiles.remove(i);
                         i--;
                     }
                 } else {
-                    SAVE_PROFILES.get(i).setSaveExists(true);
+                    saveProfiles.get(i).setSaveExists(true);
                 }
             }
         }
 
         mainWindowLayout.setOnDragOver(MASTER_MANAGER_VIEW::handleModTableDragOver);
+
 
         //TODO: REMOVE FOR FULL RELEASE
         //TODO: BE REALLY SURE TO REMOVE FOR FULL RELEASE
@@ -164,12 +164,12 @@ public class MainWindow {
 
             setupRequiredTools();
 
-            if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+            if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
                 int firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
                 if (firstTimeSetupChoice == 1) {
                     UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
                 } else if (firstTimeSetupChoice == 0) { //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
-                    UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+                    UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(false);
                     UI_SERVICE.saveUserConfiguration();
                 }
             }

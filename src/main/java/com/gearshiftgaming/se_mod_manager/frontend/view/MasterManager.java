@@ -250,7 +250,7 @@ public class MasterManager {
                          GeneralFileInput generalFileInput) throws IOException {
         this.UI_SERVICE = uiService;
         this.STAGE = stage;
-        this.USER_LOG = uiService.getUSER_LOG();
+        this.USER_LOG = uiService.getUserLog();
         this.STATUS_BAR_VIEW = statusBar;
         this.MODLIST_MANAGER_HELPER = new ModListManagerHelper();
         this.ID_AND_URL_MOD_IMPORT_INPUT = modImportInputView;
@@ -843,7 +843,7 @@ public class MasterManager {
 
     @FXML
     public void manageModProfiles() {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             MOD_PROFILE_MANAGER_VIEW.show(STAGE);
         } else {
             TutorialUtility.tutorialCoverStage(TUTORIAL_HIGHLIGHT_PANES, STAGE);
@@ -856,7 +856,7 @@ public class MasterManager {
 
     @FXML
     public void manageSaveProfiles() {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             SAVE_MANAGER_VIEW.show(STAGE);
         } else {
             TutorialUtility.tutorialCoverStage(TUTORIAL_HIGHLIGHT_PANES, STAGE);
@@ -893,7 +893,7 @@ public class MasterManager {
     //Apply the modlist the user is currently using to the save profile they're currently using.
     @FXML
     private void applyModlist() throws IOException {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
             if (currentSaveProfile.isSaveExists()) {
                 int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
@@ -911,7 +911,7 @@ public class MasterManager {
             tutorialMessages.add("Now get out there and start modding, Engineers!");
             Popup.displayNavigationDialog(tutorialMessages, STAGE, MessageType.INFO, "Congratulations!");
 
-            UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(false);
+            UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(false);
 
             Result<Void> saveConfigResult = UI_SERVICE.saveUserConfiguration();
             if (saveConfigResult.isFailure()) {
@@ -1364,7 +1364,7 @@ public class MasterManager {
             disableUserInputElements(false);
             resetModImportProgressUi();
             Platform.runLater(() -> {
-                if (UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+                if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
                     List<String> tutorialMessages = new ArrayList<>();
                     TutorialUtility.tutorialElementHighlight(TUTORIAL_HIGHLIGHT_PANES, STAGE.getWidth(), STAGE.getHeight(), modTable);
                     tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +

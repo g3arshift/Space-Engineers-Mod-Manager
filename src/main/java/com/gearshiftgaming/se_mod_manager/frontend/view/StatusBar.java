@@ -6,12 +6,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * <p>
@@ -95,7 +92,7 @@ public class StatusBar {
         this.statusBaseStyling = "-fx-border-width: 1px; -fx-border-radius: 2px; -fx-background-radius: 2px; -fx-padding: 2px;";
         if (currentSaveProfile.getLastSaveStatus() != SaveStatus.NONE) {
             updateSaveStatus(currentSaveProfile);
-            String lastModifiedByModListProfileName = UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
+            String lastModifiedByModListProfileName = UI_SERVICE.getModListProfileDetails().stream()
                     .filter(modListProfileDetails -> modListProfileDetails.getLeft().equals(currentSaveProfile.getLastUsedModListProfileId()))
                     .findAny()
 					.orElse(MutableTriple.of(null, "None", null))

@@ -165,7 +165,7 @@ public class ModTableContextBar {
         THEME_LIST.add(cupertinoDarkTheme);
         THEME_LIST.add(draculaTheme);
 
-        saveProfileDropdown.setItems(UI_SERVICE.getSAVE_PROFILES());
+        saveProfileDropdown.setItems(UI_SERVICE.getSaveProfiles());
         Optional<SaveProfile> lastActiveSaveProfile = UI_SERVICE.getLastActiveSaveProfile();
         if (lastActiveSaveProfile.isPresent())
             saveProfileDropdown.getSelectionModel().select(lastActiveSaveProfile.get());
@@ -191,11 +191,11 @@ public class ModTableContextBar {
         STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
 		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
-        modProfileDropdown.setItems(UI_SERVICE.getMOD_LIST_PROFILE_DETAILS());
+        modProfileDropdown.setItems(UI_SERVICE.getModListProfileDetails());
         Result<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isSuccess())
             for(MutableTriple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
-                if(details.getLeft().equals(UI_SERVICE.getUSER_CONFIGURATION().getLastActiveModProfileId())) {
+                if(details.getLeft().equals(UI_SERVICE.getUserConfiguration().getLastActiveModProfileId())) {
                     modProfileDropdown.getSelectionModel().select(details);
                     break;
                 }
@@ -312,7 +312,7 @@ public class ModTableContextBar {
                 Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
                 Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
                 Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-                UI_SERVICE.getUSER_CONFIGURATION().setUserTheme(selectedTheme);
+                UI_SERVICE.getUserConfiguration().setUserTheme(selectedTheme);
                 activeModCountBox.setStroke(getThemeBoxColor());
                 modConflictBox.setStroke(getThemeBoxColor());
 
@@ -396,7 +396,7 @@ public class ModTableContextBar {
     private void runTutorial() {
         int runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", STAGE, MessageType.INFO);
         if (runTutorialChoice == 1) {
-            UI_SERVICE.getUSER_CONFIGURATION().setRunFirstTimeSetup(true);
+            UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(true);
             UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
         }
     }
@@ -420,7 +420,7 @@ public class ModTableContextBar {
     }
 
     private Color getThemeBoxColor() {
-        return switch (UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()) {
+        return switch (UI_SERVICE.getUserConfiguration().getUserTheme()) {
             case "PrimerLight", "NordLight", "CupertinoLight":
                 yield Color.web("#000000");
             case "PrimerDark", "CupertinoDark":

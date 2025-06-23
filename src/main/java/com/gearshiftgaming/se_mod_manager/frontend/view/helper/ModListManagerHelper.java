@@ -51,7 +51,7 @@ public class ModListManagerHelper {
     }
 
     public String getSelectedCellBorderColor(UiService uiService) {
-        return switch (uiService.getUSER_CONFIGURATION().getUserTheme()) {
+        return switch (uiService.getUserConfiguration().getUserTheme()) {
             case "PrimerLight", "NordLight", "CupertinoLight":
                 yield "#24292f";
             case "PrimerDark", "CupertinoDark":

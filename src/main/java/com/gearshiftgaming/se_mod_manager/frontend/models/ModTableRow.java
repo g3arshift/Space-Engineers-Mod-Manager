@@ -33,7 +33,7 @@ public class ModTableRow extends TableRow<Mod> {
 			if(this.isSelected()) {
 				setStyle("-color-cell-fg-selected: -color-fg-default;" +
 						"-color-cell-fg-selected-focused: -color-fg-default;" +
-						ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
+						ListCellUtility.getSelectedCellColor(UI_SERVICE.getUserConfiguration().getUserTheme()));
 			} else {
 				StringBuilder styleBuilder = new StringBuilder();
 				if (getIndex() % 2 == 0) {

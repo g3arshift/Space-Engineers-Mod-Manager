@@ -88,7 +88,7 @@ public class ModListProfileManager {
 
     public ModListProfileManager(UiService uiService, SimpleInput PROFILE_INPUT_VIEW) {
         this.UI_SERVICE = uiService;
-        MOD_LIST_PROFILE_DETAILS = uiService.getMOD_LIST_PROFILE_DETAILS();
+        MOD_LIST_PROFILE_DETAILS = uiService.getModListProfileDetails();
         this.PROFILE_INPUT_VIEW = PROFILE_INPUT_VIEW;
         PROFILE_INPUT_VIEW.setTitle("Create Mod List");
         PROFILE_INPUT_VIEW.setInputInstructions("Mod list name");
@@ -121,7 +121,7 @@ public class ModListProfileManager {
 
     @FXML
     private void createNewProfile() {
-        if (!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
             profileList.getSelectionModel().selectLast();
             setActive();
@@ -317,7 +317,7 @@ public class ModListProfileManager {
 
     @FXML
     private void setActive() {
-        if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if(!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             setModListActive();
         } else {
             setModListActive();
@@ -341,7 +341,7 @@ public class ModListProfileManager {
 
     @FXML
     private void closeWindow() {
-        if(!UI_SERVICE.getUSER_CONFIGURATION().isRunFirstTimeSetup()) {
+        if(!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             stage.close();
             profileList.getSelectionModel().clearSelection();
             Platform.exitNestedEventLoop(stage, null);

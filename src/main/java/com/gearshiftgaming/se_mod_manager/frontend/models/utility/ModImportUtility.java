@@ -108,7 +108,7 @@ public class ModImportUtility {
             if (duplicateProfileName) {
                 Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
             } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().add(MutableTriple.of(newModListProfile.getID(), newProfileName, newModListProfile.getSPACE_ENGINEERS_VERSION()));
+                UI_SERVICE.getModListProfileDetails().add(MutableTriple.of(newModListProfile.getID(), newProfileName, newModListProfile.getSPACE_ENGINEERS_VERSION()));
                 UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
 
                 PROFILE_INPUT_VIEW.getInput().clear();
@@ -121,7 +121,7 @@ public class ModImportUtility {
     }
 
     private static boolean profileNameExists(String profileName, final UiService UI_SERVICE) {
-        return UI_SERVICE.getMOD_LIST_PROFILE_DETAILS().stream()
+        return UI_SERVICE.getModListProfileDetails().stream()
                 .anyMatch(modProfileDetails -> modProfileDetails.getMiddle().toLowerCase().trim().equals(profileName));
     }
 

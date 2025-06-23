@@ -1,6 +1,5 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
@@ -44,7 +43,7 @@ public class ModListManagerCell extends ModListCell {
 			if (this.isSelected()) {
 				styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
 						.append("-color-cell-fg-selected-focused: -color-fg-default;")
-						.append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
+						.append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUserConfiguration().getUserTheme()));
 			}
 			setStyle(styleBuilder.toString());
 		}

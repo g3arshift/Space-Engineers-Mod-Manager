@@ -69,7 +69,7 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 			if (this.isSelected()) {
 				styleBuilder.append("-color-cell-fg-selected: -color-fg-default;")
 						.append("-color-cell-fg-selected-focused: -color-fg-default;")
-						.append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUSER_CONFIGURATION().getUserTheme()));
+						.append(ListCellUtility.getSelectedCellColor(UI_SERVICE.getUserConfiguration().getUserTheme()));
 			}
 			setStyle(styleBuilder.toString());
 		}
