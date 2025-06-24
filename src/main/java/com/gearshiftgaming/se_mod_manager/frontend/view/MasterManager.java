@@ -8,9 +8,10 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ThreeButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
@@ -610,9 +611,9 @@ public class MasterManager {
     }
 
     private void addModsFromFile() {
-        ButtonChoice choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
+        ThreeButtonChoice choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
                 "Steam", "Mod.io", "Cancel");
-        if (choice != ButtonChoice.CANCEL) {
+        if (choice != ThreeButtonChoice.CANCEL) {
             //TODO: Remove this once we add back mod.io functionality.
             //Popup.displaySimpleAlert("Select a file containing Steam Workshop mod ID's or URL's. Make sure each ID or URL is on its own line by itself.", STAGE, MessageType.INFO);
             GENERAL_FILE_SELECT_VIEW.resetSelectedSave();
@@ -625,7 +626,7 @@ public class MasterManager {
                 List<String> modIds = new ArrayList<>();
                 ModType selectedModType;
 
-                if (choice == ButtonChoice.LEFT) { //Steam modlist file
+                if (choice == ThreeButtonChoice.LEFT) { //Steam modlist file
                     selectedModType = ModType.STEAM;
                     try {
                         modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.STEAM);
@@ -678,8 +679,8 @@ public class MasterManager {
                                 Popup.displaySimpleAlert("All the mods in the mod list file are already in the modlist!", STAGE, MessageType.INFO);
                                 return;
                             } else {
-                                int modFileImportChoice = Popup.displayYesNoDialog(String.format("%d mods in the file were duplicates. Add the remaining %d?", numDuplicateMods, modIds.size() - numDuplicateMods), STAGE, MessageType.INFO);
-                                if (modFileImportChoice == 0) {
+                                TwoButtonChoice modFileImportChoice = Popup.displayYesNoDialog(String.format("%d mods in the file were duplicates. Add the remaining %d?", numDuplicateMods, modIds.size() - numDuplicateMods), STAGE, MessageType.INFO);
+                                if (modFileImportChoice == TwoButtonChoice.NO) {
                                     return;
                                 }
                             }
@@ -897,8 +898,8 @@ public class MasterManager {
         if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
             if (currentSaveProfile.isSaveExists()) {
-                int overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
-                if (overwriteChoice == 1) {
+                TwoButtonChoice overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
+                if (overwriteChoice == TwoButtonChoice.YES) {
                     sortAndApplyModList();
                 }
             } else {
@@ -932,8 +933,8 @@ public class MasterManager {
                 .reversed();
 
         if (copiedModList.isEmpty()) {
-            int emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
-            if (emptyWriteChoice != 1) {
+            TwoButtonChoice emptyWriteChoice = Popup.displayYesNoDialog("The modlist contains no mods. Do you still want to apply it?", STAGE, MessageType.WARN);
+            if (emptyWriteChoice != TwoButtonChoice.YES) {
                 return;
             }
         }
@@ -1212,9 +1213,9 @@ public class MasterManager {
                             " mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
                             (totalNumberOfMods - duplicateModIds) + "?";
 
-                    int userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
+                    TwoButtonChoice userChoice = Popup.displayYesNoDialog(postCollectionScrapeMessage, STAGE, MessageType.INFO);
 
-                    if (userChoice == 1) {
+                    if (userChoice == TwoButtonChoice.YES) {
                         importModsFromList(successfullyFoundMods).start();
                     }
 

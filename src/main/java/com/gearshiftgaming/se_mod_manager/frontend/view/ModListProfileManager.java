@@ -149,8 +149,8 @@ public class ModListProfileManager {
     private void copyProfile() {
         MutableTriple<UUID, String, SpaceEngineersVersion> profileToCopy = profileList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
-            int copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", TextTruncationUtility.truncateWithEllipsis(profileToCopy.getMiddle(), 600)), stage, MessageType.WARN);
-            if (copyChoice == 1) {
+            TwoButtonChoice copyChoice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the mod list \"%s\"", TextTruncationUtility.truncateWithEllipsis(profileToCopy.getMiddle(), 600)), stage, MessageType.WARN);
+            if (copyChoice == TwoButtonChoice.YES) {
                 boolean duplicateProfileName;
                 int copyIndex = 1;
                 String copyProfileName;
@@ -167,13 +167,13 @@ public class ModListProfileManager {
                     copyProfileName = String.format("%s (%d)", profileToCopy.getMiddle(), copyIndex);
                 }
 
-                ButtonChoice renameChoice = Popup.displayThreeChoiceDialog("Do you want to rename the copied profile?", stage, MessageType.INFO, "Yes", "No", "Cancel");
+                ThreeButtonChoice renameChoice = Popup.displayThreeChoiceDialog("Do you want to rename the copied profile?", stage, MessageType.INFO, "Yes", "No", "Cancel");
 
-                if (renameChoice == ButtonChoice.CANCEL) {
+                if (renameChoice == ThreeButtonChoice.CANCEL) {
                     return;
                 }
 
-                if (renameChoice == ButtonChoice.LEFT) {
+                if (renameChoice == ThreeButtonChoice.LEFT) {
                     do {
                         PROFILE_INPUT_VIEW.getInput().setText(copyProfileName);
                         PROFILE_INPUT_VIEW.getInput().requestFocus();
@@ -232,8 +232,8 @@ public class ModListProfileManager {
             if (UI_SERVICE.getCurrentModListProfile().getID().equals(profileList.getSelectionModel().getSelectedItem().getLeft())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
-                int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
-                if (choice == 1) {
+                TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
+                if (choice == TwoButtonChoice.YES) {
                     int profileIndex = profileList.getSelectionModel().getSelectedIndex();
 
                     Result<Void> deleteResult = UI_SERVICE.deleteModListProfile(MOD_LIST_PROFILE_DETAILS.get(profileIndex).getLeft());

@@ -60,9 +60,9 @@ public class Popup {
      * @param message     The message to display
      * @param parentStage The stage this will be centered on
      * @param messageType The type of message this is
-     * @return Returns 1 for yes, 0 for no.
+     * @return a TwoButtonChoice enum
      */
-    public static int displayYesNoDialog(String message, Stage parentStage, MessageType messageType) {
+    public static TwoButtonChoice displayYesNoDialog(String message, Stage parentStage, MessageType messageType) {
         Stage stage = createStage();
 
         Label label = new Label(message);
@@ -75,9 +75,9 @@ public class Popup {
 
     /**
      * Displays a Yes/No dialog centered on the screen
-     * 1 for yes, 0 for no.
+     * @return a TwoButtonChoice enum
      */
-    public static int displayYesNoDialog(String message, MessageType messageType) throws IOException {
+    public static TwoButtonChoice displayYesNoDialog(String message, MessageType messageType) throws IOException {
         Stage stage = createStage();
 
         Label label = new Label(message);
@@ -88,7 +88,7 @@ public class Popup {
         return yesNoDialog(stage, label, messageIcon);
     }
 
-    public static <T> int displayYesNoDialog(Result<T> result) throws IOException {
+    public static <T> TwoButtonChoice displayYesNoDialog(Result<T> result) throws IOException {
         Stage stage = createStage();
 
         Label label = new Label(result.getCurrentMessage());
@@ -207,7 +207,7 @@ public class Popup {
      * <p>
      * @return The button selected
      */
-    public static ButtonChoice displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
+    public static ThreeButtonChoice displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         Stage stage = createStage();
 
         Label label = new Label(message);
@@ -217,7 +217,7 @@ public class Popup {
         return threeChoice(stage, parentStage, label, messageIcon, leftButtonMessage, centerButtonMessage, cancelButtonMessage);
     }
 
-    public static ButtonChoice displayThreeChoiceDialog(String message, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
+    public static ThreeButtonChoice displayThreeChoiceDialog(String message, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         Stage stage = createStage();
 
         Label label = new Label(message);
@@ -389,7 +389,7 @@ public class Popup {
      * @param parentStage The stage the popup will be centered on
      * @return The button selected. 1 for yes, 0 for no.
      */
-    private static int yesNoDialog(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
+    private static TwoButtonChoice yesNoDialog(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon) {
         AtomicInteger choice = new AtomicInteger(-1);
 
         HBox dialogBox = makeDialog(label, messageIcon);
@@ -398,7 +398,10 @@ public class Popup {
 
         createPopup(childStage, parentStage, dialogBox, buttonBar);
 
-        return choice.intValue();
+        if(choice.intValue() == 1)
+            return TwoButtonChoice.YES;
+        else
+            return TwoButtonChoice.NO;
     }
 
     /**
@@ -407,7 +410,7 @@ public class Popup {
      * @param childStage The stage the popup will use for its own display
      * @return The button selected. 1 for yes, 0 for no.
      */
-    private static int yesNoDialog(Stage childStage, Label label, FontIcon messageIcon) throws IOException {
+    private static TwoButtonChoice yesNoDialog(Stage childStage, Label label, FontIcon messageIcon) throws IOException {
         AtomicInteger choice = new AtomicInteger(-1);
 
         HBox dialogBox = makeDialog(label, messageIcon);
@@ -416,7 +419,10 @@ public class Popup {
 
         createPopup(childStage, dialogBox, buttonBar);
 
-        return choice.intValue();
+        if(choice.intValue() == 1)
+            return TwoButtonChoice.YES;
+        else
+            return TwoButtonChoice.NO;
     }
 
     /**
@@ -426,7 +432,7 @@ public class Popup {
      * @param parentStage The stage the popup will be centered on
      * @return The button choice selected.
      */
-    private static ButtonChoice threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
+    private static ThreeButtonChoice threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         AtomicInteger choice = new AtomicInteger(-1);
 
         HBox dialogBox = makeDialog(label, messageIcon);
@@ -436,11 +442,11 @@ public class Popup {
         createPopup(childStage, parentStage, dialogBox, buttonBar);
 
         if (choice.intValue() == 2)
-            return ButtonChoice.LEFT;
+            return ThreeButtonChoice.LEFT;
         else if (choice.intValue() == 1)
-            return ButtonChoice.MIDDLE;
+            return ThreeButtonChoice.MIDDLE;
         else
-            return ButtonChoice.CANCEL;
+            return ThreeButtonChoice.CANCEL;
     }
 
     /**
@@ -449,7 +455,7 @@ public class Popup {
      * @param childStage  The stage the popup will use for its own display.
      * @return The button choice selected.
      */
-    private static ButtonChoice threeChoice(Stage childStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
+    private static ThreeButtonChoice threeChoice(Stage childStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         AtomicInteger choice = new AtomicInteger(-1);
 
         HBox dialogBox = makeDialog(label, messageIcon);
@@ -459,11 +465,11 @@ public class Popup {
         createPopup(childStage, dialogBox, buttonBar);
 
         if (choice.intValue() == 2)
-            return ButtonChoice.LEFT;
+            return ThreeButtonChoice.LEFT;
         else if (choice.intValue() == 1)
-            return ButtonChoice.MIDDLE;
+            return ThreeButtonChoice.MIDDLE;
         else
-            return ButtonChoice.CANCEL;
+            return ThreeButtonChoice.CANCEL;
     }
 
     private static HBox makeThreeChoiceBar(AtomicInteger choice, Stage childStage, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {

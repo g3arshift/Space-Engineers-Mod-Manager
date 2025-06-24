@@ -8,6 +8,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -308,8 +309,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
     }
 
 	private void deleteMods(TableView<Mod> modTable) {
-		int choice = Popup.displayYesNoDialog("Are you sure you want to delete these mods?", MODLIST_MANAGER_VIEW.getSTAGE(), MessageType.WARN);
-		if (choice == 1) {
+		TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete these mods?", MODLIST_MANAGER_VIEW.getSTAGE(), MessageType.WARN);
+		if (choice == TwoButtonChoice.YES) {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 
 			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.

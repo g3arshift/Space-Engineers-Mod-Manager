@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownBut
 import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileDropdownItemCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -371,11 +372,11 @@ public class ModTableContextBar {
 
     @FXML
     private void resetConfig() {
-        int resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", STAGE, MessageType.INFO);
+        TwoButtonChoice resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", STAGE, MessageType.INFO);
 
-        if (resetChoice == 1) {
+        if (resetChoice == TwoButtonChoice.YES) {
             resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
-            if (resetChoice == 1) {
+            if (resetChoice == TwoButtonChoice.YES) {
                 Result<Void> configResetResult = UI_SERVICE.resetData();
                 if (configResetResult.isSuccess()) {
                     Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
@@ -394,8 +395,8 @@ public class ModTableContextBar {
 
     @FXML
     private void runTutorial() {
-        int runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", STAGE, MessageType.INFO);
-        if (runTutorialChoice == 1) {
+        TwoButtonChoice runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", STAGE, MessageType.INFO);
+        if (runTutorialChoice == TwoButtonChoice.YES) {
             UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(true);
             UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
         }

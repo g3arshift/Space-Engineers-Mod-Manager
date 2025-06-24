@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
+import com.gearshiftgaming.se_mod_manager.backend.models.ApplicationMode;
 import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -22,6 +23,7 @@ public class UserConfigurationMapper implements RowMapper<UserConfiguration> {
                 rs.getString("last_modified_save_profile_id") != null ? UUID.fromString(rs.getString("last_modified_save_profile_id")) : null,
                 rs.getString("last_active_mod_profile_id") != null ? UUID.fromString(rs.getString("last_active_mod_profile_id")) : null,
                 rs.getString("last_active_save_profile_id") != null ? UUID.fromString(rs.getString("last_active_save_profile_id")) : null,
-                rs.getBoolean("run_first_time_setup"));
+                rs.getBoolean("run_first_time_setup"),
+                ApplicationMode.valueOf(rs.getString("mod_download_mode")));
     }
 }

@@ -133,7 +133,8 @@ create table user_configuration
         constraint user_configuration_last_active_save_save_profile_save_profile_id_fk
             references save_profile
             on delete set null,
-    run_first_time_setup          INTEGER default false         not null
+    run_first_time_setup          INTEGER default false         not null,
+    mod_download_mode          TEXT
 )
     strict;
 

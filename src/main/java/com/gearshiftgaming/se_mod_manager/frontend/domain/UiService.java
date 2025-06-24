@@ -753,6 +753,29 @@ public class UiService {
     }
 
     private Path getSpaceEngineersLocalInstallPath() {
-        if
+        //TODO: For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
+        //TODO: For win clients they're saved at: SE_Install_Steam_Library_Path/steamapps/workshop/content/244850
+        //TODO: For win Torch servers they're saved at: torch/Instance/content/244850/
+        //TODO: For linux SE dedicated server they're saved at:
+        //TODO: For linux client they're saved at:
+        //TODO: For linux torch they're saved at:
+
+
+        if (com.sun.jna.Platform.isLinux()){
+
+        } else {
+
+        }
+
+        //TODO: Our basic code flow path is that we check for the libraryfolders.vdf file in some expected places in either linux or windows, then set a var if we found it or not.
+        // We also need to ask them if they're using it for SE dedicated server, or SE game.
+        // Make sure to tell the user that it'll still work for the other when you choose SE server or Game, but the downloaded mods will go into the right folder for the option they chose.
+        // If the var is false, we want to prompt the user to select where they have SE installed. Also present the SE dedicated server as an option if they're using SEMM to manage server config.
+        // When they select a folder check if the SE.exe or the SE dedicated server.exe are there. If not, say it's a bad selection. Let them continuously try until they choose to quit or they give a valid path.
+
+        //TODO: We are going to need to store what "Mode, either Server or local game" that it's running in, but we can just check for path on startup. Maybe store it?
+        // We need to flag if the path we have stored is no longer valid (contians the .exe for the mode we're in)
+        // So our basic flow now needs to be, check our stored value. If null, run the code to find it. If invalid, do the same thing too.
+        return null;
     }
 }

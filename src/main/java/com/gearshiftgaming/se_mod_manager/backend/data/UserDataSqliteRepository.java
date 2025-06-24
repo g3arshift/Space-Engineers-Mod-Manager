@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.PreparedBatch;
-import org.jdbi.v3.core.statement.Slf4JSqlLogger;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.core.transaction.TransactionException;
 
@@ -188,20 +187,23 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 last_modified_save_profile_id,
                                 last_active_mod_profile_id,
                                 last_active_save_profile_id,
-                                run_first_time_setup)
+                                run_first_time_setup,
+                                mod_download_mode)
                             VALUES (
                                 1,
                                 :userTheme,
                                 :lastModifiedSaveProfileId,
                                 :lastActiveModProfileId,
                                 :lastActiveSaveProfileId,
-                                :runFirstTimeSetup)
+                                :runFirstTimeSetup,
+                                :applicationMode)
                             ON CONFLICT(id) DO UPDATE SET
                                 user_theme = excluded.user_theme,
                                 last_modified_save_profile_id = excluded.last_modified_save_profile_id,
                                 last_active_mod_profile_id = excluded.last_active_mod_profile_id,
                                 last_active_save_profile_id = excluded.last_active_save_profile_id,
-                                run_first_time_setup = excluded.run_first_time_setup;""")
+                                run_first_time_setup = excluded.run_first_time_setup,
+                                mod_download_mode = excluded.mod_download_mode;""")
                     .bindBean(userConfiguration)
                     .execute());
             for (MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {

@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutableTriple;
 
@@ -33,8 +34,8 @@ public class ModImportUtility {
             boolean shouldAddMod = false;
             if (currentModInfoFillOutResult.isSuccess() || currentModInfoFillOutResult.getType() == ResultType.REQUIRES_ADJUDICATION) {
                 if (currentModInfoFillOutResult.getType() == ResultType.REQUIRES_ADJUDICATION) {
-                    int response = Popup.displayYesNoDialog(currentModInfoFillOutResult.getCurrentMessage(), stage, MessageType.WARN);
-                    if (response == 1) {
+                    TwoButtonChoice response = Popup.displayYesNoDialog(currentModInfoFillOutResult.getCurrentMessage(), stage, MessageType.WARN);
+                    if (response == TwoButtonChoice.YES) {
                         shouldAddMod = true;
                     }
                 } else {

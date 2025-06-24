@@ -4,6 +4,7 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -121,8 +122,8 @@ public class MainWindow {
                             "to remove this profile from the managed saves?";
                     UI_SERVICE.log("Save \"" + saveProfiles.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
 
-                    int choice = Popup.displayYesNoDialog(errorMessage, STAGE, MessageType.WARN);
-                    if (choice == 1) {
+                    TwoButtonChoice choice = Popup.displayYesNoDialog(errorMessage, STAGE, MessageType.WARN);
+                    if (choice == TwoButtonChoice.YES) {
                         UI_SERVICE.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
                         Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(saveProfiles.get(i));
                         if (deleteResult.isFailure()) {
@@ -164,10 +165,10 @@ public class MainWindow {
             setupRequiredTools();
 
             if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
-                int firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
-                if (firstTimeSetupChoice == 1) {
+                TwoButtonChoice firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
+                if (firstTimeSetupChoice == TwoButtonChoice.YES) {
                     UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
-                } else if (firstTimeSetupChoice == 0) { //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
+                } else if (firstTimeSetupChoice == TwoButtonChoice.NO) { //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
                     UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(false);
                     UI_SERVICE.saveUserConfiguration();
                 }

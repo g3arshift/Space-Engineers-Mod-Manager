@@ -269,12 +269,12 @@ public class SaveProfileManager {
 
     //TODO: This is badly organized.
     private void displayAddExistingModsDialog(File selectedSave) {
-        int addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
-        if (addExistingModsChoice == 1) {
-            ButtonChoice addExistingModsLocationChoice = Popup.displayThreeChoiceDialog("Which modlist do you want to add the mods in the save to?",
+        TwoButtonChoice addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
+        if (addExistingModsChoice == TwoButtonChoice.YES) {
+            ThreeButtonChoice addExistingModsLocationChoice = Popup.displayThreeChoiceDialog("Which modlist do you want to add the mods in the save to?",
                     stage, MessageType.INFO, "Current Modlist", "New Modlist", "Cancel");
-            if (addExistingModsLocationChoice != ButtonChoice.CANCEL) {
-                if (addExistingModsLocationChoice == ButtonChoice.MIDDLE) { //Create a new modlist and switch to it before we add mods
+            if (addExistingModsLocationChoice != ThreeButtonChoice.CANCEL) {
+                if (addExistingModsLocationChoice == ThreeButtonChoice.MIDDLE) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
                         Optional<MutableTriple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getModListProfileDetails().stream()
@@ -334,8 +334,8 @@ public class SaveProfileManager {
         SaveProfile profileToCopy = saveList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
             if (profileToCopy.isSaveExists()) {
-                int choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the save \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
-                if (choice == 1)
+                TwoButtonChoice choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the save \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
+                if (choice == TwoButtonChoice.YES)
                     getCopyThread().start();
             } else {
                 Popup.displaySimpleAlert("You cannot copy a profile that is missing its save!", stage, MessageType.ERROR);
@@ -399,8 +399,8 @@ public class SaveProfileManager {
             if (UI_SERVICE.getCurrentSaveProfile().equals(saveList.getSelectionModel().getSelectedItem())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
-                int choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
-                if (choice == 1) {
+                TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile? It will not delete the save itself from the saves folder, ONLY the profile used by SEMM.", stage, MessageType.WARN);
+                if (choice == TwoButtonChoice.YES) {
                     int profileIndex = saveList.getSelectionModel().getSelectedIndex();
                     Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(SAVE_PROFILES.get(profileIndex));
                     if (deleteResult.isFailure()) {

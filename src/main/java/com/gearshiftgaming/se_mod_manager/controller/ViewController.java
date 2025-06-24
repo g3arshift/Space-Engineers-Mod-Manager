@@ -8,7 +8,9 @@ import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.*;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ThreeButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -59,6 +61,7 @@ public class ViewController {
             throw (e);
         }
 
+        //TODO: Something is bugging me about how this is all setup... It feels brittle.
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
                 new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.path") + ".db"),
                 new SaveFileRepository());
@@ -75,9 +78,9 @@ public class ViewController {
             }
             try (Stream<Path> stream = Files.list(Path.of("./logs"))) {
                 if (stream.anyMatch(Files::isDirectory)) { //This is a hack, but it's the only way to check for a true first time setup versus a deleted config.
-                    int choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +
+                    TwoButtonChoice choice = Popup.displayYesNoDialog("Failed to load user configuration, see log for details. " +
                             "Would you like to create a new user configuration and continue?", MessageType.WARN);
-                    if (choice == 1) {
+                    if (choice == TwoButtonChoice.YES) {
                         Result<Void> dataInitializaitonResult = storageController.initializeData();
                         if (dataInitializaitonResult.isFailure()) {
                             uiService.log(dataInitializaitonResult);
@@ -206,5 +209,31 @@ public class ViewController {
         MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
         final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
         MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MASTER_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
+
+        //Check if we have a mod download mode. If it's null we've only just initialized data and need to set it up.
+        if(uiService.getUserConfiguration().getApplicationMode() == null) {
+            ThreeButtonChoice choice = Popup.displayThreeChoiceDialog(
+                    "Do you intend to use this installation of SEMM for your Space Engineers game or a dedicated server?" +
+                            " The following choice only affects where mods are downloaded, you can use SEMM to manage a game and a server, but mods will only download to one location when using it.",
+                    MessageType.INFO,
+                    "Game",
+                    "Server",
+                    "Exit");
+
+            switch (choice) {
+                case ThreeButtonChoice.LEFT -> uiService.getUserConfiguration().setApplicationMode(ApplicationMode.CLIENT);
+                case ThreeButtonChoice.MIDDLE ->  {
+                    //TODO: If we are in dedicated server mode we need to ask the user if they're using torch or the normal dedicated SE server.
+                    // Then we need to ask them to point to the correct folder with the appropriate .exe in it.
+                    uiService.getUserConfiguration().setApplicationMode();
+                }
+                default -> {
+                    Platform.exit();
+                    return;
+                }
+            }
+
+            uiService.saveUserConfiguration();
+        }
     }
 }
