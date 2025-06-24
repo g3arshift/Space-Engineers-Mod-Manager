@@ -167,13 +167,13 @@ public class ModListProfileManager {
                     copyProfileName = String.format("%s (%d)", profileToCopy.getMiddle(), copyIndex);
                 }
 
-                int renameChoice = Popup.displayThreeChoiceDialog("Do you want to rename the copied profile?", stage, MessageType.INFO, "Yes", "No", "Cancel");
+                ButtonChoice renameChoice = Popup.displayThreeChoiceDialog("Do you want to rename the copied profile?", stage, MessageType.INFO, "Yes", "No", "Cancel");
 
-                if (renameChoice == 0) {
+                if (renameChoice == ButtonChoice.CANCEL) {
                     return;
                 }
 
-                if (renameChoice == 2) {
+                if (renameChoice == ButtonChoice.LEFT) {
                     do {
                         PROFILE_INPUT_VIEW.getInput().setText(copyProfileName);
                         PROFILE_INPUT_VIEW.getInput().requestFocus();

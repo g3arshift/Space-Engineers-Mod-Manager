@@ -38,6 +38,8 @@ public class UserConfiguration {
 
     private boolean runFirstTimeSetup;
 
+    private ModDownloadMode modDownloadMode;
+
     /**
      * Creates an entirely new user configuration to store user information with.
      */
@@ -59,6 +61,7 @@ public class UserConfiguration {
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
         this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
+        this.modDownloadMode = userConfiguration.modDownloadMode;
     }
 
     public UserConfiguration(String userTheme, UUID lastModifiedSaveProfileId, UUID lastActiveModProfileId, UUID lastActiveSaveProfileId, boolean runFirstTimeSetup) {

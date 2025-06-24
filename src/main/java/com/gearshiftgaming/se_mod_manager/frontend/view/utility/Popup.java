@@ -204,8 +204,10 @@ public class Popup {
 
     /**
      * Displays a dialog centered on a specific stage that has three choices the user can make.
+     *
+     * @return The button selected. 2 for left button, 1 for center, 0 for right. Right/0 is assumed to be a cancel option.
      */
-    public static int displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
+    public static ButtonChoice displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
         Stage stage = createStage();
 
         Label label = new Label(message);
@@ -413,9 +415,9 @@ public class Popup {
      *
      * @param childStage  The stage the popup will use for its own display
      * @param parentStage The stage the popup will be centered on
-     * @return The button selected. 2 for left button, 1 for center, 0 for right. Right/0 is assumed to be a cancel option.
+     * @return The button choice selected.
      */
-    private static int threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
+    private static ButtonChoice threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
         AtomicInteger choice = new AtomicInteger(-1);
 
         HBox dialogBox = makeDialog(label, messageIcon);
@@ -424,7 +426,12 @@ public class Popup {
 
         createPopup(childStage, parentStage, dialogBox, buttonBar);
 
-        return choice.intValue();
+        if (choice.intValue() == 2)
+            return ButtonChoice.LEFT;
+        else if (choice.intValue() == 1)
+            return ButtonChoice.MIDDLE;
+        else
+            return ButtonChoice.CANCEL;
     }
 
     private static HBox makeThreeChoiceBar(AtomicInteger choice, Stage childStage, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {

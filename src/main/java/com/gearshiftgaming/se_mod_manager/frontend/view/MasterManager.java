@@ -8,6 +8,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import javafx.animation.Animation;
@@ -609,9 +610,9 @@ public class MasterManager {
     }
 
     private void addModsFromFile() {
-        int choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
+        ButtonChoice choice = Popup.displayThreeChoiceDialog("Are the mods in the file for Mod.io, or Steam? Modlist files should only contain mods from either Steam or Mod.io, but not both.", STAGE, MessageType.INFO,
                 "Steam", "Mod.io", "Cancel");
-        if (choice != 0) {
+        if (choice != ButtonChoice.CANCEL) {
             //TODO: Remove this once we add back mod.io functionality.
             //Popup.displaySimpleAlert("Select a file containing Steam Workshop mod ID's or URL's. Make sure each ID or URL is on its own line by itself.", STAGE, MessageType.INFO);
             GENERAL_FILE_SELECT_VIEW.resetSelectedSave();
@@ -624,7 +625,7 @@ public class MasterManager {
                 List<String> modIds = new ArrayList<>();
                 ModType selectedModType;
 
-                if (choice == 2) { //Steam modlist file
+                if (choice == ButtonChoice.LEFT) { //Steam modlist file
                     selectedModType = ModType.STEAM;
                     try {
                         modIds = UI_SERVICE.getModlistFromFile(selectedModlistFile, ModType.STEAM);

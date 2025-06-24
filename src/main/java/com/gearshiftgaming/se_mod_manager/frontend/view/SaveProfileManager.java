@@ -271,10 +271,10 @@ public class SaveProfileManager {
     private void displayAddExistingModsDialog(File selectedSave) {
         int addExistingModsChoice = Popup.displayYesNoDialog("Do you want to add the mods in the save to a modlist?", stage, MessageType.INFO);
         if (addExistingModsChoice == 1) {
-            int addExistingModsLocationChoice = Popup.displayThreeChoiceDialog("Which modlist do you want to add the mods in the save to?",
+            ButtonChoice addExistingModsLocationChoice = Popup.displayThreeChoiceDialog("Which modlist do you want to add the mods in the save to?",
                     stage, MessageType.INFO, "Current Modlist", "New Modlist", "Cancel");
-            if (addExistingModsLocationChoice != 0) {
-                if (addExistingModsLocationChoice == 1) { //Create a new modlist and switch to it before we add mods
+            if (addExistingModsLocationChoice != ButtonChoice.CANCEL) {
+                if (addExistingModsLocationChoice == ButtonChoice.MIDDLE) { //Create a new modlist and switch to it before we add mods
                     String newProfileName = ModImportUtility.createNewModProfile(UI_SERVICE, stage, PROFILE_INPUT_VIEW);
                     if (!newProfileName.isEmpty()) {
                         Optional<MutableTriple<UUID, String, SpaceEngineersVersion>> modlistProfile = UI_SERVICE.getModListProfileDetails().stream()
