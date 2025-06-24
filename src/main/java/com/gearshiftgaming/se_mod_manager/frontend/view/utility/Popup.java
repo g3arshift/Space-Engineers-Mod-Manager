@@ -204,17 +204,26 @@ public class Popup {
 
     /**
      * Displays a dialog centered on a specific stage that has three choices the user can make.
-     *
-     * @return The button selected. 2 for left button, 1 for center, 0 for right. Right/0 is assumed to be a cancel option.
+     * <p>
+     * @return The button selected
      */
-    public static ButtonChoice displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
+    public static ButtonChoice displayThreeChoiceDialog(String message, Stage parentStage, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         Stage stage = createStage();
 
         Label label = new Label(message);
         FontIcon messageIcon = new FontIcon();
 
         getIconByMessageType(messageType, messageIcon);
-        return threeChoice(stage, parentStage, label, messageIcon, leftButtonMessage, centerButtonMessage, rightButtonMessage);
+        return threeChoice(stage, parentStage, label, messageIcon, leftButtonMessage, centerButtonMessage, cancelButtonMessage);
+    }
+
+    public static ButtonChoice displayThreeChoiceDialog(String message, MessageType messageType, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
+        Stage stage = createStage();
+
+        Label label = new Label(message);
+        FontIcon messageIcon = new FontIcon();
+        getIconByMessageType(messageType, messageIcon);
+        return threeChoice(stage, label, messageIcon, leftButtonMessage, centerButtonMessage, cancelButtonMessage);
     }
 
     public static void displayNavigationDialog(List<String> messages, Stage parentStage, MessageType messageType, String title) {
@@ -417,12 +426,12 @@ public class Popup {
      * @param parentStage The stage the popup will be centered on
      * @return The button choice selected.
      */
-    private static ButtonChoice threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
+    private static ButtonChoice threeChoice(Stage childStage, Stage parentStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         AtomicInteger choice = new AtomicInteger(-1);
 
         HBox dialogBox = makeDialog(label, messageIcon);
 
-        HBox buttonBar = makeThreeChoiceBar(choice, childStage, leftButtonMessage, centerButtonMessage, rightButtonMessage);
+        HBox buttonBar = makeThreeChoiceBar(choice, childStage, leftButtonMessage, centerButtonMessage, cancelButtonMessage);
 
         createPopup(childStage, parentStage, dialogBox, buttonBar);
 
@@ -434,10 +443,33 @@ public class Popup {
             return ButtonChoice.CANCEL;
     }
 
-    private static HBox makeThreeChoiceBar(AtomicInteger choice, Stage childStage, String leftButtonMessage, String centerButtonMessage, String rightButtonMessage) {
+    /**
+     * Creates a yes/no dialog centered on the screen.
+     *
+     * @param childStage  The stage the popup will use for its own display.
+     * @return The button choice selected.
+     */
+    private static ButtonChoice threeChoice(Stage childStage, Label label, FontIcon messageIcon, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
+        AtomicInteger choice = new AtomicInteger(-1);
+
+        HBox dialogBox = makeDialog(label, messageIcon);
+
+        HBox buttonBar = makeThreeChoiceBar(choice, childStage, leftButtonMessage, centerButtonMessage, cancelButtonMessage);
+
+        createPopup(childStage, dialogBox, buttonBar);
+
+        if (choice.intValue() == 2)
+            return ButtonChoice.LEFT;
+        else if (choice.intValue() == 1)
+            return ButtonChoice.MIDDLE;
+        else
+            return ButtonChoice.CANCEL;
+    }
+
+    private static HBox makeThreeChoiceBar(AtomicInteger choice, Stage childStage, String leftButtonMessage, String centerButtonMessage, String cancelButtonMessage) {
         Button leftButton = createButton(leftButtonMessage, 80d, 36d);
         Button centerButton = createButton(centerButtonMessage, 80d, 36d);
-        Button rightButton = createButton(rightButtonMessage, 80d, 36d);
+        Button rightButton = createButton(cancelButtonMessage, 80d, 36d);
 
         leftButton.setOnAction((ActionEvent event) -> {
             choice.set(2);
