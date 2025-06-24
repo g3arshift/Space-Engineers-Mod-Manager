@@ -225,7 +225,7 @@ public class ViewController {
                 case ThreeButtonChoice.MIDDLE ->  {
                     //TODO: If we are in dedicated server mode we need to ask the user if they're using torch or the normal dedicated SE server.
                     // Then we need to ask them to point to the correct folder with the appropriate .exe in it.
-                    uiService.getUserConfiguration().setApplicationMode();
+                    //uiService.getUserConfiguration().setApplicationMode();
                 }
                 default -> {
                     Platform.exit();

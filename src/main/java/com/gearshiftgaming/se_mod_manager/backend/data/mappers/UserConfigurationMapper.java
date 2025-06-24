@@ -24,6 +24,6 @@ public class UserConfigurationMapper implements RowMapper<UserConfiguration> {
                 rs.getString("last_active_mod_profile_id") != null ? UUID.fromString(rs.getString("last_active_mod_profile_id")) : null,
                 rs.getString("last_active_save_profile_id") != null ? UUID.fromString(rs.getString("last_active_save_profile_id")) : null,
                 rs.getBoolean("run_first_time_setup"),
-                ApplicationMode.valueOf(rs.getString("mod_download_mode")));
+                rs.getString("application_mode") != null ?ApplicationMode.valueOf(rs.getString("application_mode")) : null);
     }
 }

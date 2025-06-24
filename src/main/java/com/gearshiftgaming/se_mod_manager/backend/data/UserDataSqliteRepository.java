@@ -188,7 +188,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 last_active_mod_profile_id,
                                 last_active_save_profile_id,
                                 run_first_time_setup,
-                                mod_download_mode)
+                                application_mode)
                             VALUES (
                                 1,
                                 :userTheme,
@@ -203,7 +203,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 last_active_mod_profile_id = excluded.last_active_mod_profile_id,
                                 last_active_save_profile_id = excluded.last_active_save_profile_id,
                                 run_first_time_setup = excluded.run_first_time_setup,
-                                mod_download_mode = excluded.mod_download_mode;""")
+                                application_mode = excluded.application_mode;""")
                     .bindBean(userConfiguration)
                     .execute());
             for (MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {

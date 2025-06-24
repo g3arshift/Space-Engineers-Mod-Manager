@@ -134,7 +134,7 @@ create table user_configuration
             references save_profile
             on delete set null,
     run_first_time_setup          INTEGER default false         not null,
-    mod_download_mode          TEXT
+    application_mode          TEXT
 )
     strict;
 

@@ -1223,7 +1223,7 @@ public class MasterManager {
                         modImportSteamCollectionName.setVisible(false);
                         disableModImportUiText(false);
 
-                        if (userChoice != 1) {
+                        if (userChoice != TwoButtonChoice.YES) {
                             disableUserInputElements(false);
                             resetModImportProgressUi();
                         }
