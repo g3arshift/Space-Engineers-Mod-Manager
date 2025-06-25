@@ -38,8 +38,6 @@ public class UserConfiguration {
 
     private boolean runFirstTimeSetup;
 
-    private ApplicationMode applicationMode;
-
     /**
      * Creates an entirely new user configuration to store user information with.
      */
@@ -61,10 +59,9 @@ public class UserConfiguration {
         this.lastActiveModProfileId = userConfiguration.getLastActiveModProfileId();
         this.lastActiveSaveProfileId = userConfiguration.getLastActiveSaveProfileId();
         this.runFirstTimeSetup = userConfiguration.isRunFirstTimeSetup();
-        this.applicationMode = userConfiguration.applicationMode;
     }
 
-    public UserConfiguration(String userTheme, UUID lastModifiedSaveProfileId, UUID lastActiveModProfileId, UUID lastActiveSaveProfileId, boolean runFirstTimeSetup, ApplicationMode applicationMode) {
+    public UserConfiguration(String userTheme, UUID lastModifiedSaveProfileId, UUID lastActiveModProfileId, UUID lastActiveSaveProfileId, boolean runFirstTimeSetup) {
         this.userTheme = userTheme;
         this.lastModifiedSaveProfileId = lastModifiedSaveProfileId;
         this.lastActiveModProfileId = lastActiveModProfileId;
@@ -72,7 +69,6 @@ public class UserConfiguration {
         this.saveProfiles = new ArrayList<>();
         this.modListProfilesBasicInfo = new ArrayList<>();
         this.runFirstTimeSetup = runFirstTimeSetup;
-        this.applicationMode = applicationMode;
     }
 
     @XmlElement(name = "userTheme")

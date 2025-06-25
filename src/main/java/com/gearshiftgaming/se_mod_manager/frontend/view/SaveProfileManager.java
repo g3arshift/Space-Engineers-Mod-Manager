@@ -24,6 +24,7 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -150,37 +151,39 @@ public class SaveProfileManager {
     private void addSave() throws IOException {
         SAVE_INPUT_VIEW.setSaveProfileInputTitle("Add new SE save");
         SAVE_INPUT_VIEW.setAddSaveButtonText("Next");
-        boolean duplicateSavePath;
+        boolean successfullyAddedProfile;
         Result<SaveProfile> saveProfileResult = new Result<>();
 
         if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
             do {
-                duplicateSavePath = false;
-                SAVE_INPUT_VIEW.show(stage);
-                File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
-                if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
-                    saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
-                    if (saveProfileResult.isSuccess()) {
-                        duplicateSavePath = addProfileWithUniqueName(saveProfileResult, selectedSave);
-                    } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
-                        Popup.displaySimpleAlert(saveProfileResult);
-                        UI_SERVICE.log(saveProfileResult);
-                    }
-                }
-            } while (saveProfileResult.isSuccess() && duplicateSavePath);
-        } else {
-            //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
-            do {
-                duplicateSavePath = false;
+                successfullyAddedProfile = false;
+                saveProfileResult.addMessage("Starting to save profile import chain...", ResultType.NOT_INITIALIZED);
                 SAVE_INPUT_VIEW.show(stage);
                 File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
                 if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
                     saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
 
                     if (saveProfileResult.isSuccess()) {
-                        duplicateSavePath = addProfileWithUniqueName(saveProfileResult, selectedSave);
-                        if (!duplicateSavePath) {
+                        successfullyAddedProfile = addProfileWithUniqueName(saveProfileResult, selectedSave);
+                    } else if (saveProfileResult.getType() != ResultType.NOT_INITIALIZED) {
+                        Popup.displaySimpleAlert(saveProfileResult);
+                        UI_SERVICE.log(saveProfileResult);
+                    }
+                }
+            } while (saveProfileResult.isSuccess() && !successfullyAddedProfile);
+        } else {
+            //Get our selected file from the user, check if its already being managed by SEMM by checking the save path, and then check if the save name already exists. If it does, append a number to the end of it.
+            do {
+                successfullyAddedProfile = false;
+                SAVE_INPUT_VIEW.show(stage);
+                File selectedSave = SAVE_INPUT_VIEW.getSelectedSave();
+                if (selectedSave != null && SAVE_INPUT_VIEW.getLastPressedButtonId().equals("addSave")) {
+                    saveProfileResult = UI_SERVICE.getSaveProfile(selectedSave);
+
+                    if (saveProfileResult.isSuccess()) {
+                        successfullyAddedProfile = addProfileWithUniqueName(saveProfileResult, selectedSave);
+                        if (successfullyAddedProfile) {
                             List<String> tutorialMessages = new ArrayList<>();
                             tutorialMessages.add("When creating a save profile you can optionally import the mods in the selected save to the currently active mod list or a new mod list. " +
                                     "For this tutorial we'll skip that step and manually add mods instead.");
@@ -196,12 +199,53 @@ public class SaveProfileManager {
                 } else {
                     Popup.displaySimpleAlert("You HAVE to add a save or you cannot apply mod lists!", stage, MessageType.WARN);
                 }
-            } while (saveProfileResult.isSuccess() && duplicateSavePath);
+            } while (saveProfileResult.isSuccess() && !successfullyAddedProfile);
         }
         //Cleanup our UI actions.
         PROFILE_INPUT_VIEW.getInput().clear();
     }
 
+    //TODO: Rewrite this to be less complicated.
+    @Nullable
+    private SaveType promptUserForSaveType() {
+        ThreeButtonChoice choice = Popup.displayThreeChoiceDialog("Is this a save for your game or a server?",
+                stage,
+                MessageType.INFO,
+                "Game",
+                "Server",
+                "Cancel");
+
+        if (choice == ThreeButtonChoice.CANCEL)
+            return null;
+
+        SaveType newProfileSaveType;
+        if (choice == ThreeButtonChoice.LEFT)
+            newProfileSaveType = SaveType.GAME;
+        else {
+            choice = Popup.displayThreeChoiceDialog("Is it for a Torch server or standard Dedicated Server?",
+                    stage,
+                    MessageType.INFO,
+                    "Torch",
+                    "Standard Server",
+                    "Cancel");
+            if (choice == ThreeButtonChoice.CANCEL) {
+                return null;
+            }
+
+            if (choice == ThreeButtonChoice.LEFT)
+                newProfileSaveType = SaveType.TORCH;
+            else
+                newProfileSaveType = SaveType.DEDICATED_SERVER;
+        }
+        return newProfileSaveType;
+    }
+
+    /**
+     * @param saveProfileResult
+     * @param selectedSave
+     * @return if the profile we are trying to add exists or not. True for if it already exists, false for if it doesn't.
+     */
+    //TODO: Fillout the javadoc
     private boolean addProfileWithUniqueName(Result<SaveProfile> saveProfileResult, File selectedSave) {
         SaveProfile saveProfile = saveProfileResult.getPayload();
         boolean duplicateSavePath = saveAlreadyExists(saveProfile.getSavePath());
@@ -209,33 +253,41 @@ public class SaveProfileManager {
         if (duplicateSavePath) {
             Popup.displaySimpleAlert("Save is already being managed!", stage, MessageType.WARN);
             SAVE_INPUT_VIEW.resetSelectedSave();
-            return true;
+            return false;
         }
 
         //Remove the default save profile that isn't actually a profile if it's all that we have in the list.
-        //TODO: Bad var naming.
-        boolean profileNameAlreadyExists;
+        //FIXME: Bad var naming.
+        boolean profileNameAlreadyExists = false;
         do {
-            profileNameAlreadyExists = false;
             PROFILE_INPUT_VIEW.getInput().clear();
             PROFILE_INPUT_VIEW.getInput().requestFocus();
             PROFILE_INPUT_VIEW.show(stage);
             String newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
-            if (newProfileName.isBlank()) {
-                if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
+
+            if (newProfileName.isBlank()) {  //Check if our input was blank. We want to keep this so if we hit cancel here we won't try to add it.
+                if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) { //This is here to have a bit of handholding in the tutorial
                     Popup.displaySimpleAlert("You have to add a profile with a name!", stage, MessageType.WARN);
+                    //FIXME: This flow control is a bit messy.
                     profileNameAlreadyExists = true;
                 }
-            } else {
+            } else { //Check if the profile name the user wants to use already exists
                 profileNameAlreadyExists = isDuplicateProfileName(PROFILE_INPUT_VIEW.getInput().getText());
-                if (profileNameAlreadyExists) {
+                if (profileNameAlreadyExists)
                     Popup.displaySimpleAlert("Profile name already exists!", stage, MessageType.WARN);
-                } else
+                else {
+                    SaveType newProfileSaveType = promptUserForSaveType();
+                    if (newProfileSaveType == null)
+                        return false;
+                    saveProfile.setSaveType(newProfileSaveType);
+
+                    //TODO: Prompt for SE game version.
                     addSaveProfileToList(saveProfileResult, saveProfile, selectedSave);
+                }
             }
         } while (profileNameAlreadyExists);
 
-        return false;
+        return true;
     }
 
     private void addSaveProfileToList(Result<SaveProfile> saveProfileResult, SaveProfile saveProfile, File selectedSave) {
@@ -449,7 +501,7 @@ public class SaveProfileManager {
                         //TODO: This is a terrible hack that does two database saves just to update a UI element and performs terribly. Fix me later.
                         // We realistically should move the fields like the last active mod and save profile to the SEMM_settings.properties file.
                         // OP #66
-                        final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
+                        final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE, SaveType.GAME);
                         SAVE_PROFILES.add(BAD_SAVE_PROFILE);
                         UI_SERVICE.saveSaveProfile(BAD_SAVE_PROFILE);
 

@@ -163,7 +163,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         return modListProfileIds;
     }
 
-    //Loads all the save profiles into the user configuration
+    //Loads all the save profiles from the DB
     private List<SaveProfile> loadSaveProfiles() {
         List<SaveProfile> saveProfiles;
         try (Handle handle = SQLITE_DB.open()) {
@@ -187,23 +187,20 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                 last_modified_save_profile_id,
                                 last_active_mod_profile_id,
                                 last_active_save_profile_id,
-                                run_first_time_setup,
-                                application_mode)
+                                run_first_time_setup)
                             VALUES (
                                 1,
                                 :userTheme,
                                 :lastModifiedSaveProfileId,
                                 :lastActiveModProfileId,
                                 :lastActiveSaveProfileId,
-                                :runFirstTimeSetup,
-                                :applicationMode)
+                                :runFirstTimeSetup)
                             ON CONFLICT(id) DO UPDATE SET
                                 user_theme = excluded.user_theme,
                                 last_modified_save_profile_id = excluded.last_modified_save_profile_id,
                                 last_active_mod_profile_id = excluded.last_active_mod_profile_id,
                                 last_active_save_profile_id = excluded.last_active_save_profile_id,
-                                run_first_time_setup = excluded.run_first_time_setup,
-                                application_mode = excluded.application_mode;""")
+                                run_first_time_setup = excluded.run_first_time_setup;""")
                     .bindBean(userConfiguration)
                     .execute());
             for (MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
@@ -604,7 +601,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     last_save_status,
                                     last_saved,
                                     save_exists,
-                                    space_engineers_version)
+                                    space_engineers_version,
+                                    save_type)
                                 VALUES (
                                     :ID,
                                     :profileName,
@@ -614,7 +612,8 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :lastSaveStatus,
                                     :lastSaved,
                                     :saveExists,
-                                    :SPACE_ENGINEERS_VERSION)
+                                    :SPACE_ENGINEERS_VERSION,
+                                    :saveType)
                                 ON CONFLICT (save_profile_id) DO UPDATE SET
                                     profile_name = CASE WHEN save_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
                                     last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id IS DISTINCT FROM excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,

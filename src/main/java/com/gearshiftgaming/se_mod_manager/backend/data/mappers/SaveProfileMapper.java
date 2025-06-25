@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -28,6 +29,7 @@ public class SaveProfileMapper implements RowMapper<SaveProfile> {
                 SaveStatus.fromString(rs.getString("last_save_status")),
                 rs.getString("last_saved"),
                 rs.getInt("save_exists") >= 1,
-                SpaceEngineersVersion.valueOf(rs.getString("space_engineers_version")));
+                SpaceEngineersVersion.valueOf(rs.getString("space_engineers_version")),
+                SaveType.valueOf(rs.getString("save_type")));
     }
 }

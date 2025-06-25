@@ -45,7 +45,12 @@ public class SaveProfile {
     private boolean saveExists;
 
     @XmlElement
+    //TODO: When we upgrade to J25, make this a Stable value.
     private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
+
+    @Setter
+    //TODO: When we upgrade to J25, make this a Stable value.
+    private SaveType saveType;
 
     //This represents our base save profile that only exists when the application is launched for the first time.
     public SaveProfile(){
@@ -55,9 +60,10 @@ public class SaveProfile {
         this.lastSaveStatus = SaveStatus.NONE;
         saveExists = false;
         SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
+        saveType = SaveType.GAME;
     }
 
-    public SaveProfile(String profileName, String savePath, String saveName, SpaceEngineersVersion spaceEngineersVersion) {
+    public SaveProfile(String profileName, String savePath, String saveName, SpaceEngineersVersion spaceEngineersVersion, SaveType saveType) {
         ID = UUID.randomUUID();
         this.profileName = profileName;
         this.lastSaveStatus = SaveStatus.NONE;
@@ -65,6 +71,17 @@ public class SaveProfile {
         this.saveName = saveName;
         saveExists = true;
         this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        this.saveType = saveType;
+    }
+
+    public SaveProfile(File saveFile, SpaceEngineersVersion spaceEngineersVersion, SaveType saveType) {
+        ID = UUID.randomUUID();
+        this.profileName = "Default";
+        this.lastSaveStatus = SaveStatus.NONE;
+        this.savePath = saveFile.getPath();
+        saveExists = true;
+        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        this.saveType = saveType;
     }
 
     public SaveProfile(File saveFile, SpaceEngineersVersion spaceEngineersVersion) {
@@ -86,6 +103,7 @@ public class SaveProfile {
         this.lastSaved = saveProfile.getLastSaved();
         this.saveExists = saveProfile.isSaveExists();
         this.SPACE_ENGINEERS_VERSION = saveProfile.getSPACE_ENGINEERS_VERSION();
+        this.saveType = saveProfile.getSaveType();
     }
 
     public void setLastUsedModListProfileId(UUID lastUsedModListProfileId) {

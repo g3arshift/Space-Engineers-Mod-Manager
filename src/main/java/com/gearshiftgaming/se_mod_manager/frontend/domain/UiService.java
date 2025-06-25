@@ -106,9 +106,6 @@ public class UiService {
     @Getter
     private final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
 
-    @Getter
-    private final Path spaceEngineersDiskPath;
-
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
     public UiService(Logger logger, @NotNull ObservableList<LogMessage> userLog, int userLogMaxSize,
@@ -164,8 +161,6 @@ public class UiService {
         //A little bit of duplication, but the order of construction is a bit different from setCurrentModProfile
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount = new SimpleIntegerProperty((int) currentModList.stream().filter(Mod::isActive).count());
-
-        spaceEngineersDiskPath = getSpaceEngineersLocalInstallPath();
     }
 
     public void log(String message, MessageType messageType) {
@@ -752,7 +747,7 @@ public class UiService {
         return panes;
     }
 
-    private Path getSpaceEngineersLocalInstallPath() {
+    private Path findModDownloadLocation() {
         //TODO: For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
         //TODO: For win clients they're saved at: SE_Install_Steam_Library_Path/steamapps/workshop/content/244850
         //TODO: For win Torch servers they're saved at: torch/Instance/content/244850/
@@ -760,6 +755,14 @@ public class UiService {
         //TODO: For linux client they're saved at:
         //TODO: For linux torch they're saved at:
 
+        //TODO: Instead of doing all this, let's do something smarter.
+        // When the user adds a save profile, ask them what kind of save it is. Torch, Dedicated server, or normal game?
+        //TODO: As a part of the above process, depending on our save mode it will alter our download location.
+        // That makes this entire class pointless, or rather, we need to move it somewhere else since, depending on our save profile, the install path will change.
+        //TODO: To summarize:
+        // 1. Find the type of install the current save is
+        // 2. Download our mods to the correct path based on our install.
+        //     2a. For client installs, this means we need to query the registry and find our path.
 
         if (com.sun.jna.Platform.isLinux()){
 
@@ -772,10 +775,6 @@ public class UiService {
         // Make sure to tell the user that it'll still work for the other when you choose SE server or Game, but the downloaded mods will go into the right folder for the option they chose.
         // If the var is false, we want to prompt the user to select where they have SE installed. Also present the SE dedicated server as an option if they're using SEMM to manage server config.
         // When they select a folder check if the SE.exe or the SE dedicated server.exe are there. If not, say it's a bad selection. Let them continuously try until they choose to quit or they give a valid path.
-
-        //TODO: We are going to need to store what "Mode, either Server or local game" that it's running in, but we can just check for path on startup. Maybe store it?
-        // We need to flag if the path we have stored is no longer valid (contians the .exe for the mode we're in)
-        // So our basic flow now needs to be, check our stored value. If null, run the code to find it. If invalid, do the same thing too.
         return null;
     }
 }

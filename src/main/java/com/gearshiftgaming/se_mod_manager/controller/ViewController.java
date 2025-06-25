@@ -209,31 +209,5 @@ public class ViewController {
         MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
         final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
         MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MASTER_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
-
-        //Check if we have a mod download mode. If it's null we've only just initialized data and need to set it up.
-        if(uiService.getUserConfiguration().getApplicationMode() == null) {
-            ThreeButtonChoice choice = Popup.displayThreeChoiceDialog(
-                    "Do you intend to use this installation of SEMM for your Space Engineers game or a dedicated server?" +
-                            " The following choice only affects where mods are downloaded, you can use SEMM to manage a game and a server, but mods will only download to one location when using it.",
-                    MessageType.INFO,
-                    "Game",
-                    "Server",
-                    "Exit");
-
-            switch (choice) {
-                case ThreeButtonChoice.LEFT -> uiService.getUserConfiguration().setApplicationMode(ApplicationMode.CLIENT);
-                case ThreeButtonChoice.MIDDLE ->  {
-                    //TODO: If we are in dedicated server mode we need to ask the user if they're using torch or the normal dedicated SE server.
-                    // Then we need to ask them to point to the correct folder with the appropriate .exe in it.
-                    //uiService.getUserConfiguration().setApplicationMode();
-                }
-                default -> {
-                    Platform.exit();
-                    return;
-                }
-            }
-
-            uiService.saveUserConfiguration();
-        }
     }
 }

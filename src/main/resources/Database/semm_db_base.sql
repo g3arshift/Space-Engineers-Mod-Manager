@@ -100,7 +100,8 @@ create table save_profile
     last_save_status              text                  not null,
     last_saved                    text,
     save_exists                   integer default false not null,
-    space_engineers_version       text                  not null
+    space_engineers_version       text                  not null,
+    save_type       text                  not null
 )
     strict;
 
@@ -133,8 +134,7 @@ create table user_configuration
         constraint user_configuration_last_active_save_save_profile_save_profile_id_fk
             references save_profile
             on delete set null,
-    run_first_time_setup          INTEGER default false         not null,
-    application_mode          TEXT
+    run_first_time_setup          INTEGER default false         not null
 )
     strict;
 
