@@ -1,4 +1,6 @@
-package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
+package com.gearshiftgaming.se_mod_manager;
+
+import com.sun.jna.Platform;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,12 +15,23 @@ import java.util.regex.Pattern;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class WindowsVersionUtility {
+public class OperatingSystemVersionUtility {
 
-    private WindowsVersionUtility() {
+    private OperatingSystemVersionUtility() {
     }
 
-    public static boolean isWindows10() throws IOException {
+    public static OperatingSystemVersion getOperatingSystemVersion() throws IOException {
+        if (isLinux())
+            return OperatingSystemVersion.LINUX;
+        else if (isWindows10())
+            return OperatingSystemVersion.WINDOWS_10;
+        else if (isWindows11())
+            return OperatingSystemVersion.WINDOWS_11;
+        else
+            throw new UnknownOperatingSystemException("The operating system is an unknown operating system.");
+    }
+
+    private static boolean isWindows10() throws IOException {
         Process process = new ProcessBuilder("cmd.exe", "/c", "ver").start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             return reader.lines()
@@ -32,7 +45,7 @@ public class WindowsVersionUtility {
         }
     }
 
-    public static boolean isWindows11() throws IOException {
+    private static boolean isWindows11() throws IOException {
         Process process = new ProcessBuilder("cmd.exe", "/c", "ver").start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             return reader.lines()
@@ -44,5 +57,9 @@ public class WindowsVersionUtility {
                     .filter(buildNumber -> buildNumber != -1)
                     .anyMatch(buildNumber -> buildNumber >= 22000);
         }
+    }
+
+    private static boolean isLinux() {
+        return Platform.isLinux();
     }
 }

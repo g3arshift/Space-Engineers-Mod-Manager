@@ -4,6 +4,8 @@ import javafx.stage.Stage;
 
 public class WindowPositionUtility {
 
+    private WindowPositionUtility(){}
+
     /**
      * Centers a JavaFX stage on another stage and returns the listeners used to do so.
      * @param childStage The stage to be centered.

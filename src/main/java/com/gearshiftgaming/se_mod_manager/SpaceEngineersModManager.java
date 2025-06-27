@@ -22,7 +22,17 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class SpaceEngineersModManager extends Application {
 
-	private final static Logger LOGGER = LogManager.getLogger(SpaceEngineersModManager.class);
+	private static final Logger LOGGER = LogManager.getLogger(SpaceEngineersModManager.class);
+
+	public static final OperatingSystemVersion OPERATING_SYSTEM_VERSION;
+
+	static {
+        try {
+            OPERATING_SYSTEM_VERSION = OperatingSystemVersionUtility.getOperatingSystemVersion();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	public static void main(String[] args) {
 		launch(args);

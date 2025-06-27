@@ -1,5 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
 
+import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
+import com.gearshiftgaming.se_mod_manager.OperatingSystemVersionUtility;
 import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Locale;
 
+import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
@@ -50,16 +53,12 @@ public class WindowTitleBarColorUtility {
 
             dwmapi.DwmSetWindowAttribute(hwnd, 20, ref, WinDef.BOOL.SIZE);
 
-            try {
-                //We check if we're using Windows 10 because this will make our title text dark mode and the titlebar light mode if we start in a dark mode theme, in Windows 11.
-                if (WindowsVersionUtility.isWindows10()) {
-                    //Forces a redraw of the title bar by sending a pair of messages to the window to toggle its active state.
-                    final int WM_NCACTIVATE = 0x0086;
-                    User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(0), new WinDef.LPARAM(0));
-                    User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(1), new WinDef.LPARAM(0));
-                }
-            } catch (IOException e) {
-                log.error(getStackTrace(e));
+            //We check if we're using Windows 10 because this will make our title text dark mode and the titlebar light mode if we start in a dark mode theme, in Windows 11.
+            if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.WINDOWS_10) {
+                //Forces a redraw of the title bar by sending a pair of messages to the window to toggle its active state.
+                final int WM_NCACTIVATE = 0x0086;
+                User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(0), new WinDef.LPARAM(0));
+                User32.INSTANCE.SendMessage(hwnd, WM_NCACTIVATE, new WinDef.WPARAM(1), new WinDef.LPARAM(0));
             }
         } else if (Platform.isLinux()) {
             //TODO: The linux equivalent
