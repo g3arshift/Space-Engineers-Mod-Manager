@@ -1,250 +1,143 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain;
 
+import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
-import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
 
-//TODO: CHECK ALL OF THIS.
 /**
- * Service class responsible for downloading Steam Workshop mods using SteamCMD.
- * Downloads mods to the Steam Workshop content directory for the Space Engineers install.
- * <p>
- * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
- * You may use, distribute and modify this code under the terms of the GPL3 license.
+ * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute, and modify this code under the terms of the GPL3 license.
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class SteamModDownloadService implements ModDownloadService{
 
-    private final String STEAM_APP_ID = "244850"; // Space Engineers Steam App ID
-    private final String STEAMCMD_DOWNLOAD_TIMEOUT_MINUTES;
-    private final String STEAM_WORKSHOP_CONTENT_PATH;
-    private final String STEAMCMD_PATH;
-    private final boolean STEAMCMD_VALIDATE_DOWNLOADS;
+    //TODO: When j25 comes out, make these stable values.
+    //TODO: For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
+    // On windows you can find libraryfolders.vdf in Steam_Install_Path/config/libraryfolders.vdf
+    // On Linux this s found in $HOME/.steam/steam/config/libraryfolders.vdf
+    private final String CLIENT_MOD_DOWNLOAD_PATH;
 
-    public SteamModDownloadService(Properties properties) {
-        this.STEAMCMD_DOWNLOAD_TIMEOUT_MINUTES = properties.getProperty("semm.steam.mod.download.timeout.minutes", "10");
-        this.STEAM_WORKSHOP_CONTENT_PATH = properties.getProperty("semm.steam.workshop.content.path", getSteamWorkshopPath());
-        this.STEAMCMD_PATH = properties.getProperty("semm.steam.cmd.localPath", getSteamCmdPath());
-        this.STEAMCMD_VALIDATE_DOWNLOADS = Boolean.parseBoolean(properties.getProperty("semm.steam.mod.download.validate", "true"));
+    //TODO: For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
+    //TODO: For linux wine SE dedicated server they're saved at: $HOME/.wine/drive_c/users/$USER/AppData/Roaming/SpaceEngineersDedicated/content/244850
+    //private final String DEDICATED_SERVER_MOD_DOWNLOAD_PATH;
+
+    //TODO: For win/linux Torch servers they're saved at: torch/Instance/content/244850/
+    //private final String TORCH_SERVER_MOD_DOWNLOAD_PATH;
+
+    private final String STEAM_CMD_PATH;
+
+    public SteamModDownloadService(String steamCmdPath, Properties properties) throws IOException, InterruptedException {
+        this.CLIENT_MOD_DOWNLOAD_PATH = getSpaceEngineersInstallPath();
+
+        //this.DEDICATED_SERVER_MOD_DOWNLOAD_PATH = getDedicatedServerPath();
+        //this.TORCH_SERVER_MOD_DOWNLOAD_PATH = getTorchServerPath();
+        this.STEAM_CMD_PATH = steamCmdPath;
     }
 
-    /**
-     * Downloads a Steam Workshop mod using SteamCMD to the Steam Workshop content directory for the Space Engineers install.
-     *
-     * @param modId The Steam Workshop mod ID to download
-     * @return Result containing success/failure information and any error messages, as well as a payload containing the path of the downloaded mod.
-     */
-    //TODO: Rewrite this whole thing with guard clauses
-    @Override
-    public Result<String> downloadMod(String modId) {
-        Result<String> downloadResult = new Result<>();
+    public String getSpaceEngineersInstallPath() throws IOException, InterruptedException {
+        String steamPath;
+        if(OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX) {
+            if(Files.notExists(Path.of("$HOME/.steam/steam/config/libraryfolders.vdf")))
+                throw new SteamInstallMissingException("Unable to find the steam installation path.");
 
-        // Validate SteamCMD installation
-        Result<Void> steamCmdValidation = validateSteamCmdInstallation();
-        if (steamCmdValidation.getType() == ResultType.FAILED) {
-            downloadResult.addMessage("SteamCMD validation failed: " + steamCmdValidation.getCurrentMessage(), ResultType.FAILED);
-            return downloadResult;
+            steamPath = "$HOME/.steam/steam/config/libraryfolders.vdf";
+        } else {
+            steamPath = getWindowsSteamInstallPath();
+            if(steamPath.isBlank())
+                throw new SteamInstallMissingException("Unable to find the steam installation path.");
         }
 
-        // Ensure workshop content directory exists
-        Path workshopPath = Paths.get(STEAM_WORKSHOP_CONTENT_PATH, STEAM_APP_ID);
-        try {
-            Files.createDirectories(workshopPath);
-        } catch (IOException e) {
-            downloadResult.addMessage("Failed to create workshop directory: " + workshopPath, ResultType.FAILED);
-            downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
-            return downloadResult;
-        }
+        //TODO: Find our client path based on the libraryvdf file. Throw an exception if we can't find it.
 
-        // Build SteamCMD command
-        List<String> command = buildSteamCmdCommand(modId);
 
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.redirectErrorStream(true);
+        //return + "/steamapps/workshop/content/244850";
+        return null;
+    }
 
-            downloadResult.addMessage("Starting download of mod " + modId + " using SteamCMD...", ResultType.SUCCESS);
+    private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath");
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
 
-            Process process = processBuilder.start();
+        String steamInstallPath = "";
 
-            // Read output from SteamCMD
-            StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");
-                    // Log important SteamCMD messages
-                    if (line.contains("Success") || line.contains("ERROR") || line.contains("FAILED")) {
-                        downloadResult.addMessage("SteamCMD: " + line, line.contains("ERROR") || line.contains("FAILED") ? ResultType.FAILED : ResultType.SUCCESS);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("InstallPath")) {
+                    // Extract the path part (after "REG_SZ")
+                    String[] parts = line.trim().split("\\s{2,}");
+                    if (parts.length >= 3) {
+                        steamInstallPath = parts[2];
                     }
                 }
             }
-
-            // Wait for process to complete with timeout
-            boolean finished = process.waitFor(Long.parseLong(STEAMCMD_DOWNLOAD_TIMEOUT_MINUTES), TimeUnit.MINUTES);
-
-            if (!finished) {
-                process.destroyForcibly();
-                downloadResult.addMessage("SteamCMD download timed out after " + STEAMCMD_DOWNLOAD_TIMEOUT_MINUTES + " minutes", ResultType.FAILED);
-                return downloadResult;
-            }
-
-            int exitCode = process.exitValue();
-            if (exitCode == 0) {
-                // Verify the mod was actually downloaded
-                Path modPath = workshopPath.resolve(modId);
-                if (Files.exists(modPath) && Files.isDirectory(modPath)) {
-                    downloadResult.addMessage("Successfully downloaded mod " + modId + " to " + modPath, ResultType.SUCCESS);
-                    downloadResult.setPayload(modPath.toString());
-                } else {
-                    downloadResult.addMessage("SteamCMD completed but mod directory not found: " + modPath, ResultType.FAILED);
-                }
-            } else {
-                downloadResult.addMessage("SteamCMD failed with exit code: " + exitCode, ResultType.FAILED);
-                downloadResult.addMessage("SteamCMD output: " + output, ResultType.FAILED);
-            }
-
-        } catch (IOException e) {
-            downloadResult.addMessage("Failed to execute SteamCMD: " + e.getMessage(), ResultType.FAILED);
-            downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
-        } catch (InterruptedException e) {
-            downloadResult.addMessage("SteamCMD download was interrupted", ResultType.FAILED);
-            downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
-            Thread.currentThread().interrupt();
         }
 
-        return downloadResult;
+        int exitCode = process.waitFor();
+        if (exitCode != 0)
+            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + exitCode);
+
+        return steamInstallPath;
     }
 
-    /**
-     * Downloads multiple Steam Workshop mods sequentially.
-     *
-     * @param modIds List of Steam Workshop mod IDs to download
-     * @return List of results for each mod download
-     */
+    @Override
+    public Result<String> downloadMod(String modId, SaveType saveType) {
+        //TODO: Let's do something smarter.
+        // When the user adds a save profile, ask them what kind of save it is. Torch, Dedicated server, or normal game?
+        //TODO: As a part of the above process, depending on our save mode it will alter our download location.
+        // That makes this entire class pointless, or rather, we need to move it somewhere else since, depending on our save profile, the install path will change.
+        //TODO: To summarize:
+        // 1. Find the type of install the current save is
+        // 2. Download our mods to the correct path based on our install.
+        //     2a. For client installs, this means we need to find libraryfolders.vdf and find our path.
+        //         For win query the registry, for linux... Hope it's in the right place, and if not, have them locate it manually.
+
+        //TODO:
+        // 1. Store our above paths
+        // 2. When we start the app, set a global variable for if the system is linux or windows, and also the windows version.
+        //    We should also replace our stuff in other places we do an OS check with this variable call!
+        // 3. When we download mods, use the appropriate path based on OS and save type.
+        //    3a. When we download mods we need to always check the fully resolved path exists because people can select the wrong save type accidentally.
+        //        If it doesn't, throw a custom exception and error, say they probably set the wrong profile type since the path for that save doesn't exist.
+
+        //TODO: Also use our steamcmd check function to make sure it exists. It should by the time we call this, but let's play it safe.
+
+        //TODO: Our basic code flow path is that we check for the libraryfolders.vdf file in some expected places in either linux or windows, then set a var if we found it or not.
+        // We also need to ask them if they're using it for SE dedicated server, or SE game.
+        // Make sure to tell the user that it'll still work for the other when you choose SE server or Game, but the downloaded mods will go into the right folder for the option they chose.
+        // If the var is false, we want to prompt the user to select where they have SE installed. Also present the SE dedicated server as an option if they're using SEMM to manage server config.
+        // When they select a folder check if the SE.exe or the SE dedicated server.exe are there. If not, say it's a bad selection. Let them continuously try until they choose to quit or they give a valid path.
+        return null;
+    }
+
     @Override
     public List<Result<String>> downloadModList(List<String> modIds) {
-        List<Result<String>> results = new ArrayList<>();
-
-        for (String modId : modIds) {
-            Result<String> result = downloadMod(modId);
-            results.add(result);
-
-            // Add a small delay between downloads to be respectful to Steam servers
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-
-        return results;
+        return List.of();
     }
 
-    /**
-     * Checks if a mod is already downloaded in the workshop content directory.
-     *
-     * @param modId The Steam Workshop mod ID to check
-     * @return true if the mod directory exists, false otherwise
-     */
     @Override
     public boolean isModDownloaded(String modId) {
-        Path modPath = Paths.get(STEAM_WORKSHOP_CONTENT_PATH, STEAM_APP_ID, modId);
-        return Files.exists(modPath) && Files.isDirectory(modPath);
+        return false;
     }
 
-    /**
-     * Gets the path to a downloaded mod.
-     *
-     * @param modId The Steam Workshop mod ID
-     * @return Path to the mod directory if it exists, null otherwise
-     */
     @Override
     public String getModPath(String modId) {
-        Path modPath = Paths.get(STEAM_WORKSHOP_CONTENT_PATH, STEAM_APP_ID, modId);
-        return Files.exists(modPath) ? modPath.toString() : null;
+        return "";
     }
 
-    private Result<Void> validateSteamCmdInstallation() {
-        Result<Void> validationResult = new Result<>();
-
-        File steamCmdFile = new File(STEAMCMD_PATH);
-        if (!steamCmdFile.exists()) {
-            validationResult.addMessage("SteamCMD not found at: " + STEAMCMD_PATH + ". Please install SteamCMD and configure the path in properties.", ResultType.FAILED);
-            return validationResult;
-        }
-
-        if (!steamCmdFile.canExecute()) {
-            validationResult.addMessage("SteamCMD is not executable: " + STEAMCMD_PATH, ResultType.FAILED);
-            return validationResult;
-        }
-
-        validationResult.addMessage("SteamCMD validation successful", ResultType.SUCCESS);
-        return validationResult;
-    }
-
-    private List<String> buildSteamCmdCommand(String modId) {
-        List<String> command = new ArrayList<>();
-        command.add(STEAMCMD_PATH);
-        command.add("+login");
-        command.add("anonymous");
-        command.add("+workshop_download_item");
-        command.add(STEAM_APP_ID);
-        command.add(modId);
-
-        if (STEAMCMD_VALIDATE_DOWNLOADS) {
-            command.add("validate");
-        }
-
-        command.add("+quit");
-
-        return command;
-    }
-
-    private String getSteamWorkshopPath() {
-        //TODO: We can do this better to check OS type.
-        //TODO: We can do the entire path check better by running the command running the command "REG QUERY HKLM\SOFTWARE\Wow6432Node\Valve\Steam /v InstallPath"
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("win")) {
-            // Default Steam installation path on Windows
-            String programFiles = System.getenv("ProgramFiles(x86)");
-            if (programFiles == null) {
-                programFiles = System.getenv("ProgramFiles");
-            }
-            if (programFiles != null) {
-                return Paths.get(programFiles, "Steam", "steamapps", "workshop", "content").toString();
-            }
-            return "C:\\Program Files (x86)\\Steam\\steamapps\\workshop\\content";
-        } else if (osName.contains("mac")) {
-            return Paths.get(System.getProperty("user.home"), "Library", "Application Support", "Steam", "steamapps", "workshop", "content").toString();
-        } else {
-            // Linux
-            return Paths.get(System.getProperty("user.home"), ".steam", "steam", "steamapps", "workshop", "content").toString();
-        }
-    }
-
-    private String getSteamCmdPath() {
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("win")) {
-            return "steamcmd.exe";
-        } else {
-            return "steamcmd";
-        }
+    private boolean isSteamCmdInstalled() {
+        return Files.exists(Path.of(STEAM_CMD_PATH));
     }
 }

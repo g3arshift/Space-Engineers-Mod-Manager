@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ import java.util.List;
  */
 public interface ModDownloadService {
 
-    public Result<String> downloadMod(String modId);
+    public Result<String> downloadMod(String modId, SaveType saveType);
 
     public List<Result<String>> downloadModList(List<String> modIds);
 

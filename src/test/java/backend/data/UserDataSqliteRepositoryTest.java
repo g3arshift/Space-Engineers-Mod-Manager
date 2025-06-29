@@ -484,9 +484,10 @@ public class UserDataSqliteRepositoryTest {
         }
     }
 
+    //TODO: We need checks for save type in all of these.
     @Test
     void shouldSaveNewSaveProfile() {
-        SaveProfile saveProfile = new SaveProfile("Test Profile", "/this/does/not/exist", "BadSave", SpaceEngineersVersion.SPACE_ENGINEERS_TWO);
+        SaveProfile saveProfile = new SaveProfile("Test Profile", "/this/does/not/exist", "BadSave", SpaceEngineersVersion.SPACE_ENGINEERS_TWO, SaveType.GAME);
         Result<Void> saveResult = userDataSqliteRepository.saveSaveProfile(saveProfile);
         assertTrue(saveResult.isSuccess());
         assertEquals(String.format("Successfully saved save profile \"%s\".", saveProfile.getProfileName()), saveResult.getCurrentMessage());
@@ -505,7 +506,7 @@ public class UserDataSqliteRepositoryTest {
     @Test
     void shouldUpdateExistingSaveProfile() {
         //Need to get the rowID of our item with "Select rowid" to make sure we are updating and not deleting/remaking the row
-        SaveProfile saveProfile = new SaveProfile("Test Profile", "/this/does/not/exist", "BadSave", SpaceEngineersVersion.SPACE_ENGINEERS_TWO);
+        SaveProfile saveProfile = new SaveProfile("Test Profile", "/this/does/not/exist", "BadSave", SpaceEngineersVersion.SPACE_ENGINEERS_TWO, SaveType.GAME);
         Result<Void> saveResult = userDataSqliteRepository.saveSaveProfile(saveProfile);
         assertTrue(saveResult.isSuccess());
         int rowID = -1;
@@ -613,7 +614,7 @@ public class UserDataSqliteRepositoryTest {
 
     @Test
     void shouldDeleteSaveProfile() {
-        SaveProfile saveProfile = new SaveProfile("Test Profile", "/this/does/not/exist", "BadSave", SpaceEngineersVersion.SPACE_ENGINEERS_TWO);
+        SaveProfile saveProfile = new SaveProfile("Test Profile", "/this/does/not/exist", "BadSave", SpaceEngineersVersion.SPACE_ENGINEERS_TWO, SaveType.GAME);
         Result<Void> saveResult = userDataSqliteRepository.saveSaveProfile(saveProfile);
         assertTrue(saveResult.isSuccess());
         assertEquals(String.format("Successfully saved save profile \"%s\".", saveProfile.getProfileName()), saveResult.getCurrentMessage());
