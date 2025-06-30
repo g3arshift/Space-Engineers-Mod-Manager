@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
+import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
@@ -37,12 +38,16 @@ public class SteamModDownloadService implements ModDownloadService{
 
     private final String STEAM_CMD_PATH;
 
+    private final SimpleSteamLibraryFoldersVdfParser vdfParser;
+
     public SteamModDownloadService(String steamCmdPath, Properties properties) throws IOException, InterruptedException {
         this.CLIENT_MOD_DOWNLOAD_PATH = getSpaceEngineersInstallPath();
 
         //this.DEDICATED_SERVER_MOD_DOWNLOAD_PATH = getDedicatedServerPath();
         //this.TORCH_SERVER_MOD_DOWNLOAD_PATH = getTorchServerPath();
         this.STEAM_CMD_PATH = steamCmdPath;
+
+        this.vdfParser = new SimpleSteamLibraryFoldersVdfParser();
     }
 
     public String getSpaceEngineersInstallPath() throws IOException, InterruptedException {

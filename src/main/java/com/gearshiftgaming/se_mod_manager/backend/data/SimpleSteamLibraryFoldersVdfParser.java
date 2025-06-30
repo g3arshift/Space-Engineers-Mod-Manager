@@ -36,10 +36,24 @@ public class SimpleSteamLibraryFoldersVdfParser {
         return parseBlock(lines);
     }
 
+
+    /**
+     * Recursively parses a block of lines representing a nested key-value structure,
+     * such as Valve's VDF (Valve Data Format), starting from the current {@code lineIndex}.
+     * <p>
+     * This method expects each block to begin with a key followed by an opening curly brace {@code { },
+     * and to end with a closing curly brace {@code } }. Keys may either map directly to string values,
+     * or to nested blocks. It populates and returns a {@link HashMap} representing the parsed structure.
+     * <p>
+     * This method modifies and relies on a shared {@code lineIndex} field that tracks the current
+     * position in the list of lines across recursive calls.
+     *
+     * @param lines The list of lines to parse from a VDF file.
+     * @return A map representing the parsed structure from the current block.
+     */
     private HashMap<String, Object> parseBlock(List<String> lines) {
         HashMap<String, Object> map = new HashMap<>();
 
-        //This will always skip our first line, since that should just be the word "libraryfolders"
         while (lineIndex < lines.size()) {
             String line = lines.get(lineIndex++).trim();
 
