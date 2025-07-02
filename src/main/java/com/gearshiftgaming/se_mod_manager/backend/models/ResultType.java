@@ -14,5 +14,6 @@ public enum ResultType {
     CANCELLED,
     FAILED,
     WARN,
-    NOT_INITIALIZED
+    NOT_INITIALIZED,
+    IN_PROGRESS
 }

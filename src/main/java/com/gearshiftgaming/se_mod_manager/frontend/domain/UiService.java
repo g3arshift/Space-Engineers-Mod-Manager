@@ -138,7 +138,7 @@ public class UiService {
             modListProfileResult = storageController.loadFirstModListProfile();
             if (modListProfileResult.isFailure()) {
                 log(modListProfileResult);
-                Popup.displaySimpleAlert(String.format("Fatal error!\n%s", modListProfileResult.getCurrentMessage()), MessageType.ERROR);
+                Popup.displaySimpleAlert(String.format("Fatal error!%n%s", modListProfileResult.getCurrentMessage()), MessageType.ERROR);
                 throw new RuntimeException(modListProfileResult.getCurrentMessage());
             }
         }
@@ -198,7 +198,7 @@ public class UiService {
             case WARN -> logger.warn(message);
             case ERROR -> logger.error(message);
             case DEBUG -> logger.debug(message);
-            case UNKNOWN -> logger.error("ERROR UNKNOWN - {}", message);
+            default -> logger.error("ERROR UNKNOWN - {}", message);
         }
     }
 
@@ -392,12 +392,12 @@ public class UiService {
 
             DateTimeFormatter formatter;
             try {
-                if (mod instanceof SteamMod) {
+                if (mod instanceof SteamMod steamMod) {
                     formatter = new DateTimeFormatterBuilder()
                             .parseCaseInsensitive()
                             .appendPattern(MOD_DATE_FORMAT)
                             .toFormatter(Locale.ENGLISH);
-                    ((SteamMod) mod).setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
+                    steamMod.setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
                     infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
                 } else {
                     ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));

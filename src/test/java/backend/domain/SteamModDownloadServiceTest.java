@@ -1,6 +1,7 @@
 package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.domain.SteamModDownloadService;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,5 +27,8 @@ public class SteamModDownloadServiceTest {
     @Test
     void removeMeImJustForDev() throws IOException, InterruptedException {
         steamModDownloadService = new SteamModDownloadService(tempDir.getPath());
+        //TODO: We need a real test profile here with all the fields.
+        SaveProfile saveProfile = new SaveProfile();
+        steamModDownloadService.downloadMod("3329381499")
     }
 }

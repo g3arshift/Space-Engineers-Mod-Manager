@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
 import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfileInfo;
 
 import java.io.*;
@@ -47,10 +48,18 @@ public class SteamModDownloadService implements ModDownloadService {
 
         this.STEAM_CMD_PATH = steamCmdPath;
 
-        this.CLIENT_MOD_DOWNLOAD_ROOT = getSpaceEngineersClientDownloadPath();
+        String clientRootCandidate = getSpaceEngineersClientDownloadPath();
+        //We shouldn't need this on account of the previous step throwing an exception if it doesn't exist, but there's a very rare scenario it can happen in.
+        if (Files.notExists(Path.of(clientRootCandidate)))
+            CLIENT_MOD_DOWNLOAD_ROOT = FALLBACK_DOWNLOAD_ROOT;
+        else
+            CLIENT_MOD_DOWNLOAD_ROOT = clientRootCandidate;
 
-        this.DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = getDedicatedServerRoot();
-        System.out.println("");
+        String dedicatedServerRootCandidate = getDedicatedServerRoot();
+        if (Files.notExists(Path.of(dedicatedServerRootCandidate)))
+            DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = FALLBACK_DOWNLOAD_ROOT;
+        else
+            DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = dedicatedServerRootCandidate;
     }
 
     //For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
@@ -82,6 +91,16 @@ public class SteamModDownloadService implements ModDownloadService {
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
 
+        String steamInstallPath = getSteamInstallPath(process);
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0)
+            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + exitCode);
+
+        return steamInstallPath;
+    }
+
+    private static String getSteamInstallPath(Process process) throws IOException {
         String steamInstallPath = "";
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -96,11 +115,6 @@ public class SteamModDownloadService implements ModDownloadService {
                 }
             }
         }
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0)
-            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + exitCode);
-
         return steamInstallPath;
     }
 
@@ -132,59 +146,87 @@ public class SteamModDownloadService implements ModDownloadService {
     }
 
     @Override
-    public Result<String> downloadMod(String modId, SaveProfileInfo saveProfileInfo) {
-        if(!saveProfileInfo.saveExists()) {
-
+    public Result<Void> downloadMod(String modId, SaveProfileInfo saveProfileInfo) throws IOException, InterruptedException {
+        Result<Void> modDownloadResult = new Result<>();
+        if (!saveProfileInfo.saveExists()) {
+            modDownloadResult.addMessage(String.format("Save does not exist. Cannot download mods for save \"%s\".", saveProfileInfo.getProfileName()), ResultType.FAILED);
+            return modDownloadResult;
         }
+
         String downloadPath = switch (saveProfileInfo.getSaveType()) {
-            case GAME: yield Path.of(CLIENT_MOD_DOWNLOAD_ROOT).resolve(modId).toString();
-            case DEDICATED_SERVER: yield Path.of(DEDICATED_SERVER_MOD_DOWNLOAD_ROOT).resolve("content").resolve("244850").toString();
+            case GAME:
+                yield Path.of(CLIENT_MOD_DOWNLOAD_ROOT)
+                        .resolve(modId)
+                        .toString();
+            case DEDICATED_SERVER:
+                yield Path.of(DEDICATED_SERVER_MOD_DOWNLOAD_ROOT)
+                        .resolve("content")
+                        .resolve("244850")
+                        .resolve(modId)
+                        .toString();
             case TORCH: {
+                //This is two levels up from our save path, then down to /content/244850/modId, which is where we need to save stuff.
                 yield Path.of(saveProfileInfo.getSavePath())
                         .getParent()
                         .getParent()
                         .resolve("content")
                         .resolve("244850")
+                        .resolve(modId)
                         .toString();
             }
         };
 
-        //TODO: For win/linux Torch servers they're saved at: torch/Instance/content/244850/
-        // So when we are downloading mods for a torch save, go up two levels to reach the "instance" folder from the .sbc file, to reach content.
+        //TODO: Investigate if this shouldn't just be a result message instead, since users might want to just continue anyways.
+        //If our save path doesn't exist, it's likely due to the wrong save type being chosen since we check that the .sbc exists.
+        if (Files.notExists(Path.of(downloadPath)))
+            throw new MissingModDownloadLocationException(String.format("Mod download location does not exist where it should for save \"%s\" of save type \"%s\"." +
+                    "This is likely caused by the save having the wrong save type.", saveProfileInfo.getProfileName(), saveProfileInfo.getSaveType()));
 
-        //TODO: We need a fallback location for downloading, let's make a folder called "Downloaded_Mods" in application directory for this.
-        // It should be used when we check if our intended path exists, and if not, throw an error but download anyways. Just need to warn the user it's happened.
+
+        //TODO: When we handle this at higher levels, just handle it like we do scraping many mods/single mods.
         // In this we just want to toss a result. At the higher level, if we download single mods have a diff message than if we DL multiple. If we DL multiple,
         // then return the normal error, but handle it at the high level like we normally do for mod scrape fails for multiple.
+        if (downloadPath.contains(FALLBACK_DOWNLOAD_ROOT))
+            modDownloadResult.addMessage("Download location does not exist, using fallback location instead!", ResultType.WARN);
 
+        modDownloadResult.addMessage(String.format("Starting download of mod: %s", modId), ResultType.IN_PROGRESS);
 
-        //TODO: Let's do something smarter.
-        // When the user adds a save profile, ask them what kind of save it is. Torch, Dedicated server, or normal game?
-        //TODO: As a part of the above process, depending on our save mode it will alter our download location.
-        // That makes this entire class pointless, or rather, we need to move it somewhere else since, depending on our save profile, the install path will change.
-        //TODO: To summarize:
-        // 1. Find the type of install the current save is
-        // 2. Download our mods to the correct path based on our install.
-        //     2a. For client installs, this means we need to find libraryfolders.vdf and find our path.
-        //         For win query the registry, for linux... Hope it's in the right place, and if not, have them locate it manually.
+        ProcessBuilder processBuilder = new ProcessBuilder("./steamcmd.exe",
+                "+force_install_dir",
+                downloadPath,
+                "+login",
+                "anonymous",
+                "+workshop_download_item",
+                "244850",
+                modId,
+                "validate",
+                "+quit");
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
 
-        //TODO:
-        // 1. Store our above paths
-        // 2. When we start the app, set a global variable for if the system is linux or windows, and also the windows version.
-        //    We should also replace our stuff in other places we do an OS check with this variable call!
-        // 3. When we download mods, use the appropriate path based on OS and save type.
-        //    3a. When we download mods we need to always check the fully resolved path exists because people can select the wrong save type accidentally.
-        //        If it doesn't, throw a custom exception and error, say they probably set the wrong profile type since the path for that save doesn't exist.
+        String lastLine = "";
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lastLine = line;
+            }
+        }
 
-        //TODO: Also use our steamcmd check function to make sure it exists. It should by the time we call this, but let's play it safe.
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            modDownloadResult.addMessage("SteamCMD failed with exit code: " + exitCode, ResultType.FAILED);
+            return modDownloadResult;
+        }
 
-        //TODO: Our basic code flow path is that we check for the libraryfolders.vdf file in some expected places in either linux or windows, then set a var if we found it or not.
-        // We also need to ask them if they're using it for SE dedicated server, or SE game.
-        // Make sure to tell the user that it'll still work for the other when you choose SE server or Game, but the downloaded mods will go into the right folder for the option they chose.
-        // If the var is false, we want to prompt the user to select where they have SE installed. Also present the SE dedicated server as an option if they're using SEMM to manage server config.
-        // When they select a folder check if the SE.exe or the SE dedicated server.exe are there. If not, say it's a bad selection. Let them continuously try until they choose to quit or they give a valid path.
-        return null;
+        if (lastLine.isBlank() || !lastLine.toLowerCase().startsWith("success")) {
+            modDownloadResult.addMessage(String.format("Mod %s failed to download. SteamCMD reported: \"%s\".", modId, lastLine), ResultType.FAILED);
+            return modDownloadResult;
+        }
+
+        modDownloadResult.addMessage(String.format("Successfully downloaded mod %s.", modId), ResultType.SUCCESS);
+        return modDownloadResult;
     }
+
 
     @Override
     public List<Result<String>> downloadModList(List<String> modIds) {

@@ -19,6 +19,8 @@ import java.util.ArrayList;
 @Getter
 public class Result<T> {
 
+    //TODO:There's a lot of places we need to change out some types with IN_PROGRESS, especially in the Sqlite backend class
+
     private ResultType type;
 
     @Setter

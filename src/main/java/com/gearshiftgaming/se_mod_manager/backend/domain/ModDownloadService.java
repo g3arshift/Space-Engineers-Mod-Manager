@@ -3,6 +3,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfileInfo;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public interface ModDownloadService {
 
-    public Result<String> downloadMod(String modId, SaveProfileInfo saveProfile);
+    public Result<Void> downloadMod(String modId, SaveProfileInfo saveProfile) throws IOException, InterruptedException;
 
     public List<Result<String>> downloadModList(List<String> modIds);
 
