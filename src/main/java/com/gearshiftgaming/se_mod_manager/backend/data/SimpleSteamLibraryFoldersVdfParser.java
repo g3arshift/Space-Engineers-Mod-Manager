@@ -74,10 +74,8 @@ public class SimpleSteamLibraryFoldersVdfParser {
 
                 lineIndex++; //Consume our left curly brace
                 map.put(key, parseBlock(lines));
-                continue;
-            }
-
-            map.put(tokens[0], tokens[1]);
+            } else
+                map.put(tokens[0], tokens[1]);
         }
         return map;
     }
