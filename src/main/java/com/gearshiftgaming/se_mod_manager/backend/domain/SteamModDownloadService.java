@@ -53,7 +53,6 @@ public class SteamModDownloadService implements ModDownloadService {
         this.CLIENT_MOD_DOWNLOAD_ROOT = getSpaceEngineersClientDownloadPath();
 
         this.DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = getDedicatedServerRoot();
-        System.out.println("");
     }
 
     //For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
