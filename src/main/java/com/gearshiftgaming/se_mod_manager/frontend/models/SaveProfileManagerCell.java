@@ -33,7 +33,7 @@ public class SaveProfileManagerCell extends SaveProfileCell {
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
 			getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(item.getProfileName(), 600));
 
-			if (!item.isSaveExists()) {
+			if (!item.saveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
 				getPROFILE_NAME().setStrikethrough(true);
 			} else {

@@ -34,13 +34,10 @@ public class SteamModDownloadService implements ModDownloadService {
      */
     private final String DEDICATED_SERVER_MOD_DOWNLOAD_ROOT;
 
-    //TODO: For win/linux Torch servers they're saved at: torch/Instance/content/244850/
-    // So when we are downloading mods for a torch save, go up two levels to reach the "instance" folder from the .sbc file, to reach content.
-
-    //TODO: We need a fallback location for downloading, let's make a folder called "Downloaded_Mods" in application directory for this.
-    // It should be used when we check if our intended path exists, and if not, throw an error but download anyways. Just need to warn the user it's happened.
-    // In this we just want to toss a result. At the higher level, if we download single mods have a diff message than if we DL multiple. If we DL multiple,
-    // then return the normal error, but handle it at the high level like we normally do for mod scrape fails for multiple.
+    /**
+     * This is the fallback path for when we cannot find the download directory we want to.
+     */
+    private static final String FALLBACK_DOWNLOAD_ROOT = "./Mod_Downloads";
 
     private final String STEAM_CMD_PATH;
 
@@ -53,6 +50,7 @@ public class SteamModDownloadService implements ModDownloadService {
         this.CLIENT_MOD_DOWNLOAD_ROOT = getSpaceEngineersClientDownloadPath();
 
         this.DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = getDedicatedServerRoot();
+        System.out.println("");
     }
 
     //For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
@@ -135,6 +133,31 @@ public class SteamModDownloadService implements ModDownloadService {
 
     @Override
     public Result<String> downloadMod(String modId, SaveProfileInfo saveProfileInfo) {
+        if(!saveProfileInfo.saveExists()) {
+
+        }
+        String downloadPath = switch (saveProfileInfo.getSaveType()) {
+            case GAME: yield Path.of(CLIENT_MOD_DOWNLOAD_ROOT).resolve(modId).toString();
+            case DEDICATED_SERVER: yield Path.of(DEDICATED_SERVER_MOD_DOWNLOAD_ROOT).resolve("content").resolve("244850").toString();
+            case TORCH: {
+                yield Path.of(saveProfileInfo.getSavePath())
+                        .getParent()
+                        .getParent()
+                        .resolve("content")
+                        .resolve("244850")
+                        .toString();
+            }
+        };
+
+        //TODO: For win/linux Torch servers they're saved at: torch/Instance/content/244850/
+        // So when we are downloading mods for a torch save, go up two levels to reach the "instance" folder from the .sbc file, to reach content.
+
+        //TODO: We need a fallback location for downloading, let's make a folder called "Downloaded_Mods" in application directory for this.
+        // It should be used when we check if our intended path exists, and if not, throw an error but download anyways. Just need to warn the user it's happened.
+        // In this we just want to toss a result. At the higher level, if we download single mods have a diff message than if we DL multiple. If we DL multiple,
+        // then return the normal error, but handle it at the high level like we normally do for mod scrape fails for multiple.
+
+
         //TODO: Let's do something smarter.
         // When the user adds a save profile, ask them what kind of save it is. Torch, Dedicated server, or normal game?
         //TODO: As a part of the above process, depending on our save mode it will alter our download location.

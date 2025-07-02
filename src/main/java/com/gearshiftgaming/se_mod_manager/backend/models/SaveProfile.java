@@ -99,7 +99,7 @@ public class SaveProfile implements  SaveProfileInfo {
         this.lastUsedModListProfileId = saveProfile.getLastUsedModListProfileId();
         this.lastSaveStatus = saveProfile.getLastSaveStatus();
         this.lastSaved = saveProfile.getLastSaved();
-        this.saveExists = saveProfile.isSaveExists();
+        this.saveExists = saveProfile.saveExists();
         this.spaceEngineersVersion = saveProfile.getSpaceEngineersVersion();
         this.saveType = saveProfile.getSaveType();
     }
@@ -166,7 +166,7 @@ public class SaveProfile implements  SaveProfileInfo {
     }
 
     @Override
-    public boolean isSaveExists() {
+    public boolean saveExists() {
         return saveExists;
     }
 

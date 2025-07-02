@@ -27,7 +27,7 @@ public interface SaveProfileInfo {
 
     String getLastSaved();
 
-    boolean isSaveExists();
+    boolean saveExists();
 
     SpaceEngineersVersion getSpaceEngineersVersion();
 

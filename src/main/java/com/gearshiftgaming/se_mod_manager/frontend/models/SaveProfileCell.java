@@ -57,7 +57,7 @@ public abstract class SaveProfileCell extends ListCell<SaveProfile> {
 			getSAVE_NAME().setText("Save name: " + item.getSaveName());
 			getPROFILE_NAME().setText(item.getProfileName());
 
-			if (!item.isSaveExists()) {
+			if (!item.saveExists()) {
 				getPROFILE_NAME().setStyle("-fx-fill: -color-danger-emphasis;");
 				getPROFILE_NAME().setStrikethrough(true);
 			}

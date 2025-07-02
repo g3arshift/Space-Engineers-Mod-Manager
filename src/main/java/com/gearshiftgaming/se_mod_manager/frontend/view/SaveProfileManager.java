@@ -385,7 +385,7 @@ public class SaveProfileManager {
     private void copySave() {
         SaveProfile profileToCopy = saveList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
-            if (profileToCopy.isSaveExists()) {
+            if (profileToCopy.saveExists()) {
                 TwoButtonChoice choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the save \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
                 if (choice == TwoButtonChoice.YES)
                     getCopyThread().start();

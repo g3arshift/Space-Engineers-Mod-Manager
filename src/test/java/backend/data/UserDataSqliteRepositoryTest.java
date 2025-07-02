@@ -83,7 +83,7 @@ public class UserDataSqliteRepositoryTest {
         assertEquals(1, saveProfiles.size());
         assertEquals("None", saveProfiles.getFirst().getProfileName());
         assertEquals("None", saveProfiles.getFirst().getSaveName());
-        assertFalse(saveProfiles.getFirst().isSaveExists());
+        assertFalse(saveProfiles.getFirst().saveExists());
         assertEquals(SaveStatus.NONE, saveProfiles.getFirst().getLastSaveStatus());
     }
 

@@ -897,7 +897,7 @@ public class MasterManager {
     private void applyModlist() throws IOException {
         if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
-            if (currentSaveProfile.isSaveExists()) {
+            if (currentSaveProfile.saveExists()) {
                 TwoButtonChoice overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
                 if (overwriteChoice == TwoButtonChoice.YES) {
                     sortAndApplyModList();
