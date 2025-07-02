@@ -222,7 +222,7 @@ public class SaveServiceTest {
 		SaveProfile testSaveProfile = new SaveProfile();
 		testSaveProfile.setSaveName("test_copy_directory");
 		testSaveProfile.setSavePath(testDir.toString() + "\\Sandbox_config.sbc");
-		testSaveProfile.setLastUsedModListProfileId(testModListProfile.getID());
+		testSaveProfile.setLastUsedModListProfileId(testModListProfile.getId());
 
 		return testSaveProfile;
 	}

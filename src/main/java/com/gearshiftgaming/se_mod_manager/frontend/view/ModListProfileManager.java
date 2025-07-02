@@ -216,7 +216,7 @@ public class ModListProfileManager {
                         Popup.displaySimpleAlert("Failed to save new copy of profile, see log for more information.", MessageType.ERROR);
                         return;
                     }
-                    MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(copiedProfile.getID(), copyProfileName, originalProfileSpaceEngineersVersion));
+                    MOD_LIST_PROFILE_DETAILS.add(MutableTriple.of(copiedProfile.getId(), copyProfileName, originalProfileSpaceEngineersVersion));
 
                     Popup.displaySimpleAlert("Successfully copied mod list!", stage, MessageType.INFO);
                 }
@@ -229,7 +229,7 @@ public class ModListProfileManager {
     @FXML
     private void removeProfile() {
         if (profileList.getSelectionModel().getSelectedItem() != null) {
-            if (UI_SERVICE.getCurrentModListProfile().getID().equals(profileList.getSelectionModel().getSelectedItem().getLeft())) {
+            if (UI_SERVICE.getCurrentModListProfile().getId().equals(profileList.getSelectionModel().getSelectedItem().getLeft())) {
                 Popup.displaySimpleAlert("You cannot remove the active profile.", stage, MessageType.WARN);
             } else {
                 TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete this profile?", stage, MessageType.WARN);
@@ -297,7 +297,7 @@ public class ModListProfileManager {
                         modTableContextBar.getModProfileDropdown().getSelectionModel().selectNext();
                     }
 
-                    if (profileToModify.getLeft().equals(UI_SERVICE.getCurrentModListProfile().getID())) {
+                    if (profileToModify.getLeft().equals(UI_SERVICE.getCurrentModListProfile().getId())) {
                         activeProfileName.setText(profileToModify.getMiddle());
                     }
 

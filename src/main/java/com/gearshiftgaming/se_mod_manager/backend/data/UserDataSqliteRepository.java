@@ -77,7 +77,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         UserConfiguration userConfiguration = new UserConfiguration();
         ModListProfile modListProfile = new ModListProfile("Default", SpaceEngineersVersion.SPACE_ENGINEERS_ONE);
         Result<Void> saveResult = saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
-        userConfiguration.setLastActiveModProfileId(modListProfile.getID());
+        userConfiguration.setLastActiveModProfileId(modListProfile.getId());
         saveResult.addAllMessages(saveUserConfiguration(userConfiguration));
         if (saveResult.isFailure()) {
             log.error("Failed to initialize database data!");
@@ -276,7 +276,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     }
 
     private void loadModList(ModListProfile modListProfile, Result<ModListProfile> modListProfileResult) {
-        Result<List<Mod>> modListResult = loadModListForProfileId(modListProfile.getID());
+        Result<List<Mod>> modListResult = loadModListForProfileId(modListProfile.getId());
         if (modListResult.isFailure()) {
             modListProfileResult.addAllMessages(modListResult);
         }
@@ -411,12 +411,12 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
      */
     @Override
     public Result<Void> saveModListProfile(ModListProfile modListProfile) {
-        Result<Void> modListProfileSaveResult = saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
+        Result<Void> modListProfileSaveResult = saveModListProfileDetails(modListProfile.getId(), modListProfile.getProfileName(), modListProfile.getSpaceEngineersVersion());
         if (modListProfileSaveResult.isFailure()) {
             return modListProfileSaveResult;
         }
 
-        modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getID(), modListProfile.getModList()));
+        modListProfileSaveResult.addAllMessages(updateModListProfileModList(modListProfile.getId(), modListProfile.getModList()));
 
         if (modListProfileSaveResult.isFailure()) {
             modListProfileSaveResult.addMessage("Failed to save mod list profile.", ResultType.FAILED);
@@ -612,7 +612,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                                     :lastSaveStatus,
                                     :lastSaved,
                                     :saveExists,
-                                    :SPACE_ENGINEERS_VERSION,
+                                    :spaceEngineersVersion,
                                     :saveType)
                                 ON CONFLICT (save_profile_id) DO UPDATE SET
                                     profile_name = CASE WHEN save_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
@@ -626,7 +626,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 SQLITE_DB.useTransaction(handle1 -> handle.createUpdate("""
                                 INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
                                     VALUES (1, :saveProfileId);""")
-                        .bind("saveProfileId", saveProfile.getID())
+                        .bind("saveProfileId", saveProfile.getId())
                         .execute());
                 saveSaveProfileResult.addMessage(String.format("Successfully saved save profile \"%s\".", saveProfile.getProfileName()), ResultType.SUCCESS);
             });
@@ -643,7 +643,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         Result<Void> saveResult = new Result<>();
         SQLITE_DB.useTransaction(handle -> {
             int countSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id = :id")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .execute();
             if (countSaveProfilesDeleted != 1) {
                 saveResult.addMessage(String.format("Failed to delete save profile \"%s\".", saveProfile.getProfileName()), ResultType.FAILED);

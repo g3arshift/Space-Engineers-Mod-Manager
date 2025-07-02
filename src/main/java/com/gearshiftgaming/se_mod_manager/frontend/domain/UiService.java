@@ -31,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.MonthDay;
@@ -223,7 +222,7 @@ public class UiService {
     }
 
     public Result<Void> updateModListLoadPriority() {
-        return storageController.updateModListLoadPriority(currentModListProfile.getID(), currentModList);
+        return storageController.updateModListLoadPriority(currentModListProfile.getId(), currentModList);
     }
 
     public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
@@ -231,7 +230,7 @@ public class UiService {
     }
 
     public Result<Void> updateModListActiveMods() {
-        return storageController.updateModListActiveMods(currentModListProfile.getID(), currentModList);
+        return storageController.updateModListActiveMods(currentModListProfile.getId(), currentModList);
     }
 
     public Result<Void> saveModListProfileDetails(Triple<UUID, String, SpaceEngineersVersion> modListProfileDetails) {
@@ -255,7 +254,7 @@ public class UiService {
     }
 
     public Result<Void> updateModListProfileModList() {
-        return storageController.updateModListProfileModList(currentModListProfile.getID(), currentModList);
+        return storageController.updateModListProfileModList(currentModListProfile.getId(), currentModList);
     }
 
     public Result<Void> saveSaveProfile(SaveProfile saveProfile) {
@@ -313,13 +312,13 @@ public class UiService {
         currentModListProfile = modListProfile;
         currentModList = FXCollections.observableArrayList(currentModListProfile.getModList());
         activeModCount.set((int) currentModList.stream().filter(Mod::isActive).count());
-        setResult.addAllMessages(setLastActiveModlistProfile(modListProfile.getID()));
+        setResult.addAllMessages(setLastActiveModlistProfile(modListProfile.getId()));
         return setResult;
     }
 
     public Result<Void> setCurrentSaveProfile(SaveProfile newCurrentSaveProfile) {
         this.currentSaveProfile = newCurrentSaveProfile;
-        return setLastActiveSaveProfile(newCurrentSaveProfile.getID());
+        return setLastActiveSaveProfile(newCurrentSaveProfile.getId());
     }
 
     public void modifyActiveModCount(@NotNull Mod mod) {
@@ -656,8 +655,8 @@ public class UiService {
                     return saveModListResult;
                 }
 
-                modListProfileDetails.add(MutableTriple.of(importModListProfile.getID(), importModListProfile.getProfileName(), importModListProfile.getSPACE_ENGINEERS_VERSION()));
-                importResult.addAllMessages(setCurrentModListProfile(importModListProfile.getID()));
+                modListProfileDetails.add(MutableTriple.of(importModListProfile.getId(), importModListProfile.getProfileName(), importModListProfile.getSpaceEngineersVersion()));
+                importResult.addAllMessages(setCurrentModListProfile(importModListProfile.getId()));
                 if (importResult.isSuccess()) {
                     importResult.addMessage(String.format("Successfully imported mod list profile \"%s\".", importModListProfile.getProfileName()), ResultType.SUCCESS);
                     logPrivate(importResult);
@@ -686,14 +685,14 @@ public class UiService {
 
     public Optional<SaveProfile> getLastActiveSaveProfile() {
         return saveProfiles.stream()
-                .filter(saveProfile -> saveProfile.getID().equals(userConfiguration.getLastActiveSaveProfileId()))
+                .filter(saveProfile -> saveProfile.getId().equals(userConfiguration.getLastActiveSaveProfileId()))
                 .findFirst();
     }
 
     public void setSaveProfileInformationAfterSuccessfullyApplyingModlist() {
-        currentSaveProfile.setLastUsedModListProfileId(currentModListProfile.getID());
+        currentSaveProfile.setLastUsedModListProfileId(currentModListProfile.getId());
         currentSaveProfile.setLastSaveStatus(SaveStatus.SAVED);
-        userConfiguration.setLastModifiedSaveProfileId(currentSaveProfile.getID());
+        userConfiguration.setLastModifiedSaveProfileId(currentSaveProfile.getId());
         Result<Void> saveResult = saveSaveProfile(currentSaveProfile);
         if (saveResult.isFailure()) {
             log(saveResult);

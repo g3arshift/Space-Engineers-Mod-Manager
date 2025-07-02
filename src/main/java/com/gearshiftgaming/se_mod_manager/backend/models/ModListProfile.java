@@ -13,44 +13,43 @@ import java.util.*;
  * <p>
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
-
  */
-@Getter
 @XmlRootElement(name = "modlistProfile")
-public class ModListProfile {
+public class ModListProfile implements ModProfileInfo {
 
     @XmlElement
-    private final UUID ID;
+    private final UUID id;
 
     private String profileName;
 
     private List<Mod> modList = new ArrayList<>();
 
+    //TODO: Replace with a stable value in J25.
     @XmlElement
-    private final SpaceEngineersVersion SPACE_ENGINEERS_VERSION;
+    private final SpaceEngineersVersion spaceEngineersVersion;
 
     private HashMap<String, List<Mod>> conflictTable = new HashMap<>();
 
     public ModListProfile() {
-        ID = UUID.randomUUID();
+        id = UUID.randomUUID();
         profileName = "New Mod Profile";
-        SPACE_ENGINEERS_VERSION = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
+        spaceEngineersVersion = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
     }
 
     public ModListProfile(SpaceEngineersVersion spaceEngineersVersion) {
-        ID = UUID.randomUUID();
+        id = UUID.randomUUID();
         profileName = "New Mod Profile";
-        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
+        this.spaceEngineersVersion = spaceEngineersVersion;
     }
 
     public ModListProfile(String profileName, SpaceEngineersVersion spaceEngineersVersion) {
-        this.SPACE_ENGINEERS_VERSION = spaceEngineersVersion;
-        ID = UUID.randomUUID();
+        this.spaceEngineersVersion = spaceEngineersVersion;
+        id = UUID.randomUUID();
         this.profileName = profileName;
     }
 
     public ModListProfile(ModListProfile modListProfile) {
-        this.ID = UUID.randomUUID();
+        this.id = UUID.randomUUID();
         this.profileName = modListProfile.getProfileName();
         if(modListProfile.getModList() != null){
             for(int i = 0; i < modListProfile.getModList().size(); i++) {
@@ -66,7 +65,7 @@ public class ModListProfile {
                 }
             }
         }
-        SPACE_ENGINEERS_VERSION = modListProfile.getSPACE_ENGINEERS_VERSION();
+        spaceEngineersVersion = modListProfile.getSpaceEngineersVersion();
         conflictTable = new HashMap<>();
         for(Map.Entry<String, List<Mod>> entry : modListProfile.getConflictTable().entrySet()) {
             List<Mod> copiedModConflictList = new ArrayList<>();
@@ -81,10 +80,10 @@ public class ModListProfile {
         }
     }
 
-    public ModListProfile(UUID ID, String profileName, SpaceEngineersVersion SPACE_ENGINEERS_VERSION) {
-        this.ID = ID;
+    public ModListProfile(UUID id, String profileName, SpaceEngineersVersion spaceEngineersVersion) {
+        this.id = id;
         this.profileName = profileName;
-        this.SPACE_ENGINEERS_VERSION = SPACE_ENGINEERS_VERSION;
+        this.spaceEngineersVersion = spaceEngineersVersion;
     }
 
     @XmlAttribute
@@ -102,7 +101,7 @@ public class ModListProfile {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ModListProfile that)) return false;
-		return Objects.equals(ID, that.ID) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
+		return Objects.equals(id, that.id) && Objects.equals(profileName, that.profileName) && Objects.equals(modList, that.modList);
     }
 
     public void generateConflictTable() {
@@ -114,7 +113,32 @@ public class ModListProfile {
     }
 
     @Override
+    public UUID getId() {
+        return id;
+    }
+
+    @Override
+    public String getProfileName() {
+        return profileName;
+    }
+
+    @Override
+    public List<Mod> getModList() {
+        return modList;
+    }
+
+    @Override
+    public SpaceEngineersVersion getSpaceEngineersVersion() {
+        return spaceEngineersVersion;
+    }
+
+    @Override
+    public HashMap<String, List<Mod>> getConflictTable() {
+        return conflictTable;
+    }
+
+    @Override
     public int hashCode() {
-        return Objects.hash(ID, profileName, modList);
+        return Objects.hash(id, profileName, modList);
     }
 }

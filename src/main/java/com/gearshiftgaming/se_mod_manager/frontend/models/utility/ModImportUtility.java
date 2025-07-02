@@ -109,7 +109,7 @@ public class ModImportUtility {
             if (duplicateProfileName) {
                 Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
             } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                UI_SERVICE.getModListProfileDetails().add(MutableTriple.of(newModListProfile.getID(), newProfileName, newModListProfile.getSPACE_ENGINEERS_VERSION()));
+                UI_SERVICE.getModListProfileDetails().add(MutableTriple.of(newModListProfile.getId(), newProfileName, newModListProfile.getSpaceEngineersVersion()));
                 UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
 
                 PROFILE_INPUT_VIEW.getInput().clear();

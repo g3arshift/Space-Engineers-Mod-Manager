@@ -3,7 +3,7 @@ package com.gearshiftgaming.se_mod_manager.backend.domain;
 import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
 import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfileInfo;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -134,7 +134,7 @@ public class SteamModDownloadService implements ModDownloadService {
     }
 
     @Override
-    public Result<String> downloadMod(String modId, SaveType saveType) {
+    public Result<String> downloadMod(String modId, SaveProfileInfo saveProfileInfo) {
         //TODO: Let's do something smarter.
         // When the user adds a save profile, ask them what kind of save it is. Torch, Dedicated server, or normal game?
         //TODO: As a part of the above process, depending on our save mode it will alter our download location.

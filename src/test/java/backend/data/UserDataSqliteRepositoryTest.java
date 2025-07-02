@@ -72,7 +72,7 @@ public class UserDataSqliteRepositoryTest {
                 .list();
         handle.close();
         assertEquals(1, modListProfiles.size());
-        assertEquals(userConfiguration.getLastActiveModProfileId(), modListProfiles.getFirst().getID());
+        assertEquals(userConfiguration.getLastActiveModProfileId(), modListProfiles.getFirst().getId());
         assertEquals("Default", modListProfiles.getFirst().getProfileName());
 
         handle = sqliteDb.open();
@@ -195,7 +195,7 @@ public class UserDataSqliteRepositoryTest {
         ModListProfile foundModListProfile;
         try (Handle handle = sqliteDb.open()) {
             foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE mod_list_profile_id = :id")
-                    .bind("id", modListProfile.getID())
+                    .bind("id", modListProfile.getId())
                     .map(new ModListProfileMapper())
                     .one();
         }
@@ -226,7 +226,7 @@ public class UserDataSqliteRepositoryTest {
         Result<Void> saveResult = userDataSqliteRepository.saveModListProfile(modListProfile);
         assertTrue(saveResult.isSuccess());
 
-        Result<ModListProfile> modListProfileResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getID());
+        Result<ModListProfile> modListProfileResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getId());
         assertTrue(modListProfileResult.isSuccess());
         assertNotNull(modListProfileResult.getPayload());
         assertEquals(modListProfile, modListProfileResult.getPayload());
@@ -244,10 +244,10 @@ public class UserDataSqliteRepositoryTest {
     @Test
     void shouldSaveModListProfileDetails() {
         ModListProfile modListProfile = new ModListProfile("Test profile", SpaceEngineersVersion.SPACE_ENGINEERS_TWO);
-        Result<Void> saveDetailsResult = userDataSqliteRepository.saveModListProfileDetails(modListProfile.getID(), modListProfile.getProfileName(), modListProfile.getSPACE_ENGINEERS_VERSION());
+        Result<Void> saveDetailsResult = userDataSqliteRepository.saveModListProfileDetails(modListProfile.getId(), modListProfile.getProfileName(), modListProfile.getSpaceEngineersVersion());
         assertTrue(saveDetailsResult.isSuccess());
 
-        Result<ModListProfile> profileLoadResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getID());
+        Result<ModListProfile> profileLoadResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getId());
         assertTrue(profileLoadResult.isSuccess());
         assertEquals(modListProfile, profileLoadResult.getPayload());
     }
@@ -278,14 +278,14 @@ public class UserDataSqliteRepositoryTest {
         int rowID = -1;
         try (Handle handle = sqliteDb.open()) {
             rowID = handle.createQuery("SELECT ROWID FROM mod_list_profile WHERE mod_list_profile_id = :id;")
-                    .bind("id", defaultProfile.getID())
+                    .bind("id", defaultProfile.getId())
                     .mapTo(Integer.class)
                     .first();
         }
         assertNotEquals(-1, rowID);
         assertEquals(1, rowID);
 
-        Result<ModListProfile> modifiedProfileResult = userDataSqliteRepository.loadModListProfileById(defaultProfile.getID());
+        Result<ModListProfile> modifiedProfileResult = userDataSqliteRepository.loadModListProfileById(defaultProfile.getId());
         assertTrue(modifiedProfileResult.isSuccess());
         assertNotNull(modifiedProfileResult.getPayload());
         assertEquals(defaultProfile, modifiedProfileResult.getPayload());
@@ -305,7 +305,7 @@ public class UserDataSqliteRepositoryTest {
         assertTrue(saveResult.isSuccess());
 
         modListProfile.getModList().getFirst().setActive(true);
-        Result<Void> updateResult = userDataSqliteRepository.updateModListActiveMods(modListProfile.getID(), modListProfile.getModList());
+        Result<Void> updateResult = userDataSqliteRepository.updateModListActiveMods(modListProfile.getId(), modListProfile.getModList());
         assertTrue(updateResult.isSuccess());
 
         boolean modIsActive;
@@ -314,7 +314,7 @@ public class UserDataSqliteRepositoryTest {
                             SELECT active
                             FROM mod_list_profile_mod
                             WHERE mod_list_profile_id = :profileId AND mod_id = :modId;""")
-                    .bind("profileId", modListProfile.getID())
+                    .bind("profileId", modListProfile.getId())
                     .bind("modId", modOne.getId())
                     .mapTo(Boolean.class)
                     .one();
@@ -338,7 +338,7 @@ public class UserDataSqliteRepositoryTest {
         assertTrue(saveResult.isSuccess());
 
         modListProfile.getModList().getFirst().setLoadPriority(5);
-        Result<Void> updateResult = userDataSqliteRepository.updateModListLoadPriority(modListProfile.getID(), modListProfile.getModList());
+        Result<Void> updateResult = userDataSqliteRepository.updateModListLoadPriority(modListProfile.getId(), modListProfile.getModList());
         assertTrue(updateResult.isSuccess());
 
         int modLoadPriority;
@@ -347,7 +347,7 @@ public class UserDataSqliteRepositoryTest {
                             SELECT load_priority
                             FROM mod_list_profile_mod
                             WHERE mod_list_profile_id = :profileId AND mod_id = :modId;""")
-                    .bind("profileId", modListProfile.getID())
+                    .bind("profileId", modListProfile.getId())
                     .bind("modId", modOne.getId())
                     .mapTo(Integer.class)
                     .one();
@@ -387,10 +387,10 @@ public class UserDataSqliteRepositoryTest {
         modUpdateResult = userDataSqliteRepository.updateModInformation(List.of(modIoMod));
         assertTrue(modUpdateResult.isSuccess());
 
-        Result<Void> modListUpdateResult = userDataSqliteRepository.updateModListProfileModList(modListProfile.getID(), List.of(modOne, modTwo, modIoMod));
+        Result<Void> modListUpdateResult = userDataSqliteRepository.updateModListProfileModList(modListProfile.getId(), List.of(modOne, modTwo, modIoMod));
         assertTrue(modListUpdateResult.isSuccess());
 
-        Result<ModListProfile> loadResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getID());
+        Result<ModListProfile> loadResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getId());
         assertTrue(loadResult.isSuccess());
         assertNotNull(loadResult.getPayload());
         assertEquals(3, loadResult.getPayload().getModList().size());
@@ -429,7 +429,7 @@ public class UserDataSqliteRepositoryTest {
                     .first();
             assertEquals(1, rowID);
         }
-        modListProfile = userDataSqliteRepository.loadModListProfileById(modListProfile.getID()).getPayload();
+        modListProfile = userDataSqliteRepository.loadModListProfileById(modListProfile.getId()).getPayload();
         assertEquals(1, modListProfile.getModList().size());
         Mod retrievedMod = modListProfile.getModList().getFirst();
         assertNotNull(retrievedMod);
@@ -454,7 +454,7 @@ public class UserDataSqliteRepositoryTest {
         modUpdateResult = userDataSqliteRepository.saveModListProfile(modListProfile);
         assertTrue(modUpdateResult.isSuccess());
 
-        Result<ModListProfile> loadResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getID());
+        Result<ModListProfile> loadResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getId());
         assertTrue(loadResult.isSuccess());
         assertEquals(1, loadResult.getPayload().getModList().size());
     }
@@ -495,7 +495,7 @@ public class UserDataSqliteRepositoryTest {
         SaveProfile foundSaveProfile;
         try (Handle handle = sqliteDb.open()) {
             foundSaveProfile = handle.createQuery("SELECT * FROM save_profile WHERE save_profile_id = :id")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .map(new SaveProfileMapper())
                     .one();
         }
@@ -512,7 +512,7 @@ public class UserDataSqliteRepositoryTest {
         int rowID = -1;
         try (Handle handle = sqliteDb.open()) {
             rowID = handle.createQuery("SELECT ROWID FROM save_profile WHERE save_profile_id = :id;")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .mapTo(Integer.class)
                     .first();
         }
@@ -522,7 +522,7 @@ public class UserDataSqliteRepositoryTest {
         SaveProfile foundProfile;
         try (Handle handle = sqliteDb.open()) {
             foundProfile = handle.createQuery("SELECT * FROM save_profile WHERE save_profile_id = :id")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .map(new SaveProfileMapper())
                     .first();
         }
@@ -535,7 +535,7 @@ public class UserDataSqliteRepositoryTest {
 
         try (Handle handle = sqliteDb.open()) {
             foundProfile = handle.createQuery("SELECT * FROM save_profile WHERE save_profile_id = :id")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .map(new SaveProfileMapper())
                     .first();
         }
@@ -545,7 +545,7 @@ public class UserDataSqliteRepositoryTest {
 
         try (Handle handle = sqliteDb.open()) {
             rowID = handle.createQuery("SELECT ROWID FROM save_profile WHERE save_profile_id = :id;")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .mapTo(Integer.class)
                     .first();
         }
@@ -580,7 +580,7 @@ public class UserDataSqliteRepositoryTest {
         for (int i = 0; i < originalModListProfileModList.size(); i++) {
             assertEquals(originalModListProfileModList.get(i), foundModListProfileModList.get(i));
         }
-        assertEquals(originalModListProfile.getSPACE_ENGINEERS_VERSION(), foundProfile.getSPACE_ENGINEERS_VERSION());
+        assertEquals(originalModListProfile.getSpaceEngineersVersion(), foundProfile.getSpaceEngineersVersion());
 
         Files.delete(testFilePath);
     }
@@ -598,10 +598,10 @@ public class UserDataSqliteRepositoryTest {
         assertTrue(saveResult.isSuccess());
         assertEquals(String.format("Successfully saved mod list profile \"%s\".", modListProfile.getProfileName()), saveResult.getCurrentMessage());
 
-        Result<Void> deleteResult = userDataSqliteRepository.deleteModListProfile(modListProfile.getID());
+        Result<Void> deleteResult = userDataSqliteRepository.deleteModListProfile(modListProfile.getId());
         assertTrue(deleteResult.isSuccess());
 
-        Result<ModListProfile> searchResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getID());
+        Result<ModListProfile> searchResult = userDataSqliteRepository.loadModListProfileById(modListProfile.getId());
         assertFalse(searchResult.isSuccess());
         assertNull(searchResult.getPayload());
     }
@@ -625,7 +625,7 @@ public class UserDataSqliteRepositoryTest {
         SaveProfile foundSaveProfile;
         try (Handle handle = sqliteDb.open()) {
             foundSaveProfile = handle.createQuery("SELECT * FROM save_profile WHERE save_profile_id = :id")
-                    .bind("id", saveProfile.getID())
+                    .bind("id", saveProfile.getId())
                     .map(new SaveProfileMapper())
                     .findFirst().orElse(null);
         }

@@ -162,7 +162,7 @@ public class StorageController {
 		if (userConfigResetResult.isSuccess()) {
             UserConfiguration userConfiguration = new UserConfiguration();
             ModListProfile modListProfile = new ModListProfile();
-            userConfiguration.setLastActiveModProfileId(modListProfile.getID());
+            userConfiguration.setLastActiveModProfileId(modListProfile.getId());
             Result<Void> saveResult = USER_DATA_SERVICE.saveCurrentData(userConfiguration, modListProfile, userConfiguration.getSaveProfiles().getFirst());
             if(saveResult.isFailure()) {
                 log.error(saveResult.getCurrentMessage());
