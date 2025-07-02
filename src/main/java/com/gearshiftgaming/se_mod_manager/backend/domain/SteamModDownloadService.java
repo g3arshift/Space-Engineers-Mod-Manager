@@ -4,13 +4,12 @@ import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
 import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
 
@@ -21,53 +20,64 @@ import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERAT
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class SteamModDownloadService implements ModDownloadService{
+public class SteamModDownloadService implements ModDownloadService {
 
+    //TODO: Add Space Engineers 2 support. Lotta values here are hardcoded and need to change based on if a save is SE1 or 2.
     //TODO: When j25 comes out, make these stable values.
-    //TODO: For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
-    // On windows you can find libraryfolders.vdf in Steam_Install_Path/config/libraryfolders.vdf
-    // On Linux this s found in $HOME/.steam/steam/config/libraryfolders.vdf
-    private final String CLIENT_MOD_DOWNLOAD_PATH;
+    /**
+     * This is the root path where mods need to be placed. When downloading a mod, create a folder in this directory equal to the mod ID, and download the mod there.
+     */
+    private final String CLIENT_MOD_DOWNLOAD_ROOT;
 
-    //TODO: For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
-    //TODO: For linux wine SE dedicated server they're saved at: $HOME/.wine/drive_c/users/$USER/AppData/Roaming/SpaceEngineersDedicated/content/244850
-    //private final String DEDICATED_SERVER_MOD_DOWNLOAD_PATH;
+    /**
+     * This is the root path for dedicated server saves. When downloading a mod, append the save name to this, and then /content/244850
+     */
+    private final String DEDICATED_SERVER_MOD_DOWNLOAD_ROOT;
 
     //TODO: For win/linux Torch servers they're saved at: torch/Instance/content/244850/
-    //private final String TORCH_SERVER_MOD_DOWNLOAD_PATH;
+    // So when we are downloading mods for a torch save, go up two levels to reach the "instance" folder from the .sbc file, to reach content.
+
+    //TODO: We need a fallback location for downloading, let's make a folder called "Downloaded_Mods" in application directory for this.
+    // It should be used when we check if our intended path exists, and if not, throw an error but download anyways. Just need to warn the user it's happened.
+    // In this we just want to toss a result. At the higher level, if we download single mods have a diff message than if we DL multiple. If we DL multiple,
+    // then return the normal error, but handle it at the high level like we normally do for mod scrape fails for multiple.
 
     private final String STEAM_CMD_PATH;
 
-    private final SimpleSteamLibraryFoldersVdfParser vdfParser;
+    public SteamModDownloadService(String steamCmdPath) throws IOException, InterruptedException {
+        if (Files.notExists(Path.of(steamCmdPath)))
+            throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
-    public SteamModDownloadService(String steamCmdPath, Properties properties) throws IOException, InterruptedException {
-        this.CLIENT_MOD_DOWNLOAD_PATH = getSpaceEngineersInstallPath();
-
-        //this.DEDICATED_SERVER_MOD_DOWNLOAD_PATH = getDedicatedServerPath();
-        //this.TORCH_SERVER_MOD_DOWNLOAD_PATH = getTorchServerPath();
         this.STEAM_CMD_PATH = steamCmdPath;
 
-        this.vdfParser = new SimpleSteamLibraryFoldersVdfParser();
+        this.CLIENT_MOD_DOWNLOAD_ROOT = getSpaceEngineersClientDownloadPath();
+
+        this.DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = getDedicatedServerRoot();
+        System.out.println("");
     }
 
-    public String getSpaceEngineersInstallPath() throws IOException, InterruptedException {
+    //For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
+    // On windows you can find libraryfolders.vdf in Steam_Install_Path/config/libraryfolders.vdf
+    // On Linux this s found in $HOME/.steam/steam/config/libraryfolders.vdf
+    public String getSpaceEngineersClientDownloadPath() throws IOException, InterruptedException {
         String steamPath;
-        if(OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX) {
-            if(Files.notExists(Path.of("$HOME/.steam/steam/config/libraryfolders.vdf")))
+        if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX) {
+            if (Files.notExists(Path.of("$HOME/.steam/steam/config/libraryfolders.vdf")))
                 throw new SteamInstallMissingException("Unable to find the steam installation path.");
 
             steamPath = "$HOME/.steam/steam/config/libraryfolders.vdf";
         } else {
             steamPath = getWindowsSteamInstallPath();
-            if(steamPath.isBlank())
+            if (steamPath.isBlank())
                 throw new SteamInstallMissingException("Unable to find the steam installation path.");
         }
 
-        //TODO: Find our client path based on the libraryvdf file. Throw an exception if we can't find it.
+        String spaceEngineersInstallLocation = getSpaceEngineersDiskLocation(Path.of(steamPath).
+                resolve("steamapps").
+                resolve("libraryfolders.vdf").
+                toString());
 
-
-        //return + "/steamapps/workshop/content/244850";
-        return null;
+        return spaceEngineersInstallLocation + "/steamapps/workshop/content/244850";
     }
 
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
@@ -95,6 +105,33 @@ public class SteamModDownloadService implements ModDownloadService{
             throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + exitCode);
 
         return steamInstallPath;
+    }
+
+    @SuppressWarnings("unchecked")
+    private String getSpaceEngineersDiskLocation(String filePath) throws IOException {
+        SimpleSteamLibraryFoldersVdfParser vdfParser = new SimpleSteamLibraryFoldersVdfParser();
+        HashMap<String, Object> steamInstallLocations = (HashMap<String, Object>) vdfParser.parseVdf(filePath).get("libraryfolders");
+
+        //Go through every map and submap we have, which represents the heirarchy of a .vdf file, to find the SE 244850 app ID.
+        for (Object diskBlockObj : steamInstallLocations.values()) {
+            if (diskBlockObj instanceof HashMap diskBlock) {
+                Object appsObj = diskBlock.get("apps");
+                if ((appsObj instanceof HashMap<?, ?> appsBlock) && appsBlock.containsKey("244850")) {
+                    return (String) diskBlock.get("path");
+                }
+            }
+        }
+        throw new SpaceEngineersNotFoundException("Could not find the client installation path for Space Engineers. This is most likely due to it not being installed.");
+    }
+
+    //For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
+    //For linux wine SE dedicated server they're saved at: $HOME/.wine/drive_c/users/$USER/AppData/Roaming/SpaceEngineersDedicated/content/244850
+    //This is only the root path, we need to append the save name afterward for it to work correctly.
+    private String getDedicatedServerRoot() {
+        if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX)
+            return "$HOME/.wine/drive_c/users/$USER/AppData/Roaming/SpaceEngineersDedicated/content/244850";
+        else
+            return "%programdata%/SpaceEngineersDedicated";
     }
 
     @Override
