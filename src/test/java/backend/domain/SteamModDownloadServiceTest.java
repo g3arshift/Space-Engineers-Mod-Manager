@@ -2,7 +2,8 @@ package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.domain.SteamModDownloadService;
 import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import org.junit.jupiter.api.BeforeEach;
+import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -26,9 +27,14 @@ public class SteamModDownloadServiceTest {
 
     @Test
     void removeMeImJustForDev() throws IOException, InterruptedException {
-        steamModDownloadService = new SteamModDownloadService(tempDir.getPath());
+        steamModDownloadService = new SteamModDownloadService("./Tools/SteamCMD/steamcmd.exe");
         //TODO: We need a real test profile here with all the fields.
-        SaveProfile saveProfile = new SaveProfile();
-        steamModDownloadService.downloadMod("3329381499")
+        SaveProfile saveProfile = new SaveProfile("pr7",
+                "C:\\Users\\Gear Shift\\AppData\\Roaming\\SpaceEngineers\\Saves\\76561198072313924\\Phoenix Rising Test 7\\Sandbox_config.sbc",
+                "Phoenix Rising Test 7",
+                SpaceEngineersVersion.SPACE_ENGINEERS_ONE,
+                SaveType.GAME);
+        steamModDownloadService.downloadMod("3329381499", saveProfile);
+        //TODO: Verify dedi and torch functionality
     }
 }

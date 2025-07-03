@@ -28,38 +28,38 @@ public class SteamModDownloadService implements ModDownloadService {
     /**
      * This is the root path where mods need to be placed. When downloading a mod, create a folder in this directory equal to the mod ID, and download the mod there.
      */
-    private final String CLIENT_MOD_DOWNLOAD_ROOT;
+    private final String clientModDownloadPath;
 
     /**
      * This is the root path for dedicated server saves. When downloading a mod, append the save name to this, and then /content/244850
      */
-    private final String DEDICATED_SERVER_MOD_DOWNLOAD_ROOT;
+    private final String dedicatedServerDownloadPath;
 
     /**
      * This is the fallback path for when we cannot find the download directory we want to.
      */
     private static final String FALLBACK_DOWNLOAD_ROOT = "./Mod_Downloads";
 
-    private final String STEAM_CMD_PATH;
+    private final String steamCmdExePath;
 
     public SteamModDownloadService(String steamCmdPath) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
-        this.STEAM_CMD_PATH = steamCmdPath;
+        this.steamCmdExePath = steamCmdPath;
 
         String clientRootCandidate = getSpaceEngineersClientDownloadPath();
         //We shouldn't need this on account of the previous step throwing an exception if it doesn't exist, but there's a very rare scenario it can happen in.
         if (Files.notExists(Path.of(clientRootCandidate)))
-            CLIENT_MOD_DOWNLOAD_ROOT = FALLBACK_DOWNLOAD_ROOT;
+            clientModDownloadPath = FALLBACK_DOWNLOAD_ROOT;
         else
-            CLIENT_MOD_DOWNLOAD_ROOT = clientRootCandidate;
+            clientModDownloadPath = clientRootCandidate;
 
         String dedicatedServerRootCandidate = getDedicatedServerRoot();
         if (Files.notExists(Path.of(dedicatedServerRootCandidate)))
-            DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = FALLBACK_DOWNLOAD_ROOT;
+            dedicatedServerDownloadPath = FALLBACK_DOWNLOAD_ROOT;
         else
-            DEDICATED_SERVER_MOD_DOWNLOAD_ROOT = dedicatedServerRootCandidate;
+            dedicatedServerDownloadPath = dedicatedServerRootCandidate;
     }
 
     //For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
@@ -83,7 +83,7 @@ public class SteamModDownloadService implements ModDownloadService {
                 resolve("libraryfolders.vdf").
                 toString());
 
-        return spaceEngineersInstallLocation + "/steamapps/workshop/content/244850";
+        return spaceEngineersInstallLocation;
     }
 
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
@@ -123,7 +123,7 @@ public class SteamModDownloadService implements ModDownloadService {
         SimpleSteamLibraryFoldersVdfParser vdfParser = new SimpleSteamLibraryFoldersVdfParser();
         HashMap<String, Object> steamInstallLocations = (HashMap<String, Object>) vdfParser.parseVdf(filePath).get("libraryfolders");
 
-        //Go through every map and submap we have, which represents the heirarchy of a .vdf file, to find the SE 244850 app ID.
+        //Go through every map and submap we have, which represents the hierarchy of a .vdf file, to find the SE 244850 app ID.
         for (Object diskBlockObj : steamInstallLocations.values()) {
             if (diskBlockObj instanceof HashMap diskBlock) {
                 Object appsObj = diskBlock.get("apps");
@@ -155,32 +155,22 @@ public class SteamModDownloadService implements ModDownloadService {
 
         String downloadPath = switch (saveProfileInfo.getSaveType()) {
             case GAME:
-                yield Path.of(CLIENT_MOD_DOWNLOAD_ROOT)
-                        .resolve(modId)
-                        .toString();
+                yield clientModDownloadPath;
             case DEDICATED_SERVER:
-                yield Path.of(DEDICATED_SERVER_MOD_DOWNLOAD_ROOT)
-                        .resolve("content")
-                        .resolve("244850")
-                        .resolve(modId)
-                        .toString();
+                yield dedicatedServerDownloadPath;
             case TORCH: {
                 //This is two levels up from our save path, then down to /content/244850/modId, which is where we need to save stuff.
                 yield Path.of(saveProfileInfo.getSavePath())
                         .getParent()
                         .getParent()
-                        .resolve("content")
-                        .resolve("244850")
-                        .resolve(modId)
                         .toString();
             }
         };
 
-        //TODO: Investigate if this shouldn't just be a result message instead, since users might want to just continue anyways.
-        //If our save path doesn't exist, it's likely due to the wrong save type being chosen since we check that the .sbc exists.
-        if (Files.notExists(Path.of(downloadPath)))
+        if(Files.notExists(Path.of(downloadPath))) {
             throw new MissingModDownloadLocationException(String.format("Mod download location does not exist where it should for save \"%s\" of save type \"%s\"." +
                     "This is likely caused by the save having the wrong save type.", saveProfileInfo.getProfileName(), saveProfileInfo.getSaveType()));
+        }
 
 
         //TODO: When we handle this at higher levels, just handle it like we do scraping many mods/single mods.
@@ -191,17 +181,12 @@ public class SteamModDownloadService implements ModDownloadService {
 
         modDownloadResult.addMessage(String.format("Starting download of mod: %s", modId), ResultType.IN_PROGRESS);
 
-        ProcessBuilder processBuilder = new ProcessBuilder("./steamcmd.exe",
-                "+force_install_dir",
-                downloadPath,
-                "+login",
-                "anonymous",
-                "+workshop_download_item",
-                "244850",
-                modId,
-                "validate",
-                "+quit");
-        processBuilder.redirectErrorStream(true);
+        ProcessBuilder processBuilder = new ProcessBuilder(steamCmdExePath,
+                "+force_install_dir", downloadPath,
+                "+login", "anonymous",
+                "+workshop_download_item", "244850", modId,
+                "validate", "+quit");
+
         Process process = processBuilder.start();
 
         String lastLine = "";
@@ -209,6 +194,8 @@ public class SteamModDownloadService implements ModDownloadService {
             String line;
             while ((line = reader.readLine()) != null) {
                 lastLine = line;
+                if(lastLine.toLowerCase().startsWith("success"))
+                    break;
             }
         }
 
@@ -218,6 +205,7 @@ public class SteamModDownloadService implements ModDownloadService {
             return modDownloadResult;
         }
 
+        //TODO: We're getting a lot of text after it's done downloading cause of validation. Step through and find something that works properly.
         if (lastLine.isBlank() || !lastLine.toLowerCase().startsWith("success")) {
             modDownloadResult.addMessage(String.format("Mod %s failed to download. SteamCMD reported: \"%s\".", modId, lastLine), ResultType.FAILED);
             return modDownloadResult;
@@ -244,6 +232,6 @@ public class SteamModDownloadService implements ModDownloadService {
     }
 
     private boolean isSteamCmdInstalled() {
-        return Files.exists(Path.of(STEAM_CMD_PATH));
+        return Files.exists(Path.of(steamCmdExePath));
     }
 }
