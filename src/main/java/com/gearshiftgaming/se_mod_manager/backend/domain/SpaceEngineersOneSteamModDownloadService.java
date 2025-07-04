@@ -225,12 +225,6 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         return modDownloadResult;
     }
 
-
-    @Override
-    public List<Result<String>> downloadModList(List<String> modIds) {
-        return List.of();
-    }
-
     @Override
     public boolean isModDownloaded(String modId) {
         return false;

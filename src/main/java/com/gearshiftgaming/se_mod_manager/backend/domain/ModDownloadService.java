@@ -17,8 +17,6 @@ public interface ModDownloadService {
 
     public Result<Void> downloadMod(String modId, SaveProfileInfo saveProfile) throws IOException, InterruptedException;
 
-    public List<Result<String>> downloadModList(List<String> modIds);
-
     public boolean isModDownloaded(String modId);
 
     public String getModPath(String modId);
