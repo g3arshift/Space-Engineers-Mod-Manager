@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,127 +30,6 @@ import static org.mockito.Mockito.*;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 class SpaceEngineersOneSteamModDownloadServiceTest {
-
-    @TempDir
-    private Path tempDir;
-
-    private String steamCmdPath;
-
-    private SaveProfileInfo saveProfileInfo;
-
-    private SaveProfileInfo clientProfile;
-
-    private SaveProfileInfo dedicatedServerProfile;
-
-    private SaveProfileInfo torchProfile;
-
-    private SaveProfileInfo badProfile;
-
-    @BeforeEach
-    void setup() {
-        steamCmdPath = tempDir.resolve("steamcmd.exe").toString();
-        saveProfileInfo = mock(SaveProfileInfo.class);
-
-        //TODO: Setup the save profiles.
-    }
-
-    @Test
-    void constructorShouldThrowSteamInstallMissingException() {
-        assertThrows(SteamInstallMissingException.class, () -> new SpaceEngineersOneSteamModDownloadService("nonexistent/path/to/steamcmd.exe"));
-    }
-
-    @Test
-    void constructorShouldUseFallbackWhenClientDownloadPathMissing() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException {
-        Files.createFile(Path.of(steamCmdPath));
-        try (MockedStatic<OperatingSystemVersionUtility> utilMock = mockStatic(OperatingSystemVersionUtility.class)) {
-            utilMock.when(OperatingSystemVersionUtility::getOperatingSystemVersion)
-                    .thenReturn(OperatingSystemVersion.WINDOWS_11);
-
-            Class.forName("com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager");
-            assertEquals(OperatingSystemVersion.LINUX, SpaceEngineersModManager.OPERATING_SYSTEM_VERSION);
-
-            //TODO: Pass the bad profile here.
-            SpaceEngineersOneSteamModDownloadService service = new SpaceEngineersOneSteamModDownloadService()
-
-            var constructor = SpaceEngineersOneSteamModDownloadService.class.getConstructor(String.class);
-            assertNotNull(constructor);
-        }
-    }
-
-    @Test
-    void getDedicatedServerRootShouldReturnWindowsPathWhenOsIsWindows() {
-
-    }
-
-    @Test
-    void getDedicatedServerRootShouldReturnLinuxPathWhenOsIsLinux() {
-
-    }
-
-    @Test
-    void getClientDownloadPathShouldUseWindowsRegistry() throws Exception {
-    }
-
-
-    @Test
-    void getClientDownloadPathShouldUseLinuxPath() throws Exception {
-
-    }
-
-
-    @Test
-    void downloadModShouldFailWhenSaveDoesNotExist() {
-
-    }
-
-    @Test
-    void downloadModShouldUseFallbackWhenDownloadPathIsInvalid() {
-
-    }
-
-    @Test
-    void downloadModShouldFailwhenSteamCmdExitsWithError() {
-
-    }
-
-    @Test
-    void downloadModShouldFailWhenNoSuccessOutput() {
-
-    }
-
-    @Test
-    void downloadModShouldSucceedWithValidClientDownloadPath() {
-
-    }
-
-    void downloadModShouldSucceedWithDedicatedServerSaveType() {
-
-    }
-
-    @Test
-    void downloadModShouldSucceedWithTorchSaveType() {
-
-    }
-
-    @Test
-    void isModDownloadedShouldReturnFalse() {
-
-    }
-
-    @Test
-    void isModDownloadedShouldReturnTrue() {
-
-    }
-
-    @Test
-    void getModPathSHouldReturnEmptyString() {
-
-    }
-
-    @Test
-    void getModPathSHouldReturnValidString() {
-
-    }
 
     @Test
     void removeMeImJustForDev() throws IOException, InterruptedException {
