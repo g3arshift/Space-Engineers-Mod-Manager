@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
 
@@ -144,7 +145,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         Result<String> downloadPathResult = getModDownloadPath(saveProfileInfo);
         modDownloadResult.addAllMessages(downloadPathResult);
         Path downloadPath = Path.of(downloadPathResult.getPayload());
-        
+
         if (downloadPath.startsWith(FALLBACK_DOWNLOAD_ROOT)) {
             modDownloadResult.addMessage("Download location does not exist, using fallback location instead!", ResultType.WARN);
             if (Files.notExists(downloadPath))
@@ -215,7 +216,8 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         Result<String> modDownloadResult = new Result<>();
         String downloadPath = switch (saveProfileInfo.getSaveType()) {
             case GAME -> clientModDownloadPath;
-            case DEDICATED_SERVER, TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
+            case DEDICATED_SERVER,
+                 TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
                     Path.of(saveProfileInfo.getSavePath())
                             .getParent()
                             .getParent()
@@ -236,8 +238,20 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
     }
 
     @Override
-    public boolean isModDownloaded(String modId) {
-        return false;
+    public boolean isModDownloaded(String modId, SaveProfileInfo saveProfileInfo) throws IOException {
+        Result<String> downloadPathResult = getModDownloadPath(saveProfileInfo);
+        Path modPath = Path.of(downloadPathResult.getPayload());
+
+        if (saveProfileInfo.getSaveType() != SaveType.GAME)
+            modPath = modPath.resolve("content").resolve("244850").resolve(modId);
+
+        boolean isModDownloaded = false;
+        if(Files.exists(modPath)) {
+            try(Stream<Path> entries = Files.list(modPath)) {
+                isModDownloaded = entries.findFirst().isPresent();
+            }
+        }
+        return isModDownloaded;
     }
 
     //TODO: USe this with the conflict check
@@ -247,7 +261,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
     }
 
     @Override
-    public boolean shouldDownloadMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo) {
+    public boolean shouldUpdateMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo) {
         //TODO: If our mod exists, check the size of our download files versus the remote, and if different, download. If same, don't.
         //TODO: This is going to require modifying our scraping to also pull back the file size. Don't need to store it though, just scrape it.
         //TODO: Mod.io stores it too!
