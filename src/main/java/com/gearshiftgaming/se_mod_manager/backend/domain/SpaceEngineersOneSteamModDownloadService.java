@@ -141,33 +141,20 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
             return modDownloadResult;
         }
 
-        String downloadPath = switch (saveProfileInfo.getSaveType()) {
-            case GAME -> clientModDownloadPath;
-            case DEDICATED_SERVER, TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
-                    Path.of(saveProfileInfo.getSavePath())
-                            .getParent()
-                            .getParent()
-                            .getParent()
-                            .toString();
-        };
-
-        if (Files.notExists(Path.of(downloadPath))) {
-            modDownloadResult.addMessage(String.format("Mod download location does not exist where it should for save \"%s\" of save type \"%s\"." +
-                            "This is likely caused by the save having the wrong save type, or the save associated with the save profile not existing in \"%s.\"",
-                    saveProfileInfo.getProfileName(), saveProfileInfo.getSaveType(), downloadPath), ResultType.WARN);
-            downloadPath = FALLBACK_DOWNLOAD_ROOT + saveProfileInfo.getSaveName();
-        }
-
+        Result<String> downloadPathResult = getModDownloadPath(saveProfileInfo);
+        modDownloadResult.addAllMessages(downloadPathResult);
+        Path downloadPath = Path.of(downloadPathResult.getPayload());
+        
         if (downloadPath.startsWith(FALLBACK_DOWNLOAD_ROOT)) {
             modDownloadResult.addMessage("Download location does not exist, using fallback location instead!", ResultType.WARN);
-            if (Files.notExists(Path.of(downloadPath)))
-                Files.createDirectories(Path.of(downloadPath));
+            if (Files.notExists(downloadPath))
+                Files.createDirectories(downloadPath);
         }
 
         modDownloadResult.addMessage(String.format("Starting download of mod: %s", modId), ResultType.IN_PROGRESS);
 
         ProcessBuilder processBuilder = new ProcessBuilder(steamCmdExePath,
-                "+force_install_dir", downloadPath,
+                "+force_install_dir", downloadPath.toString(),
                 "+login", "anonymous",
                 "+workshop_download_item", "244850", modId,
                 "validate", "+quit");
@@ -198,7 +185,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         //If we have a dedicated or torch server, we want to put the files where they belong.
         if (saveProfileInfo.getSaveType() == SaveType.DEDICATED_SERVER || saveProfileInfo.getSaveType() == SaveType.TORCH) {
             //Get the folder location of the downloaded mod
-            String modFileFolderPath = Path.of(downloadPath)
+            String modFileFolderPath = downloadPath
                     .resolve("steamapps")
                     .resolve("workshop")
                     .resolve("content")
@@ -207,20 +194,44 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
                     .toString();
 
             //Move the mod folder to the right directory
-            Path destinationPath = Path.of(downloadPath)
+            Path destinationPath = downloadPath
                     .resolve("content")
                     .resolve("244850");
             Files.createDirectories(destinationPath);
-            Files.move(Path.of(modFileFolderPath), Path.of(downloadPath)
+            Files.move(Path.of(modFileFolderPath), downloadPath
                     .resolve("content")
                     .resolve("244850")
                     .resolve(modId));
 
             //Delete the leftover and unwanted steamapps directory
-            FileUtils.deleteDirectory(new File(Path.of(downloadPath).resolve("steamapps").toString()));
+            FileUtils.deleteDirectory(new File(downloadPath.resolve("steamapps").toString()));
         }
 
         modDownloadResult.addMessage(String.format("Successfully downloaded mod %s.", modId), ResultType.SUCCESS);
+        return modDownloadResult;
+    }
+
+    private Result<String> getModDownloadPath(SaveProfileInfo saveProfileInfo) {
+        Result<String> modDownloadResult = new Result<>();
+        String downloadPath = switch (saveProfileInfo.getSaveType()) {
+            case GAME -> clientModDownloadPath;
+            case DEDICATED_SERVER, TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
+                    Path.of(saveProfileInfo.getSavePath())
+                            .getParent()
+                            .getParent()
+                            .getParent()
+                            .toString();
+        };
+
+        if (Files.notExists(Path.of(downloadPath))) {
+            modDownloadResult.addMessage(String.format("Mod download location does not exist where it should for save \"%s\" of save type \"%s\"." +
+                            "This is likely caused by the save having the wrong save type, or the save associated with the save profile not existing in \"%s.\"",
+                    saveProfileInfo.getProfileName(), saveProfileInfo.getSaveType(), downloadPath), ResultType.WARN);
+            downloadPath = FALLBACK_DOWNLOAD_ROOT + saveProfileInfo.getSaveName();
+        } else
+            modDownloadResult.addMessage("Download path for save found successfully.", ResultType.SUCCESS);
+
+        modDownloadResult.setPayload(downloadPath);
         return modDownloadResult;
     }
 
@@ -229,13 +240,10 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         return false;
     }
 
+    //TODO: USe this with the conflict check
     @Override
-    public String getModPath(String modId) {
-        return "";
-    }
-
-    private boolean isSteamCmdInstalled() {
-        return Files.exists(Path.of(steamCmdExePath));
+    public Result<String> getModLocation(String modId, SaveProfileInfo saveProfileInfo) {
+        return getModDownloadPath(saveProfileInfo);
     }
 
     @Override
