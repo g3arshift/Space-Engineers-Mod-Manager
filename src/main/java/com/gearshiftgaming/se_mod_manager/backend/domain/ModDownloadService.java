@@ -20,4 +20,6 @@ public interface ModDownloadService {
     public boolean isModDownloaded(String modId);
 
     public String getModPath(String modId);
+
+    public boolean shouldDownloadMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo);
 }

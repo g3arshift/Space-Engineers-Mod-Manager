@@ -12,7 +12,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 
 import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
 
@@ -237,5 +236,13 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
     private boolean isSteamCmdInstalled() {
         return Files.exists(Path.of(steamCmdExePath));
+    }
+
+    @Override
+    public boolean shouldDownloadMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo) {
+        //TODO: If our mod exists, check the size of our download files versus the remote, and if different, download. If same, don't.
+        //TODO: This is going to require modifying our scraping to also pull back the file size. Don't need to store it though, just scrape it.
+        //TODO: Mod.io stores it too!
+        return false;
     }
 }
