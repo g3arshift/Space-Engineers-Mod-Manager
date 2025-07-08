@@ -31,6 +31,111 @@ import static org.mockito.Mockito.*;
  */
 class SpaceEngineersOneSteamModDownloadServiceTest {
 
+    @TempDir
+    private Path tempDir;
+
+    private String steamCmdPath;
+
+    private SaveProfileInfo saveProfileInfo;
+
+    @BeforeEach
+    void setup() {
+        steamCmdPath = tempDir.resolve("steamcmd.exe").toString();
+        saveProfileInfo = mock(SaveProfile.class);
+    }
+
+    @Test
+    void constructorShouldThrowSteamInstallMissingException() {
+        assertThrows(SteamInstallMissingException.class, () -> new SpaceEngineersOneSteamModDownloadService("nonexistent/path/to/steamcmd.exe"));
+    }
+
+    @Test
+    void constructorShouldUseFallbackWhenClientDownloadPathMissing() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException {
+        Files.createFile(Path.of(steamCmdPath));
+    }
+
+    @Test
+    void getDedicatedServerRootShouldReturnWindowsPathWhenOsIsWindows() {
+
+    }
+
+    @Test
+    void getDedicatedServerRootShouldReturnLinuxPathWhenOsIsLinux() {
+
+    }
+
+    @Test
+    void getClientDownloadPathShouldUseWindowsRegistry() throws Exception {
+    }
+
+
+    @Test
+    void getClientDownloadPathShouldUseLinuxPath() throws Exception {
+        try (MockedStatic<OperatingSystemVersionUtility> utilMock = mockStatic(OperatingSystemVersionUtility.class)) {
+            utilMock.when(OperatingSystemVersionUtility::getOperatingSystemVersion)
+                    .thenReturn(OperatingSystemVersion.LINUX);
+
+            Class.forName("com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager");
+            assertEquals(OperatingSystemVersion.LINUX, SpaceEngineersModManager.OPERATING_SYSTEM_VERSION);
+            //TODO: Do the stuff in the try
+        }
+    }
+
+
+    @Test
+    void downloadModShouldFailWhenSaveDoesNotExist() {
+
+    }
+
+    @Test
+    void downloadModShouldUseFallbackWhenDownloadPathIsInvalid() {
+
+    }
+
+    @Test
+    void downloadModShouldFailwhenSteamCmdExitsWithError() {
+
+    }
+
+    @Test
+    void downloadModShouldFailWhenNoSuccessOutput() {
+
+    }
+
+    @Test
+    void downloadModShouldSucceedWithValidClientDownloadPath() {
+
+    }
+
+    void downloadModShouldSucceedWithDedicatedServerSaveType() {
+
+    }
+
+    @Test
+    void downloadModShouldSucceedWithTorchSaveType() {
+
+    }
+
+    @Test
+    void isModDownloadedShouldReturnFalse() {
+
+    }
+
+    @Test
+    void isModDownloadedShouldReturnTrue() {
+
+    }
+
+    @Test
+    void getModPathSHouldReturnEmptyString() {
+
+    }
+
+    @Test
+    void getModPathSHouldReturnValidString() {
+
+    }
+
     @Test
     void removeMeImJustForDev() throws IOException, InterruptedException {
         //spaceEngineersOneSteamModDownloadService = new SpaceEngineersOneSteamModDownloadService("./Tools/SteamCMD/steamcmd.exe");
