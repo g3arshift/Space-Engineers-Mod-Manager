@@ -82,10 +82,10 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
         CommandResult commandResult = commandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath"));
         if (!commandResult.wasSuccessful())
-            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + commandResult.getExitCode());
+            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + commandResult.exitCode());
 
         String steamInstallPath = "";
-        for (String line : commandResult.getOutputLines()) {
+        for (String line : commandResult.outputLines()) {
             if (line.contains("InstallPath")) {
                 // Extract the path part (after "REG_SZ")
                 String[] parts = line.trim().split("\\s{2,}");
@@ -153,15 +153,15 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
                 "validate", "+quit"));
 
         if (!commandResult.wasSuccessful()) {
-            modDownloadResult.addMessage("SteamCMD failed with exit code: " + commandResult.getExitCode(), ResultType.FAILED);
+            modDownloadResult.addMessage("SteamCMD failed with exit code: " + commandResult.exitCode(), ResultType.FAILED);
             return modDownloadResult;
         }
 
         //We iterate in reverse and only check the ten most recent lines as it will be generally faster since our success message will always be at the rear.
         String lastLine = "";
-        int commandOutputLinesSize = commandResult.getOutputLines().size() - 1; //This is adjusted by one so we don't keep having to do it elsewhere
+        int commandOutputLinesSize = commandResult.outputLines().size() - 1; //This is adjusted by one so we don't keep having to do it elsewhere
         for (int i = commandOutputLinesSize; i > commandOutputLinesSize - 7; i--) {
-            lastLine = commandResult.getOutputLines().get(i);
+            lastLine = commandResult.outputLines().get(i);
             if (lastLine.toLowerCase().startsWith("success"))
                 break;
         }

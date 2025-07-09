@@ -9,24 +9,7 @@ import java.util.List;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class CommandResult {
-
-    private final int exitCode;
-
-    private final List<String> outputLines;
-
-    public CommandResult(int exitCode, List<String> outputLines) {
-        this.exitCode = exitCode;
-        this.outputLines = outputLines;
-    }
-
-    public int getExitCode() {
-        return exitCode;
-    }
-
-    public List<String> getOutputLines() {
-        return outputLines;
-    }
+public record CommandResult(int exitCode, List<String> outputLines) {
 
     public String getLastLine() {
         return outputLines.isEmpty() ? "" : outputLines.getLast();

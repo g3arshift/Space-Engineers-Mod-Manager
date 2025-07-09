@@ -60,9 +60,9 @@ public class OperatingSystemVersionUtility {
     private static OperatingSystemVersion getWindowsVersion() throws IOException, InterruptedException {
         CommandResult commandResult = COMMAND_RUNNER.runCommand(List.of("cmd.exe", "/c", "ver"));
         if (!commandResult.wasSuccessful())
-            throw new CommandRunnerException("Failed to run command to find operating system version. Exited with code: " + commandResult.getExitCode());
+            throw new CommandRunnerException("Failed to run command to find operating system version. Exited with code: " + commandResult.exitCode());
 
-        return commandResult.getOutputLines().stream()
+        return commandResult.outputLines().stream()
                 .filter(line -> line.contains("Microsoft Windows"))
                 .map(line -> {
                     Matcher m = Pattern.compile("Version \\d+\\.\\d+\\.(\\d+)").matcher(line);
