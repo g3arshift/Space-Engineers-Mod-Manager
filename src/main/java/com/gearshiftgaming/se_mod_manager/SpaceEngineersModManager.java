@@ -29,9 +29,12 @@ public class SpaceEngineersModManager extends Application {
 	static {
         try {
             OPERATING_SYSTEM_VERSION = OperatingSystemVersionUtility.getOperatingSystemVersion();
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
-        }
+        } catch (InterruptedException e){
+			Thread.currentThread().interrupt();
+			throw new RuntimeException("Thread was interrupted", e);
+		}
     }
 
 	public static void main(String[] args) {
