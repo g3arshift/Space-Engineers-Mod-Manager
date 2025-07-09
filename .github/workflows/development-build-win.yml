@@ -60,6 +60,7 @@ jobs:
           }
 
       - name: Check if version is already released
+        if: ${{ env.SHOULD_SKIP != 'true' }}
         id: check-version
         shell: pwsh
         env:
