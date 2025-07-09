@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
@@ -39,11 +40,14 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
     private final String steamCmdExePath;
 
-    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath) throws IOException, InterruptedException {
+    private final CommandRunner commandRunner;
+
+    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
         this.steamCmdExePath = steamCmdPath;
+        this.commandRunner = commandRunner;
 
         String clientRootCandidate = getClientDownloadPath();
         //We shouldn't need this on account of the previous step throwing an exception if it doesn't exist, but there's a very rare scenario it can happen in.
@@ -76,34 +80,22 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
     }
 
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath");
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
+        CommandResult commandResult = commandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath"));
+        if (!commandResult.wasSuccessful())
+            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + commandResult.getExitCode());
 
-        String steamInstallPath = getSteamInstallPath(process);
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0)
-            throw new SteamInstallMissingException("Unable to find the steam installation path. Registry query failed with exit code: " + exitCode);
-
-        return steamInstallPath;
-    }
-
-    private static String getSteamInstallPath(Process process) throws IOException {
         String steamInstallPath = "";
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("InstallPath")) {
-                    // Extract the path part (after "REG_SZ")
-                    String[] parts = line.trim().split("\\s{2,}");
-                    if (parts.length >= 3) {
-                        steamInstallPath = parts[2];
-                    }
+        for (String line : commandResult.getOutputLines()) {
+            if (line.contains("InstallPath")) {
+                // Extract the path part (after "REG_SZ")
+                String[] parts = line.trim().split("\\s{2,}");
+                if (parts.length >= 3) {
+                    steamInstallPath = parts[2];
+                    break;
                 }
             }
         }
+
         return steamInstallPath;
     }
 
@@ -154,28 +146,24 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
         modDownloadResult.addMessage(String.format("Starting download of mod: %s", modId), ResultType.IN_PROGRESS);
 
-        ProcessBuilder processBuilder = new ProcessBuilder(steamCmdExePath,
+        CommandResult commandResult = commandRunner.runCommand(List.of(steamCmdExePath,
                 "+force_install_dir", downloadPath.toString(),
                 "+login", "anonymous",
                 "+workshop_download_item", "244850", modId,
-                "validate", "+quit");
+                "validate", "+quit"));
 
-        Process process = processBuilder.start();
-
-        String lastLine = "";
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lastLine = line;
-                if (lastLine.toLowerCase().startsWith("success"))
-                    break;
-            }
+        if (!commandResult.wasSuccessful()) {
+            modDownloadResult.addMessage("SteamCMD failed with exit code: " + commandResult.getExitCode(), ResultType.FAILED);
+            return modDownloadResult;
         }
 
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            modDownloadResult.addMessage("SteamCMD failed with exit code: " + exitCode, ResultType.FAILED);
-            return modDownloadResult;
+        //We iterate in reverse and only check the ten most recent lines as it will be generally faster since our success message will always be at the rear.
+        String lastLine = "";
+        int commandOutputLinesSize = commandResult.getOutputLines().size() - 1; //This is adjusted by one so we don't keep having to do it elsewhere
+        for (int i = commandOutputLinesSize; i > commandOutputLinesSize - 7; i--) {
+            lastLine = commandResult.getOutputLines().get(i);
+            if (lastLine.toLowerCase().startsWith("success"))
+                break;
         }
 
         if (lastLine.isBlank() || !lastLine.toLowerCase().startsWith("success")) {
@@ -246,8 +234,8 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
             modPath = modPath.resolve("content").resolve("244850").resolve(modId);
 
         boolean isModDownloaded = false;
-        if(Files.exists(modPath)) {
-            try(Stream<Path> entries = Files.list(modPath)) {
+        if (Files.exists(modPath)) {
+            try (Stream<Path> entries = Files.list(modPath)) {
                 isModDownloaded = entries.findFirst().isPresent();
             }
         }

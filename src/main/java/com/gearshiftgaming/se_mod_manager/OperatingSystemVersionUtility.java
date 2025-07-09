@@ -1,10 +1,12 @@
 package com.gearshiftgaming.se_mod_manager;
 
+import com.gearshiftgaming.se_mod_manager.backend.domain.CommandResult;
+import com.gearshiftgaming.se_mod_manager.backend.domain.CommandRunner;
+import com.gearshiftgaming.se_mod_manager.backend.domain.DefaultCommandRunner;
 import com.sun.jna.Platform;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,46 +19,42 @@ import java.util.regex.Pattern;
  */
 public class OperatingSystemVersionUtility {
 
+    private static final CommandRunner COMMAND_RUNNER = new DefaultCommandRunner();
+
     private OperatingSystemVersionUtility() {
     }
 
-    public static OperatingSystemVersion getOperatingSystemVersion() throws IOException {
+    public static OperatingSystemVersion getOperatingSystemVersion() throws IOException, InterruptedException {
         if (isLinux())
             return OperatingSystemVersion.LINUX;
-        else if (isWindows10())
-            return OperatingSystemVersion.WINDOWS_10;
-        else if (isWindows11())
-            return OperatingSystemVersion.WINDOWS_11;
+        else if (Platform.isWindows())
+            return getWindowsVersion();
         else
-            throw new UnknownOperatingSystemException("The operating system is an unknown operating system.");
+            throw new UnknownOperatingSystemException("The operating system is unable to be determined");
     }
 
-    private static boolean isWindows10() throws IOException {
-        Process process = new ProcessBuilder("cmd.exe", "/c", "ver").start();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            return reader.lines()
-                    .filter(line -> line.contains("Microsoft Windows"))
-                    .map(line -> {
-                        Matcher m = Pattern.compile("Version \\d+\\.\\d+\\.(\\d+)").matcher(line);
-                        return m.find() ? Integer.parseInt(m.group(1)) : -1;
-                    })
-                    .filter(buildNumber -> buildNumber != -1)
-                    .anyMatch(buildNumber -> buildNumber <= 22000);
-        }
-    }
+    private static OperatingSystemVersion getWindowsVersion() throws IOException, InterruptedException {
+        CommandResult commandResult = COMMAND_RUNNER.runCommand(List.of("cmd.exe", "/c", "ver"));
+        if (!commandResult.wasSuccessful())
+            throw new CommandRunnerException("Failed to run command to find operating system version. Exited with code: " + commandResult.getExitCode());
 
-    private static boolean isWindows11() throws IOException {
-        Process process = new ProcessBuilder("cmd.exe", "/c", "ver").start();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            return reader.lines()
-                    .filter(line -> line.contains("Microsoft Windows"))
-                    .map(line -> {
-                        Matcher m = Pattern.compile("Version \\d+\\.\\d+\\.(\\d+)").matcher(line);
-                        return m.find() ? Integer.parseInt(m.group(1)) : -1;
-                    })
-                    .filter(buildNumber -> buildNumber != -1)
-                    .anyMatch(buildNumber -> buildNumber >= 22000);
-        }
+        return commandResult.getOutputLines().stream()
+                .filter(line -> line.contains("Microsoft Windows"))
+                .map(line -> {
+                    Matcher m = Pattern.compile("Version \\d+\\.\\d+\\.(\\d+)").matcher(line);
+                    return m.find() ? Integer.parseInt(m.group(1)) : -1;
+                })
+                .filter(buildNumber -> buildNumber != -1 && buildNumber <= 22000)
+                .findFirst()
+                .map(buildNumber -> {
+                    if(buildNumber >= 22000) //Earliest Windows 11 build
+                        return OperatingSystemVersion.WINDOWS_11;
+                    else if (buildNumber >= 10240) //Earliest Windows 10 build
+                        return OperatingSystemVersion.WINDOWS_10;
+                    else
+                        throw new UnknownOperatingSystemException("The operating system is an unknown build number.");
+                })
+                .orElseThrow(() -> new CommandRunnerException("Unable to determine Windows version from command output."));
     }
 
     private static boolean isLinux() {

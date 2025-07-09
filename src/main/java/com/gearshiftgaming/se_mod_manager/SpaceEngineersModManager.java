@@ -29,7 +29,7 @@ public class SpaceEngineersModManager extends Application {
 	static {
         try {
             OPERATING_SYSTEM_VERSION = OperatingSystemVersionUtility.getOperatingSystemVersion();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
