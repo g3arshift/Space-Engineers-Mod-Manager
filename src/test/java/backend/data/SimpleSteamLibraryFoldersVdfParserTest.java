@@ -32,7 +32,7 @@ public class SimpleSteamLibraryFoldersVdfParserTest {
     //FIXME: This test is really, really basic.
     @Test
     void shouldGenerateValidVdfTable() throws IOException {
-        HashMap<String, Object> validTable = steamLibraryFoldersVdfParser.parseVdf(TEST_FILE_PATH);
+        HashMap<String, Object> validTable = (HashMap<String, Object>) steamLibraryFoldersVdfParser.parseVdf(TEST_FILE_PATH);
         assertEquals(1, validTable.size());
         HashMap<String, Object> firstBlock = (HashMap<String, Object>) validTable.get("libraryfolders");
         assertEquals(6, firstBlock.size());

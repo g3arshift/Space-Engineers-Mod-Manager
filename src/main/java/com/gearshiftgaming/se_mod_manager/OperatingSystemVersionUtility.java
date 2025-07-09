@@ -25,7 +25,15 @@ import java.util.regex.Pattern;
  */
 public class OperatingSystemVersionUtility {
 
-    private static final CommandRunner COMMAND_RUNNER = new DefaultCommandRunner();
+    private static final CommandRunner COMMAND_RUNNER;
+
+    static {
+        try {
+            COMMAND_RUNNER = new DefaultCommandRunner();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read properties ", e);
+        }
+    }
 
     private OperatingSystemVersionUtility() {
     }

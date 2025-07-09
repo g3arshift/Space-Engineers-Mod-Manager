@@ -42,12 +42,15 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
     private final CommandRunner commandRunner;
 
-    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner) throws IOException, InterruptedException {
+    private final SimpleSteamLibraryFoldersVdfParser vdfParser;
+
+    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
         this.steamCmdExePath = steamCmdPath;
         this.commandRunner = commandRunner;
+        this.vdfParser = vdfParser;
 
         String clientRootCandidate = getClientDownloadPath();
         //We shouldn't need this on account of the previous step throwing an exception if it doesn't exist, but there's a very rare scenario it can happen in.
@@ -73,10 +76,14 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
                 throw new SteamInstallMissingException("Unable to find the steam installation path.");
         }
 
-        return getSpaceEngineersDiskLocation(Path.of(steamPath).
-                resolve("steamapps").
-                resolve("libraryfolders.vdf").
-                toString());
+        try {
+            return getSpaceEngineersDiskLocation(Path.of(steamPath).
+                    resolve("steamapps").
+                    resolve("libraryfolders.vdf").
+                    toString());
+        } catch (SpaceEngineersNotFoundException e) { //We want to handle it this way so if they don't have the game installed we initialize it so a safe value.
+            return FALLBACK_DOWNLOAD_ROOT;
+        }
     }
 
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
@@ -101,7 +108,6 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
     @SuppressWarnings("unchecked")
     private String getSpaceEngineersDiskLocation(String filePath) throws IOException {
-        SimpleSteamLibraryFoldersVdfParser vdfParser = new SimpleSteamLibraryFoldersVdfParser();
         HashMap<String, Object> steamInstallLocations = (HashMap<String, Object>) vdfParser.parseVdf(filePath).get("libraryfolders");
 
         //Go through every map and submap we have, which represents the hierarchy of a .vdf file, to find the SE 244850 app ID.

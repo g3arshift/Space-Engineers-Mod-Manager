@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
@@ -20,7 +21,7 @@ import java.util.List;
 public class SimpleSteamLibraryFoldersVdfParser {
     private int lineIndex = 0;
 
-    public HashMap<String, Object> parseVdf(String filePath) throws IOException {
+    public Map<String, Object> parseVdf(String filePath) throws IOException {
         if (Files.notExists(Path.of(filePath)))
             throw new FileNotFoundException();
 
