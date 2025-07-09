@@ -46,6 +46,19 @@ jobs:
       - name: Save app version
         run: Add-Content -Path ${env:GITHUB_ENV} -Value "VERSION_INFORMATION=${{ steps.read-properties.outputs.version }}"
 
+      - name: Check if version is nightly build
+        id: check-version-nightly
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Skip if version contains letters
+          if ($env:VERSION_INFORMATION -match '[a-zA-Z]') {
+            echo "Nightly version. Skipping build."
+            echo "SHOULD_SKIP=true" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+            exit 0
+          }
+
       - name: Check if version is already released
         id: check-version
         shell: pwsh
@@ -53,13 +66,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Current Version: $env:VERSION_INFORMATION"
-          
-          # Skip if version contains letters
-          if ($env:VERSION_INFORMATION -match '[a-zA-Z]') {
-            echo "Nightly version. Skipping build."
-            echo "SHOULD_SKIP=true" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
-            exit 0
-          }
           
           $latestTag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
           echo "Latest Tag: $latestTag"
