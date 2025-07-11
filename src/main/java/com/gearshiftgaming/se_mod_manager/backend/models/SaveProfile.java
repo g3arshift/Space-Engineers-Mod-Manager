@@ -58,7 +58,7 @@ public class SaveProfile implements  SaveProfileInfo {
         this.lastSaveStatus = SaveStatus.NONE;
         saveExists = false;
         spaceEngineersVersion = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
-        saveType = SaveType.GAME;
+        saveType = SaveType.CLIENT;
     }
 
     public SaveProfile(String profileName, String savePath, String saveName, SpaceEngineersVersion spaceEngineersVersion, SaveType saveType) {

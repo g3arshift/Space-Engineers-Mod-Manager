@@ -36,7 +36,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
     /**
      * This is the fallback path for when we cannot find the download directory we want to.
      */
-    private static final String FALLBACK_DOWNLOAD_ROOT = "./Mod_Downloads";
+    private final String fallbackDownloadRoot;
 
     private final String steamCmdExePath;
 
@@ -44,25 +44,59 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
     private final SimpleSteamLibraryFoldersVdfParser vdfParser;
 
-    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+    public SpaceEngineersOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
+        this.fallbackDownloadRoot = fallbackDownloadBasePath + "/Mod_Downloads";
         this.steamCmdExePath = steamCmdPath;
         this.commandRunner = commandRunner;
         this.vdfParser = vdfParser;
 
-        String clientRootCandidate = getClientDownloadPath();
-        //We shouldn't need this on account of the previous step throwing an exception if it doesn't exist, but there's a very rare scenario it can happen in.
+        String clientRootCandidate;
+        try {
+            clientRootCandidate = getClientDownloadPath();
+        } catch (SpaceEngineersNotFoundException e) {
+            //We want to handle it this way so if they don't have the game installed we initialize it to a safe value.
+            clientRootCandidate = fallbackDownloadRoot;
+        }
+
+        /* We shouldn't need this on account of the previous step throwing an exception if it doesn't exist,
+        but there's a very rare scenario it can happen in, so let's just be safe. */
         if (Files.notExists(Path.of(clientRootCandidate)))
-            clientModDownloadPath = FALLBACK_DOWNLOAD_ROOT;
+            clientModDownloadPath = fallbackDownloadRoot;
         else
             clientModDownloadPath = clientRootCandidate;
     }
 
-    //For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
-    // On windows you can find libraryfolders.vdf in Steam_Install_Path/config/libraryfolders.vdf
-    // On Linux this s found in $HOME/.steam/steam/config/libraryfolders.vdf
+    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+        if (Files.notExists(Path.of(steamCmdPath)))
+            throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
+
+        this.fallbackDownloadRoot = "./Mod_Downloads";
+        this.steamCmdExePath = steamCmdPath;
+        this.commandRunner = commandRunner;
+        this.vdfParser = vdfParser;
+
+        String clientRootCandidate;
+        try {
+            clientRootCandidate = getClientDownloadPath();
+        } catch (SpaceEngineersNotFoundException e) {
+            //We want to handle it this way so if they don't have the game installed we initialize it to a safe value.
+            clientRootCandidate = fallbackDownloadRoot;
+        }
+
+        /* We shouldn't need this on account of the previous step throwing an exception if it doesn't exist,
+        but there's a very rare scenario it can happen in, so let's just be safe. */
+        if (Files.notExists(Path.of(clientRootCandidate)))
+            clientModDownloadPath = fallbackDownloadRoot;
+        else
+            clientModDownloadPath = clientRootCandidate;
+    }
+
+    /*For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
+     On windows you can find libraryfolders.vdf in Steam_Install_Path/config/libraryfolders.vdf
+     On Linux this s found in $HOME/.steam/steam/config/libraryfolders.vdf*/
     private String getClientDownloadPath() throws IOException, InterruptedException {
         String steamPath;
         if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX) {
@@ -73,17 +107,13 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         } else {
             steamPath = getWindowsSteamInstallPath();
             if (steamPath.isBlank())
-                throw new SteamInstallMissingException("Unable to find the steam installation path.");
+                throw new SpaceEngineersNotFoundException("Unable to find the Space Engineers install path.");
         }
 
-        try {
-            return getSpaceEngineersDiskLocation(Path.of(steamPath).
-                    resolve("steamapps").
-                    resolve("libraryfolders.vdf").
-                    toString());
-        } catch (SpaceEngineersNotFoundException e) { //We want to handle it this way so if they don't have the game installed we initialize it to a safe value.
-            return FALLBACK_DOWNLOAD_ROOT;
-        }
+        return getSpaceEngineersDiskLocation(Path.of(steamPath).
+                resolve("steamapps").
+                resolve("libraryfolders.vdf").
+                toString());
     }
 
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
@@ -140,11 +170,11 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
             return modDownloadResult;
         }
 
-        Result<String> downloadPathResult = getModDownloadPath(saveProfileInfo);
+        Result<Path> downloadPathResult = getModDownloadPath(saveProfileInfo);
         modDownloadResult.addAllMessages(downloadPathResult);
-        Path downloadPath = Path.of(downloadPathResult.getPayload());
+        Path downloadPath = downloadPathResult.getPayload();
 
-        if (downloadPath.startsWith(FALLBACK_DOWNLOAD_ROOT)) {
+        if (downloadPath.startsWith(fallbackDownloadRoot)) {
             modDownloadResult.addMessage("Download location does not exist, using fallback location instead!", ResultType.WARN);
             if (Files.notExists(downloadPath))
                 Files.createDirectories(downloadPath);
@@ -163,7 +193,8 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
             return modDownloadResult;
         }
 
-        //We iterate in reverse and only check the ten most recent lines as it will be generally faster since our success message will always be at the rear.
+        /* We iterate in reverse and only check the ten most recent lines as it will be generally faster
+        since our success message will always be at the rear. */
         String lastLine = "";
         int commandOutputLinesSize = commandResult.outputLines().size() - 1; //This is adjusted by one so we don't keep having to do it elsewhere
         for (int i = commandOutputLinesSize; i > commandOutputLinesSize - 7; i--) {
@@ -206,37 +237,12 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         return modDownloadResult;
     }
 
-    private Result<String> getModDownloadPath(SaveProfileInfo saveProfileInfo) {
-        Result<String> modDownloadResult = new Result<>();
-        String downloadPath = switch (saveProfileInfo.getSaveType()) {
-            case GAME -> clientModDownloadPath;
-            case DEDICATED_SERVER,
-                 TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
-                    Path.of(saveProfileInfo.getSavePath())
-                            .getParent()
-                            .getParent()
-                            .getParent()
-                            .toString();
-        };
-
-        if (Files.notExists(Path.of(downloadPath))) {
-            modDownloadResult.addMessage(String.format("Mod download location does not exist where it should for save \"%s\" of save type \"%s\"." +
-                            "This is likely caused by the save having the wrong save type, or the save associated with the save profile not existing in \"%s.\"",
-                    saveProfileInfo.getProfileName(), saveProfileInfo.getSaveType(), downloadPath), ResultType.WARN);
-            downloadPath = FALLBACK_DOWNLOAD_ROOT + saveProfileInfo.getSaveName();
-        } else
-            modDownloadResult.addMessage("Download path for save found successfully.", ResultType.SUCCESS);
-
-        modDownloadResult.setPayload(downloadPath);
-        return modDownloadResult;
-    }
-
     @Override
     public boolean isModDownloaded(String modId, SaveProfileInfo saveProfileInfo) throws IOException {
-        Result<String> downloadPathResult = getModDownloadPath(saveProfileInfo);
-        Path modPath = Path.of(downloadPathResult.getPayload());
+        Result<Path> downloadPathResult = getModDownloadPath(saveProfileInfo);
+        Path modPath = downloadPathResult.getPayload();
 
-        if (saveProfileInfo.getSaveType() != SaveType.GAME)
+        if (saveProfileInfo.getSaveType() != SaveType.CLIENT)
             modPath = modPath.resolve("content").resolve("244850").resolve(modId);
 
         boolean isModDownloaded = false;
@@ -248,9 +254,9 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         return isModDownloaded;
     }
 
-    //TODO: USe this with the conflict check
+    //TODO: Use this with the conflict check
     @Override
-    public Result<String> getModLocation(String modId, SaveProfileInfo saveProfileInfo) {
+    public Result<Path> getModLocation(String modId, SaveProfileInfo saveProfileInfo) {
         return getModDownloadPath(saveProfileInfo);
     }
 
@@ -260,5 +266,30 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
         //TODO: This is going to require modifying our scraping to also pull back the file size. Don't need to store it though, just scrape it.
         //TODO: Mod.io stores it too!
         return false;
+    }
+
+
+    private Result<Path> getModDownloadPath(SaveProfileInfo saveProfileInfo) {
+        Result<Path> modDownloadResult = new Result<>();
+        Path downloadPath = switch (saveProfileInfo.getSaveType()) {
+            case CLIENT -> Path.of(clientModDownloadPath);
+            case DEDICATED_SERVER,
+                 TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
+                    Path.of(saveProfileInfo.getSavePath())
+                            .getParent()
+                            .getParent()
+                            .getParent();
+        };
+
+        if (Files.notExists(downloadPath)) {
+            modDownloadResult.addMessage(String.format("Mod download location does not exist where it should for save \"%s\" of save type \"%s\"." +
+                            "This is likely caused by the save having the wrong save type, or the save associated with the save profile not existing in \"%s.\"",
+                    saveProfileInfo.getProfileName(), saveProfileInfo.getSaveType(), downloadPath), ResultType.WARN);
+            downloadPath = Path.of(fallbackDownloadRoot).resolve(saveProfileInfo.getSaveName());
+        } else
+            modDownloadResult.addMessage("Download path for save found.", ResultType.SUCCESS);
+
+        modDownloadResult.setPayload(downloadPath);
+        return modDownloadResult;
     }
 }

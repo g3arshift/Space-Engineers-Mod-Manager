@@ -8,7 +8,7 @@ package com.gearshiftgaming.se_mod_manager.backend.models;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public enum SaveType {
-    GAME,
+    CLIENT,
     DEDICATED_SERVER,
     TORCH
 }

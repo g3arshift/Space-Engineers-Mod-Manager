@@ -220,7 +220,7 @@ public class SaveProfileManager {
 
         SaveType newProfileSaveType;
         if (choice == ThreeButtonChoice.LEFT)
-            newProfileSaveType = SaveType.GAME;
+            newProfileSaveType = SaveType.CLIENT;
         else {
             choice = Popup.displayThreeChoiceDialog("Is it for a Torch server or standard Dedicated Server?",
                     stage,
@@ -501,7 +501,7 @@ public class SaveProfileManager {
                         //TODO: This is a terrible hack that does two database saves just to update a UI element and performs terribly. Fix me later.
                         // We realistically should move the fields like the last active mod and save profile to the SEMM_settings.properties file.
                         // OP #66
-                        final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE, SaveType.GAME);
+                        final SaveProfile BAD_SAVE_PROFILE = new SaveProfile("SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", "SHOULD_NOT_BE_DISPLAYED", SpaceEngineersVersion.SPACE_ENGINEERS_ONE, SaveType.CLIENT);
                         SAVE_PROFILES.add(BAD_SAVE_PROFILE);
                         UI_SERVICE.saveSaveProfile(BAD_SAVE_PROFILE);
 

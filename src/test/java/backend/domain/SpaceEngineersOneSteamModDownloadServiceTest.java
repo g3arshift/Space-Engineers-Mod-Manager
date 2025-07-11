@@ -38,6 +38,8 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
     @TempDir
     private Path tempDir;
 
+    private String fallbackPath = "Mod_Downloads";
+
     private Path fakeClientPath;
 
     private Path fakeDedicatedServerPath;
@@ -64,6 +66,7 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
     ArgumentCaptor<List<String>> captor;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setup() throws IOException {
         steamCmdPath = tempDir.resolve("steamcmd.exe").toString();
         saveProfileInfo = mock(SaveProfile.class);
@@ -79,6 +82,13 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
         fakeLibraryFolders = new HashMap<>();
         Map<String, Object> libraryFolders = getFakeLibraryFoldersVdf();
         fakeLibraryFolders.put("libraryfolders", libraryFolders);
+
+        fakeClientPath = tempDir.resolve("Saves")
+                .resolve("12345")
+                .resolve(fakeSaveFolderName)
+                .resolve(fakeSaveName);
+        Files.createDirectories(fakeClientPath);
+        Files.createFile(fakeClientPath.resolve("Sandbox_config.sbc"));
 
         fakeDedicatedServerPath = tempDir.resolve("SpaceEngineersDedicated")
                 .resolve(fakeSaveFolderName)
@@ -111,12 +121,47 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
 
     @Test
     void constructorShouldThrowSteamInstallMissingException() {
-        assertThrows(SteamInstallMissingException.class, () -> new SpaceEngineersOneSteamModDownloadService("nonexistent/path/to/steamcmd.exe", mockedCommandRunner, mockedVdfParser));
+        assertThrows(SteamInstallMissingException.class, () -> new SpaceEngineersOneSteamModDownloadService(tempDir.toString(),
+                "nonexistent/path/to/steamcmd.exe",
+                mockedCommandRunner,
+                mockedVdfParser));
     }
 
     @Test
-    void constructorShouldUseFallbackWhenClientDownloadPathMissing() {
+    void constructorShouldUseFallbackWhenClientDownloadPathMissing() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("")));
 
+        String modId = "123456";
+        Path fakeClientRoot = tempDir.resolve(fallbackPath);
+        when(mockedCommandRunner.runCommand(List.of(steamCmdPath,
+                "+force_install_dir", fakeClientRoot.resolve(fakeSaveName).toString(),
+                "+login", "anonymous",
+                "+workshop_download_item", "244850", modId,
+                "validate", "+quit")))
+                .thenReturn(new CommandResult(0, List.of("Success")));
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
+
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        SpaceEngineersOneSteamModDownloadService se1SteamModDownloadService = new SpaceEngineersOneSteamModDownloadService(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        Result<Void> downloadResult = se1SteamModDownloadService.downloadMod(modId, saveProfileInfo);
+        verify(mockedCommandRunner, times(2)).runCommand(captor.capture());
+        List<String> actualCommand = captor.getValue();
+        assertEquals(fakeClientRoot.resolve(fakeSaveName).toString(), actualCommand.get(2));
+        assertTrue(downloadResult.isSuccess());
     }
 
     @Test
@@ -158,11 +203,15 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
             when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-            SpaceEngineersOneSteamModDownloadService spaceEngineersOneSteamModDownloadService = new SpaceEngineersOneSteamModDownloadService(steamCmdPath, mockedCommandRunner, mockedVdfParser);
+            SpaceEngineersOneSteamModDownloadService se1SteamModDownloadService = new SpaceEngineersOneSteamModDownloadService(tempDir.toString(),
+                    steamCmdPath,
+                    mockedCommandRunner,
+                    mockedVdfParser);
 
-            Result<Void> downloadResult = spaceEngineersOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+            Result<Void> downloadResult = se1SteamModDownloadService.downloadMod(modId, saveProfileInfo);
 
-            verify(mockedCommandRunner, times(2)).runCommand(captor.capture()); //Our bread and butter. Now we can actually verify our args.
+            //Our bread and butter. Now we can actually verify our args.
+            verify(mockedCommandRunner, times(2)).runCommand(captor.capture());
             List<String> actualCommand = captor.getValue();
             assertEquals(String.valueOf(fakeServerRoot), actualCommand.get(2));
             assertTrue(downloadResult.isSuccess());
