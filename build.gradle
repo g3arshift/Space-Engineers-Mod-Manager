@@ -52,8 +52,7 @@ dependencies {
     api libs.org.openjfx.javafx.web
     api libs.org.kordamp.ikonli.ikonli.javafx
     api libs.org.kordamp.ikonli.ikonli.carbonicons.pack
-    api libs.io.github.mkpaz.atlantafx.styles
-    api libs.io.github.mkpaz.atlantafx.base
+    implementation 'io.github.mkpaz:atlantafx-base:2.1.0'
     api libs.org.openjfx.javafx.media
     api libs.net.java.dev.jna.jna
     api libs.net.java.dev.jna.jna.platform
