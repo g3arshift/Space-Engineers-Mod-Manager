@@ -81,7 +81,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
                     resolve("steamapps").
                     resolve("libraryfolders.vdf").
                     toString());
-        } catch (SpaceEngineersNotFoundException e) { //We want to handle it this way so if they don't have the game installed we initialize it so a safe value.
+        } catch (SpaceEngineersNotFoundException e) { //We want to handle it this way so if they don't have the game installed we initialize it to a safe value.
             return FALLBACK_DOWNLOAD_ROOT;
         }
     }
