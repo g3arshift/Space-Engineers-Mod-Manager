@@ -24,7 +24,7 @@ import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERAT
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class SpaceEngineersOneSteamModDownloadService implements ModDownloadService {
+public class SEOneSteamModDownloadService implements ModDownloadService {
 
     //TODO: Add Space Engineers 2 support. Lotta values here are hardcoded and need to change based on if a save is SE1 or 2.
     //TODO: When j25 comes out, make these stable values.
@@ -44,7 +44,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
 
     private final SimpleSteamLibraryFoldersVdfParser vdfParser;
 
-    public SpaceEngineersOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+    public SEOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
@@ -69,7 +69,7 @@ public class SpaceEngineersOneSteamModDownloadService implements ModDownloadServ
             clientModDownloadPath = clientRootCandidate;
     }
 
-    public SpaceEngineersOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+    public SEOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 

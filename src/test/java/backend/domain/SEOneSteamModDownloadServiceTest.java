@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-class SpaceEngineersOneSteamModDownloadServiceTest {
+class SEOneSteamModDownloadServiceTest {
 
     @TempDir
     private Path tempDir;
@@ -121,7 +121,7 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
 
     @Test
     void constructorShouldThrowSteamInstallMissingException() {
-        assertThrows(SteamInstallMissingException.class, () -> new SpaceEngineersOneSteamModDownloadService(tempDir.toString(),
+        assertThrows(SteamInstallMissingException.class, () -> new SEOneSteamModDownloadService(tempDir.toString(),
                 "nonexistent/path/to/steamcmd.exe",
                 mockedCommandRunner,
                 mockedVdfParser));
@@ -152,12 +152,12 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-        SpaceEngineersOneSteamModDownloadService se1SteamModDownloadService = new SpaceEngineersOneSteamModDownloadService(tempDir.toString(),
+        SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
                 steamCmdPath,
                 mockedCommandRunner,
                 mockedVdfParser);
 
-        Result<Void> downloadResult = se1SteamModDownloadService.downloadMod(modId, saveProfileInfo);
+        Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
         verify(mockedCommandRunner, times(2)).runCommand(captor.capture());
         List<String> actualCommand = captor.getValue();
         assertEquals(fakeClientRoot.resolve(fakeSaveName).toString(), actualCommand.get(2));
@@ -203,12 +203,12 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
             when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-            SpaceEngineersOneSteamModDownloadService se1SteamModDownloadService = new SpaceEngineersOneSteamModDownloadService(tempDir.toString(),
+            SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
                     steamCmdPath,
                     mockedCommandRunner,
                     mockedVdfParser);
 
-            Result<Void> downloadResult = se1SteamModDownloadService.downloadMod(modId, saveProfileInfo);
+            Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
 
             //Our bread and butter. Now we can actually verify our args.
             verify(mockedCommandRunner, times(2)).runCommand(captor.capture());
@@ -298,7 +298,7 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
 
     @Test
     void removeMeImJustForDev() throws IOException, InterruptedException {
-        SpaceEngineersOneSteamModDownloadService spaceEngineersOneSteamModDownloadService = new SpaceEngineersOneSteamModDownloadService("./Tools/SteamCMD/steamcmd.exe",
+        SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService("./Tools/SteamCMD/steamcmd.exe",
                 new DefaultCommandRunner(), new SimpleSteamLibraryFoldersVdfParser());
         //TODO: We need a real test profile here with all the fields.
 //        SaveProfile saveProfile = new SaveProfile("pr7",
@@ -319,7 +319,7 @@ class SpaceEngineersOneSteamModDownloadServiceTest {
 //                SpaceEngineersVersion.SPACE_ENGINEERS_ONE,
 //                SaveType.TORCH);
 
-        spaceEngineersOneSteamModDownloadService.downloadMod("3329381499", saveProfile);
+        SEOneSteamModDownloadService.downloadMod("3329381499", saveProfile);
     }
 
 }
