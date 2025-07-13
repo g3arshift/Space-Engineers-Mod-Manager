@@ -35,7 +35,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     /**
      * This is the fallback path for when we cannot find the download directory we want to.
      */
-    private String fallbackDownloadRoot;
+    private final String fallbackDownloadRoot;
 
     private final String steamCmdExePath;
 
@@ -43,29 +43,30 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
 
     private final SimpleSteamLibraryFoldersVdfParser vdfParser;
 
-    public SEOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
-        this(steamCmdPath, commandRunner, vdfParser);
-        this.fallbackDownloadRoot = fallbackDownloadBasePath + "/Mod_Downloads";
-    }
-
-    public SEOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+    private SEOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
-        this.fallbackDownloadRoot = "./Mod_Downloads";
+        this.fallbackDownloadRoot = fallbackDownloadBasePath;
         this.steamCmdExePath = steamCmdPath;
         this.commandRunner = commandRunner;
         this.vdfParser = vdfParser;
 
-        String clientRootCandidate;
-        clientRootCandidate = getClientDownloadPath();
-
+        String clientRootCandidate = getClientDownloadPath();
         /* We shouldn't need this on account of the previous step throwing an exception if it doesn't exist,
         but there's a very rare scenario it can happen in, so let's just be safe. */
         if (Files.notExists(Path.of(clientRootCandidate)) || clientRootCandidate.isBlank())
             clientModDownloadPath = fallbackDownloadRoot;
         else
             clientModDownloadPath = clientRootCandidate;
+    }
+
+    public static SEOneSteamModDownloadService create(String steamCmdExePath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+        return new SEOneSteamModDownloadService("./Mod_Downloads", steamCmdExePath, commandRunner, vdfParser);
+    }
+
+    public static SEOneSteamModDownloadService createWithCustomFallbackRoot(String fallbackDownloadRoot, String steamCmdExePath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+        return new SEOneSteamModDownloadService(fallbackDownloadRoot + "/Mod_Downloads", steamCmdExePath, commandRunner, vdfParser);
     }
 
     /*For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850

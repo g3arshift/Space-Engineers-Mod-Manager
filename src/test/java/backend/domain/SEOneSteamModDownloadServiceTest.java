@@ -6,6 +6,7 @@ import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
 import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
 import com.gearshiftgaming.se_mod_manager.backend.domain.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.domain.SEOneSteamModDownloadService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -121,7 +122,7 @@ class SEOneSteamModDownloadServiceTest {
 
     @Test
     void constructorShouldThrowSteamInstallMissingException() {
-        assertThrows(SteamInstallMissingException.class, () -> new SEOneSteamModDownloadService("nonexistent/path/to/steamcmd.exe",
+        assertThrows(SteamInstallMissingException.class, () -> SEOneSteamModDownloadService.create("nonexistent/path/to/steamcmd.exe",
                 mockedCommandRunner,
                 mockedVdfParser));
     }
@@ -151,15 +152,15 @@ class SEOneSteamModDownloadServiceTest {
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-        SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
                 steamCmdPath,
                 mockedCommandRunner,
                 mockedVdfParser);
 
-        Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
         verify(mockedCommandRunner, times(2)).runCommand(captor.capture());
         List<String> actualCommand = captor.getValue();
-        assertEquals(fakeClientRoot.resolve(fakeSaveName).toString(), actualCommand.get(2));
+        assertEquals(tempDir.resolve("Mod_Downloads").resolve(fakeSaveName).toString(), actualCommand.get(2));
         assertTrue(downloadResult.isSuccess());
     }
 
@@ -197,12 +198,12 @@ class SEOneSteamModDownloadServiceTest {
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
             when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-            SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+            SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
                     steamCmdPath,
                     mockedCommandRunner,
                     mockedVdfParser);
 
-            Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+            Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
 
             //Our bread and butter. Now we can actually verify our args.
             verify(mockedCommandRunner, times(2)).runCommand(captor.capture());
@@ -243,12 +244,12 @@ class SEOneSteamModDownloadServiceTest {
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
             when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-            SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+            SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
                     steamCmdPath,
                     mockedCommandRunner,
                     mockedVdfParser);
 
-            Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+            Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
 
             //Our bread and butter. Now we can actually verify our args.
             verify(mockedCommandRunner, times(1)).runCommand(captor.capture());
@@ -285,15 +286,15 @@ class SEOneSteamModDownloadServiceTest {
             when(saveProfileInfo.saveExists()).thenReturn(true);
             when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
             when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
-            when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
+            when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
             when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-            SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+            SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
                     steamCmdPath,
                     mockedCommandRunner,
                     mockedVdfParser);
 
-            Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+            Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
 
             //Our bread and butter. Now we can actually verify our args.
             verify(mockedCommandRunner, times(1)).runCommand(captor.capture());
@@ -318,28 +319,54 @@ class SEOneSteamModDownloadServiceTest {
         //Mock the behavior we need from our save profile
         when(saveProfileInfo.saveExists()).thenReturn(false);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
-        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-        SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
                 steamCmdPath,
                 mockedCommandRunner,
                 mockedVdfParser);
 
-        Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
         assertTrue(downloadResult.isFailure());
         assertEquals(String.format("Save does not exist. Cannot download mods for save \"%s\".", saveProfileInfo.getProfileName()), downloadResult.getCurrentMessage());
     }
 
     @Test
-    void downloadModShouldUseFallbackWhenDownloadPathIsInvalid() {
+    void downloadModShouldFailWhenSteamCmdExitsWithError() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
-    }
+        String modId = "123456";
+        Path fakeClientRoot = tempDir;
+        //When we run the download command, get a valid result.
+        when(mockedCommandRunner.runCommand(List.of(steamCmdPath,
+                "+force_install_dir", fakeClientRoot.toString(),
+                "+login", "anonymous",
+                "+workshop_download_item", "244850", modId,
+                "validate", "+quit")))
+                .thenReturn(new CommandResult(99, List.of("Test Failure")));
 
-    @Test
-    void downloadModShouldFailWhenSteamCmdExitsWithError() {
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+        assertTrue(downloadResult.isFailure());
+        assertEquals("SteamCMD failed with exit code: 99", downloadResult.getCurrentMessage());
     }
 
     @Test
@@ -381,31 +408,4 @@ class SEOneSteamModDownloadServiceTest {
     void getModPathShouldReturnValidString() {
 
     }
-
-    @Test
-    void removeMeImJustForDev() throws IOException, InterruptedException {
-        SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService("./Tools/SteamCMD/steamcmd.exe",
-                new DefaultCommandRunner(), new SimpleSteamLibraryFoldersVdfParser());
-        //TODO: We need a real test profile here with all the fields.
-//        SaveProfile saveProfile = new SaveProfile("pr7",
-//                "C:\\Users\\Gear Shift\\AppData\\Roaming\\SpaceEngineers\\Saves\\76561198072313924\\Phoenix Rising Test 7\\Sandbox_config.sbc",
-//                "Phoenix Rising Test 7",
-//                SpaceEngineersVersion.SPACE_ENGINEERS_ONE,
-//                SaveType.GAME);
-
-        SaveProfile saveProfile = new SaveProfile("alien planet",
-                "C:\\ProgramData\\SpaceEngineersDedicated\\New Test World\\Saves\\Alien Planet 06-24-2025 18-44-44\\Sandbox_config.sbc",
-                "Alien Planet",
-                SpaceEngineersVersion.SPACE_ENGINEERS_ONE,
-                SaveType.DEDICATED_SERVER);
-
-//        SaveProfile saveProfile = new SaveProfile("STar system",
-//                "G:\\Support\\Torch\\Instance\\Saves\\Star System [PC]\\Sandbox_config.sbc",
-//                "Star System [PC]",
-//                SpaceEngineersVersion.SPACE_ENGINEERS_ONE,
-//                SaveType.TORCH);
-
-        SEOneSteamModDownloadService.downloadMod("3329381499", saveProfile);
-    }
-
 }
