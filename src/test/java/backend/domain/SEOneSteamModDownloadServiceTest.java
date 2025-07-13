@@ -121,14 +121,13 @@ class SEOneSteamModDownloadServiceTest {
 
     @Test
     void constructorShouldThrowSteamInstallMissingException() {
-        assertThrows(SteamInstallMissingException.class, () -> new SEOneSteamModDownloadService(tempDir.toString(),
-                "nonexistent/path/to/steamcmd.exe",
+        assertThrows(SteamInstallMissingException.class, () -> new SEOneSteamModDownloadService("nonexistent/path/to/steamcmd.exe",
                 mockedCommandRunner,
                 mockedVdfParser));
     }
 
     @Test
-    void constructorShouldUseFallbackWhenClientDownloadPathMissing() throws IOException, InterruptedException {
+    void clientPathShouldBeFallbackWhenGameNotInstalled() throws IOException, InterruptedException {
         //When we run the command to get the install location of steam, return our temp dir.
         when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
                 .thenReturn(new CommandResult(0, List.of("")));
@@ -162,11 +161,6 @@ class SEOneSteamModDownloadServiceTest {
         List<String> actualCommand = captor.getValue();
         assertEquals(fakeClientRoot.resolve(fakeSaveName).toString(), actualCommand.get(2));
         assertTrue(downloadResult.isSuccess());
-    }
-
-    @Test
-    void clientPathShouldBeFallbackWhenGameNotInstalled() {
-
     }
 
     @Test
@@ -218,13 +212,50 @@ class SEOneSteamModDownloadServiceTest {
         }
     }
 
+    //This generally won't actually matter, but we add it for verification anyways in case something down the line changes.
     @Test
-    void getDedicatedServerRootShouldReturnLinuxPathWhenOsIsLinux() {
+    void getDedicatedServerRootShouldReturnLinuxPathWhenOsIsLinux() throws ClassNotFoundException, IOException, InterruptedException {
+        try (MockedStatic<OperatingSystemVersionUtility> utilMock = mockStatic(OperatingSystemVersionUtility.class)) {
+            utilMock.when(OperatingSystemVersionUtility::getOperatingSystemVersion)
+                    .thenReturn(OperatingSystemVersion.LINUX);
 
-    }
+            Class.forName("com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager");
+            assertEquals(OperatingSystemVersion.LINUX, SpaceEngineersModManager.OPERATING_SYSTEM_VERSION);
 
-    @Test
-    void getClientDownloadPathShouldUseWindowsRegistry() throws Exception {
+            String modId = "123456";
+            Path fakeServerRoot = fakeDedicatedServerPath.getParent().getParent();
+            Files.createDirectories(fakeServerRoot.resolve("steamapps").resolve("workshop").resolve("content").resolve("244850").resolve(modId));
+            //When we run the download command, get a valid result.
+            when(mockedCommandRunner.runCommand(List.of(steamCmdPath,
+                    "+force_install_dir", fakeServerRoot.toString(),
+                    "+login", "anonymous",
+                    "+workshop_download_item", "244850", modId,
+                    "validate", "+quit")))
+                    .thenReturn(new CommandResult(0, List.of("Success")));
+
+            //When we try to parse a VDF file, normally our steam library, return our fake.
+            when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
+
+            //Mock the behavior we need from our save profile
+            when(saveProfileInfo.saveExists()).thenReturn(true);
+            when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+            when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
+            when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
+            when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+            SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+                    steamCmdPath,
+                    mockedCommandRunner,
+                    mockedVdfParser);
+
+            Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+
+            //Our bread and butter. Now we can actually verify our args.
+            verify(mockedCommandRunner, times(1)).runCommand(captor.capture());
+            List<String> actualCommand = captor.getValue();
+            assertEquals(String.valueOf(fakeServerRoot), actualCommand.get(2));
+            assertTrue(downloadResult.isSuccess());
+        }
     }
 
 
@@ -236,14 +267,69 @@ class SEOneSteamModDownloadServiceTest {
 
             Class.forName("com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager");
             assertEquals(OperatingSystemVersion.LINUX, SpaceEngineersModManager.OPERATING_SYSTEM_VERSION);
-            //TODO: Do the stuff in the try
+
+            String modId = "123456";
+            Path fakeClientRoot = tempDir.resolve(fallbackPath);
+            //When we run the download command, get a valid result.
+            when(mockedCommandRunner.runCommand(List.of(steamCmdPath,
+                    "+force_install_dir", fakeClientRoot.resolve(fakeSaveName).toString(),
+                    "+login", "anonymous",
+                    "+workshop_download_item", "244850", modId,
+                    "validate", "+quit")))
+                    .thenReturn(new CommandResult(0, List.of("Success")));
+
+            //When we try to parse a VDF file, normally our steam library, return our fake.
+            when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
+
+            //Mock the behavior we need from our save profile
+            when(saveProfileInfo.saveExists()).thenReturn(true);
+            when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+            when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+            when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
+            when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+            SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+                    steamCmdPath,
+                    mockedCommandRunner,
+                    mockedVdfParser);
+
+            Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+
+            //Our bread and butter. Now we can actually verify our args.
+            verify(mockedCommandRunner, times(1)).runCommand(captor.capture());
+            List<String> actualCommand = captor.getValue();
+            assertEquals(fakeClientRoot.resolve(fakeSaveName).toString(), actualCommand.get(2));
+            assertTrue(downloadResult.isSuccess());
         }
     }
 
 
     @Test
-    void downloadModShouldFailWhenSaveDoesNotExist() {
+    void downloadModShouldFailWhenSaveDoesNotExist() throws IOException, InterruptedException {
+        String modId = "123456";
 
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
+
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.saveExists()).thenReturn(false);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        SEOneSteamModDownloadService SEOneSteamModDownloadService = new SEOneSteamModDownloadService(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        Result<Void> downloadResult = SEOneSteamModDownloadService.downloadMod(modId, saveProfileInfo);
+        assertTrue(downloadResult.isFailure());
+        assertEquals(String.format("Save does not exist. Cannot download mods for save \"%s\".", saveProfileInfo.getProfileName()), downloadResult.getCurrentMessage());
     }
 
     @Test
@@ -263,17 +349,17 @@ class SEOneSteamModDownloadServiceTest {
 
     @Test
     void downloadModShouldSucceedWithValidClientDownloadPath() {
-
+        //TODO: We are going to have to download steamcmd for this
     }
 
     @Test
     void downloadModShouldSucceedWithDedicatedServerSaveType() {
-
+        //TODO: We are going to have to download steamcmd for this
     }
 
     @Test
     void downloadModShouldSucceedWithTorchSaveType() {
-
+        //TODO: We are going to have to download steamcmd for this
     }
 
     @Test

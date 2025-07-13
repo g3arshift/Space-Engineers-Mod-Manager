@@ -26,7 +26,6 @@ import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERAT
  */
 public class SEOneSteamModDownloadService implements ModDownloadService {
 
-    //TODO: Add Space Engineers 2 support. Lotta values here are hardcoded and need to change based on if a save is SE1 or 2.
     //TODO: When j25 comes out, make these stable values.
     /**
      * This is the root path where mods need to be placed. When downloading a mod, create a folder in this directory equal to the mod ID, and download the mod there.
@@ -36,7 +35,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     /**
      * This is the fallback path for when we cannot find the download directory we want to.
      */
-    private final String fallbackDownloadRoot;
+    private String fallbackDownloadRoot;
 
     private final String steamCmdExePath;
 
@@ -45,28 +44,8 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     private final SimpleSteamLibraryFoldersVdfParser vdfParser;
 
     public SEOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
-        if (Files.notExists(Path.of(steamCmdPath)))
-            throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
-
+        this(steamCmdPath, commandRunner, vdfParser);
         this.fallbackDownloadRoot = fallbackDownloadBasePath + "/Mod_Downloads";
-        this.steamCmdExePath = steamCmdPath;
-        this.commandRunner = commandRunner;
-        this.vdfParser = vdfParser;
-
-        String clientRootCandidate;
-        try {
-            clientRootCandidate = getClientDownloadPath();
-        } catch (SpaceEngineersNotFoundException e) {
-            //We want to handle it this way so if they don't have the game installed we initialize it to a safe value.
-            clientRootCandidate = fallbackDownloadRoot;
-        }
-
-        /* We shouldn't need this on account of the previous step throwing an exception if it doesn't exist,
-        but there's a very rare scenario it can happen in, so let's just be safe. */
-        if (Files.notExists(Path.of(clientRootCandidate)))
-            clientModDownloadPath = fallbackDownloadRoot;
-        else
-            clientModDownloadPath = clientRootCandidate;
     }
 
     public SEOneSteamModDownloadService(String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
@@ -79,16 +58,11 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
         this.vdfParser = vdfParser;
 
         String clientRootCandidate;
-        try {
-            clientRootCandidate = getClientDownloadPath();
-        } catch (SpaceEngineersNotFoundException e) {
-            //We want to handle it this way so if they don't have the game installed we initialize it to a safe value.
-            clientRootCandidate = fallbackDownloadRoot;
-        }
+        clientRootCandidate = getClientDownloadPath();
 
         /* We shouldn't need this on account of the previous step throwing an exception if it doesn't exist,
         but there's a very rare scenario it can happen in, so let's just be safe. */
-        if (Files.notExists(Path.of(clientRootCandidate)))
+        if (Files.notExists(Path.of(clientRootCandidate)) || clientRootCandidate.isBlank())
             clientModDownloadPath = fallbackDownloadRoot;
         else
             clientModDownloadPath = clientRootCandidate;
@@ -101,13 +75,13 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
         String steamPath;
         if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX) {
             if (Files.notExists(Path.of("$HOME/.steam/steam/config/libraryfolders.vdf")))
-                throw new SteamInstallMissingException("Unable to find the steam installation path.");
+                return "";
 
             steamPath = "$HOME/.steam/steam/config/libraryfolders.vdf";
         } else {
             steamPath = getWindowsSteamInstallPath();
             if (steamPath.isBlank())
-                throw new SpaceEngineersNotFoundException("Unable to find the Space Engineers install path.");
+                return "";
         }
 
         return getSpaceEngineersDiskLocation(Path.of(steamPath).
@@ -149,7 +123,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
                 }
             }
         }
-        throw new SpaceEngineersNotFoundException("Could not find the client installation path for Space Engineers. This is most likely due to it not being installed.");
+        return "";
     }
 
     //For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
