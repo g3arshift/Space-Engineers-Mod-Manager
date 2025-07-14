@@ -1,9 +1,11 @@
 package com.gearshiftgaming.se_mod_manager;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowTitleBarColorUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowTitleBarColorUtility;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;

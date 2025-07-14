@@ -1,10 +1,24 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.SaveProfileManagerCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.savelistmanager.SaveProfileManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.SaveInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.ThreeButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowDressingUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowPositionUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowTitleBarColorUtility;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -385,7 +399,7 @@ public class SaveProfileManager {
     private void copySave() {
         SaveProfile profileToCopy = saveList.getSelectionModel().getSelectedItem();
         if (profileToCopy != null) {
-            if (profileToCopy.saveExists()) {
+            if (profileToCopy.isSaveExists()) {
                 TwoButtonChoice choice = Popup.displayYesNoDialog(String.format("Are you sure you want to copy the save \"%s\"", profileToCopy.getProfileName()), stage, MessageType.WARN);
                 if (choice == TwoButtonChoice.YES)
                     getCopyThread().start();

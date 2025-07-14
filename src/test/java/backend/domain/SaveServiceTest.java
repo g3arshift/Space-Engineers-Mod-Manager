@@ -1,13 +1,13 @@
 package backend.domain;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.SandboxService;
-import com.gearshiftgaming.se_mod_manager.backend.domain.SaveService;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.data.sandbox.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.save.SaveFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.domain.sandbox.SandboxService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.save.SaveService;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,10 +1,15 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models.utility;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.SimpleInput;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutableTriple;
 

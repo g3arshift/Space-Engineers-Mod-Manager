@@ -1,11 +1,15 @@
 package controller;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.data.sandbox.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.sandbox.SandboxConfigRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.save.SaveRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.user.UserDataRepository;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.user.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
-import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
@@ -13,7 +17,6 @@ import java.io.File;
 import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
 
 public class StorageControllerTest {
     private SandboxConfigRepository sandboxConfigRepository;

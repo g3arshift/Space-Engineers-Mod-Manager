@@ -1,17 +1,26 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModType;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.LogCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModImportType;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModNameCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModTableRowFactory;
+import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.LogCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.ModImportType;
+import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.ModNameCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.ModTableRowFactory;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ThreeButtonChoice;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.GeneralFileInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.SaveInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.ThreeButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
@@ -897,7 +906,7 @@ public class MasterManager {
     private void applyModlist() throws IOException {
         if (!UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
             SaveProfile currentSaveProfile = UI_SERVICE.getCurrentSaveProfile();
-            if (currentSaveProfile.saveExists()) {
+            if (currentSaveProfile.isSaveExists()) {
                 TwoButtonChoice overwriteChoice = Popup.displayYesNoDialog("Are you sure you want to apply this modlist to the current save? The modlist in the save will be overwritten.", STAGE, MessageType.WARN);
                 if (overwriteChoice == TwoButtonChoice.YES) {
                     sortAndApplyModList();

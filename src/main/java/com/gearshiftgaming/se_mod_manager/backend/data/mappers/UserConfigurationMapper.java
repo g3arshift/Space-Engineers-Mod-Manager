@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.UserConfiguration;
+import com.gearshiftgaming.se_mod_manager.backend.models.user.UserConfiguration;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 

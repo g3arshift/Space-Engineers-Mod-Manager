@@ -1,7 +1,7 @@
 package backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigFileRepository;
-import com.gearshiftgaming.se_mod_manager.backend.data.SandboxConfigRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.sandbox.SandboxConfigFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.sandbox.SandboxConfigRepository;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

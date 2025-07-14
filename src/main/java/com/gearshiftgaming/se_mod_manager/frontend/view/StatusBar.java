@@ -1,6 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

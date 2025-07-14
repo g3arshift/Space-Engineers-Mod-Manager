@@ -1,11 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view.helper;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;

@@ -1,11 +1,20 @@
 package backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.SQLiteConnectionFactory;
-import com.gearshiftgaming.se_mod_manager.backend.data.UserDataSqliteRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.user.SQLiteConnectionFactory;
+import com.gearshiftgaming.se_mod_manager.backend.data.user.UserDataSqliteRepository;
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.ModListProfileMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.SaveProfileMapper;
 import com.gearshiftgaming.se_mod_manager.backend.data.mappers.UserConfigurationMapper;
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.SpaceEngineersVersion;
+import com.gearshiftgaming.se_mod_manager.backend.models.user.UserConfiguration;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
@@ -21,7 +30,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserDataSqliteRepositoryTest {
+class UserDataSqliteRepositoryTest {
     private UserDataSqliteRepository userDataSqliteRepository;
     Jdbi sqliteDb;
     private final String DATABASE_PATH = "src/test/resources/DataStorage/TestData.db";
@@ -83,7 +92,7 @@ public class UserDataSqliteRepositoryTest {
         assertEquals(1, saveProfiles.size());
         assertEquals("None", saveProfiles.getFirst().getProfileName());
         assertEquals("None", saveProfiles.getFirst().getSaveName());
-        assertFalse(saveProfiles.getFirst().saveExists());
+        assertFalse(saveProfiles.getFirst().isSaveExists());
         assertEquals(SaveStatus.NONE, saveProfiles.getFirst().getLastSaveStatus());
     }
 

@@ -1,12 +1,20 @@
 package com.gearshiftgaming.se_mod_manager.frontend.domain;
 
 import atlantafx.base.theme.Theme;
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModType;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.*;
+import com.gearshiftgaming.se_mod_manager.backend.models.user.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.controller.ModInfoController;
 import com.gearshiftgaming.se_mod_manager.controller.StorageController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;

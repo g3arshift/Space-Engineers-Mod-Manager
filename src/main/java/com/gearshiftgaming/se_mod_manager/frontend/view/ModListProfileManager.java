@@ -1,15 +1,22 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.MessageType;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.SpaceEngineersVersion;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.ModListManagerCell;
+import com.gearshiftgaming.se_mod_manager.frontend.models.modlistmanager.ModListManagerCell;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.TextTruncationUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
+import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.ThreeButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowDressingUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowPositionUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowTitleBarColorUtility;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

@@ -1,12 +1,10 @@
 package com.gearshiftgaming.se_mod_manager.controller;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModInfoService;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModType;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.backend.data.modlist.ModlistRepository;
+import com.gearshiftgaming.se_mod_manager.backend.domain.mod.ModInfoService;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 
 import java.io.File;
 import java.io.IOException;

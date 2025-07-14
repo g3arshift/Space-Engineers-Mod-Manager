@@ -1,7 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.ModListProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
+import com.gearshiftgaming.se_mod_manager.backend.models.modlist.ModListProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.SpaceEngineersVersion;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 

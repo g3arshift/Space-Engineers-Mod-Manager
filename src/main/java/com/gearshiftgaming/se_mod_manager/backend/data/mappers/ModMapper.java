@@ -1,9 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
-import com.gearshiftgaming.se_mod_manager.backend.models.Mod;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 

@@ -1,11 +1,14 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
-import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
+import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.user.UserConfiguration;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.Popup;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TwoButtonChoice;
-import com.gearshiftgaming.se_mod_manager.frontend.view.utility.WindowDressingUtility;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
+import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
+import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowDressingUtility;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;

@@ -1,7 +1,7 @@
 package frontend;
 
 import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
-import com.gearshiftgaming.se_mod_manager.backend.models.LogMessage;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.LogMessage;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

@@ -1,6 +1,6 @@
 package backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.SaveFileRepository;
+import com.gearshiftgaming.se_mod_manager.backend.data.save.SaveFileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

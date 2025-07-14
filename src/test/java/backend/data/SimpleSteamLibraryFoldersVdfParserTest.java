@@ -1,10 +1,9 @@
 package backend.data;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
+import com.gearshiftgaming.se_mod_manager.backend.data.steam.SimpleSteamLibraryFoldersVdfParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 

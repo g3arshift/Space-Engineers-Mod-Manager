@@ -8,6 +8,8 @@ import javafx.stage.Stage;
 
 public class TutorialUtility {
 
+    private TutorialUtility(){}
+
     public static void tutorialElementHighlight(@NamedArg("panes") Pane[] panes, @NamedArg("stageWidth") double stageWidth, @NamedArg("stageHeight") double stageHeight, @NamedArg("node") Node node) {
         final double MARGIN = 5.0;
 

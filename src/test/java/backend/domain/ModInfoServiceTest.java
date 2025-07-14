@@ -1,10 +1,10 @@
 package backend.domain;
 
-import com.gearshiftgaming.se_mod_manager.backend.data.ModlistRepository;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ModInfoService;
-import com.gearshiftgaming.se_mod_manager.backend.models.ModIoMod;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.SteamMod;
+import com.gearshiftgaming.se_mod_manager.backend.data.modlist.ModlistRepository;
+import com.gearshiftgaming.se_mod_manager.backend.domain.mod.ModInfoService;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,9 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveProfile;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveStatus;
-import com.gearshiftgaming.se_mod_manager.backend.models.SaveType;
-import com.gearshiftgaming.se_mod_manager.backend.models.SpaceEngineersVersion;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveStatus;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.SpaceEngineersVersion;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 

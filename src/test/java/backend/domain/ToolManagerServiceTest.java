@@ -1,11 +1,8 @@
 package backend.domain;
 
-import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
-import com.gearshiftgaming.se_mod_manager.OperatingSystemVersionUtility;
-import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
-import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
-import com.gearshiftgaming.se_mod_manager.backend.models.Result;
-import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
+import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
@@ -16,7 +13,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -438,7 +434,7 @@ class ToolManagerServiceTest {
 
         //Check that we failed the way we expected
         assertFalse(result.isSuccess(), "Download result should be a failure.");
-        assertEquals("com.gearshiftgaming.se_mod_manager.backend.domain.ToolDownloadFailedException: Received HTTP response code 500 from server.", result.getCurrentMessage().split("\n")[0].trim());
+        assertEquals("com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolDownloadFailedException: Received HTTP response code 500 from server.", result.getCurrentMessage().split("\n")[0].trim());
 
         //Check that we tried the correct number of times to redownload steamCMD
         assertEquals(maxRetries + 1, result.getMessages().size());
@@ -498,7 +494,7 @@ class ToolManagerServiceTest {
         //Check it failed how we expected
         assertFalse(result.isSuccess());
         assertTrue(Files.notExists(Path.of(steamCmdZipPath)));
-        assertEquals("com.gearshiftgaming.se_mod_manager.backend.domain.ToolDownloadFailedException: Received HTTP response code 500 from server.", result.getCurrentMessage().split("\n")[0].trim());
+        assertEquals("com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolDownloadFailedException: Received HTTP response code 500 from server.", result.getCurrentMessage().split("\n")[0].trim());
 
         //Check that we tried the correct number of times to redownload steamCMD
         assertEquals(maxRetries + 1, result.getMessages().size());

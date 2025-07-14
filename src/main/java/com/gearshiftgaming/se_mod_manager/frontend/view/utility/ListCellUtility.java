@@ -10,21 +10,21 @@ package com.gearshiftgaming.se_mod_manager.frontend.view.utility;
  */
 public class ListCellUtility {
 
-	//This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation, but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet, then add onto it.
-	public static String getSelectedCellColor(String themeName) {
-		return switch (themeName) {
-			case "PrimerLight", "NordLight", "CupertinoLight":
-				yield "-color-cell-bg-selected: -color-base-2;" +
-						"-color-cell-bg-selected-focused: -color-accent-2;";
-			case "PrimerDark", "CupertinoDark":
-				yield "-color-cell-bg-selected: -color-base-5;" +
-						"-color-cell-bg-selected-focused: -color-accent-5;";
-			case "NordDark":
-				yield "-color-cell-bg-selected: -color-base-6;" +
-						"-color-cell-bg-selected-focused: -color-accent-6;";
-			default:
-				yield "-color-cell-bg-selected: -color-accent-subtle;" +
-						"-color-cell-bg-selected-focused: -color-accent-subtle;";
-		};
-	}
+    private ListCellUtility() {
+    }
+
+    /* This is an extremely clunky way of doing this, and it's pretty dependent on the atlantaFX implementation,
+    but I'm an idiot and can't figure out another way to actually get the damn current CSS style from my stylesheet, then add onto it. */
+    public static String getSelectedCellColor(String themeName) {
+        return switch (themeName) {
+            case "PrimerLight", "NordLight", "CupertinoLight" -> "-color-cell-bg-selected: -color-base-2;" +
+                    "-color-cell-bg-selected-focused: -color-accent-2;";
+            case "PrimerDark", "CupertinoDark" -> "-color-cell-bg-selected: -color-base-5;" +
+                    "-color-cell-bg-selected-focused: -color-accent-5;";
+            case "NordDark" -> "-color-cell-bg-selected: -color-base-6;" +
+                    "-color-cell-bg-selected-focused: -color-accent-6;";
+            default -> "-color-cell-bg-selected: -color-accent-subtle;" +
+                    "-color-cell-bg-selected-focused: -color-accent-subtle;";
+        };
+    }
 }

@@ -1,12 +1,19 @@
 package backend.domain;
 
-import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
-import com.gearshiftgaming.se_mod_manager.OperatingSystemVersionUtility;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
-import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFoldersVdfParser;
-import com.gearshiftgaming.se_mod_manager.backend.domain.*;
-import com.gearshiftgaming.se_mod_manager.backend.models.*;
-import com.gearshiftgaming.se_mod_manager.backend.domain.SEOneSteamModDownloadService;
+import com.gearshiftgaming.se_mod_manager.backend.data.steam.SimpleSteamLibraryFoldersVdfParser;
+import com.gearshiftgaming.se_mod_manager.backend.domain.command.CommandResult;
+import com.gearshiftgaming.se_mod_manager.backend.domain.command.CommandRunner;
+import com.gearshiftgaming.se_mod_manager.backend.domain.command.DefaultCommandRunner;
+import com.gearshiftgaming.se_mod_manager.backend.domain.mod.SteamInstallMissingException;
+import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
+import com.gearshiftgaming.se_mod_manager.backend.domain.mod.SEOneSteamModDownloadService;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfileInfo;
+import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -158,7 +165,7 @@ class SEOneSteamModDownloadServiceTest {
         when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
         //Mock the behavior we need from our save profile
-        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
@@ -204,7 +211,7 @@ class SEOneSteamModDownloadServiceTest {
             when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
             //Mock the behavior we need from our save profile
-            when(saveProfileInfo.saveExists()).thenReturn(true);
+            when(saveProfileInfo.isSaveExists()).thenReturn(true);
             when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
             when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
@@ -250,7 +257,7 @@ class SEOneSteamModDownloadServiceTest {
             when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
             //Mock the behavior we need from our save profile
-            when(saveProfileInfo.saveExists()).thenReturn(true);
+            when(saveProfileInfo.isSaveExists()).thenReturn(true);
             when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
             when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
@@ -295,7 +302,7 @@ class SEOneSteamModDownloadServiceTest {
             when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
             //Mock the behavior we need from our save profile
-            when(saveProfileInfo.saveExists()).thenReturn(true);
+            when(saveProfileInfo.isSaveExists()).thenReturn(true);
             when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
             when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
             when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
@@ -329,7 +336,7 @@ class SEOneSteamModDownloadServiceTest {
         when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
         //Mock the behavior we need from our save profile
-        when(saveProfileInfo.saveExists()).thenReturn(false);
+        when(saveProfileInfo.isSaveExists()).thenReturn(false);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
@@ -365,7 +372,7 @@ class SEOneSteamModDownloadServiceTest {
         when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
         //Mock the behavior we need from our save profile
-        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
@@ -401,7 +408,7 @@ class SEOneSteamModDownloadServiceTest {
         when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
         //Mock the behavior we need from our save profile
-        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
@@ -509,7 +516,7 @@ class SEOneSteamModDownloadServiceTest {
         when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
 
         //Mock the behavior we need from our save profile
-        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
     }
