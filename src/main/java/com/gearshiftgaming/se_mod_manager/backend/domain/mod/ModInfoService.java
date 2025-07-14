@@ -40,78 +40,81 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
  */
 public class ModInfoService {
 
-    private final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
+    private static final String STEAM_WORKSHOP_URL = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
-    private final String MOD_IO_URL = "https://mod.io/search/mods/";
+    private static final String MOD_IO_URL = "https://mod.io/search/mods/";
 
-    private final ModlistRepository MODLIST_REPOSITORY;
+    private final ModlistRepository modlistRepository;
 
-    private final String STEAM_MOD_TYPE_SELECTOR;
+    private final String steamModTypeSelector;
 
-    private final String STEAM_MOD_LAST_UPDATED_SELECTOR;
+    private final String steamModLastUpdatedSelector;
 
-    private final String STEAM_MOD_FIRST_POSTED_SELECTOR;
+    private final String steamModFirstPostedSelector;
 
-    private final String STEAM_MOD_TAGS_SELECTOR;
+    private final String steamModTagsSelector;
 
-    private final String STEAM_MOD_DESCRIPTION_SELECTOR;
+    private final String steamModDescriptionSelector;
 
-    private final String STEAM_MOD_VERIFICATION_SELECTOR;
+    private final String steamModVerificationSelector;
 
-    private final Pattern STEAM_MOD_ID_PATTERN;
+    private final Pattern steamModIdPattern;
 
-    private final String STEAM_COLLECTION_GAME_NAME_SELECTOR;
+    private final String steamCollectionGameNameSelector;
 
-    private final String STEAM_COLLECTION_MOD_ID_SELECTOR;
+    private final String steamCollectionModIdSelector;
 
-    private final String STEAM_COLLECTION_VERIFICATION_SELECTOR;
+    private final String steamCollectionVerificationSelector;
 
-    private final String MOD_IO_MOD_TYPE_SELECTOR;
+    private final String modIoModTypeSelector;
 
-    private final String MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR;
+    private final String modIoModJsoupModIdSelector;
 
-    private final String MOD_IO_MOD_LAST_UPDATED_SELECTOR;
+    private final String modIoModLastUpdatedSelector;
 
-    private final String MOD_IO_MOD_TAGS_SELECTOR;
+    private final String modIoModTagsSelector;
 
-    private final String MOD_IO_MOD_DESCRIPTION_SELECTOR;
+    private final String modIoModDescriptionSelector;
 
-    private final int MOD_IO_SCRAPING_TIMEOUT;
+    private final int modIoScrapingTimeout;
 
-    private final String MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR;
+    private final String modIoScrapingWaitConditionSelector;
+
+
+    //TODO: Split this into two subclasses, one for steam one for mod.io. Much more maintainable then.
 
     //TODO: Download mods using steamCMD to the user directory. Have some sort of UI indication they're downloading in the UI.
     // Once downloaded, get modified paths and modify conflict table.
-    public ModInfoService(ModlistRepository MODLIST_REPOSITORY, Properties PROPERTIES) {
-        this.MODLIST_REPOSITORY = MODLIST_REPOSITORY;
+    public ModInfoService(ModlistRepository modlistRepository, Properties PROPERTIES) {
+        this.modlistRepository = modlistRepository;
 
-        this.STEAM_MOD_TYPE_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
-        this.STEAM_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
-        this.STEAM_MOD_FIRST_POSTED_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
-        this.STEAM_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
-        this.STEAM_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
-        this.STEAM_MOD_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
+        this.steamModTypeSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
+        this.steamModLastUpdatedSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
+        this.steamModFirstPostedSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
+        this.steamModTagsSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
+        this.steamModDescriptionSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
+        this.steamModVerificationSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
 
-        this.STEAM_MOD_ID_PATTERN = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
+        this.steamModIdPattern = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
 
-        this.STEAM_COLLECTION_GAME_NAME_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
-        this.STEAM_COLLECTION_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
-        this.STEAM_COLLECTION_VERIFICATION_SELECTOR = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
+        this.steamCollectionGameNameSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
+        this.steamCollectionModIdSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
+        this.steamCollectionVerificationSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
-        this.MOD_IO_MOD_TYPE_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.type.cssSelector");
-        this.MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
-        this.MOD_IO_MOD_LAST_UPDATED_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.lastUpdated.cssSelector");
-        this.MOD_IO_MOD_TAGS_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
-        this.MOD_IO_MOD_DESCRIPTION_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.description.cssSelector");
-        this.MOD_IO_SCRAPING_TIMEOUT = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
-        this.MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR = PROPERTIES.getProperty("semm.modio.modScraper.waitCondition.cssSelector");
+        this.modIoModTypeSelector = PROPERTIES.getProperty("semm.modio.modScraper.type.cssSelector");
+        this.modIoModJsoupModIdSelector = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
+        this.modIoModLastUpdatedSelector = PROPERTIES.getProperty("semm.modio.modScraper.lastUpdated.cssSelector");
+        this.modIoModTagsSelector = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
+        this.modIoModDescriptionSelector = PROPERTIES.getProperty("semm.modio.modScraper.description.cssSelector");
+        this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
+        this.modIoScrapingWaitConditionSelector = PROPERTIES.getProperty("semm.modio.modScraper.waitCondition.cssSelector");
     }
 
     public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
         if (modType == ModType.STEAM) {
-            return MODLIST_REPOSITORY.getSteamModList(modlistFile);
+            return modlistRepository.getSteamModList(modlistFile);
         } else {
-            return MODLIST_REPOSITORY.getModIoModUrls(modlistFile);
+            return modlistRepository.getModIoModUrls(modlistFile);
         }
     }
 
@@ -120,8 +123,8 @@ public class ModInfoService {
 
         Document collectionPage = Jsoup.connect(STEAM_WORKSHOP_URL + collectionId).get();
 
-        String gameName = collectionPage.select(STEAM_COLLECTION_GAME_NAME_SELECTOR).getFirst().childNodes().getFirst().toString().trim();
-        String foundBreadcrumbName = collectionPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR).getFirst().childNodes().getFirst().toString();
+        String gameName = collectionPage.select(steamCollectionGameNameSelector).getFirst().childNodes().getFirst().toString().trim();
+        String foundBreadcrumbName = collectionPage.select(steamCollectionVerificationSelector).getFirst().childNodes().getFirst().toString();
         if (!gameName.equals("Space Engineers")) { //Game name check
             Result<String> wrongGameResult = new Result<>();
             wrongGameResult.addMessage("The collection must be a Space Engineers collection!", ResultType.FAILED);
@@ -131,7 +134,7 @@ public class ModInfoService {
             notACollectionResult.addMessage("You must provide a link or ID of a collection!", ResultType.FAILED);
             modIdScrapeResults.add(notACollectionResult);
         } else {
-            Elements elements = collectionPage.select(STEAM_COLLECTION_MOD_ID_SELECTOR);
+            Elements elements = collectionPage.select(steamCollectionModIdSelector);
             List<Node> nodes = elements.getFirst().childNodes();
 
             if (nodes.get(1).attributes().get("class").equals("collectionNoChildren")) { //Empty collection check
@@ -143,7 +146,7 @@ public class ModInfoService {
                     Result<String> modIdResult = new Result<>();
                     if (node.hasAttr("data-panel")) { //All the nodes that have the actual info we need have this attribute
                         StringBuilder modId = new StringBuilder();
-                        modId.append(STEAM_MOD_ID_PATTERN.matcher(node.childNodes().get(1).toString())
+                        modId.append(steamModIdPattern.matcher(node.childNodes().get(1).toString())
                                 .results()
                                 .map(MatchResult::group)
                                 .collect(Collectors.joining()));
@@ -177,7 +180,7 @@ public class ModInfoService {
 
         Document doc = Jsoup.connect(MOD_IO_NAME_URL + name).get();
 
-        List<String> matches = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(MOD_IO_MOD_JSOUP_MOD_ID_SELECTOR).toString())
+        List<String> matches = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(modIoModJsoupModIdSelector).toString())
                 .results()
                 .map(MatchResult::group)
                 .toList();
@@ -227,7 +230,7 @@ public class ModInfoService {
             return modScrapeResult;
         }
 
-        String itemType = modPage.select(STEAM_MOD_VERIFICATION_SELECTOR)
+        String itemType = modPage.select(steamModVerificationSelector)
                 .stream()
                 .findFirst()
                 .flatMap(element -> element.childNodes().stream().findFirst())
@@ -237,7 +240,7 @@ public class ModInfoService {
             return modScrapeResult;
         }
 
-        String workshopType = modPage.select(STEAM_COLLECTION_VERIFICATION_SELECTOR)
+        String workshopType = modPage.select(steamCollectionVerificationSelector)
                 .stream()
                 .findFirst()
                 .flatMap(element -> element.childNodes().stream().findFirst())
@@ -249,9 +252,9 @@ public class ModInfoService {
 
         String modName = modPage.title().contains("Workshop::") ? modPage.title().split("Workshop::")[1] : modPage.title();
         if (pageDoesNotContainMod(ModType.STEAM, modPage)) {
-            if (!modPage.select(STEAM_MOD_TYPE_SELECTOR).isEmpty()) {
+            if (!modPage.select(steamModTypeSelector).isEmpty()) {
                 modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
-                        modPage.select(STEAM_MOD_TYPE_SELECTOR).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
+                        modPage.select(steamModTypeSelector).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
             } else {
                 modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is for either a workshop item that is not a mod, for the wrong game, or is not publicly available on the workshop.", ResultType.INVALID);
             }
@@ -262,10 +265,10 @@ public class ModInfoService {
         String[] modInfo = new String[4];
         modInfo[0] = modName;
 
-        Elements modTagElements = modPage.select(STEAM_MOD_TAGS_SELECTOR);
+        Elements modTagElements = modPage.select(steamModTagsSelector);
         Element modTagElement;
         if (!modTagElements.isEmpty()) {
-            modTagElement = modPage.select(STEAM_MOD_TAGS_SELECTOR).getFirst();
+            modTagElement = modPage.select(steamModTagsSelector).getFirst();
         } else {
             modTagElement = null;
         }
@@ -289,15 +292,15 @@ public class ModInfoService {
         }
         modInfo[1] = concatenatedModTags.toString();
 
-        modInfo[2] = modPage.select(STEAM_MOD_DESCRIPTION_SELECTOR).getFirst().toString();
+        modInfo[2] = modPage.select(steamModDescriptionSelector).getFirst().toString();
 
         String lastUpdated;
-        if (modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).isEmpty()) {
-            lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_FIRST_POSTED_SELECTOR).toString(),
+        if (modPage.select(steamModLastUpdatedSelector).isEmpty()) {
+            lastUpdated = StringUtils.substringBetween(modPage.select(steamModFirstPostedSelector).toString(),
                     "<div class=\"detailsStatRight\">\n ",
                     "\n</div>");
         } else {
-            lastUpdated = StringUtils.substringBetween(modPage.select(STEAM_MOD_LAST_UPDATED_SELECTOR).toString(),
+            lastUpdated = StringUtils.substringBetween(modPage.select(steamModLastUpdatedSelector).toString(),
                     "<div class=\"detailsStatRight\">\n ",
                     "\n</div>");
         }
@@ -381,7 +384,7 @@ public class ModInfoService {
                         retries++;
                 }
                 //webPage.waitForSelector(new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
-                webPage.waitForLoadState(LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
+                webPage.waitForLoadState(LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(modIoScrapingTimeout));
                 pageSource = webPage.content();
             } catch (RateLimitException e) {
                 retries++;
@@ -408,7 +411,7 @@ public class ModInfoService {
     private void parseModIoModInfo(String pageSource, String modId, Result<String[]> modScrapeResult) {
         Document modPage = Jsoup.parse(pageSource);
         if (pageDoesNotContainMod(ModType.MOD_IO, modPage)) {
-            String itemType = modPage.select(MOD_IO_MOD_TYPE_SELECTOR)
+            String itemType = modPage.select(modIoModTypeSelector)
                     .stream()
                     .findFirst()
                     .flatMap(element -> element.childNodes().stream().findFirst())
@@ -434,7 +437,7 @@ public class ModInfoService {
         modInfo[0] = modPage.title().split(" for Space Engineers - mod.io")[0];
 
         //Get mod tags
-        List<Node> tagNodes = modPage.select(MOD_IO_MOD_TAGS_SELECTOR).getLast().childNodes();
+        List<Node> tagNodes = modPage.select(modIoModTagsSelector).getLast().childNodes();
         StringBuilder concatenatedModTags = new StringBuilder();
         for (int i = 1; i < tagNodes.size(); i++) {
             String tag = StringUtils.substringBetween(tagNodes.get(i).toString(), "<a href=\"/g/spaceengineers?tags-in=", "\"");
@@ -447,14 +450,14 @@ public class ModInfoService {
         modInfo[1] = concatenatedModTags.toString();
 
         //Get mod description
-        modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR)
-                .stream()
-                .findFirst()
-                .map(element -> element.childNodes().stream()
-                        .map(Object::toString)
-                        .collect(Collectors.joining())
-                        .trim())
-                .orElse("");
+//        modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR)
+//                .stream()
+//                .findFirst()
+//                .map(element -> element.childNodes().stream()
+//                        .map(Object::toString)
+//                        .collect(Collectors.joining())
+//                        .trim())
+//                .orElse("");
         //TODO: Instead of this, we need to split our page content apart. We need to start by getting everything after <span class="">Description</span>
         // Then find the stuff between <p> tags!
         // If this works do it for the other stuff as well, don't rely on selectors.
@@ -464,7 +467,7 @@ public class ModInfoService {
         }
 
         //Get mod last updated information
-        String lastUpdatedRaw = modPage.select(MOD_IO_MOD_LAST_UPDATED_SELECTOR).getFirst().childNodes().getFirst().toString();
+        String lastUpdatedRaw = modPage.select(modIoModLastUpdatedSelector).getFirst().childNodes().getFirst().toString();
         String lastUpdatedFormatted = Optional.ofNullable(StringUtils.substringBetween(lastUpdatedRaw, "<span>", "</span>")).orElse("'");
         if (lastUpdatedFormatted.isEmpty()) {
             modScrapeResult.addMessage(String.format("Failed to get last updated information for \"%s\".", modInfo[0]), ResultType.FAILED);
@@ -506,7 +509,7 @@ public class ModInfoService {
     //Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
     private boolean pageDoesNotContainMod(ModType modType, Document modPage) {
         if (modType == ModType.STEAM) {
-            Elements typeElements = modPage.select(STEAM_MOD_TYPE_SELECTOR);
+            Elements typeElements = modPage.select(steamModTypeSelector);
             if (!typeElements.isEmpty()) {
                 Node modTypeNode = typeElements.getFirst().childNodes().stream().findFirst().orElse(null);
                 return modTypeNode == null || !modTypeNode.toString().equals("Mod");
@@ -514,7 +517,7 @@ public class ModInfoService {
                 return true;
             }
         } else {
-            Element element = modPage.selectFirst(MOD_IO_MOD_TYPE_SELECTOR);
+            Element element = modPage.selectFirst(modIoModTypeSelector);
             if (element != null) {
                 Node modTypeNode = element.childNodes().stream().findFirst().orElse(null);
                 //return element.childNodes().getFirst().toString().startsWith("Mod", 6);
