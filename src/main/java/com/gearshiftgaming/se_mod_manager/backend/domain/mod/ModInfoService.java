@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.LoadState;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -364,7 +365,7 @@ public class ModInfoService {
         while (retries < MAX_RETRIES && StringUtils.countMatches(pageSource, "\n") < 1) {
             try {
                 String jsonText = StringUtils.substringBetween(webPage.content(), "<pre>", "</pre>");
-                if (jsonText != null) {
+                if (jsonText != null) { //We only get this to not be null if mod.io is giving us an error
                     JsonObject response = new Gson().fromJson(jsonText, JsonObject.class);
                     if (response != null) {
                         JsonElement element = response.get("error");
@@ -379,7 +380,8 @@ public class ModInfoService {
                         //We shouldn't ever really reach this because it is a scenario where we SOMEHOW are encountering an error, but it's not getting us a value from the webpage.
                         retries++;
                 }
-                webPage.waitForSelector(MOD_IO_SCRAPING_WAIT_CONDITION_SELECTOR, new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
+                //webPage.waitForSelector(new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
+                webPage.waitForLoadState(LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
                 pageSource = webPage.content();
             } catch (RateLimitException e) {
                 retries++;
@@ -453,6 +455,9 @@ public class ModInfoService {
                         .collect(Collectors.joining())
                         .trim())
                 .orElse("");
+        //TODO: Instead of this, we need to split our page content apart. We need to start by getting everything after <span class="">Description</span>
+        // Then find the stuff between <p> tags!
+        // If this works do it for the other stuff as well, don't rely on selectors.
         if (modInfo[2].isEmpty()) {
             modScrapeResult.addMessage(String.format("Failed to get description for \"%s\".", modInfo[0]), ResultType.FAILED);
             return;
