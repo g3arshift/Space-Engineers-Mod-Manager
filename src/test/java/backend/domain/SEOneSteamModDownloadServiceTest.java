@@ -7,6 +7,9 @@ import com.gearshiftgaming.se_mod_manager.backend.data.SimpleSteamLibraryFolders
 import com.gearshiftgaming.se_mod_manager.backend.domain.*;
 import com.gearshiftgaming.se_mod_manager.backend.models.*;
 import com.gearshiftgaming.se_mod_manager.backend.domain.SEOneSteamModDownloadService;
+import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +20,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -370,13 +375,81 @@ class SEOneSteamModDownloadServiceTest {
     }
 
     @Test
-    void downloadModShouldFailWhenNoSuccessOutput() {
+    void downloadModShouldFailWhenNoSuccessOutput() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
+        String modId = "123456";
+        Path fakeClientRoot = tempDir;
+        String steamFailMessage = "This is a test failure for steamcmd that isn't a critical failure";
+        when(mockedCommandRunner.runCommand(List.of(steamCmdPath,
+                "+force_install_dir", fakeClientRoot.toString(),
+                "+login", "anonymous",
+                "+workshop_download_item", "244850", modId,
+                "validate", "+quit")))
+                .thenReturn(new CommandResult(0, List.of(steamFailMessage)));
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
+
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+
+        assertTrue(downloadResult.isFailure());
+        assertEquals(String.format("Mod %s failed to download. SteamCMD reported: \"%s\".", modId, steamFailMessage), downloadResult.getCurrentMessage());
     }
 
     @Test
-    void downloadModShouldSucceedWithValidClientDownloadPath() {
-        //TODO: We are going to have to download steamcmd for this
+    void downloadModShouldSucceedWithValidClientDownloadPath() throws IOException, InterruptedException, ExecutionException {
+        Properties properties = new Properties();
+        try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM_ToolManagerTest.properties")) {
+            properties.load(input);
+        }
+
+        Result<Void> steamCmdDownloadResult = downloadSteamCmd(properties);
+        assertTrue(steamCmdDownloadResult.isSuccess(), steamCmdDownloadResult.getCurrentMessage());
+        assertEquals("Successfully downloaded SteamCMD", steamCmdDownloadResult.getCurrentMessage());
+
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(fakeLibraryFolders);
+
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.saveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.create(tempDir.resolve("steamcmd.exe").toString(),
+                new DefaultCommandRunner(),
+                mockedVdfParser);
+
+        String modId = "3329381499"; // Cross Barred windows (Large Grid Update)
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+        assertTrue(downloadResult.isSuccess());
+        assertEquals(String.format("Successfully downloaded mod %s.", modId), downloadResult.getCurrentMessage());
+        assertTrue(Files.exists(tempDir.resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId)
+                .resolve("Data")));
     }
 
     @Test
@@ -389,23 +462,66 @@ class SEOneSteamModDownloadServiceTest {
         //TODO: We are going to have to download steamcmd for this
     }
 
+    private void initJfx() {
+        CountDownLatch latch = new CountDownLatch(1);
+        Platform.startup(() -> {});
+        latch.countDown();
+    }
+
+    private Result<Void> downloadSteamCmd(Properties properties) throws InterruptedException, ExecutionException, IOException {
+        Files.deleteIfExists(tempDir.resolve("steamcmd.exe"));
+        initJfx();
+        CountDownLatch doneLatch = new CountDownLatch(1);
+
+        String steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.download.source");
+        int maxRetries = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit"));
+        int connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
+        int readTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout"));
+        int retryDelay = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.delay"));
+
+        ToolManagerService toolManagerService = new ToolManagerService(mock(UiService.class),
+                tempDir.resolve("steamcmd.zip").toString(),
+                steamCmdSourceLocation,
+                maxRetries,
+                connectionTimeout,
+                readTimeout,
+                retryDelay);
+        Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
+
+        setupTask.setOnSucceeded(e -> doneLatch.countDown());
+        setupTask.setOnFailed(e -> doneLatch.countDown());
+
+        //Run the task
+        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
+        taskThread.start();
+
+        //Pause the test until our task is done, but give it a timeout.
+        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Could not download SteamCMD.");
+        return setupTask.get();
+    }
+
     @Test
-    void isModDownloadedShouldReturnFalse() {
+    void shouldFailWhenSteamCmdExitCodeIsNotZeroOrSevenAfterUpdate() {
 
     }
 
     @Test
-    void isModDownloadedShouldReturnTrue() {
+    void isModDownloadedShouldReturnFalseWhenNotDownloaded() {
 
     }
 
     @Test
-    void getModPathShouldReturnEmptyString() {
+    void isModDownloadedShouldReturnTrueWhenDownloaded() {
 
     }
 
     @Test
-    void getModPathShouldReturnValidString() {
+    void getModPathShouldReturnEmptyStringWhenNotDownloaded() {
+
+    }
+
+    @Test
+    void getModPathShouldReturnValidStringWhenDownloaded() {
 
     }
 }

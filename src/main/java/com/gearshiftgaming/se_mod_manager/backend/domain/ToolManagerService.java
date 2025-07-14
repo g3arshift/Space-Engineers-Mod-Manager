@@ -51,6 +51,18 @@ public class ToolManagerService {
     private String divisorName;
 
 
+    /**
+     * Constructs a {@code ToolManagerService} responsible for managing the download and configuration
+     * of SteamCMD and related tooling.
+     *
+     * @param uiService              the UI service used to log errors
+     * @param steamCmdZipPath        the local file system path where the SteamCMD zip will be downloaded to
+     * @param steamCmdSourceLocation the remote URL or path from which the SteamCMD zip can be downloaded
+     * @param maxRetries             the maximum number of retry attempts for downloading SteamCMD in case of failure
+     * @param connectionTimeout      the timeout in milliseconds for establishing a network connection during download
+     * @param readTimeout            the timeout in milliseconds for reading data from the connection
+     * @param retryDelay             the delay in milliseconds between retry attempts
+     */
     public ToolManagerService(UiService uiService, String steamCmdZipPath, String steamCmdSourceLocation, int maxRetries, int connectionTimeout, int readTimeout, int retryDelay) {
         this.uiService = uiService;
         this.steamCmdZipPath = steamCmdZipPath;
@@ -61,8 +73,8 @@ public class ToolManagerService {
         this.retryDelay = retryDelay;
     }
 
-    //TODO: We need to do some linux specific stuff, check the official steamcmd page for it. https://developer.valvesoftware.com/wiki/SteamCMD
-    // This is also a decent resource to start from: https://forum.moddingcommunity.com/t/how-to-download-run-steamcmd/190
+    //TODO: We HAVE to add Linux stuff or this will never work on it. https://developer.valvesoftware.com/wiki/SteamCMD#Manually
+    // This is going to include setting up a steam user
     //TODO: Add support for chunked downloads
     public Task<Result<Void>> setupSteamCmd() {
         return new Task<>() {
@@ -109,7 +121,9 @@ public class ToolManagerService {
             Files.createFile(steamDownloadPath);
 
         //Check if we already have steam CMD downloaded. If it isn't, download it.
-        if (Files.exists(steamDownloadPath.getParent().resolve("steamcmd.exe"))) {
+        Path steamDownloadPathParent = steamDownloadPath.getParent();
+        //TODO: There's definitely a better option here for checking our path instead of just doing it twice.
+        if (Files.exists(steamDownloadPathParent.resolve("steamcmd.exe")) || Files.exists(steamDownloadPathParent.resolve("steamcmd.sh"))) {
             steamCmdSetupResult = new Result<>();
             steamCmdSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
             return steamCmdSetupResult;
@@ -161,7 +175,7 @@ public class ToolManagerService {
         int extractedFileCount = extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
 
         if (extractedFileCount == 0)
-            steamCmdSetupResult.addMessage("Failed to extract steamcmd.exe from .zip.", ResultType.FAILED);
+            steamCmdSetupResult.addMessage("Failed to extract steamcmd from .zip.", ResultType.FAILED);
 
         return steamCmdSetupResult;
     }

@@ -1,5 +1,8 @@
 package backend.domain;
 
+import com.gearshiftgaming.se_mod_manager.OperatingSystemVersion;
+import com.gearshiftgaming.se_mod_manager.OperatingSystemVersionUtility;
+import com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager;
 import com.gearshiftgaming.se_mod_manager.backend.domain.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.ResultType;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -36,6 +40,7 @@ import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockStatic;
 
 
 /**
@@ -96,6 +101,7 @@ class ToolManagerServiceTest {
 
     /**
      * Returns true if the file has an .exe file signature (4D 5A for first two bytes)
+     *
      * @param exeFile is the file we are checking
      * @return true if the file is an .exe, and false if it is not or does not exist
      * @throws IOException when we fail to read the file or our buffer of the read bytes is empty.
@@ -118,7 +124,13 @@ class ToolManagerServiceTest {
     private Result<Void> runDownload(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {
         steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
 
-        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
+        toolManagerService = new ToolManagerService(mock(UiService.class),
+                steamCmdZipPath,
+                steamCmdSourceLocation,
+                maxRetries,
+                connectionTimeout,
+                readTimeout,
+                retryDelay);
         Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         //Add the listeners so our lists get updated properly when the task updates
@@ -272,7 +284,7 @@ class ToolManagerServiceTest {
 
         //Check that we tried the correct number of times to redownload steamCMD
         assertEquals(maxRetries + 1, result.getMessages().size());
-        for(int i = 0; i < maxRetries; i++) {
+        for (int i = 0; i < maxRetries; i++) {
             assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMessages().get(i));
         }
 
@@ -310,9 +322,10 @@ class ToolManagerServiceTest {
      *   <li>File system checks for the downloaded ZIP and extracted contents</li>
      * </ul>
      * <p>
+     *
      * @throws InterruptedException if the current thread is interrupted while waiting for the task to finish
-     * @throws ExecutionException if the task throws an exception during execution
-     * @throws IOException if an I/O error occurs while verifying downloaded or extracted files
+     * @throws ExecutionException   if the task throws an exception during execution
+     * @throws IOException          if an I/O error occurs while verifying downloaded or extracted files
      */
     @Test
     void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException, IOException {
@@ -371,7 +384,7 @@ class ToolManagerServiceTest {
      *   <li>The initial {@code GET} request begins successfully but returns only part of the file</li>
      *   <li>All subsequent ranged {@code GET} requests to resume the download fail with HTTP 500</li>
      * </ul>
-     *<p>
+     * <p>
      * Assertions verify that:
      * <ul>
      *   <li>The result is a failure, with a message indicating the HTTP 500 error</li>
@@ -380,10 +393,11 @@ class ToolManagerServiceTest {
      *   <li>Progress updates were made and include a partial progress value (e.g., 0.48)</li>
      *   <li>The messages and progress lists are populated as expected</li>
      * </ul>
+     *
      * @param wireMockRuntimeInfo injected by the test framework to provide runtime access to the WireMock server
-     * @throws ExecutionException if an exception occurs during asynchronous task execution
+     * @throws ExecutionException   if an exception occurs during asynchronous task execution
      * @throws InterruptedException if the thread waiting for the result is interrupted
-     * @throws IOException if an I/O error occurs during partial file creation or verification
+     * @throws IOException          if an I/O error occurs during partial file creation or verification
      */
     @Test
     void shouldStartButThenFailToDownloadFakeSteamCmd(WireMockRuntimeInfo wireMockRuntimeInfo) throws ExecutionException, InterruptedException, IOException {
@@ -428,7 +442,7 @@ class ToolManagerServiceTest {
 
         //Check that we tried the correct number of times to redownload steamCMD
         assertEquals(maxRetries + 1, result.getMessages().size());
-        for(int i = 0; i < maxRetries; i++) {
+        for (int i = 0; i < maxRetries; i++) {
             assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMessages().get(i));
         }
 
@@ -436,7 +450,7 @@ class ToolManagerServiceTest {
         assertFalse(messages.isEmpty(), "Should have updated messages");
         assertFalse(progress.isEmpty());
         assertEquals("SteamCMD download failed!", messages.getLast());
-        assertEquals("0.48",String.format("%.2f", progress.getLast()));
+        assertEquals("0.48", String.format("%.2f", progress.getLast()));
     }
 
     /**
@@ -447,7 +461,7 @@ class ToolManagerServiceTest {
      *   <li>A successful {@code HEAD} request providing expected file metadata</li>
      *   <li>Repeated {@code GET} requests that always fail with HTTP 500</li>
      * </ul>
-     *<p>
+     * <p>
      * Verifies that:
      * <ul>
      *   <li>The download fails with a {@code ToolDownloadFailedException} due to server error</li>
@@ -458,7 +472,7 @@ class ToolManagerServiceTest {
      *
      * @param wireMockRuntimeInfo runtime info for WireMock, injected by the test framework
      * @throws InterruptedException if the thread waiting for task completion is interrupted
-     * @throws ExecutionException if an exception occurs during asynchronous task execution
+     * @throws ExecutionException   if an exception occurs during asynchronous task execution
      */
     @Test
     void shouldTimeOutConnection(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {
@@ -488,7 +502,7 @@ class ToolManagerServiceTest {
 
         //Check that we tried the correct number of times to redownload steamCMD
         assertEquals(maxRetries + 1, result.getMessages().size());
-        for(int i = 0; i < maxRetries; i++) {
+        for (int i = 0; i < maxRetries; i++) {
             assertEquals(String.format("SteamCMD download failed, retrying... Attempt %d", i + 1), result.getMessages().get(i));
         }
     }
@@ -505,9 +519,10 @@ class ToolManagerServiceTest {
      *   <li>The result indicates failure and provides the expected user-facing error message</li>
      * </ul>
      * <p>
+     *
      * @param wireMockRuntimeInfo runtime info for WireMock, injected by the test framework
      * @throws InterruptedException if the thread waiting for the result is interrupted
-     * @throws ExecutionException if an exception occurs during asynchronous task execution
+     * @throws ExecutionException   if an exception occurs during asynchronous task execution
      */
     @Test
     void shouldFailToGetSizeOfFakeSteamCmd(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {

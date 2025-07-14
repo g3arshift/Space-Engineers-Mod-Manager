@@ -37,7 +37,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
      */
     private final String fallbackDownloadRoot;
 
-    private final String steamCmdExePath;
+    private final String steamCmdLauncherPath;
 
     private final CommandRunner commandRunner;
 
@@ -48,7 +48,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
 
         this.fallbackDownloadRoot = fallbackDownloadBasePath;
-        this.steamCmdExePath = steamCmdPath;
+        this.steamCmdLauncherPath = steamCmdPath;
         this.commandRunner = commandRunner;
         this.vdfParser = vdfParser;
 
@@ -61,12 +61,12 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
             clientModDownloadPath = clientRootCandidate;
     }
 
-    public static SEOneSteamModDownloadService create(String steamCmdExePath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
-        return new SEOneSteamModDownloadService("./Mod_Downloads", steamCmdExePath, commandRunner, vdfParser);
+    public static SEOneSteamModDownloadService create(String steamCmdLauncherPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+        return new SEOneSteamModDownloadService("./Mod_Downloads", steamCmdLauncherPath, commandRunner, vdfParser);
     }
 
-    public static SEOneSteamModDownloadService createWithCustomFallbackRoot(String fallbackDownloadRoot, String steamCmdExePath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
-        return new SEOneSteamModDownloadService(fallbackDownloadRoot + "/Mod_Downloads", steamCmdExePath, commandRunner, vdfParser);
+    public static SEOneSteamModDownloadService createWithCustomFallbackRoot(String fallbackDownloadRoot, String steamCmdLauncherPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
+        return new SEOneSteamModDownloadService(fallbackDownloadRoot + "/Mod_Downloads", steamCmdLauncherPath, commandRunner, vdfParser);
     }
 
     /*For win/linux clients they're saved at: SE_Install_Path/steamapps/workshop/content/244850
@@ -157,23 +157,29 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
 
         modDownloadResult.addMessage(String.format("Starting download of mod: %s", modId), ResultType.IN_PROGRESS);
 
-        CommandResult commandResult = commandRunner.runCommand(List.of(steamCmdExePath,
+        //We have to run this to make sure SteamCMD applies any updates it needs BEFORE downloading the workshop item
+        CommandResult steamUpdateCommandResult = commandRunner.runCommand(List.of(steamCmdLauncherPath, "+login", "anonymous", "+quit"));
+        if(!steamUpdateCommandResult.wasSuccessful() && steamUpdateCommandResult.exitCode() != 7) { //Exclude 7 code since that returns from an update
+            modDownloadResult.addMessage("Failed to update SteamCMD. Exited with code: " + steamUpdateCommandResult.exitCode(), ResultType.FAILED);
+            return modDownloadResult;
+        }
+
+        CommandResult workshopDownloadCommandResult = commandRunner.runCommand(List.of(steamCmdLauncherPath,
                 "+force_install_dir", downloadPath.toString(),
                 "+login", "anonymous",
                 "+workshop_download_item", "244850", modId,
-                "validate", "+quit"));
-
-        if (!commandResult.wasSuccessful()) {
-            modDownloadResult.addMessage("SteamCMD failed with exit code: " + commandResult.exitCode(), ResultType.FAILED);
+                "+quit"));
+        if (!workshopDownloadCommandResult.wasSuccessful()) {
+            modDownloadResult.addMessage("SteamCMD failed with exit code: " + workshopDownloadCommandResult.exitCode(), ResultType.FAILED);
             return modDownloadResult;
         }
 
         /* We iterate in reverse and only check the ten most recent lines as it will be generally faster
         since our success message will always be at the rear. */
         String lastLine = "";
-        int commandOutputLinesSize = commandResult.outputLines().size() - 1; //This is adjusted by one so we don't keep having to do it elsewhere
-        for (int i = commandOutputLinesSize; i > commandOutputLinesSize - 7; i--) {
-            lastLine = commandResult.outputLines().get(i);
+        int commandOutputLinesSize = workshopDownloadCommandResult.outputLines().size() - 1; //This is adjusted by one so we don't keep having to do it elsewhere
+        for (int i = commandOutputLinesSize; i >= Math.max(0, commandOutputLinesSize - 7); i--) {
+            lastLine = workshopDownloadCommandResult.outputLines().get(i);
             if (lastLine.toLowerCase().startsWith("success"))
                 break;
         }
