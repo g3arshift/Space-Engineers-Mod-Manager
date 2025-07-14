@@ -650,4 +650,9 @@ class ToolManagerServiceTest {
         assertEquals(1, result.getMessages().size());
         assertEquals("Steam CMD already installed. Skipping.", result.getMessages().getFirst());
     }
+
+    @Test
+    void downloadsShellVersionOfSteamCmdIfOnLinux() {
+
+    }
 }

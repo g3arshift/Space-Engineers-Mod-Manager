@@ -102,6 +102,13 @@ class SEOneSteamModDownloadServiceTest {
                 .resolve(fakeSaveName);
         Files.createDirectories(fakeDedicatedServerPath);
         Files.createFile(fakeDedicatedServerPath.resolve("Sandbox_config.sbc"));
+
+        fakeTorchPath = tempDir.resolve("Torch")
+                .resolve("Instance")
+                .resolve("Saves")
+                .resolve(fakeSaveFolderName);
+        Files.createDirectories(fakeTorchPath);
+        Files.createFile(fakeTorchPath.resolve("Sandbox_config.sbc"));
     }
 
     @NotNull
@@ -412,7 +419,79 @@ class SEOneSteamModDownloadServiceTest {
     }
 
     @Test
-    void downloadModShouldSucceedWithValidClientDownloadPath() throws IOException, InterruptedException, ExecutionException {
+    void downloadModShouldSucceedWithValidClientDownloadPathOnWindows() throws IOException, InterruptedException, ExecutionException {
+        setupRealDownloadBehavior();
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.create(tempDir.resolve("steamcmd.exe").toString(),
+                new DefaultCommandRunner(),
+                mockedVdfParser);
+
+        String modId = "3329381499"; // Cross Barred windows (Large Grid Update)
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+        assertTrue(downloadResult.isSuccess());
+        assertEquals(String.format("Successfully downloaded mod %s.", modId), downloadResult.getCurrentMessage());
+        assertTrue(Files.exists(tempDir.resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId)
+                .resolve("Data")));
+    }
+
+    @Test
+    void downloadModShouldSucceedWithDedicatedServerSaveTypeOnWindows() throws IOException, ExecutionException, InterruptedException {
+        setupRealDownloadBehavior();
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.create(tempDir.resolve("steamcmd.exe").toString(),
+                new DefaultCommandRunner(),
+                mockedVdfParser);
+
+        String modId = "3329381499"; // Cross Barred windows (Large Grid Update)
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+        assertTrue(downloadResult.isSuccess());
+        assertEquals(String.format("Successfully downloaded mod %s.", modId), downloadResult.getCurrentMessage());
+        assertTrue(Files.exists(tempDir.resolve("SpaceEngineersDedicated")
+                .resolve(fakeSaveFolderName)
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId)
+                .resolve("Data")));
+    }
+
+    @Test
+    void downloadModShouldSucceedWithTorchSaveTypeOnWindows() throws IOException, ExecutionException, InterruptedException {
+        setupRealDownloadBehavior();
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.TORCH);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeTorchPath.resolve("Sandbox_config.sbc")));
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.create(tempDir.resolve("steamcmd.exe").toString(),
+                new DefaultCommandRunner(),
+                mockedVdfParser);
+
+        String modId = "3329381499"; // Cross Barred windows (Large Grid Update)
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+        assertTrue(downloadResult.isSuccess(), downloadResult.getCurrentMessage());
+        assertEquals(String.format("Successfully downloaded mod %s.", modId), downloadResult.getCurrentMessage());
+
+        assertTrue(Files.exists(tempDir.resolve("Torch")
+                .resolve("Instance")
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId)
+                .resolve("Data")));
+    }
+
+    @Test
+    void downloadModShouldSucceedOnLinux() {
+        //TODO: We are gonna have to mock a LOT of behavior. This includes adding a command runner to the ToolManagerService, which it needs to make Linux even work.
+        // So we'll have to mock that too.
+    }
+
+    private void setupRealDownloadBehavior() throws IOException, InterruptedException, ExecutionException {
         Properties properties = new Properties();
         try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM_ToolManagerTest.properties")) {
             properties.load(input);
@@ -432,39 +511,13 @@ class SEOneSteamModDownloadServiceTest {
         //Mock the behavior we need from our save profile
         when(saveProfileInfo.saveExists()).thenReturn(true);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
-        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
-        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientPath.resolve("Sandbox_config.sbc")));
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
-
-        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.create(tempDir.resolve("steamcmd.exe").toString(),
-                new DefaultCommandRunner(),
-                mockedVdfParser);
-
-        String modId = "3329381499"; // Cross Barred windows (Large Grid Update)
-        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
-        assertTrue(downloadResult.isSuccess());
-        assertEquals(String.format("Successfully downloaded mod %s.", modId), downloadResult.getCurrentMessage());
-        assertTrue(Files.exists(tempDir.resolve("steamapps")
-                .resolve("workshop")
-                .resolve("content")
-                .resolve("244850")
-                .resolve(modId)
-                .resolve("Data")));
-    }
-
-    @Test
-    void downloadModShouldSucceedWithDedicatedServerSaveType() {
-        //TODO: We are going to have to download steamcmd for this
-    }
-
-    @Test
-    void downloadModShouldSucceedWithTorchSaveType() {
-        //TODO: We are going to have to download steamcmd for this
     }
 
     private void initJfx() {
         CountDownLatch latch = new CountDownLatch(1);
-        Platform.startup(() -> {});
+        Platform.startup(() -> {
+        });
         latch.countDown();
     }
 

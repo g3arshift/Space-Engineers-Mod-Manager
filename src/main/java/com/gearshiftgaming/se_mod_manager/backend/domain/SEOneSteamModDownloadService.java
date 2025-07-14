@@ -127,16 +127,6 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
         return "";
     }
 
-    //For win SE dedicated server mods are downloaded to: programdata\spaceengineersdedicated\save_name
-    //For linux wine SE dedicated server they're saved at: $HOME/.wine/drive_c/users/$USER/AppData/Roaming/SpaceEngineersDedicated/content/244850
-    //This is only the root path, we need to append the save name afterward for it to work correctly.
-    private String getDedicatedServerRoot() {
-        if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX)
-            return "$HOME/.wine/drive_c/users/$USER/AppData/Roaming/SpaceEngineersDedicated/content/244850";
-        else
-            return System.getenv("PROGRAMDATA") + "\\SpaceEngineersDedicated";
-    }
-
     @Override
     public Result<Void> downloadMod(String modId, SaveProfileInfo saveProfileInfo) throws IOException, InterruptedException {
         Result<Void> modDownloadResult = new Result<>();
