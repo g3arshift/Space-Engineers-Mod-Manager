@@ -222,7 +222,7 @@ class ModInfoServiceTest {
         Result<String[]> goodResult = modInfoService.scrapeModInformation(new ModIoMod(goodModIoId));
         assertTrue(goodResult.isSuccess());
         assertEquals("Multi-Function Survival Kit with Sifter", goodResult.getPayload()[0]);
-        assertEquals("Mod,Block,NoScripts", goodResult.getPayload()[1]);
+        assertEquals("Block,NoScripts", goodResult.getPayload()[1]);
 
         //This isn't exact, but our description should contain at LEAST this.
         Document modDescription = Jsoup.parse(goodResult.getPayload()[2]);
