@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.time.*;
 import java.util.*;
 import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -67,8 +68,6 @@ public class ModInfoService {
 
     private final String steamCollectionVerificationSelector;
 
-    private final String modIoModJsoupModIdSelector;
-
     private final int modIoScrapingTimeout;
 
     //TODO: Split this into two subclasses, one for steam one for mod.io. Much more maintainable then.
@@ -91,7 +90,6 @@ public class ModInfoService {
         this.steamCollectionModIdSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
         this.steamCollectionVerificationSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
-        this.modIoModJsoupModIdSelector = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
         this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
     }
 
@@ -165,20 +163,24 @@ public class ModInfoService {
 
         Document doc = Jsoup.connect(MOD_IO_NAME_URL + name).get();
 
-        List<String> matches = MOD_ID_FROM_IMAGE_URL.matcher(doc.select(modIoModJsoupModIdSelector).toString())
-                .results()
-                .map(MatchResult::group)
-                .toList();
-        if (matches.isEmpty()) {
+        Element ogImageUrl = doc.selectFirst("meta[property=og:image]");
+        if (ogImageUrl == null) {
             modIdResult.addMessage("Invalid Mod.io URL entered!", ResultType.INVALID);
             return modIdResult;
         }
 
-        String modId = matches.getLast();
-        if (!modId.isBlank()) {
-            modIdResult.setPayload(modId);
-            modIdResult.addMessage("Successfully scraped Mod.io Mod ID from URL.", ResultType.SUCCESS);
+        String contentUrl = ogImageUrl.attr("content");
+
+        // Match: /mods/{anyHexOrFolder}/{numericId}/
+        Pattern pattern = Pattern.compile("/mods/[^/]+/(\\d+)/");
+        Matcher matcher = pattern.matcher(contentUrl);
+        if(!matcher.find()) {
+            modIdResult.addMessage("Invalid Mod.io URL entered!", ResultType.INVALID);
+            return modIdResult;
         }
+
+        modIdResult.setPayload(matcher.group(1));
+        modIdResult.addMessage("Successfully scraped Mod.io Mod ID from URL.", ResultType.SUCCESS);
 
         return modIdResult;
     }
@@ -405,7 +407,7 @@ public class ModInfoService {
 
         String modType = uniqueTags.getFirst();
         if (modIoPageDoesNotContainMod(modType)) {
-            modScrapeResult.addMessage(String.format("%s is not a mod, it is a %s.", modPage.title().split(" for Space Engineers - mod.io")[0], modType),  ResultType.FAILED);
+            modScrapeResult.addMessage(String.format("%s is not a mod, it is a %s.", modPage.title().split(" for Space Engineers - mod.io")[0], modType), ResultType.FAILED);
             return;
         }
 
