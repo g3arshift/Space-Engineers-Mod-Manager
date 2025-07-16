@@ -71,8 +71,6 @@ public class ModInfoService {
 
     private final String modIoModJsoupModIdSelector;
 
-    private final String modIoModLastUpdatedSelector;
-
     private final int modIoScrapingTimeout;
 
     //TODO: Split this into two subclasses, one for steam one for mod.io. Much more maintainable then.
@@ -97,7 +95,6 @@ public class ModInfoService {
 
         this.modIoModTypeSelector = PROPERTIES.getProperty("semm.modio.modScraper.type.cssSelector");
         this.modIoModJsoupModIdSelector = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
-        this.modIoModLastUpdatedSelector = PROPERTIES.getProperty("semm.modio.modScraper.lastUpdated.cssSelector");
         this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
     }
 
@@ -453,14 +450,6 @@ public class ModInfoService {
         modInfo[2] = fullDescription.toString();
         if (modInfo[2].isEmpty()) {
             modScrapeResult.addMessage(String.format("Failed to get description for \"%s\".", modInfo[0]), ResultType.FAILED);
-            return;
-        }
-
-        //Get mod last updated information
-        String lastUpdatedRaw = modPage.select(modIoModLastUpdatedSelector).getFirst().childNodes().getFirst().toString();
-        String lastUpdatedFormatted = Optional.ofNullable(StringUtils.substringBetween(lastUpdatedRaw, "<span>", "</span>")).orElse("'");
-        if (lastUpdatedFormatted.isEmpty()) {
-            modScrapeResult.addMessage(String.format("Failed to get last updated information for \"%s\".", modInfo[0]), ResultType.FAILED);
             return;
         }
 
