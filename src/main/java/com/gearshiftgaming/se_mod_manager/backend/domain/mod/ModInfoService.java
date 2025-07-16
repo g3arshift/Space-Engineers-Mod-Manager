@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -72,14 +73,7 @@ public class ModInfoService {
 
     private final String modIoModLastUpdatedSelector;
 
-    private final String modIoModTagsSelector;
-
-    private final String modIoModDescriptionSelector;
-
     private final int modIoScrapingTimeout;
-
-    private final String modIoScrapingWaitConditionSelector;
-
 
     //TODO: Split this into two subclasses, one for steam one for mod.io. Much more maintainable then.
 
@@ -104,10 +98,7 @@ public class ModInfoService {
         this.modIoModTypeSelector = PROPERTIES.getProperty("semm.modio.modScraper.type.cssSelector");
         this.modIoModJsoupModIdSelector = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
         this.modIoModLastUpdatedSelector = PROPERTIES.getProperty("semm.modio.modScraper.lastUpdated.cssSelector");
-        this.modIoModTagsSelector = PROPERTIES.getProperty("semm.modio.modScraper.tags.cssSelector");
-        this.modIoModDescriptionSelector = PROPERTIES.getProperty("semm.modio.modScraper.description.cssSelector");
         this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
-        this.modIoScrapingWaitConditionSelector = PROPERTIES.getProperty("semm.modio.modScraper.waitCondition.cssSelector");
     }
 
     public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
@@ -437,30 +428,29 @@ public class ModInfoService {
         modInfo[0] = modPage.title().split(" for Space Engineers - mod.io")[0];
 
         //Get mod tags
-        List<Node> tagNodes = modPage.select(modIoModTagsSelector).getLast().childNodes();
-        StringBuilder concatenatedModTags = new StringBuilder();
-        for (int i = 1; i < tagNodes.size(); i++) {
-            String tag = StringUtils.substringBetween(tagNodes.get(i).toString(), "<a href=\"/g/spaceengineers?tags-in=", "\"");
-            if (i + 1 < tagNodes.size()) {
-                concatenatedModTags.append(tag).append(",");
-            } else {
-                concatenatedModTags.append(tag);
-            }
-        }
-        modInfo[1] = concatenatedModTags.toString();
+        //List<Node> tagNodes = modPage.select(modIoModTagsSelector).getLast().childNodes();
+        Set<String> uniqueTags = modPage.select("a[href]").stream()
+                .map(element -> element.attr("href"))
+                .filter(href -> href.startsWith("/g/spaceengineers?tags="))
+                .map(href -> href.substring(href.indexOf("=") + 1))
+                .collect(Collectors.toSet());
 
-        //Get mod description
-//        modInfo[2] = modPage.select(MOD_IO_MOD_DESCRIPTION_SELECTOR)
-//                .stream()
-//                .findFirst()
-//                .map(element -> element.childNodes().stream()
-//                        .map(Object::toString)
-//                        .collect(Collectors.joining())
-//                        .trim())
-//                .orElse("");
-        //TODO: Instead of this, we need to split our page content apart. We need to start by getting everything after <span class="">Description</span>
-        // Then find the stuff between <p> tags!
-        // If this works do it for the other stuff as well, don't rely on selectors.
+        modInfo[1] = String.join(",", uniqueTags);
+
+        /* Get the HTML we need for the proper rendering of the description.
+        There SHOULD only be one tag using .tw-view-text with a parent that has the class tw-flex and tw-flex col.
+
+        Descriptions can be in another format though where the user didn't enter one, so we will check for that too.*/
+        //FIXME: This is really sloppy.
+        Element fullDescription;
+        fullDescription = findDescriptionFromViewTextTag(modScrapeResult, modPage);
+        if (fullDescription == null)
+            fullDescription = findDescriptionFromBreakWordsTag(modScrapeResult, modPage);
+
+        //If we've failed our second check, fail it back.
+        if(fullDescription == null) return;
+
+        modInfo[2] = fullDescription.toString();
         if (modInfo[2].isEmpty()) {
             modScrapeResult.addMessage(String.format("Failed to get description for \"%s\".", modInfo[0]), ResultType.FAILED);
             return;
@@ -486,7 +476,7 @@ public class ModInfoService {
 
         String jsonContent = newsArticleScript.childNodes().getFirst().toString();
         JsonObject newsArticleJson = new Gson().fromJson(jsonContent, JsonObject.class);
-        if(!newsArticleJson.has("dateModified")) {
+        if (!newsArticleJson.has("dateModified")) {
             modScrapeResult.addMessage(String.format("Could not find dateModified for \"%s\"", modInfo[0]), ResultType.FAILED);
             return;
         }
@@ -503,6 +493,47 @@ public class ModInfoService {
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);
+    }
+
+    @Nullable
+    private Element findDescriptionFromViewTextTag(Result<String[]> modScrapeResult, Document modPage) {
+        //Check for the first mod description pattern
+        Elements descriptionTags = modPage.select(".tw-view-text");
+        return findDescriptionElementByClass(modScrapeResult, descriptionTags);
+    }
+
+    @Nullable
+    private Element findDescriptionFromBreakWordsTag(Result<String[]> modScrapeResult, Document modPage) {
+        List<Element> descriptionTags = modPage.select(".tw-break-words").stream()
+                .filter(element -> "tw-break-words".equals(element.className()))
+                .toList();
+        return findDescriptionElementByClass(modScrapeResult, descriptionTags);
+    }
+
+    @Nullable
+    private Element findDescriptionElementByClass(Result<String[]> modScrapeResult, List<Element> descriptionTags) {
+        Element fullDescription = null;
+        for (Element element : descriptionTags) {
+            if (element.parent() != null && element.parent().hasClass("tw-flex") && element.parent().hasClass("tw-flex-col")) {
+                fullDescription = element;
+                break;
+            }
+        }
+
+        if(fullDescription == null) {
+            modScrapeResult.addMessage("Failed to get description tag.", ResultType.FAILED);
+            return null;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            fullDescription = fullDescription.parent();
+            if (fullDescription == null) {
+                modScrapeResult.addMessage("Parent chain ended early during iteration " + i, ResultType.FAILED);
+                return null;
+            }
+        }
+
+        return fullDescription;
     }
 
     //Check if the mod we're scraping is actually a workshop mod.

@@ -5,6 +5,9 @@ import com.gearshiftgaming.se_mod_manager.backend.domain.mod.ModInfoService;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,12 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ModInfoServiceTest {
 
@@ -224,18 +223,13 @@ public class ModInfoServiceTest {
         assertTrue(goodResult.isSuccess());
         assertEquals("Multi-Function Survival Kit with Sifter", goodResult.getPayload()[0]);
         assertEquals("Mod,Block,NoScripts", goodResult.getPayload()[1]);
-        assertEquals("""
-                <!----><div id="" class="tw-absolute tw--top-20 tw-h-px tw-w-full" style="z-index: -1;"></div><!----><div class="tw-w-full tw-global--border-radius tw-relative tw-rounded-tr-none tw-border-transparent">
-                 <div class="">
-                  <!----><!---->
-                  <div class="tw-flex tw-flex-col">
-                   <!---->
-                   <div class="tw-content tw-view-text">
-                    <p>A survival kit that has many other function like full assembler, refining (via assembling function) and sifting function too.</p>
-                   </div><!---->
-                  </div>
-                 </div><!---->
-                </div>""", goodResult.getPayload()[2]);
+
+        //This isn't exact, but our description should contain at LEAST this.
+        Document modDescription = Jsoup.parse(goodResult.getPayload()[2]);
+        Element description = modDescription.selectFirst("p");
+        assertNotNull(description);
+        assertEquals("A survival kit that has many other function like full assembler, refining (via assembling function) and sifting function too.", description.text());
+
         assertEquals("2024", goodResult.getPayload()[3]);
         assertEquals("--06-24", goodResult.getPayload()[4]);
         assertEquals("11:30:31", goodResult.getPayload()[5]);
