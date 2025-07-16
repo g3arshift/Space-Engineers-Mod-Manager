@@ -20,7 +20,7 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-public class ModInfoServiceTest {
+class ModInfoServiceTest {
 
     ModlistRepository modlistRepository;
 
@@ -234,4 +234,6 @@ public class ModInfoServiceTest {
         assertEquals("--06-24", goodResult.getPayload()[4]);
         assertEquals("11:30:31", goodResult.getPayload()[5]);
     }
+
+    //TODO: Add a test for mods that have no description. Like https://mod.io/g/spaceengineers/m/battle-cannon-and-turrets1#description
 }
