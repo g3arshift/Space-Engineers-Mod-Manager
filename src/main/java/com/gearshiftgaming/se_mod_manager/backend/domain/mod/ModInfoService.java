@@ -186,7 +186,7 @@ public class ModInfoService {
     }
 
     //Scrape the web pages of the mods we want the information from
-    public Result<String[]> scrapeModInformation(Mod mod) throws InterruptedException {
+    public Result<String[]> scrapeModInformation(Mod mod) {
         Result<String[]> modScrapeResult;
         if (mod instanceof SteamMod) {
             modScrapeResult = scrapeSteamMod(mod.getId());
@@ -319,7 +319,6 @@ public class ModInfoService {
         return modScrapeResult;
     }
 
-    //TODO: OP #67. As a part of it, we need to rewrite all the scraping functionality to parse based on our returned value, not just HTML.
     private Result<String[]> scrapeModIoMod(String modId) {
         Result<String[]> modScrapeResult = new Result<>();
         //By this point we should have a valid ModIO ID to look up the mods by for the correct game. Need to verify tags and that it is a mod, however.
