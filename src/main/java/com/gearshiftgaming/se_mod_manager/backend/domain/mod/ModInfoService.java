@@ -67,8 +67,6 @@ public class ModInfoService {
 
     private final String steamCollectionVerificationSelector;
 
-    private final String modIoModTypeSelector;
-
     private final String modIoModJsoupModIdSelector;
 
     private final int modIoScrapingTimeout;
@@ -93,7 +91,6 @@ public class ModInfoService {
         this.steamCollectionModIdSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
         this.steamCollectionVerificationSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
-        this.modIoModTypeSelector = PROPERTIES.getProperty("semm.modio.modScraper.type.cssSelector");
         this.modIoModJsoupModIdSelector = PROPERTIES.getProperty("semm.modio.modScraper.jsoup.modId.cssSelector");
         this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
     }
@@ -239,7 +236,7 @@ public class ModInfoService {
         }
 
         String modName = modPage.title().contains("Workshop::") ? modPage.title().split("Workshop::")[1] : modPage.title();
-        if (pageDoesNotContainMod(ModType.STEAM, modPage)) {
+        if (steamPageDoesNotContainMod(modPage)) {
             if (!modPage.select(steamModTypeSelector).isEmpty()) {
                 modScrapeResult.addMessage("\"" + modPage.title().split("Workshop::")[1] + "\" is not a mod, it is a " +
                         modPage.select(steamModTypeSelector).getFirst().childNodes().getFirst().toString() + ".", ResultType.FAILED);
@@ -398,18 +395,17 @@ public class ModInfoService {
 
     private void parseModIoModInfo(String pageSource, String modId, Result<String[]> modScrapeResult) {
         Document modPage = Jsoup.parse(pageSource);
-        if (pageDoesNotContainMod(ModType.MOD_IO, modPage)) {
-            String itemType = modPage.select(modIoModTypeSelector)
-                    .stream()
-                    .findFirst()
-                    .flatMap(element -> element.childNodes().stream().findFirst())
-                    .map(Object::toString).orElse("");
-            if (!itemType.isEmpty()) {
-                modScrapeResult.addMessage(modPage.title().split(" for Space Engineers - mod.io")[0] + " is not a mod, it is a " +
-                        StringUtils.substringBetween(itemType, "<span>", "</span>") + ".", ResultType.FAILED);
-            } else {
-                modScrapeResult.addMessage("Unknown error when scraping mod.io.", ResultType.FAILED);
-            }
+        //Get mod tags. The first one will always be the mod type.
+        List<String> uniqueTags = modPage.select("a[href]").stream()
+                .map(element -> element.attr("href"))
+                .filter(href -> href.startsWith("/g/spaceengineers?tags="))
+                .map(href -> href.substring(href.indexOf("=") + 1))
+                .distinct()
+                .toList();
+
+        String modType = uniqueTags.getFirst();
+        if (modIoPageDoesNotContainMod(modType)) {
+            modScrapeResult.addMessage(String.format("%s is not a mod, it is a %s.", modPage.title().split(" for Space Engineers - mod.io")[0], modType),  ResultType.FAILED);
             return;
         }
 
@@ -424,15 +420,7 @@ public class ModInfoService {
         //Get mod name
         modInfo[0] = modPage.title().split(" for Space Engineers - mod.io")[0];
 
-        //Get mod tags
-        //List<Node> tagNodes = modPage.select(modIoModTagsSelector).getLast().childNodes();
-        Set<String> uniqueTags = modPage.select("a[href]").stream()
-                .map(element -> element.attr("href"))
-                .filter(href -> href.startsWith("/g/spaceengineers?tags="))
-                .map(href -> href.substring(href.indexOf("=") + 1))
-                .collect(Collectors.toSet());
-
-        modInfo[1] = String.join(",", uniqueTags);
+        modInfo[1] = String.join(",", uniqueTags.subList(1, uniqueTags.size()));
 
         /* Get the HTML we need for the proper rendering of the description.
         There SHOULD only be one tag using .tw-view-text with a parent that has the class tw-flex and tw-flex col.
@@ -445,7 +433,7 @@ public class ModInfoService {
             fullDescription = findDescriptionFromBreakWordsTag(modScrapeResult, modPage);
 
         //If we've failed our second check, fail it back.
-        if(fullDescription == null) return;
+        if (fullDescription == null) return;
 
         modInfo[2] = fullDescription.toString();
         if (modInfo[2].isEmpty()) {
@@ -509,7 +497,7 @@ public class ModInfoService {
             }
         }
 
-        if(fullDescription == null) {
+        if (fullDescription == null) {
             modScrapeResult.addMessage("Failed to get description tag.", ResultType.FAILED);
             return null;
         }
@@ -526,26 +514,18 @@ public class ModInfoService {
     }
 
     //Check if the mod we're scraping is actually a workshop mod.
-    //Mod.io will NOT load without JS running, so we have to open a full headless browser, which is slow as hell.
-    private boolean pageDoesNotContainMod(ModType modType, Document modPage) {
-        if (modType == ModType.STEAM) {
-            Elements typeElements = modPage.select(steamModTypeSelector);
-            if (!typeElements.isEmpty()) {
-                Node modTypeNode = typeElements.getFirst().childNodes().stream().findFirst().orElse(null);
-                return modTypeNode == null || !modTypeNode.toString().equals("Mod");
-            } else {
-                return true;
-            }
+    private boolean steamPageDoesNotContainMod(Document modPage) {
+        Elements typeElements = modPage.select(steamModTypeSelector);
+        if (!typeElements.isEmpty()) {
+            Node modTypeNode = typeElements.getFirst().childNodes().stream().findFirst().orElse(null);
+            return modTypeNode == null || !modTypeNode.toString().equals("Mod");
         } else {
-            Element element = modPage.selectFirst(modIoModTypeSelector);
-            if (element != null) {
-                Node modTypeNode = element.childNodes().stream().findFirst().orElse(null);
-                //return element.childNodes().getFirst().toString().startsWith("Mod", 6);
-                return modTypeNode == null || !modTypeNode.toString().contains("Mod");
-            } else {
-                return true;
-            }
+            return true;
         }
+    }
+
+    private boolean modIoPageDoesNotContainMod(String tag) {
+        return !tag.equals("Mod");
     }
 }
 
