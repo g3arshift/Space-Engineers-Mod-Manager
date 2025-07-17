@@ -126,14 +126,14 @@ class SEOneSteamModDownloadServiceTest {
         Files.createFile(fakeTorchPath.resolve("Sandbox_config.sbc"));
 
         fakeWindowsSeInstallLocation = tempDir.resolve("Steam").toString();
-        if(Files.exists(Path.of(fakeWindowsSeInstallLocation)))
+        if (Files.exists(Path.of(fakeWindowsSeInstallLocation)))
             FileUtils.deleteDirectory(new File(fakeWindowsSeInstallLocation));
         Files.createDirectories(Path.of(fakeWindowsSeInstallLocation));
 
         //This has to be in the home directory for the linux tests.
         Files.createDirectories(Path.of(System.getProperty("user.home")).resolve(".steam").resolve("steam").resolve("config"));
         Path fakeLinuxSeInstallPath = Path.of(fakeLinuxSeInstallLocation);
-        if(Files.exists(fakeLinuxSeInstallPath))
+        if (Files.exists(fakeLinuxSeInstallPath))
             FileUtils.deleteDirectory(new File(fakeLinuxSeInstallLocation));
         Files.createDirectories(fakeLinuxSeInstallPath);
         Files.deleteIfExists(Path.of(System.getProperty("user.home") + "/.steam/steam/config/libraryfolders.vdf"));
@@ -653,7 +653,7 @@ class SEOneSteamModDownloadServiceTest {
     void shouldFailWhenSteamCmdExitCodeIsNotZeroOrSevenAfterUpdate() throws IOException, InterruptedException {
         //When we run the command to get the install location of steam, return our temp dir.
         when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
-                .thenReturn(new CommandResult(0, List.of("")));
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
         int testFailCode = 6;
         when(mockedCommandRunner.runCommand(List.of(steamCmdPath, "+login", "anonymous", "+quit")))
@@ -683,13 +683,77 @@ class SEOneSteamModDownloadServiceTest {
     }
 
     @Test
-    void isModDownloadedShouldReturnFalseWhenNotDownloaded() {
+    void isModDownloadedShouldReturnFalseWhenNotDownloaded() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientSavePath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
+
+        String modId = "3329381499"; //Cross barred windows, my favorite :)
+
+        Files.createDirectories(tempDir.resolve("Steam")
+                .resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850"));
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        boolean isDownloaded = downloadService.isModDownloaded(modId, saveProfileInfo);
+        assertFalse(isDownloaded);
     }
 
     @Test
-    void isModDownloadedShouldReturnTrueWhenDownloaded() {
+    void isModDownloadedShouldReturnTrueWhenDownloaded() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientSavePath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
+
+        String modId = "3329381499"; //Cross barred windows, my favorite :)
+
+        Path modPath = tempDir.resolve("Steam")
+                .resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId);
+
+        //Create our base path
+        Files.createDirectories(modPath);
+
+        //Create some content inside the folder so we can pass the file walk check.
+        //This is not chained with the previous createDirectories call as it makes it more explicit in what we're doing rather than the harder to read chain of resolves.
+        Files.createDirectories(modPath.resolve("Data"));
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        boolean isDownloaded = downloadService.isModDownloaded(modId, saveProfileInfo);
+        assertTrue(isDownloaded);
     }
 
     @Test

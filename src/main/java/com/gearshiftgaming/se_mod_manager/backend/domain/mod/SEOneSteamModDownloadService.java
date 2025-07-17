@@ -10,6 +10,8 @@ import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfileInfo;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
 import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -160,7 +162,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
 
         //We have to run this to make sure SteamCMD applies any updates it needs BEFORE downloading the workshop item
         CommandResult steamUpdateCommandResult = commandRunner.runCommand(List.of(steamCmdLauncherPath, "+login", "anonymous", "+quit"));
-        if(!steamUpdateCommandResult.wasSuccessful() && steamUpdateCommandResult.exitCode() != 7) { //Exclude 7 code since that returns from an update
+        if (!steamUpdateCommandResult.wasSuccessful() && steamUpdateCommandResult.exitCode() != 7) { //Exclude 7 code since that returns from an update
             modDownloadResult.addMessage("Failed to update SteamCMD. Exited with code: " + steamUpdateCommandResult.exitCode(), ResultType.FAILED);
             return modDownloadResult;
         }
@@ -221,14 +223,10 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
 
     @Override
     public boolean isModDownloaded(String modId, SaveProfileInfo saveProfileInfo) throws IOException {
-        Result<Path> downloadPathResult = getModDownloadPath(saveProfileInfo);
-        Path modPath = downloadPathResult.getPayload();
-
-        if (saveProfileInfo.getSaveType() != SaveType.CLIENT)
-            modPath = modPath.resolve("content").resolve("244850").resolve(modId);
+        Path modPath = getFullyResolvedModPath(modId, saveProfileInfo);
 
         boolean isModDownloaded = false;
-        if (Files.exists(modPath)) {
+        if (modPath != null && Files.exists(modPath)) {
             try (Stream<Path> entries = Files.list(modPath)) {
                 isModDownloaded = entries.findFirst().isPresent();
             }
@@ -239,7 +237,37 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     //TODO: Use this with the conflict check
     @Override
     public Result<Path> getModLocation(String modId, SaveProfileInfo saveProfileInfo) {
-        return getModDownloadPath(saveProfileInfo);
+        Path modDownloadLocation = getFullyResolvedModPath(modId, saveProfileInfo);
+        Result<Path> modLocationResult = new Result<>();
+        if(modDownloadLocation == null) {
+            modLocationResult.addMessage(String.format("Could not find mod %s.", modId), ResultType.FAILED);
+            return modLocationResult;
+        }
+
+        modLocationResult.addMessage(String.format("Found mod %s path.", modId), ResultType.FAILED);
+        modLocationResult.setPayload(modDownloadLocation);
+        return modLocationResult;
+    }
+
+
+    @Nullable
+    private Path getFullyResolvedModPath(String modId, SaveProfileInfo saveProfileInfo) {
+        Result<Path> downloadPathResult = getModDownloadPath(saveProfileInfo);
+        Path modPath = downloadPathResult.getPayload();
+
+        if (saveProfileInfo.getSaveType() != SaveType.CLIENT)
+            modPath = modPath.resolve("content").resolve("244850").resolve(modId);
+        else
+            modPath = modPath.resolve("steamapps")
+                    .resolve("workshop")
+                    .resolve("content")
+                    .resolve("244850")
+                    .resolve(modId);
+
+        if(Files.notExists(modPath))
+            return null;
+
+        return modPath;
     }
 
     @Override
