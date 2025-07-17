@@ -19,7 +19,7 @@ public interface ModDownloadService {
 
     public boolean isModDownloaded(String modId, SaveProfileInfo saveProfileInfo) throws IOException;
 
-    public Result<Path> getModLocation(String modId, SaveProfileInfo saveProfileInfo);
+    public Result<Path> getModPath(String modId, SaveProfileInfo saveProfileInfo) throws IOException;
 
     public boolean shouldUpdateMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo);
 }

@@ -10,7 +10,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfileInfo;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
 import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -225,18 +224,22 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     public boolean isModDownloaded(String modId, SaveProfileInfo saveProfileInfo) throws IOException {
         Path modPath = getFullyResolvedModPath(modId, saveProfileInfo);
 
-        boolean isModDownloaded = false;
+        return directoryHasContent(modPath);
+    }
+
+    private static boolean directoryHasContent(Path modPath) throws IOException {
+        boolean hasContent = false;
         if (modPath != null && Files.exists(modPath)) {
             try (Stream<Path> entries = Files.list(modPath)) {
-                isModDownloaded = entries.findFirst().isPresent();
+                hasContent = entries.findFirst().isPresent();
             }
         }
-        return isModDownloaded;
+        return hasContent;
     }
 
     //TODO: Use this with the conflict check
     @Override
-    public Result<Path> getModLocation(String modId, SaveProfileInfo saveProfileInfo) {
+    public Result<Path> getModPath(String modId, SaveProfileInfo saveProfileInfo) throws IOException {
         Path modDownloadLocation = getFullyResolvedModPath(modId, saveProfileInfo);
         Result<Path> modLocationResult = new Result<>();
         if(modDownloadLocation == null) {
@@ -244,7 +247,12 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
             return modLocationResult;
         }
 
-        modLocationResult.addMessage(String.format("Found mod %s path.", modId), ResultType.FAILED);
+        if(!directoryHasContent(modDownloadLocation)) {
+            modLocationResult.addMessage(String.format("Mod %s folder exists but is empty.", modId), ResultType.FAILED);
+            return modLocationResult;
+        }
+
+        modLocationResult.addMessage(String.format("Found mod %s path.", modId), ResultType.SUCCESS);
         modLocationResult.setPayload(modDownloadLocation);
         return modLocationResult;
     }
