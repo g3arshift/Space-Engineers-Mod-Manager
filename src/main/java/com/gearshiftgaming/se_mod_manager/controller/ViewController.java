@@ -18,6 +18,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.input.SaveInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -135,86 +136,86 @@ public class ViewController {
         //For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
 
         //View for adding a new Save Profile
-        final FXMLLoader SAVE_LIST_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
-        final SaveInput SAVE_INPUT_VIEW = new SaveInput(uiService);
-        SAVE_LIST_INPUT_LOADER.setController(SAVE_INPUT_VIEW);
-        final Parent SAVE_LIST_INPUT_ROOT = SAVE_LIST_INPUT_LOADER.load();
-        SAVE_INPUT_VIEW.initView(SAVE_LIST_INPUT_ROOT);
+        final FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
+        final SaveInput saveInputView = new SaveInput(uiService);
+        saveListInputLoader.setController(saveInputView);
+        final Parent saveListInputRoot = saveListInputLoader.load();
+        saveInputView.initView(saveListInputRoot);
 
         //View for text input when creating a new save profile.
-        final FXMLLoader SAVE_PROFILE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
-        final SimpleInput SAVE_PROFILE_INPUT_VIEW = new SimpleInput();
-        SAVE_PROFILE_MANAGER_LOADER.setController(SAVE_PROFILE_INPUT_VIEW);
-        final Parent SAVE_PROFILE_MANAGER_ROOT = SAVE_PROFILE_MANAGER_LOADER.load();
-        SAVE_PROFILE_INPUT_VIEW.initView(SAVE_PROFILE_MANAGER_ROOT);
+        final FXMLLoader saveProfileManagerLoader = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+        final SimpleInput saveProfileInputView = new SimpleInput();
+        saveProfileManagerLoader.setController(saveProfileInputView);
+        final Parent saveProfileManagerRoot = saveProfileManagerLoader.load();
+        saveProfileInputView.initView(saveProfileManagerRoot);
 
         //View for text input when adding a new Mod Profile
-        final FXMLLoader MOD_PROFILE_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
-        final SimpleInput MOD_PROFILE_INPUT_VIEW = new SimpleInput();
-        MOD_PROFILE_INPUT_LOADER.setController(MOD_PROFILE_INPUT_VIEW);
-        final Parent MOD_PROFILE_INPUT_ROOT = MOD_PROFILE_INPUT_LOADER.load();
-        MOD_PROFILE_INPUT_VIEW.initView(MOD_PROFILE_INPUT_ROOT);
+        final FXMLLoader modProfileInputLoader = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+        final SimpleInput modProfileInputView = new SimpleInput();
+        modProfileInputLoader.setController(modProfileInputView);
+        final Parent modProfileInputRoot = modProfileInputLoader.load();
+        modProfileInputView.initView(modProfileInputRoot);
 
         //View for managing Save Profiles
-        final FXMLLoader SAVE_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
-        final SaveProfileManager SAVE_MANAGER_VIEW = new SaveProfileManager(uiService, SAVE_INPUT_VIEW, SAVE_PROFILE_INPUT_VIEW);
-        SAVE_MANAGER_LOADER.setController(SAVE_MANAGER_VIEW);
-        final Parent SAVE_MANAGER_ROOT = SAVE_MANAGER_LOADER.load();
+        final FXMLLoader saveManagerLoader = new FXMLLoader(getClass().getResource("/view/save-profile-manager.fxml"));
+        final SaveProfileManager saveManagerView = new SaveProfileManager(uiService, saveInputView, saveProfileInputView);
+        saveManagerLoader.setController(saveManagerView);
+        final Parent saveManagerRoot = saveManagerLoader.load();
 
         //View for managing Mod Profiles
-        final FXMLLoader MOD_LIST_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/mod-list-manager.fxml"));
-        final ModListProfileManager MOD_LIST_MANAGER_VIEW = new ModListProfileManager(uiService, MOD_PROFILE_INPUT_VIEW);
-        MOD_LIST_MANAGER_LOADER.setController(MOD_LIST_MANAGER_VIEW);
-        final Parent MOD_LIST_MANAGER_ROOT = MOD_LIST_MANAGER_LOADER.load();
+        final FXMLLoader modListManagerLoader = new FXMLLoader(getClass().getResource("/view/mod-list-manager.fxml"));
+        final ModListProfileManager modListManagerView = new ModListProfileManager(uiService, modProfileInputView);
+        modListManagerLoader.setController(modListManagerView);
+        final Parent modListManagerRoot = modListManagerLoader.load();
 
         //View for the statusbar section of the main window
-        final FXMLLoader STATUS_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
-        final StatusBar STATUS_BAR_VIEW = new StatusBar(uiService);
-        STATUS_BAR_LOADER.setController(STATUS_BAR_VIEW);
-        final Parent STATUS_BAR_ROOT = STATUS_BAR_LOADER.load();
+        final FXMLLoader statusBarLoader = new FXMLLoader(getClass().getResource("/view/statusbar.fxml"));
+        final StatusBar statusBarView = new StatusBar(uiService);
+        statusBarLoader.setController(statusBarView);
+        final Parent statusBarRoot = statusBarLoader.load();
 
         //View for text input when adding a new Mod either by ID or URL, but not for files.
-        final FXMLLoader ID_AND_URL_MOD_IMPORT_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
-        final SimpleInput ID_AND_URL_MOD_IMPORT_INPUT_VIEW = new SimpleInput();
-        ID_AND_URL_MOD_IMPORT_INPUT_LOADER.setController(ID_AND_URL_MOD_IMPORT_INPUT_VIEW);
-        final Parent ID_AND_URL_MOD_IMPORT_INPUT_ROOT = ID_AND_URL_MOD_IMPORT_INPUT_LOADER.load();
-        ID_AND_URL_MOD_IMPORT_INPUT_VIEW.initView(ID_AND_URL_MOD_IMPORT_INPUT_ROOT);
+        final FXMLLoader idAndUrlModImportInputLoader = new FXMLLoader(getClass().getResource("/view/simple-input.fxml"));
+        final SimpleInput idAndUrlModImportInputView = new SimpleInput();
+        idAndUrlModImportInputLoader.setController(idAndUrlModImportInputView);
+        final Parent idAndUrlModImportInputRoot = idAndUrlModImportInputLoader.load();
+        idAndUrlModImportInputView.initView(idAndUrlModImportInputRoot);
 
         //View for handling general file input, but primarily for ingesting modlist files.
-        final FXMLLoader GENERAL_FILE_INPUT_LOADER = new FXMLLoader(getClass().getResource("/view/general-file-input.fxml"));
-        final GeneralFileInput GENERAL_FILE_INPUT_VIEW = new GeneralFileInput();
-        GENERAL_FILE_INPUT_LOADER.setController(GENERAL_FILE_INPUT_VIEW);
-        final Parent GENERAL_FILE_LOADER_ROOT = GENERAL_FILE_INPUT_LOADER.load();
-        GENERAL_FILE_INPUT_VIEW.initView(GENERAL_FILE_LOADER_ROOT);
+        final FXMLLoader generalFileInputLoader = new FXMLLoader(getClass().getResource("/view/general-file-input.fxml"));
+        final GeneralFileInput generalFileInputView = new GeneralFileInput();
+        generalFileInputLoader.setController(generalFileInputView);
+        final Parent generalFileLoaderRoot = generalFileInputLoader.load();
+        generalFileInputView.initView(generalFileLoaderRoot);
 
         //View for managing the actual mod lists. This is the center section of the main window
-        final FXMLLoader MASTER_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/master-manager.fxml"));
-        final MasterManager MASTER_MANAGER_VIEW = new MasterManager(uiService, stage, PROPERTIES, STATUS_BAR_VIEW, MOD_LIST_MANAGER_VIEW, SAVE_MANAGER_VIEW, ID_AND_URL_MOD_IMPORT_INPUT_VIEW, SAVE_INPUT_VIEW, GENERAL_FILE_INPUT_VIEW);
-        MASTER_MANAGER_LOADER.setController(MASTER_MANAGER_VIEW);
-        final Parent MASTER_MANAGER_ROOT = MASTER_MANAGER_LOADER.load();
+        final FXMLLoader masterManagerLoader = new FXMLLoader(getClass().getResource("/view/master-manager.fxml"));
+        final MasterManager masterManagerView = new MasterManager(uiService, stage, PROPERTIES, statusBarView, modListManagerView, saveManagerView, idAndUrlModImportInputView, saveInputView, generalFileInputView);
+        masterManagerLoader.setController(masterManagerView);
+        final Parent masterManagerRoot = masterManagerLoader.load();
 
         //View for the menubar section of the main window
-        final FXMLLoader MOD_TABLE_CONTEXT_BAR_LOADER = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
-        final ModTableContextBar MOD_TABLE_CONTEXT_BAR_VIEW = new ModTableContextBar(uiService, MASTER_MANAGER_VIEW, STATUS_BAR_VIEW, stage);
-        MOD_TABLE_CONTEXT_BAR_LOADER.setController(MOD_TABLE_CONTEXT_BAR_VIEW);
-        final Parent MENU_BAR_ROOT = MOD_TABLE_CONTEXT_BAR_LOADER.load();
+        final FXMLLoader modTableContextBarLoader = new FXMLLoader(getClass().getResource("/view/mod-table-context-bar.fxml"));
+        final ModTableContextBar modTableContextBarView = new ModTableContextBar(uiService, masterManagerView, statusBarView, stage);
+        modTableContextBarLoader.setController(modTableContextBarView);
+        final Parent menuBarRoot = modTableContextBarLoader.load();
 
         //The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-        MOD_LIST_MANAGER_VIEW.initView(MOD_LIST_MANAGER_ROOT, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), MOD_TABLE_CONTEXT_BAR_VIEW);
-        SAVE_MANAGER_VIEW.initView(SAVE_MANAGER_ROOT, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), MOD_TABLE_CONTEXT_BAR_VIEW);
+        modListManagerView.initView(modListManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
+        saveManagerView.initView(saveManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
 
         //View for the tool manager that gets attached to the primary app window
-        final FXMLLoader TOOL_MANAGER_LOADER = new FXMLLoader(getClass().getResource("/view/tool-manager.fxml"));
-        final ToolManager TOOL_MANAGER_VIEW = new ToolManager();
-        TOOL_MANAGER_LOADER.setController(TOOL_MANAGER_VIEW);
-        TOOL_MANAGER_LOADER.load();
+        final FXMLLoader toolManagerLoader = new FXMLLoader(getClass().getResource("/view/tool-manager.fxml"));
+        final ToolManager toolManagerView = new ToolManager();
+        toolManagerLoader.setController(toolManagerView);
+        toolManagerLoader.load();
 
         //View for the primary application window
-        final FXMLLoader MAIN_VIEW_LOADER = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
-        final MainWindow MAIN_WINDOW_VIEW = new MainWindow(PROPERTIES, stage,
-                MOD_TABLE_CONTEXT_BAR_VIEW, MASTER_MANAGER_VIEW, STATUS_BAR_VIEW, TOOL_MANAGER_VIEW, uiService);
-        MAIN_VIEW_LOADER.setController(MAIN_WINDOW_VIEW);
-        final Parent MAIN_VIEW_ROOT = MAIN_VIEW_LOADER.load();
-        MAIN_WINDOW_VIEW.initView(MAIN_VIEW_ROOT, MENU_BAR_ROOT, MASTER_MANAGER_ROOT, STATUS_BAR_ROOT, SAVE_MANAGER_VIEW, MOD_LIST_MANAGER_VIEW);
+        final FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
+        final MainWindow mainWindowView = new MainWindow(PROPERTIES, stage,
+                modTableContextBarView, masterManagerView, statusBarView, toolManagerView, uiService);
+        mainViewLoader.setController(mainWindowView);
+        final Parent mainViewRoot = mainViewLoader.load();
+        mainWindowView.initView(mainViewRoot, menuBarRoot, masterManagerRoot, statusBarRoot, saveManagerView, modListManagerView);
     }
 }

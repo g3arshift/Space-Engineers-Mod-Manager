@@ -4,8 +4,6 @@ import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
 import com.gearshiftgaming.se_mod_manager.controller.ViewController;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowTitleBarColorUtility;
-import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
-import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -26,25 +24,12 @@ public class SpaceEngineersModManager extends Application {
 
 	private static final Logger LOGGER = LogManager.getLogger(SpaceEngineersModManager.class);
 
-	public static final OperatingSystemVersion OPERATING_SYSTEM_VERSION;
-
-	static {
-        try {
-            OPERATING_SYSTEM_VERSION = OperatingSystemVersionUtility.getOperatingSystemVersion();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e){
-			Thread.currentThread().interrupt();
-			throw new RuntimeException("Thread was interrupted", e);
-		}
-    }
-
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 		launch(args);
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+	public void start(Stage primaryStage) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InterruptedException {
 		new ViewController(primaryStage, LOGGER);
 		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
 			try {

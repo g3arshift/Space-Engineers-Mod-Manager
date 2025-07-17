@@ -780,29 +780,6 @@ public class Popup {
         WindowDressingUtility.appendStageIcon(childStage);
         childStage.setResizable(false);
 
-//        try {
-//            if (WindowsVersionUtility.isWindows11()) {
-//                Rectangle clippingRectangle = new Rectangle();
-//                clippingRectangle.setArcWidth(30);
-//                clippingRectangle.setArcHeight(30);
-//                contents.setClip(clippingRectangle);
-//
-//                ChangeListener<Number> widthClipListener = (observable, oldValue, newValue) -> clippingRectangle.setWidth(newValue.doubleValue());
-//                ChangeListener<Number> heightClipListener = (observable, oldValue, newValue) -> clippingRectangle.setHeight(newValue.doubleValue());
-//                childStage.widthProperty().addListener(widthClipListener);
-//                childStage.heightProperty().addListener(heightClipListener);
-//
-//                childStage.setOnShown(e -> {
-//                    childStage.widthProperty().removeListener(widthClipListener);
-//                    childStage.heightProperty().removeListener(heightClipListener);
-//                });
-//
-//                scene.setFill(Color.TRANSPARENT);
-//            }
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
         childStage.setScene(scene);
     }
 }

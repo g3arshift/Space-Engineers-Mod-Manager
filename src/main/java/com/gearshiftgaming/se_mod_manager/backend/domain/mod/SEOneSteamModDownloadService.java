@@ -1,6 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain.mod;
 
-import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
+import com.gearshiftgaming.se_mod_manager.AppContext;
 import com.gearshiftgaming.se_mod_manager.backend.data.steam.SimpleSteamLibraryFoldersVdfParser;
 import com.gearshiftgaming.se_mod_manager.backend.domain.command.CommandResult;
 import com.gearshiftgaming.se_mod_manager.backend.domain.command.CommandRunner;
@@ -8,6 +8,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfileInfo;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -16,8 +17,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager.OPERATING_SYSTEM_VERSION;
 
 /**
  * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
@@ -32,7 +31,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     /**
      * This is the root path where mods need to be placed. When downloading a mod, create a folder in this directory equal to the mod ID, and download the mod there.
      */
-    private final String clientModDownloadPath;
+    private final String clientModDownloadRoot;
 
     /**
      * This is the fallback path for when we cannot find the download directory we want to.
@@ -45,6 +44,8 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
 
     private final SimpleSteamLibraryFoldersVdfParser vdfParser;
 
+    private final AppContext appContext;
+
     private SEOneSteamModDownloadService(String fallbackDownloadBasePath, String steamCmdPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
         if (Files.notExists(Path.of(steamCmdPath)))
             throw new SteamInstallMissingException("A valid SteamCMD install was not found at: " + steamCmdPath);
@@ -53,14 +54,15 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
         this.steamCmdLauncherPath = steamCmdPath;
         this.commandRunner = commandRunner;
         this.vdfParser = vdfParser;
+        appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
 
         String clientRootCandidate = getClientDownloadPath();
         /* We shouldn't need this on account of the previous step throwing an exception if it doesn't exist,
         but there's a very rare scenario it can happen in, so let's just be safe. */
         if (Files.notExists(Path.of(clientRootCandidate)) || clientRootCandidate.isBlank())
-            clientModDownloadPath = fallbackDownloadRoot;
+            clientModDownloadRoot = fallbackDownloadRoot;
         else
-            clientModDownloadPath = clientRootCandidate;
+            clientModDownloadRoot = clientRootCandidate;
     }
 
     public static SEOneSteamModDownloadService create(String steamCmdLauncherPath, CommandRunner commandRunner, SimpleSteamLibraryFoldersVdfParser vdfParser) throws IOException, InterruptedException {
@@ -76,21 +78,28 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
      On Linux this s found in $HOME/.steam/steam/config/libraryfolders.vdf*/
     private String getClientDownloadPath() throws IOException, InterruptedException {
         String steamPath;
-        if (OPERATING_SYSTEM_VERSION == OperatingSystemVersion.LINUX) {
-            if (Files.notExists(Path.of("$HOME/.steam/steam/config/libraryfolders.vdf")))
+        if (appContext.isLinux()) {
+            if (Files.notExists(Path.of(System.getProperty("user.home")).resolve(".steam")
+                    .resolve("steam")
+                    .resolve("config")
+                    .resolve("libraryfolders.vdf")))
                 return "";
 
-            steamPath = "$HOME/.steam/steam/config/libraryfolders.vdf";
+            steamPath = Path.of(System.getProperty("user.home")).resolve(".steam")
+                    .resolve("steam")
+                    .resolve("config")
+                    .resolve("libraryfolders.vdf")
+                    .toString();
+            return getSpaceEngineersDiskLocation(steamPath);
         } else {
             steamPath = getWindowsSteamInstallPath();
             if (steamPath.isBlank())
                 return "";
+            return getSpaceEngineersDiskLocation(Path.of(steamPath).
+                    resolve("steamapps").
+                    resolve("libraryfolders.vdf").
+                    toString());
         }
-
-        return getSpaceEngineersDiskLocation(Path.of(steamPath).
-                resolve("steamapps").
-                resolve("libraryfolders.vdf").
-                toString());
     }
 
     private String getWindowsSteamInstallPath() throws IOException, InterruptedException {
@@ -245,7 +254,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     private Result<Path> getModDownloadPath(SaveProfileInfo saveProfileInfo) {
         Result<Path> modDownloadResult = new Result<>();
         Path downloadPath = switch (saveProfileInfo.getSaveType()) {
-            case CLIENT -> Path.of(clientModDownloadPath);
+            case CLIENT -> Path.of(clientModDownloadRoot);
             case DEDICATED_SERVER,
                  TORCH -> //This is two levels up from our save path, it has three parent calls because it includes the file itself.
                     Path.of(saveProfileInfo.getSavePath())
