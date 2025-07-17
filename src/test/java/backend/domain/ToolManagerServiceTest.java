@@ -6,7 +6,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import javafx.application.Platform;
+import helper.JavaFXTestHelper;
 import javafx.concurrent.Task;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -36,7 +36,6 @@ import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mockStatic;
 
 
 /**
@@ -146,10 +145,7 @@ class ToolManagerServiceTest {
 
     @BeforeAll
     static void initJfx() {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.startup(() -> {
-        });
-        latch.countDown();
+        JavaFXTestHelper.initJavaFx();
     }
 
     @BeforeEach

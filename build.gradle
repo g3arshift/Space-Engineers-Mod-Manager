@@ -64,9 +64,6 @@ dependencies {
     api libs.org.apache.maven.plugins.maven.jlink.plugin
     api libs.org.apache.commons.commons.compress
     api libs.org.iq80.snappy.snappy
-    // https://mvnrepository.com/artifact/org.wiremock/wiremock
-    //JSON Small and Fast Parser upgrade to resolve CVE-2024-57699 from wiremock.
-    // https://mvnrepository.com/artifact/net.minidev/json-smart
     implementation group: 'net.minidev', name: 'json-smart', version: '2.5.2'
     testImplementation group: 'org.wiremock', name: 'wiremock', version: '3.13.0'
     testImplementation libs.org.junit.jupiter.junit.jupiter
@@ -77,7 +74,7 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.8.1a'
+version = '0.8.1.1a'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 

@@ -14,7 +14,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfileInfo;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveType;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import javafx.application.Platform;
+import helper.JavaFXTestHelper;
 import javafx.concurrent.Task;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -87,7 +87,7 @@ class SEOneSteamModDownloadServiceTest {
 
     @BeforeAll
     static void init() {
-        initJfx();
+        JavaFXTestHelper.initJavaFx();
     }
 
     @BeforeEach
@@ -132,9 +132,10 @@ class SEOneSteamModDownloadServiceTest {
 
         //This has to be in the home directory for the linux tests.
         Files.createDirectories(Path.of(System.getProperty("user.home")).resolve(".steam").resolve("steam").resolve("config"));
-        if(Files.exists(Path.of(fakeLinuxSeInstallLocation)))
+        Path fakeLinuxSeInstallPath = Path.of(fakeLinuxSeInstallLocation);
+        if(Files.exists(fakeLinuxSeInstallPath))
             FileUtils.deleteDirectory(new File(fakeLinuxSeInstallLocation));
-        Files.createDirectories(Path.of(fakeLinuxSeInstallLocation));
+        Files.createDirectories(fakeLinuxSeInstallPath);
         Files.deleteIfExists(Path.of(System.getProperty("user.home") + "/.steam/steam/config/libraryfolders.vdf"));
         Files.createFile(Path.of(System.getProperty("user.home") + "/.steam/steam/config/libraryfolders.vdf"));
     }
@@ -365,7 +366,6 @@ class SEOneSteamModDownloadServiceTest {
 
             Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
 
-            //TODO: We need to check to make sure our argumnt starts with C:\Users. DO THIS FOR OTHER TESTS TOO!!!
             //Our bread and butter. Now we can actually verify our args.
             verify(mockedCommandRunner, times(3)).runCommand(captor.capture());
             List<String> actualCommand = captor.getValue();
@@ -378,7 +378,7 @@ class SEOneSteamModDownloadServiceTest {
 
     //This generally won't actually matter, but we add it for verification anyways in case something down the line changes.
     @Test
-    void getDedicatedServerRootShouldReturnLinuxPathWhenOsIsLinux() throws ClassNotFoundException, IOException, InterruptedException {
+    void getDedicatedServerRootShouldReturnLinuxPathWhenOsIsLinux() throws IOException, InterruptedException {
         try (MockedStatic<OperatingSystemVersionUtility> utilMock = mockStatic(OperatingSystemVersionUtility.class)) {
             utilMock.when(OperatingSystemVersionUtility::getOperatingSystemVersion)
                     .thenReturn(OperatingSystemVersion.LINUX);
@@ -598,12 +598,6 @@ class SEOneSteamModDownloadServiceTest {
                 .resolve("Data")));
     }
 
-    @Test
-    void downloadModShouldSucceedOnLinux() {
-        //TODO: We are gonna have to mock a LOT of behavior. This includes adding a command runner to the ToolManagerService, which it needs to make Linux even work.
-        // So we'll have to mock that too.
-    }
-
     private void setupRealDownloadBehavior() throws IOException, InterruptedException, ExecutionException {
         Properties properties = new Properties();
         try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM_ToolManagerTest.properties")) {
@@ -622,13 +616,6 @@ class SEOneSteamModDownloadServiceTest {
         when(saveProfileInfo.isSaveExists()).thenReturn(true);
         when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
-    }
-
-    private static void initJfx() {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.startup(() -> {
-        });
-        latch.countDown();
     }
 
     private Result<Void> downloadSteamCmd(Properties properties) throws InterruptedException, ExecutionException, IOException {
@@ -663,8 +650,36 @@ class SEOneSteamModDownloadServiceTest {
     }
 
     @Test
-    void shouldFailWhenSteamCmdExitCodeIsNotZeroOrSevenAfterUpdate() {
+    void shouldFailWhenSteamCmdExitCodeIsNotZeroOrSevenAfterUpdate() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("")));
 
+        int testFailCode = 6;
+        when(mockedCommandRunner.runCommand(List.of(steamCmdPath, "+login", "anonymous", "+quit")))
+                .thenReturn(new CommandResult(testFailCode, List.of("Test Failure")));
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
+
+        String modId = "123456";
+
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientSavePath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        Result<Void> downloadResult = downloadService.downloadMod(modId, saveProfileInfo);
+
+        assertTrue(downloadResult.isFailure());
+        assertEquals(String.format("Failed to update SteamCMD. Exited with code: %d", testFailCode), downloadResult.getCurrentMessage());
     }
 
     @Test
