@@ -279,11 +279,15 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
     }
 
     @Override
-    public boolean shouldUpdateMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo) {
-        //TODO: If our mod exists, check the size of our download files versus the remote, and if different, download. If same, don't.
+    public boolean shouldUpdateMod(String modId, long remoteFileSize, SaveProfileInfo saveProfileInfo) throws IOException {
         //TODO: This is going to require modifying our scraping to also pull back the file size. Don't need to store it though, just scrape it.
         //TODO: Mod.io stores it too!
-        return false;
+        Result<Path> modPathResult = getModPath(modId, saveProfileInfo);
+        if(modPathResult.isFailure())
+            return true;
+
+        long localFileSize = FileUtils.sizeOfDirectory(modPathResult.getPayload().toFile());
+        return localFileSize < remoteFileSize;
     }
 
 

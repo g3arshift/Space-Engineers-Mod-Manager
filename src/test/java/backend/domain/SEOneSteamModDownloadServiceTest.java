@@ -53,8 +53,6 @@ class SEOneSteamModDownloadServiceTest {
     @TempDir
     private Path tempDir;
 
-    private String fallbackPath = "Mod_Downloads";
-
     private Path fakeClientSavePath;
 
     private Path fakeDedicatedServerPath;
@@ -205,6 +203,7 @@ class SEOneSteamModDownloadServiceTest {
                 .thenReturn(new CommandResult(0, List.of("Success")));
 
         String modId = "123456";
+        String fallbackPath = "Mod_Downloads";
         Path fakeClientRoot = tempDir.resolve(fallbackPath);
         when(mockedCommandRunner.runCommand(List.of(steamCmdPath,
                 "+force_install_dir", fakeClientRoot.resolve(fakeSaveName).toString(),
@@ -882,22 +881,127 @@ class SEOneSteamModDownloadServiceTest {
     }
 
     @Test
-    void shouldFailToUpdateSteamCmdAndExitWithFailedStatus() {
+    void shouldReturnModNeedsUpdateWhenLocalFileSizeIsSmallerThanRemote() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientSavePath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
+
+        String modId = "3329381499"; //Cross barred windows, my favorite :)
+
+        Path modPath = tempDir.resolve("Steam")
+                .resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId);
+
+        //Create our base path
+        Files.createDirectories(modPath);
+
+        Random random = new Random();
+        int fileSize = random.nextInt(102400, 1048576); //100KB to 1MB
+        byte[] fakeFile = new byte[fileSize];
+        random.nextBytes(fakeFile);
+        Files.write(modPath.resolve("fake_mod.fake"), fakeFile);
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        boolean shouldUpdateMod = downloadService.shouldUpdateMod(modId, fileSize + 1, saveProfileInfo);
+        assertTrue(shouldUpdateMod);
     }
 
     @Test
-    void shouldReturnModNeedsUpdateWhenLocalFileSizeIsSmallerThanRemote() {
+    void shouldReturnModDoesNotNeedUpdateWhenModIsTheSameSizeAsRemote() throws IOException, InterruptedException {
+        //When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientSavePath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
+
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
+
+        String modId = "3329381499"; //Cross barred windows, my favorite :)
+
+        Path modPath = tempDir.resolve("Steam")
+                .resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850")
+                .resolve(modId);
+
+        //Create our base path
+        Files.createDirectories(modPath);
+
+        Random random = new Random();
+        int fileSize = random.nextInt(102400, 1048576); //100KB to 1MB
+        byte[] fakeFile = new byte[fileSize];
+        random.nextBytes(fakeFile);
+        Files.write(modPath.resolve("fake_mod.fake"), fakeFile);
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        boolean shouldUpdateMod = downloadService.shouldUpdateMod(modId, fileSize, saveProfileInfo);
+        assertFalse(shouldUpdateMod);
     }
 
     @Test
-    void shouldReturnModNeedsUpdateWhenModIsNotDownloaded() {
+    void shouldReturnModNeedsUpdateWhenModIsNotDownloaded() throws IOException, InterruptedException {
+//When we run the command to get the install location of steam, return our temp dir.
+        when(mockedCommandRunner.runCommand(List.of("REG", "QUERY", "HKLM\\SOFTWARE\\Wow6432Node\\Valve\\Steam", "/v", "InstallPath")))
+                .thenReturn(new CommandResult(0, List.of("    InstallPath    REG_SZ    " + tempDir)));
 
-    }
+        //Mock the behavior we need from our save profile
+        when(saveProfileInfo.isSaveExists()).thenReturn(true);
+        when(saveProfileInfo.getProfileName()).thenReturn("Test Profile");
+        when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
+        when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeClientSavePath.resolve("Sandbox_config.sbc")));
+        when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
 
-    @Test
-    void shouldReturnModDoesNotNeedUpdateWhenModIsTheSameSizeAsRemote() {
+        //When we try to parse a VDF file, normally our steam library, return our fake.
+        when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
 
+        String modId = "3329381499"; //Cross barred windows, my favorite :)
+
+        Path modPath = tempDir.resolve("Steam")
+                .resolve("steamapps")
+                .resolve("workshop")
+                .resolve("content")
+                .resolve("244850");
+
+        //Create our base path
+        Files.createDirectories(modPath);
+
+        Random random = new Random();
+        int fileSize = random.nextInt(102400, 1048576); //100KB to 1MB
+
+        SEOneSteamModDownloadService downloadService = SEOneSteamModDownloadService.createWithCustomFallbackRoot(tempDir.toString(),
+                steamCmdPath,
+                mockedCommandRunner,
+                mockedVdfParser);
+
+        boolean shouldUpdateMod = downloadService.shouldUpdateMod(modId, fileSize, saveProfileInfo);
+        assertTrue(shouldUpdateMod);
     }
 }

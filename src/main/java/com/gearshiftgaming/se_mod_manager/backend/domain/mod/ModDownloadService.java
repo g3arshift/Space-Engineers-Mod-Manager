@@ -21,5 +21,5 @@ public interface ModDownloadService {
 
     public Result<Path> getModPath(String modId, SaveProfileInfo saveProfileInfo) throws IOException;
 
-    public boolean shouldUpdateMod(String modId, int remoteFileSize, SaveProfileInfo saveProfileInfo);
+    public boolean shouldUpdateMod(String modId, long remoteFileSize, SaveProfileInfo saveProfileInfo) throws IOException;
 }
