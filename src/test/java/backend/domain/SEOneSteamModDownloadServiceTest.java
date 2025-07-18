@@ -621,7 +621,7 @@ class SEOneSteamModDownloadServiceTest {
         Files.deleteIfExists(tempDir.resolve("steamcmd.exe"));
         CountDownLatch doneLatch = new CountDownLatch(1);
 
-        String steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.download.source");
+        String steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.windows.download.source");
         int maxRetries = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit"));
         int connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
         int readTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout"));
