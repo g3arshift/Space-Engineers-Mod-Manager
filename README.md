@@ -22,7 +22,7 @@ It can do this for either Space Engineers servers or clients, providing a far ea
 
 
 
-Currently tested on Windows 10 and 11. It functions with Linux but there are minor UI bugs.
+Currently tested on Windows 10 and 11. It should function on Linux, but there are minor UI bugs, and it has not been as thoroughly tested.
 
 Gear Shift - Developer
 
