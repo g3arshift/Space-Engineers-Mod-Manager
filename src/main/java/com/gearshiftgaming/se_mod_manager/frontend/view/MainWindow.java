@@ -55,63 +55,63 @@ public class MainWindow {
 
     //TODO: We need to replace the window control bar for the window.
 
-    private final Properties PROPERTIES;
+    private final Properties properties;
 
-    private final UiService UI_SERVICE;
+    private final UiService uiService;
 
-    private final Stage STAGE;
+    private final Stage stage;
 
     private Scene scene;
 
-    private final UserConfiguration USER_CONFIGURATION;
+    private final UserConfiguration userConfiguration;
 
     //This is the reference to the controller for the bar located in the top section of the main borderpane
-    private final ModTableContextBar CONTEXT_BAR_VIEW;
+    private final ModTableContextBar contextBarView;
 
     //This is the reference to the meat and potatoes of the UI, the actual controls located in the center of the UI responsible for managing modlists
-    private final MasterManager MASTER_MANAGER_VIEW;
+    private final MasterManager masterManagerView;
 
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane
-    private final StatusBar STATUS_BAR_VIEW;
+    private final StatusBar statusBarView;
 
     //This is the service that handles the logic behind setting up the various tools we need for SEMM to function.
-    private final ToolManagerService TOOL_MANAGER_SERVICE;
+    private final ToolManagerService toolManagerService;
 
     //This is the reference for the UI portion of the tool manager.
-    private final ToolManager TOOL_MANAGER_VIEW;
+    private final ToolManager toolManagerView;
 
     //Initializes our controller while maintaining the empty constructor JavaFX expects
     public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ToolManager toolManager, UiService uiService) {
-        this.STAGE = stage;
-        this.PROPERTIES = properties;
-        this.USER_CONFIGURATION = uiService.getUserConfiguration();
-        this.UI_SERVICE = uiService;
-        this.CONTEXT_BAR_VIEW = modTableContextBar;
-        this.MASTER_MANAGER_VIEW = masterManager;
-        this.STATUS_BAR_VIEW = statusBar;
-        this.TOOL_MANAGER_VIEW = toolManager;
+        this.stage = stage;
+        this.properties = properties;
+        this.userConfiguration = uiService.getUserConfiguration();
+        this.uiService = uiService;
+        this.contextBarView = modTableContextBar;
+        this.masterManagerView = masterManager;
+        this.statusBarView = statusBar;
+        this.toolManagerView = toolManager;
 
-        TOOL_MANAGER_SERVICE = new ToolManagerService(UI_SERVICE,
-                PROPERTIES.getProperty("semm.steam.cmd.localFolderPath"),
-                PROPERTIES.getProperty("semm.steam.cmd.download.source"),
-                Integer.parseInt(PROPERTIES.getProperty("semm.steam.cmd.download.retry.limit")),
-                Integer.parseInt(PROPERTIES.getProperty("semm.steam.cmd.download.connection.timeout")),
-                Integer.parseInt(PROPERTIES.getProperty("semm.steam.cmd.download.read.timeout")),
-                Integer.parseInt(PROPERTIES.getProperty("semm.steam.cmd.download.retry.delay")));
+        toolManagerService = new ToolManagerService(this.uiService,
+                this.properties.getProperty("semm.steam.cmd.localFolderPath"),
+                this.properties.getProperty("semm.steam.cmd.download.source"),
+                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.limit")),
+                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.connection.timeout")),
+                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.read.timeout")),
+                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.delay")));
     }
 
     public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManager saveProfileManager, ModListProfileManager modListProfileManager) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         //Prepare the UI
         setupWindow(mainViewRoot);
-        CONTEXT_BAR_VIEW.initView();
-        MASTER_MANAGER_VIEW.initView(CONTEXT_BAR_VIEW.getLogToggle(), CONTEXT_BAR_VIEW.getModDescriptionToggle(), Integer.parseInt(PROPERTIES.getProperty("semm.modTable.cellSize")),
-                CONTEXT_BAR_VIEW.getModProfileDropdown(), CONTEXT_BAR_VIEW.getSaveProfileDropdown(), CONTEXT_BAR_VIEW.getModTableSearchField());
-        STATUS_BAR_VIEW.initView();
+        contextBarView.initView();
+        masterManagerView.initView(contextBarView.getLogToggle(), contextBarView.getModDescriptionToggle(), Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
+                contextBarView.getModProfileDropdown(), contextBarView.getSaveProfileDropdown(), contextBarView.getModTableSearchField());
+        statusBarView.initView();
         mainWindowLayout.setTop(menuBarRoot);
         mainWindowLayout.setCenter(modlistManagerRoot);
         mainWindowLayout.setBottom(statusBarRoot);
 
-        final ObservableList<SaveProfile> saveProfiles = UI_SERVICE.getSaveProfiles();
+        final ObservableList<SaveProfile> saveProfiles = uiService.getSaveProfiles();
 
         //Prompt the user to remove any saves that no longer exist on the file system.
         if (saveProfiles.size() != 1 &&
@@ -123,14 +123,14 @@ public class MainWindow {
                     saveProfiles.get(i).setSaveExists(false);
                     String errorMessage = "The save associated with the profile \"" + saveProfiles.get(i).getProfileName() + "\" was not found. Do you want " +
                             "to remove this profile from the managed saves?";
-                    UI_SERVICE.log("Save \"" + saveProfiles.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
+                    uiService.log("Save \"" + saveProfiles.get(i).getSaveName() + "\" is missing from the disk.", MessageType.ERROR);
 
-                    TwoButtonChoice choice = Popup.displayYesNoDialog(errorMessage, STAGE, MessageType.WARN);
+                    TwoButtonChoice choice = Popup.displayYesNoDialog(errorMessage, stage, MessageType.WARN);
                     if (choice == TwoButtonChoice.YES) {
-                        UI_SERVICE.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
-                        Result<Void> deleteResult = UI_SERVICE.deleteSaveProfile(saveProfiles.get(i));
+                        uiService.log("Removing save " + saveProfiles.get(i).getSaveName() + ".", MessageType.INFO);
+                        Result<Void> deleteResult = uiService.deleteSaveProfile(saveProfiles.get(i));
                         if (deleteResult.isFailure()) {
-                            UI_SERVICE.log(deleteResult);
+                            uiService.log(deleteResult);
                             Popup.displaySimpleAlert(deleteResult);
                             break;
                         }
@@ -143,7 +143,7 @@ public class MainWindow {
             }
         }
 
-        mainWindowLayout.setOnDragOver(MASTER_MANAGER_VIEW::handleModTableDragOver);
+        mainWindowLayout.setOnDragOver(masterManagerView::handleModTableDragOver);
 
         //TODO: REMOVE FOR FULL RELEASE
         //TODO: BE REALLY SURE TO REMOVE FOR FULL RELEASE
@@ -152,28 +152,28 @@ public class MainWindow {
                         "Make sure to backup your Space Engineers saves before use, and please report any bugs you find at the following link.",
                 "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", MessageType.INFO);
 
-        STAGE.setOnShown(event -> {
+        stage.setOnShown(event -> {
             //Add title and icon to the stage
             Properties versionProperties = new Properties();
             try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("version.properties")) {
                 versionProperties.load(input);
             } catch (IOException | NullPointerException e) {
-                UI_SERVICE.log(e);
+                uiService.log(e);
             }
 
             //Setup the window title and icon
-            STAGE.setTitle("SEMM v" + versionProperties.getProperty("version"));
-            WindowDressingUtility.appendStageIcon(STAGE);
+            stage.setTitle("SEMM v" + versionProperties.getProperty("version"));
+            WindowDressingUtility.appendStageIcon(stage);
 
             setupRequiredTools();
 
-            if (UI_SERVICE.getUserConfiguration().isRunFirstTimeSetup()) {
-                TwoButtonChoice firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", STAGE, MessageType.INFO);
+            if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
+                TwoButtonChoice firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", stage, MessageType.INFO);
                 if (firstTimeSetupChoice == TwoButtonChoice.YES) {
-                    UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
+                    uiService.displayTutorial(stage, masterManagerView);
                 } else if (firstTimeSetupChoice == TwoButtonChoice.NO) { //It seems like this branch doesn't matter, but it prevents the firstTimeSetup bool from being set if the application closes mid-tutorial.
-                    UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(false);
-                    UI_SERVICE.saveUserConfiguration();
+                    uiService.getUserConfiguration().setRunFirstTimeSetup(false);
+                    uiService.saveUserConfiguration();
                 }
             }
         });
@@ -183,48 +183,48 @@ public class MainWindow {
         //TODO: Add some check for if the files already exist.
         // We want to skip the steps that exist. If they all exist, just skip this entirely.
         //Download all the required tools we need for SEMM to function
-        UI_SERVICE.log("Downloading required tools...", MessageType.INFO);
+        uiService.log("Downloading required tools...", MessageType.INFO);
 
         //Download SteamCMD.
         //TODO: Genericize
-        if(Files.exists(Path.of(PROPERTIES.getProperty("semm.steam.cmd.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
-            UI_SERVICE.log("SteamCMD already installed.", MessageType.INFO);
+        if(Files.exists(Path.of(properties.getProperty("semm.steam.cmd.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
+            uiService.log("SteamCMD already installed.", MessageType.INFO);
             return;
         }
 
-        StackPane toolManagerWindow = TOOL_MANAGER_VIEW.getToolDownloadProgressPanel();
-        MASTER_MANAGER_VIEW.getMainViewStack().getChildren().add(toolManagerWindow);
+        StackPane toolManagerWindow = toolManagerView.getToolDownloadProgressPanel();
+        masterManagerView.getMainViewStack().getChildren().add(toolManagerWindow);
 
         //TODO: Wrap this in another task so we can just staple on additional tasks for additional tools.
-        Task<Result<Void>> toolSetupTask = TOOL_MANAGER_SERVICE.setupSteamCmd();
-        TOOL_MANAGER_VIEW.setToolNameText("SteamCMD");
+        Task<Result<Void>> toolSetupTask = toolManagerService.setupSteamCmd();
+        toolManagerView.setToolNameText("SteamCMD");
 
         toolSetupTask.setOnRunning(event1 -> {
-            MASTER_MANAGER_VIEW.disableUserInputElements(true);
-            TOOL_MANAGER_VIEW.bindProgressAndUpdateValues(toolSetupTask.messageProperty(), toolSetupTask.progressProperty());
+            masterManagerView.disableUserInputElements(true);
+            toolManagerView.bindProgressAndUpdateValues(toolSetupTask.messageProperty(), toolSetupTask.progressProperty());
         });
         //When the task is finished log our result, display the last message from it, and fade it out.
         toolSetupTask.setOnSucceeded(event1 -> {
             Result<Void> steamCmdSetupResult = toolSetupTask.getValue();
-            UI_SERVICE.log(steamCmdSetupResult);
+            uiService.log(steamCmdSetupResult);
 
             if (steamCmdSetupResult.isFailure()) {
                 Popup.displayInfoMessageWithLink("Failed to download SteamCMD. SEMM requires SteamCMD to run. " +
                                 "Please submit your log file at the following link.",
-                        "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", STAGE, MessageType.ERROR);
+                        "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", stage, MessageType.ERROR);
                 Platform.exit();
                 return;
             }
 
-            TOOL_MANAGER_VIEW.setAllDownloadsCompleteState();
+            toolManagerView.setAllDownloadsCompleteState();
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), toolManagerWindow);
             fadeTransition.setFromValue(1d);
             fadeTransition.setToValue(0d);
 
             fadeTransition.setOnFinished(actionEvent -> {
-                MASTER_MANAGER_VIEW.disableUserInputElements(false);
-                TOOL_MANAGER_VIEW.setDefaultState();
-                MASTER_MANAGER_VIEW.getMainViewStack().getChildren().remove(toolManagerWindow);
+                masterManagerView.disableUserInputElements(false);
+                toolManagerView.setDefaultState();
+                masterManagerView.getMainViewStack().getChildren().remove(toolManagerWindow);
             });
 
             PauseTransition pauseTransition = new PauseTransition(Duration.millis(450));
@@ -243,22 +243,22 @@ public class MainWindow {
     private void setupWindow(Parent root) {
         this.scene = new Scene(root);
         //Prepare the scene
-        int minWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minWidth"));
-        int minHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.minHeight"));
-        int prefWidth = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.prefWidth"));
-        int prefHeight = Integer.parseInt(PROPERTIES.getProperty("semm.mainView.resolution.prefHeight"));
+        int minWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minWidth"));
+        int minHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.minHeight"));
+        int prefWidth = Integer.parseInt(properties.getProperty("semm.mainView.resolution.prefWidth"));
+        int prefHeight = Integer.parseInt(properties.getProperty("semm.mainView.resolution.prefHeight"));
 
         //Prepare the stage
-        STAGE.setScene(scene);
-        STAGE.setMinWidth(minWidth);
-        STAGE.setMinHeight(minHeight);
-        STAGE.setWidth(prefWidth);
-        STAGE.setHeight(prefHeight);
+        stage.setScene(scene);
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
+        stage.setWidth(prefWidth);
+        stage.setHeight(prefHeight);
 
         //Add a listener to make the slider on the split pane stay at the bottom of our window when resizing it when it shouldn't be visible
-        STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
-            if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
-                MASTER_MANAGER_VIEW.getMainViewSplit().setDividerPosition(0, 1);
+        stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if (!masterManagerView.isMainViewSplitDividerVisible()) {
+                masterManagerView.getMainViewSplit().setDividerPosition(0, 1);
             }
         });
     }
