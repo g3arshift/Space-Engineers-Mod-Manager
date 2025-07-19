@@ -1,6 +1,7 @@
 package backend.domain;
 
 import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.TarballArchiveTool;
 import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ZipArchiveTool;
 import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
@@ -54,7 +55,11 @@ class ToolManagerServiceTest {
 
     private String steamCmdZipPath;
 
-    private String steamCmdSourceLocation;
+    private String steamCmdTarPath;
+
+    private String steamCmdWindowsSourceLocation;
+
+    private String steamCmdLinuxSourceLocation;
 
     private int maxRetries;
 
@@ -118,12 +123,34 @@ class ToolManagerServiceTest {
         return isExe;
     }
 
+    /**
+     * Returns true if the file starts with a shebang (23 21 for first two bytes)
+     *
+     * @param shellScriptFile is the file we are checking
+     * @return true if the file starts with a shebang, and false if it is not or does not exist
+     * @throws IOException when we fail to read the file or our buffer of the read bytes is empty.
+     */
+    private static boolean isShellScript(File shellScriptFile) throws IOException {
+        if(!shellScriptFile.exists())
+            return false;
+
+        byte[] buffer = new byte[2];
+        boolean isShellScript = false;
+        try(InputStream is = new FileInputStream(shellScriptFile)) {
+            //Shebang signature is 23 21
+            if(is.read(buffer) == buffer.length) {
+                isShellScript = buffer[0] == (byte) 0x23 && buffer[1] == (byte) 0x21;
+            }
+        }
+        return isShellScript;
+    }
+
     private Result<Void> runDownload(WireMockRuntimeInfo wireMockRuntimeInfo, ArchiveTool archiveTool) throws InterruptedException, ExecutionException {
-        steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
+        steamCmdWindowsSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
 
         toolManagerService = new ToolManagerService(mock(UiService.class),
                 steamCmdZipPath,
-                steamCmdSourceLocation,
+                steamCmdWindowsSourceLocation,
                 maxRetries,
                 connectionTimeout,
                 readTimeout,
@@ -158,7 +185,9 @@ class ToolManagerServiceTest {
         }
 
         steamCmdZipPath = properties.getProperty("semm.steam.cmd.windows.localFolderPath");
-        steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.windows.download.source");
+        steamCmdTarPath = properties.getProperty("semm.steam.cmd.linux.localFolderPath");
+        steamCmdWindowsSourceLocation = properties.getProperty("semm.steam.cmd.windows.download.source");
+        steamCmdLinuxSourceLocation = properties.getProperty("semm.steam.cmd.linux.download.source");
         maxRetries = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit"));
         connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
         readTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout"));
@@ -323,7 +352,7 @@ class ToolManagerServiceTest {
      */
     @Test
     void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException, IOException {
-        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay, new ZipArchiveTool());
+        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdWindowsSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay, new ZipArchiveTool());
         Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         //Add the listeners so our lists get updated properly when the task updates
@@ -646,7 +675,57 @@ class ToolManagerServiceTest {
     }
 
     @Test
-    void downloadsShellVersionOfSteamCmdIfOnLinux() {
+    void downloadsShellVersionOfSteamCmdIfOnLinux() throws ExecutionException, InterruptedException, IOException {
+        toolManagerService = new ToolManagerService(mock(UiService.class),
+                steamCmdTarPath,
+                steamCmdLinuxSourceLocation,
+                maxRetries,
+                connectionTimeout,
+                readTimeout,
+                retryDelay,
+                new TarballArchiveTool());
 
+        Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
+
+        //Add the listeners so our lists get updated properly when the task updates
+        setupTask.messageProperty().addListener((obs, oldVal, newVal) -> messages.add(newVal));
+        setupTask.progressProperty().addListener((obs, oldVal, newVal) -> progress.add(newVal.doubleValue()));
+        setupTask.setOnSucceeded(e -> doneLatch.countDown());
+        setupTask.setOnFailed(e -> doneLatch.countDown());
+
+        //Run the task
+        Thread taskThread = Thread.ofVirtual().unstarted(setupTask);
+        taskThread.setDaemon(true);
+        taskThread.start();
+
+        //Pause the test until our task is done, but give it a timeout.
+        assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "Task did not complete in time");
+        Result<Void> result = setupTask.get();
+
+        //Check we get both the expected number and type of messages from our result
+        assertTrue(result.isSuccess(), "Download result should be a success");
+        assertEquals("Successfully downloaded SteamCMD", result.getCurrentMessage());
+        assertEquals(ResultType.SUCCESS, result.getType(), "Result is the wrong type, should be SUCCESS.");
+        assertEquals(1, result.getMessages().size(), "Result messages were:\n" + String.join("\n", result.getMessages()));
+
+        //Check we both don't have an empty list of messages and that it's giving us the last expected final message
+        assertFalse(messages.isEmpty(), "Should have updated messages");
+        assertFalse(progress.isEmpty());
+        File steamCmdDownload = new File(Path.of(steamCmdTarPath).toString());
+        //Verify our messages are the correct value for the length.
+        assertEquals(String.format("%d%s/%d%s", steamCmdDownload.length() / toolManagerService.getDivisor(),
+                toolManagerService.getDivisorName(),
+                steamCmdDownload.length() / toolManagerService.getDivisor(),
+                toolManagerService.getDivisorName()), messages.get(messages.size() - 2), "Update messages were:\n" + String.join("\n", messages));
+        assertEquals(1.0, progress.getLast(), "Progress messages were:\n" + progress.stream().map(p -> String.format("%.2f", p)).collect(Collectors.joining("\n- ")));
+
+        //Verify the file downloaded properly.
+        assertTrue(steamCmdDownload.exists());
+        assertEquals(steamCmdDownload.length(), new File(steamCmdZipPath).length());
+
+        //Verify our tar file extracted properly
+        Path extractedTarPath = Path.of(Path.of(steamCmdTarPath).getParent() + "/steamcmd.exe");
+        assertTrue(Files.exists(extractedTarPath));
+        assertTrue(isShellScript(new File(extractedTarPath.toString())));
     }
 }
