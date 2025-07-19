@@ -8,28 +8,28 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane fx:id="toolDownloadProgressPanel" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root type="StackPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Pane opacity="0.4" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: -color-fg-muted;" />
       <HBox alignment="CENTER" spacing="10.0" translateY="20.0">
          <children>
             <VBox alignment="CENTER" translateY="-17.0">
                <children>
-                  <Label fx:id="toolName" text="Tool Name">
+                  <Label fx:id="itemName" text="Tool Name">
                      <graphic>
                         <Label text="Downloading:" />
                      </graphic>
                   </Label>
                   <StackPane>
                      <children>
-                        <ProgressBar fx:id="toolDownloadProgressBar" maxWidth="1.7976931348623157E308" minWidth="100.0" prefHeight="16.0" prefWidth="200.0" progress="0.0" />
-                        <Label fx:id="toolDownloadMessage" text="0B/0B" />
+                        <ProgressBar fx:id="progressBar" maxWidth="1.7976931348623157E308" minWidth="100.0" prefHeight="16.0" prefWidth="200.0" progress="0.0" />
+                        <Label fx:id="progressMessage" text="0B/0B" />
                      </children>
                   </StackPane>
                </children>
             </VBox>
-            <ProgressIndicator fx:id="toolDownloadProgressWheel" prefHeight="60.0" prefWidth="29.0" translateY="-7.0" />
+            <ProgressIndicator fx:id="progressWheel" prefHeight="60.0" prefWidth="29.0" translateY="-7.0" />
          </children>
       </HBox>
    </children>
-</StackPane>
+</fx:root>

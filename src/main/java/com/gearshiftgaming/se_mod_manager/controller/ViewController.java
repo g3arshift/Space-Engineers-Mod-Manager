@@ -18,7 +18,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.input.SaveInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
-import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -135,6 +134,8 @@ public class ViewController {
         //The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
         //For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
 
+        //TODO: Should probably redo this at some point to bind the FXML loading stuff inside the constructor of the objects. This is kinda... Dumb.
+        // Doing that should also let us move a LOT of logic and variables out of the master manager.
         //View for adding a new Save Profile
         final FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
         final SaveInput saveInputView = new SaveInput(uiService);
@@ -204,11 +205,9 @@ public class ViewController {
         modListManagerView.initView(modListManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
         saveManagerView.initView(saveManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
 
+        //TODO: We need a second one fr the master manager.
         //View for the tool manager that gets attached to the primary app window
-        final FXMLLoader toolManagerLoader = new FXMLLoader(getClass().getResource("/view/tool-manager.fxml"));
-        final ToolManager toolManagerView = new ToolManager();
-        toolManagerLoader.setController(toolManagerView);
-        toolManagerLoader.load();
+        final ProgressDisplay toolManagerView = new ProgressDisplay();
 
         //View for the primary application window
         final FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));

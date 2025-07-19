@@ -97,17 +97,6 @@ public class UiService {
     @Getter
     private final IntegerProperty activeModCount;
 
-    //TODO: In the future, rewrite the mod import stuff to be self-contained in another service class. See ToolManagerService as an example.
-    //TODO: This is done with updateProgress and updateMessage
-    @Setter
-    private IntegerProperty modImportProgressNumerator;
-
-    @Setter
-    private IntegerProperty modImportProgressDenominator;
-
-    @Setter
-    private DoubleProperty modImportProgressPercentage;
-
     private final String MOD_DATE_FORMAT;
 
     @Getter

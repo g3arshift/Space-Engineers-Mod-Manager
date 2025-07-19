@@ -1,0 +1,73 @@
+package com.gearshiftgaming.se_mod_manager.frontend.view;
+
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.layout.StackPane;
+import lombok.Getter;
+
+import java.io.IOException;
+
+/**
+ * This class represents all the UI logic surrounding the display elements shown when display a progress panel.
+ * <p>
+ * Copyright (C) 2025 Gear Shift Gaming - All Rights Reserved
+ * You may use, distribute, and modify this code under the terms of the GPL3 license.
+ * <p>
+ * You should have received a copy of the GPL3 license with
+ * this file. If not, please write to: gearshift@gearshiftgaming.com.
+ */
+public class ProgressDisplay extends StackPane {
+
+    @FXML
+    private ProgressBar progressBar;
+
+    @FXML
+    private ProgressIndicator progressWheel;
+
+    @FXML
+    @Getter
+    private Label itemName;
+
+    @FXML
+    private Label progressMessage;
+
+    public ProgressDisplay() {
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/progress-display.fxml"));
+        loader.setRoot(this);
+        loader.setController(this);
+        try {
+            loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load ProgressDisplay FXML", e);
+        }
+    }
+
+    public void bindProgressAndUpdateValues(ReadOnlyStringProperty updateMessage, ReadOnlyDoubleProperty updateProgress) {
+        progressMessage.textProperty().bind(updateMessage);
+        progressBar.progressProperty().bind(updateProgress);
+    }
+
+    public void setToolNameText(String newToolName) {
+        itemName.setText(newToolName);
+    }
+
+    public void setAllDownloadsCompleteState() {
+        progressWheel.setVisible(false);
+    }
+
+    public void setDefaultState() {
+        setToolNameText("Tool Name");
+        progressWheel.setVisible(true);
+    }
+
+    public void setItemNameVisible(boolean visible) {
+        itemName.setVisible(visible);
+    }
+
+    //TODO:
+}

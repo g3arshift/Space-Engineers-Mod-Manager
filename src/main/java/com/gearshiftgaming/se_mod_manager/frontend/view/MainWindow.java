@@ -82,12 +82,12 @@ public class MainWindow {
     private final ToolManagerService toolManagerService;
 
     //This is the reference for the UI portion of the tool manager.
-    private final ToolManager toolManagerView;
+    private final ProgressDisplay toolManagerView;
 
     private final AppContext appContext;
 
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ToolManager toolManager, UiService uiService) throws IOException, InterruptedException {
+    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ProgressDisplay progressDisplay, UiService uiService) throws IOException, InterruptedException {
         this.stage = stage;
         this.properties = properties;
         this.userConfiguration = uiService.getUserConfiguration();
@@ -95,7 +95,7 @@ public class MainWindow {
         this.contextBarView = modTableContextBar;
         this.masterManagerView = masterManager;
         this.statusBarView = statusBar;
-        this.toolManagerView = toolManager;
+        this.toolManagerView = progressDisplay;
 
         appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
 
@@ -189,20 +189,17 @@ public class MainWindow {
     }
 
     private void setupRequiredTools() {
-        //TODO: Add some check for if the files already exist.
-        // We want to skip the steps that exist. If they all exist, just skip this entirely.
         //Download all the required tools we need for SEMM to function
         uiService.log("Downloading required tools...", MessageType.INFO);
 
         //Download SteamCMD.
-        //TODO: Genericize
-        if(Files.exists(Path.of(properties.getProperty("semm.steam.cmd.windows.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
+        if(Files.exists(Path.of(properties.getProperty("semm.steam.cmd.windows.localFolderPath")).getParent().resolve("steamcmd.exe")) ||
+        Files.exists(Path.of(properties.getProperty("semm.steam.cmd.linux.localFolderPath")).getParent().resolve("steamcmd.sh"))) {
             uiService.log("SteamCMD already installed.", MessageType.INFO);
             return;
         }
 
-        StackPane toolManagerWindow = toolManagerView.getToolDownloadProgressPanel();
-        masterManagerView.getMainViewStack().getChildren().add(toolManagerWindow);
+        masterManagerView.getMainViewStack().getChildren().add(toolManagerView);
 
         //TODO: Wrap this in another task so we can just staple on additional tasks for additional tools.
         Task<Result<Void>> toolSetupTask = toolManagerService.setupSteamCmd();
@@ -226,14 +223,14 @@ public class MainWindow {
             }
 
             toolManagerView.setAllDownloadsCompleteState();
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), toolManagerWindow);
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), toolManagerView);
             fadeTransition.setFromValue(1d);
             fadeTransition.setToValue(0d);
 
             fadeTransition.setOnFinished(actionEvent -> {
                 masterManagerView.disableUserInputElements(false);
                 toolManagerView.setDefaultState();
-                masterManagerView.getMainViewStack().getChildren().remove(toolManagerWindow);
+                masterManagerView.getMainViewStack().getChildren().remove(toolManagerView);
             });
 
             PauseTransition pauseTransition = new PauseTransition(Duration.millis(450));

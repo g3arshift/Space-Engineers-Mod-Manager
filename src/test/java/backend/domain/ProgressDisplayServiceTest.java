@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 @WireMockTest
-class ToolManagerServiceTest {
+class ProgressDisplayServiceTest {
 
     private ToolManagerService toolManagerService;
 

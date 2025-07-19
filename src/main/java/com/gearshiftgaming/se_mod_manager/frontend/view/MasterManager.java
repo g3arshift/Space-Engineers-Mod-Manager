@@ -82,6 +82,8 @@ import java.util.stream.Collectors;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class MasterManager {
+
+    //TODO: We need to clean this up and look at separting it into different classes. This is a LOT of variables in one class.
     @FXML
     private ComboBox<String> modImportDropdown;
 
@@ -157,34 +159,11 @@ public class MasterManager {
     private ListView<LogMessage> viewableLog;
 
     @FXML
-    private StackPane modImportProgressPanel;
-
-    @FXML
-    private ProgressBar modImportProgressBar;
-
-    @FXML
-    private Label modImportProgressActionName;
-
-    @FXML
-    private Label modImportProgressNumerator;
-
-    @FXML
-    private Label modImportProgressDivider;
-
-    @FXML
-    private Label modImportProgressDenominator;
-
-    @FXML
-    private ProgressIndicator modImportProgressWheel;
-
-    @FXML
     private Label modImportSteamCollectionName;
 
     @FXML
     private Label modIoUrlToIdName;
 
-
-    //TODO: Organize the nightmare of variable declarations here.
     private final UiService UI_SERVICE;
 
     private final ObservableList<LogMessage> USER_LOG;
