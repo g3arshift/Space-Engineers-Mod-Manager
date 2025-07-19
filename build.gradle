@@ -24,7 +24,8 @@ repositories {
 
 dependencies {
 
-    api libs.org.apache.commons.commons.lang3
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.18.0'
     api libs.commons.io.commons.io
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.24.3'
@@ -65,6 +66,7 @@ dependencies {
     api libs.org.apache.commons.commons.compress
     api libs.org.iq80.snappy.snappy
     implementation group: 'net.minidev', name: 'json-smart', version: '2.5.2'
+    // We can't upgrade this, it breaks our wiremock hard.
     testImplementation group: 'org.wiremock', name: 'wiremock', version: '3.13.0'
     testImplementation libs.org.junit.jupiter.junit.jupiter
     testImplementation libs.org.testfx.testfx.core
@@ -74,7 +76,7 @@ dependencies {
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
-version = '0.8.1.1a'
+version = '0.8.2a'
 description = 'Space-Engineers-Mod-Manager'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
