@@ -57,8 +57,8 @@ public class ToolManagerService {
      * of SteamCMD and related tooling.
      *
      * @param uiService              the UI service used to log errors
-     * @param steamCmdArchivePath    the local file system path where the SteamCMD zip will be downloaded to
-     * @param steamCmdSourceLocation the remote URL or path from which the SteamCMD zip can be downloaded
+     * @param steamCmdArchivePath    the local file system path where the SteamCMD archive will be downloaded to
+     * @param steamCmdSourceLocation the remote URL or path from which the SteamCMD archive can be downloaded
      * @param maxRetries             the maximum number of retry attempts for downloading SteamCMD in case of failure
      * @param connectionTimeout      the timeout in milliseconds for establishing a network connection during download
      * @param readTimeout            the timeout in milliseconds for reading data from the connection
@@ -138,7 +138,7 @@ public class ToolManagerService {
         uiService.log("Downloading Steam CMD...", MessageType.INFO);
         URL steamDownloadUrl = new URI(steamCmdSourceLocation).toURL();
 
-        //Get the size of the steamcmd.zip we're downloading
+        //Get the size of the steamcmd archive we're downloading
         long remoteSteamCmdFileSize = getRemoteFileSize(steamDownloadUrl);
         if (remoteSteamCmdFileSize == -1) {
             steamCmdSetupResult = new Result<>();
@@ -172,7 +172,7 @@ public class ToolManagerService {
         uiService.log(downloadMessage.toString(), MessageType.INFO);
         messageUpdater.accept(downloadMessage.toString());
 
-        //Check that we've actually downloaded a .zip file by checking the first four bytes.
+        //Check that we've actually downloaded the correct type of file by checking the first four bytes.
         if(!archiveTool.isSupportedArchive(new File(steamCmdArchivePath))) {
             steamCmdSetupResult.addMessage("Downloaded SteamCMD archive is not in the correct file format.", ResultType.FAILED);
             return steamCmdSetupResult;
@@ -181,7 +181,7 @@ public class ToolManagerService {
         int extractedFileCount = archiveTool.extractArchive(steamDownloadPath, steamDownloadPath.getParent());
 
         if (extractedFileCount == 0)
-            steamCmdSetupResult.addMessage("Failed to extract steamcmd from .zip.", ResultType.FAILED);
+            steamCmdSetupResult.addMessage("Failed to extract steamcmd from archive..", ResultType.FAILED);
 
         return steamCmdSetupResult;
     }
