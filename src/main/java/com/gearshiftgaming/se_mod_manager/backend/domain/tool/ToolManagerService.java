@@ -1,6 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain.tool;
 
 import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ZipArchiveTool;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
@@ -128,7 +129,6 @@ public class ToolManagerService {
 
         //Check if we already have steam CMD downloaded. If it isn't, download it.
         Path steamDownloadPathParent = steamDownloadPath.getParent();
-        //TODO: There's definitely a better option here for checking our path instead of just doing it twice.
         if (Files.exists(steamDownloadPathParent.resolve("steamcmd.exe")) || Files.exists(steamDownloadPathParent.resolve("steamcmd.sh"))) {
             steamCmdSetupResult = new Result<>();
             steamCmdSetupResult.addMessage("Steam CMD already installed. Skipping.", ResultType.SUCCESS);
@@ -174,7 +174,8 @@ public class ToolManagerService {
 
         //Check that we've actually downloaded the correct type of file by checking the first four bytes.
         if(!archiveTool.isSupportedArchive(new File(steamCmdArchivePath))) {
-            steamCmdSetupResult.addMessage("Downloaded SteamCMD archive is not in the correct file format.", ResultType.FAILED);
+            steamCmdSetupResult.addMessage(String.format("Downloaded SteamCMD archive is not in the correct file format. (%s)",
+                    archiveTool instanceof ZipArchiveTool ? ".zip" : ".tar.gz"), ResultType.FAILED);
             return steamCmdSetupResult;
         }
 

@@ -58,7 +58,7 @@ public class ViewController {
     private UiService uiService;
 
     //TODO: Check for file locks to prevent two copies of the app from running simultaneously
-    public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InterruptedException {
         logger.info("Started application");
 
         PROPERTIES = new Properties();
@@ -129,7 +129,7 @@ public class ViewController {
         setupInterface(stage);
     }
 
-    private void setupInterface(Stage stage) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private void setupInterface(Stage stage) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InterruptedException {
         //Manually inject our controllers into our FXML so we can reuse the FXML for the profile creation elsewhere, and have greater flexibility in controller injection and FXML initialization.
         //This method also allows us to properly define constructors for the view objects which is otherwise not feasible with JavaFX.
         //The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.

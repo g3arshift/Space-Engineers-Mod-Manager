@@ -1,5 +1,7 @@
 package backend.domain;
 
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ZipArchiveTool;
 import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
 import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import com.gearshiftgaming.se_mod_manager.backend.data.steam.SimpleSteamLibraryFoldersVdfParser;
@@ -528,7 +530,7 @@ class SEOneSteamModDownloadServiceTest {
 
     @Test
     void downloadModShouldSucceedWithValidClientDownloadPathOnWindows() throws IOException, InterruptedException, ExecutionException {
-        setupRealDownloadBehavior();
+        setupRealDownloadBehavior(new ZipArchiveTool());
         //When we try to parse a VDF file, normally our steam library, return our fake.
         when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.CLIENT);
@@ -552,7 +554,7 @@ class SEOneSteamModDownloadServiceTest {
 
     @Test
     void downloadModShouldSucceedWithDedicatedServerSaveTypeOnWindows() throws IOException, ExecutionException, InterruptedException {
-        setupRealDownloadBehavior();
+        setupRealDownloadBehavior(new ZipArchiveTool());
         when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.DEDICATED_SERVER);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeDedicatedServerPath.resolve("Sandbox_config.sbc")));
@@ -575,7 +577,7 @@ class SEOneSteamModDownloadServiceTest {
 
     @Test
     void downloadModShouldSucceedWithTorchSaveTypeOnWindows() throws IOException, ExecutionException, InterruptedException {
-        setupRealDownloadBehavior();
+        setupRealDownloadBehavior(new ZipArchiveTool());
         when(mockedVdfParser.parseVdf(any())).thenReturn(getFakeWindowsLibraryVdf());
         when(saveProfileInfo.getSaveType()).thenReturn(SaveType.TORCH);
         when(saveProfileInfo.getSavePath()).thenReturn(String.valueOf(fakeTorchPath.resolve("Sandbox_config.sbc")));
@@ -597,13 +599,13 @@ class SEOneSteamModDownloadServiceTest {
                 .resolve("Data")));
     }
 
-    private void setupRealDownloadBehavior() throws IOException, InterruptedException, ExecutionException {
+    private void setupRealDownloadBehavior(ArchiveTool archiveTool) throws IOException, InterruptedException, ExecutionException {
         Properties properties = new Properties();
         try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM_ToolManagerTest.properties")) {
             properties.load(input);
         }
 
-        Result<Void> steamCmdDownloadResult = downloadSteamCmd(properties);
+        Result<Void> steamCmdDownloadResult = downloadSteamCmd(properties, archiveTool);
         assertTrue(steamCmdDownloadResult.isSuccess(), steamCmdDownloadResult.getCurrentMessage());
         assertEquals("Successfully downloaded SteamCMD", steamCmdDownloadResult.getCurrentMessage());
 
@@ -617,7 +619,7 @@ class SEOneSteamModDownloadServiceTest {
         when(saveProfileInfo.getSaveName()).thenReturn(fakeSaveName);
     }
 
-    private Result<Void> downloadSteamCmd(Properties properties) throws InterruptedException, ExecutionException, IOException {
+    private Result<Void> downloadSteamCmd(Properties properties, ArchiveTool archiveTool) throws InterruptedException, ExecutionException, IOException {
         Files.deleteIfExists(tempDir.resolve("steamcmd.exe"));
         CountDownLatch doneLatch = new CountDownLatch(1);
 
@@ -633,7 +635,8 @@ class SEOneSteamModDownloadServiceTest {
                 maxRetries,
                 connectionTimeout,
                 readTimeout,
-                retryDelay);
+                retryDelay,
+                archiveTool);
         Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         setupTask.setOnSucceeded(e -> doneLatch.countDown());

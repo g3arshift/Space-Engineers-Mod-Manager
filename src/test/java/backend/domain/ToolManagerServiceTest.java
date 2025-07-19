@@ -1,5 +1,7 @@
 package backend.domain;
 
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ZipArchiveTool;
 import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
@@ -116,7 +118,7 @@ class ToolManagerServiceTest {
         return isExe;
     }
 
-    private Result<Void> runDownload(WireMockRuntimeInfo wireMockRuntimeInfo) throws InterruptedException, ExecutionException {
+    private Result<Void> runDownload(WireMockRuntimeInfo wireMockRuntimeInfo, ArchiveTool archiveTool) throws InterruptedException, ExecutionException {
         steamCmdSourceLocation = wireMockRuntimeInfo.getHttpBaseUrl() + fakeSteamCmdResourcePath;
 
         toolManagerService = new ToolManagerService(mock(UiService.class),
@@ -125,7 +127,7 @@ class ToolManagerServiceTest {
                 maxRetries,
                 connectionTimeout,
                 readTimeout,
-                retryDelay);
+                retryDelay, archiveTool);
         Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         //Add the listeners so our lists get updated properly when the task updates
@@ -155,7 +157,7 @@ class ToolManagerServiceTest {
             properties.load(input);
         }
 
-        steamCmdZipPath = properties.getProperty("semm.steam.cmd.localPath");
+        steamCmdZipPath = properties.getProperty("semm.steam.cmd.windows.localFolderPath");
         steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.windows.download.source");
         maxRetries = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit"));
         connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
@@ -266,7 +268,7 @@ class ToolManagerServiceTest {
                                 .withBody(remainingData))  // rest of the file
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be a success");
@@ -321,7 +323,7 @@ class ToolManagerServiceTest {
      */
     @Test
     void shouldDownloadSteamCmd() throws InterruptedException, ExecutionException, IOException {
-        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay);
+        toolManagerService = new ToolManagerService(mock(UiService.class), steamCmdZipPath, steamCmdSourceLocation, maxRetries, connectionTimeout, readTimeout, retryDelay, new ZipArchiveTool());
         Task<Result<Void>> setupTask = toolManagerService.setupSteamCmd();
 
         //Add the listeners so our lists get updated properly when the task updates
@@ -426,7 +428,7 @@ class ToolManagerServiceTest {
                                 .withStatus(500))
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         //Check that we failed the way we expected
         assertFalse(result.isSuccess(), "Download result should be a failure.");
@@ -485,7 +487,7 @@ class ToolManagerServiceTest {
                                 .withStatus(500))
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         //Check it failed how we expected
         assertFalse(result.isSuccess());
@@ -525,7 +527,7 @@ class ToolManagerServiceTest {
                                 .withStatus(500))
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         //Check we failed the way we expected
         assertFalse(result.isSuccess());
@@ -557,10 +559,10 @@ class ToolManagerServiceTest {
                                 .withBody(notZipFile))
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         assertFalse(result.isSuccess());
-        assertEquals("Downloaded SteamCMD file is not a .zip file.", result.getCurrentMessage());
+        assertEquals("Downloaded SteamCMD archive is not in the correct file format. (.zip)", result.getCurrentMessage());
 
         //Check we both don't have an empty list of messages and that it's giving us the last expected final message
         assertFalse(messages.isEmpty(), "Should have updated messages");
@@ -591,7 +593,7 @@ class ToolManagerServiceTest {
                                 .withBody(fakeSteamCmdZip))
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         //Check we get both the expected number and type of messages from our result
         assertTrue(result.isSuccess(), "Download result should be a success");
@@ -636,7 +638,7 @@ class ToolManagerServiceTest {
                                 .withHeader("Content-Type", "application/zip"))
         );
 
-        Result<Void> result = runDownload(wireMockRuntimeInfo);
+        Result<Void> result = runDownload(wireMockRuntimeInfo, new ZipArchiveTool());
 
         assertTrue(result.isSuccess());
         assertEquals(1, result.getMessages().size());
