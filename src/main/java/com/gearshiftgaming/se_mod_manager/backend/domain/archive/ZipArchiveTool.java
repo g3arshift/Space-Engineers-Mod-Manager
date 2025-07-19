@@ -1,4 +1,4 @@
-package com.gearshiftgaming.se_mod_manager.backend.domain.utility;
+package com.gearshiftgaming.se_mod_manager.backend.domain.archive;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -13,16 +13,17 @@ import java.util.zip.ZipInputStream;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ZipUtility {
+public class ZipArchiveTool implements ArchiveTool{
 
-    private ZipUtility(){}
+    public ZipArchiveTool(){}
 
     /**
      * Checks the first four bytes of provided file to see if it's actually a zip file
      * @param zipFile The actual file we want to check
-     * @return Returns true if the file is a zip file, returns false if it is not, or if it doesn't exist.
+     * @return Returns true if the file is a zip file, returns false if it is not or if it doesn't exist.
      */
-    public static boolean isZip(File zipFile) throws IOException {
+    @Override
+    public boolean isSupportedArchive(File zipFile) throws IOException {
         if(!zipFile.exists())
             return false;
 
@@ -40,13 +41,8 @@ public class ZipUtility {
         return isZip;
     }
 
-    /**
-     * Extracts a given zip archive to a specified destination. Returns -1 if the destination path or the zip file do not exist.
-     * @param zipFilePath The zip archive we want to extract.
-     * @param destinationPath The location we want to extract the zip archive to.
-     * @return The number of entries extracted from the zip archive.
-     */
-    public static int extractZipArchive(Path zipFilePath, Path destinationPath) throws IOException {
+    @Override
+    public int extractArchive(Path zipFilePath, Path destinationPath) throws IOException {
         if(Files.notExists(zipFilePath))
             return -1;
 
@@ -58,29 +54,35 @@ public class ZipUtility {
         try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFilePath))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                entriesExtracted++;
-                Path outputPath = normalizedDestination.resolve(entry.getName()).normalize();
+                Path entryPath = normalizedDestination.resolve(entry.getName()).normalize();
 
                 //Prevent zip slip vulnerability
-                if (!outputPath.startsWith(normalizedDestination))
+                if (!entryPath.startsWith(normalizedDestination))
                     throw new IOException("Zip slip! Entry is outside of the target directory: " + entry.getName());
 
-                if (entry.isDirectory())
-                    Files.createDirectories(outputPath);
-                else {
-                    if (outputPath.getParent() != null)
-                        Files.createDirectories(outputPath.getParent());
-
-                    try (OutputStream os = Files.newOutputStream(outputPath)) {
-                        byte[] buffer = new byte[8192];
-                        int len;
-                        while ((len = zis.read(buffer)) > 0)
-                            os.write(buffer, 0, len);
-                    }
-                }
+                entriesExtracted = extractEntriesToFile(entry, entryPath, zis, entriesExtracted);
             }
             zis.closeEntry();
         }
+        return entriesExtracted;
+    }
+
+    //This is TECHNCIALLY duplicated in TarballArchiveTool, but there's not actually a common parent between the entry variables
+    private static int extractEntriesToFile(ZipEntry entry, Path entryPath, ZipInputStream zis, int entriesExtracted) throws IOException {
+        if (entry.isDirectory())
+            Files.createDirectories(entryPath);
+        else {
+            if (entryPath.getParent() != null)
+                Files.createDirectories(entryPath.getParent());
+
+            try (OutputStream os = Files.newOutputStream(entryPath)) {
+                byte[] buffer = new byte[8192];
+                int len;
+                while ((len = zis.read(buffer)) > 0)
+                    os.write(buffer, 0, len);
+            }
+        }
+        entriesExtracted++;
         return entriesExtracted;
     }
 }

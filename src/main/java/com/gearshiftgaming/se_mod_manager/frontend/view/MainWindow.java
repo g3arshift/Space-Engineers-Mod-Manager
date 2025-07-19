@@ -1,5 +1,8 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import com.gearshiftgaming.se_mod_manager.AppContext;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.TarballArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ZipArchiveTool;
 import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
@@ -9,6 +12,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowDressingUtility;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
@@ -80,8 +84,10 @@ public class MainWindow {
     //This is the reference for the UI portion of the tool manager.
     private final ToolManager toolManagerView;
 
+    private final AppContext appContext;
+
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ToolManager toolManager, UiService uiService) {
+    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ToolManager toolManager, UiService uiService) throws IOException, InterruptedException {
         this.stage = stage;
         this.properties = properties;
         this.userConfiguration = uiService.getUserConfiguration();
@@ -91,13 +97,16 @@ public class MainWindow {
         this.statusBarView = statusBar;
         this.toolManagerView = toolManager;
 
+        appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
+
         toolManagerService = new ToolManagerService(this.uiService,
-                this.properties.getProperty("semm.steam.cmd.localFolderPath"),
-                this.properties.getProperty("semm.steam.cmd.download.source"),
+                appContext.isWindows() ? this.properties.getProperty("semm.steam.cmd.windows.localFolderPath") : this.properties.getProperty("semm.steam.cmd.linux.localFolderPath"),
+                appContext.isWindows() ? this.properties.getProperty("semm.steam.cmd.windows.download.source") : this.properties.getProperty("semm.steam.cmd.linux.download.source"),
                 Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.limit")),
                 Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.connection.timeout")),
                 Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.read.timeout")),
-                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.delay")));
+                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.delay")),
+                appContext.isWindows() ? new ZipArchiveTool() : new TarballArchiveTool());
     }
 
     public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManager saveProfileManager, ModListProfileManager modListProfileManager) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -187,7 +196,7 @@ public class MainWindow {
 
         //Download SteamCMD.
         //TODO: Genericize
-        if(Files.exists(Path.of(properties.getProperty("semm.steam.cmd.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
+        if(Files.exists(Path.of(properties.getProperty("semm.steam.cmd.windows.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
             uiService.log("SteamCMD already installed.", MessageType.INFO);
             return;
         }

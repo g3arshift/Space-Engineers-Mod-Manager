@@ -156,7 +156,7 @@ class ToolManagerServiceTest {
         }
 
         steamCmdZipPath = properties.getProperty("semm.steam.cmd.localPath");
-        steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.download.source");
+        steamCmdSourceLocation = properties.getProperty("semm.steam.cmd.windows.download.source");
         maxRetries = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit"));
         connectionTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout"));
         readTimeout = Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout"));

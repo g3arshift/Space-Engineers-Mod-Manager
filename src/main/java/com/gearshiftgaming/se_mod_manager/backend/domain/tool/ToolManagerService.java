@@ -1,9 +1,11 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain.tool;
 
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ArchiveTool;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.MessageType;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
 import javafx.concurrent.Task;
 import lombok.Getter;
 
@@ -14,8 +16,6 @@ import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import static com.gearshiftgaming.se_mod_manager.backend.domain.utility.ZipUtility.extractZipArchive;
-import static com.gearshiftgaming.se_mod_manager.backend.domain.utility.ZipUtility.isZip;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 /**
@@ -32,7 +32,7 @@ public class ToolManagerService {
 
     private final UiService uiService;
 
-    private final String steamCmdZipPath;
+    private final String steamCmdArchivePath;
 
     private final String steamCmdSourceLocation;
 
@@ -50,27 +50,33 @@ public class ToolManagerService {
     @Getter
     private String divisorName;
 
+    private final ArchiveTool archiveTool;
 
     /**
      * Constructs a {@code ToolManagerService} responsible for managing the download and configuration
      * of SteamCMD and related tooling.
      *
      * @param uiService              the UI service used to log errors
-     * @param steamCmdZipPath        the local file system path where the SteamCMD zip will be downloaded to
+     * @param steamCmdArchivePath    the local file system path where the SteamCMD zip will be downloaded to
      * @param steamCmdSourceLocation the remote URL or path from which the SteamCMD zip can be downloaded
      * @param maxRetries             the maximum number of retry attempts for downloading SteamCMD in case of failure
      * @param connectionTimeout      the timeout in milliseconds for establishing a network connection during download
      * @param readTimeout            the timeout in milliseconds for reading data from the connection
      * @param retryDelay             the delay in milliseconds between retry attempts
      */
-    public ToolManagerService(UiService uiService, String steamCmdZipPath, String steamCmdSourceLocation, int maxRetries, int connectionTimeout, int readTimeout, int retryDelay) {
+    public ToolManagerService(UiService uiService, String steamCmdArchivePath, String steamCmdSourceLocation, int maxRetries, int connectionTimeout, int readTimeout, int retryDelay, ArchiveTool archiveTool) {
+       /* Note, this does not install the required software for Linux, specifically, because that would require an escalation of user privileges
+        that we generally are trying to avoid with this application. This may cause some issues on certain operating systems that require the
+        user to install them manually, but that tradeoff is accepted. */
+
         this.uiService = uiService;
-        this.steamCmdZipPath = steamCmdZipPath;
+        this.steamCmdArchivePath = steamCmdArchivePath;
         this.steamCmdSourceLocation = steamCmdSourceLocation;
         this.maxRetries = maxRetries;
         this.connectionTimeout = connectionTimeout;
         this.readTimeout = readTimeout;
         this.retryDelay = retryDelay;
+        this.archiveTool = archiveTool;
     }
 
     //TODO: We HAVE to add Linux stuff or this will never work on it. https://developer.valvesoftware.com/wiki/SteamCMD#Manually
@@ -113,7 +119,7 @@ public class ToolManagerService {
         Result<Void> steamCmdSetupResult;
 
         //Make the base directories and file we need if they don't exist
-        Path steamDownloadPath = Path.of(steamCmdZipPath);
+        Path steamDownloadPath = Path.of(steamCmdArchivePath);
         if (Files.notExists(steamDownloadPath))
             Files.createDirectories(steamDownloadPath.getParent());
 
@@ -149,7 +155,7 @@ public class ToolManagerService {
 
         //Download SteamCMD
         steamCmdSetupResult = downloadFileWithResumeAndRetries(steamDownloadUrl,
-                steamCmdZipPath,
+                steamCmdArchivePath,
                 "SteamCMD",
                 remoteSteamCmdFileSize,
                 progressUpdater,
@@ -167,12 +173,12 @@ public class ToolManagerService {
         messageUpdater.accept(downloadMessage.toString());
 
         //Check that we've actually downloaded a .zip file by checking the first four bytes.
-        if (!isZip(new File(steamCmdZipPath))) {
-            steamCmdSetupResult.addMessage("Downloaded SteamCMD file is not a .zip file.", ResultType.FAILED);
+        if(!archiveTool.isSupportedArchive(new File(steamCmdArchivePath))) {
+            steamCmdSetupResult.addMessage("Downloaded SteamCMD archive is not in the correct file format.", ResultType.FAILED);
             return steamCmdSetupResult;
         }
 
-        int extractedFileCount = extractZipArchive(steamDownloadPath, steamDownloadPath.getParent());
+        int extractedFileCount = archiveTool.extractArchive(steamDownloadPath, steamDownloadPath.getParent());
 
         if (extractedFileCount == 0)
             steamCmdSetupResult.addMessage("Failed to extract steamcmd from .zip.", ResultType.FAILED);
@@ -260,7 +266,7 @@ public class ToolManagerService {
                     //Wait the specified time of our retry delay before retrying the download.
                     Thread.sleep(retryDelay);
                 } else {
-                    Files.deleteIfExists(Path.of(steamCmdZipPath));
+                    Files.deleteIfExists(Path.of(steamCmdArchivePath));
                     downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
                 }
             } catch (IOException e) {
