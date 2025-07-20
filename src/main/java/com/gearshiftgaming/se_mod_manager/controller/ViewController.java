@@ -205,16 +205,13 @@ public class ViewController {
         modListManagerView.initView(modListManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
         saveManagerView.initView(saveManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
 
-        //TODO: We need a second one fr the master manager.
-        //View for the tool manager that gets attached to the primary app window
-        final ProgressDisplay toolManagerView = new ProgressDisplay();
 
         //View for the primary application window
         final FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
         final MainWindow mainWindowView = new MainWindow(PROPERTIES, stage,
-                modTableContextBarView, masterManagerView, statusBarView, toolManagerView, uiService);
+                modTableContextBarView, masterManagerView, statusBarView, uiService);
         mainViewLoader.setController(mainWindowView);
         final Parent mainViewRoot = mainViewLoader.load();
-        mainWindowView.initView(mainViewRoot, menuBarRoot, masterManagerRoot, statusBarRoot, saveManagerView, modListManagerView);
+        mainWindowView.initView(mainViewRoot, menuBarRoot, masterManagerRoot, statusBarRoot);
     }
 }

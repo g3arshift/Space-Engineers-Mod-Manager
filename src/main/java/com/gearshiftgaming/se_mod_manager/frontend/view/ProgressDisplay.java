@@ -43,7 +43,7 @@ public class ProgressDisplay extends StackPane {
         try {
             loader.load();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load ProgressDisplay FXML", e);
+            throw new FXMLLoadException("Failed to load ProgressDisplay FXML", e);
         }
     }
 
@@ -68,6 +68,4 @@ public class ProgressDisplay extends StackPane {
     public void setItemNameVisible(boolean visible) {
         itemName.setVisible(visible);
     }
-
-    //TODO:
 }

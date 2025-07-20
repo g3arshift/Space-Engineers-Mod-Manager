@@ -81,13 +81,10 @@ public class MainWindow {
     //This is the service that handles the logic behind setting up the various tools we need for SEMM to function.
     private final ToolManagerService toolManagerService;
 
-    //This is the reference for the UI portion of the tool manager.
-    private final ProgressDisplay toolManagerView;
-
     private final AppContext appContext;
 
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ProgressDisplay progressDisplay, UiService uiService) throws IOException, InterruptedException {
+    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, UiService uiService) throws IOException, InterruptedException {
         this.stage = stage;
         this.properties = properties;
         this.userConfiguration = uiService.getUserConfiguration();
@@ -95,7 +92,6 @@ public class MainWindow {
         this.contextBarView = modTableContextBar;
         this.masterManagerView = masterManager;
         this.statusBarView = statusBar;
-        this.toolManagerView = progressDisplay;
 
         appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
 
@@ -109,18 +105,22 @@ public class MainWindow {
                 appContext.isWindows() ? new ZipArchiveTool() : new TarballArchiveTool());
     }
 
-    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManager saveProfileManager, ModListProfileManager modListProfileManager) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         //Prepare the UI
         setupWindow(mainViewRoot);
         contextBarView.initView();
-        masterManagerView.initView(contextBarView.getLogToggle(), contextBarView.getModDescriptionToggle(), Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
-                contextBarView.getModProfileDropdown(), contextBarView.getSaveProfileDropdown(), contextBarView.getModTableSearchField());
+        masterManagerView.initView(contextBarView.getLogToggle(),
+                contextBarView.getModDescriptionToggle(),
+                Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
+                contextBarView.getModProfileDropdown(),
+                contextBarView.getSaveProfileDropdown(),
+                contextBarView.getModTableSearchField());
         statusBarView.initView();
         mainWindowLayout.setTop(menuBarRoot);
         mainWindowLayout.setCenter(modlistManagerRoot);
         mainWindowLayout.setBottom(statusBarRoot);
 
-        final ObservableList<SaveProfile> saveProfiles = uiService.getSaveProfiles();
+        ObservableList<SaveProfile> saveProfiles = uiService.getSaveProfiles();
 
         //Prompt the user to remove any saves that no longer exist on the file system.
         if (saveProfiles.size() != 1 &&
