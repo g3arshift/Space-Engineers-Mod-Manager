@@ -52,7 +52,7 @@ import java.util.stream.Stream;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ViewController {
-    private final Properties PROPERTIES;
+    private final Properties properties;
 
     private UiService uiService;
 
@@ -60,9 +60,9 @@ public class ViewController {
     public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InterruptedException {
         logger.info("Started application");
 
-        PROPERTIES = new Properties();
+        properties = new Properties();
         try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM.properties")) {
-            PROPERTIES.load(input);
+            properties.load(input);
         } catch (IOException | NullPointerException e) {
             logger.error("Could not load SEMM.properties. {}", e.getMessage());
             throw (e);
@@ -70,7 +70,7 @@ public class ViewController {
 
         //TODO: Something is bugging me about how this is all setup... It feels brittle.
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
-                new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.path") + ".db"),
+                new UserDataSqliteRepository(properties.getProperty("semm.userData.default.path") + ".db"),
                 new SaveFileRepository());
 
         Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
@@ -120,9 +120,9 @@ public class ViewController {
                         logMessage.MESSAGE_TYPEProperty()
                 });
 
-        ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
+        ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), properties);
 
-        uiService = new UiService(logger, userLog, Integer.parseInt(PROPERTIES.getProperty("semm.ui.maxUserLogSize")), modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+        uiService = new UiService(logger, userLog, Integer.parseInt(properties.getProperty("semm.ui.maxUserLogSize")), modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, properties);
         uiService.log(userConfigurationResult);
 
         setupInterface(stage);
@@ -191,7 +191,7 @@ public class ViewController {
 
         //View for managing the actual mod lists. This is the center section of the main window
         final FXMLLoader masterManagerLoader = new FXMLLoader(getClass().getResource("/view/master-manager.fxml"));
-        final MasterManager masterManagerView = new MasterManager(uiService, stage, PROPERTIES, statusBarView, modListManagerView, saveManagerView, idAndUrlModImportInputView, saveInputView, generalFileInputView);
+        final MasterManager masterManagerView = new MasterManager(uiService, stage, properties, statusBarView, modListManagerView, saveManagerView, idAndUrlModImportInputView, saveInputView, generalFileInputView);
         masterManagerLoader.setController(masterManagerView);
         final Parent masterManagerRoot = masterManagerLoader.load();
 
@@ -202,13 +202,13 @@ public class ViewController {
         final Parent menuBarRoot = modTableContextBarLoader.load();
 
         //The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-        modListManagerView.initView(modListManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
-        saveManagerView.initView(saveManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
+        modListManagerView.initView(modListManagerRoot, Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
+        saveManagerView.initView(saveManagerRoot, Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
 
 
         //View for the primary application window
         final FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
-        final MainWindow mainWindowView = new MainWindow(PROPERTIES, stage,
+        final MainWindow mainWindowView = new MainWindow(properties, stage,
                 modTableContextBarView, masterManagerView, statusBarView, uiService);
         mainViewLoader.setController(mainWindowView);
         final Parent mainViewRoot = mainViewLoader.load();

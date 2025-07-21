@@ -47,10 +47,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -126,7 +124,8 @@ public class UiService {
                 case UP, DOWN, LEFT, RIGHT, TAB, ESCAPE:
                     arrowKeyEvent.consume();
                     break;
-                default: log("Failed to initialize UiService keyboard button navigation disabler.", MessageType.ERROR);
+                default:
+                    log("Failed to initialize UiService keyboard button navigation disabler.", MessageType.ERROR);
             }
         };
 
@@ -173,6 +172,7 @@ public class UiService {
 
     /**
      * Logs all messages in a result object.
+     *
      * @param result is the object we will be logging.
      */
     public <T> void log(@NotNull Result<T> result) {
@@ -371,56 +371,68 @@ public class UiService {
         return modListResult;
     }
 
-    //TODO: We need to rewrite most of this stuff using the UI property values to work with updating progress instead. Doing it as it is now violates the architecture rules.
-    //TODO: Do the same for the actual UI message parts. We don't need labels for everything, just change the text via  updateMessage in the task.
     public Task<List<Result<Mod>>> importModsFromList(List<Mod> modList) {
-        List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
         return new Task<>() {
             @Override
             protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
-                List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
+                List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+                AtomicInteger completedMods = new AtomicInteger(0);
+                int totalMods = modList.size();
+
+                List<Future<Result<Mod>>> futures = new ArrayList<>(totalMods);
                 try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+                    CompletionService<Result<Mod>> completionService = new ExecutorCompletionService<>(executorService);
                     Random random = new Random();
                     for (Mod m : modList) {
                         // Submit the task without waiting for it to finish
-                        Future<Result<Mod>> future = executorService.submit(() -> {
+                        //Future<Result<Mod>> future = executorService.submit(() -> {
+                        completionService.submit(() -> {
                             try {
-                                if (m instanceof ModIoMod && modList.size() > 1) {
+                                if (m instanceof ModIoMod && totalMods > 1) {
                                     Thread.sleep(random.nextInt(200, 600));
                                 }
-                                //TODO: What's the best way to handle this... Pass it a value for the max number of mods?
-                                // Doesn't seem quite right, violates single concern...
-                                return fillOutModInformation(m, this::updateProgress, this::updateMessage);
+                                return fillOutModInformation(m);
                             } catch (IOException e) {
                                 Result<Mod> failedResult = new Result<>();
-                                if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-                                    failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-                                } else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-                                    failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-                                } else {
-                                    failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
-                                }
+                                String errorMessage = switch (e.toString()) {
+                                    case "java.net.UnknownHostException: steamcommunity.com" ->
+                                            "Unable to reach the Steam Workshop. Please check your internet connection.";
+                                    case "java.net.UnknownHostException: mod.io" ->
+                                            "Unable to reach Mod.io. Please check your internet connection.";
+                                    default -> getStackTrace(e);
+                                };
+                                failedResult.addMessage(errorMessage, ResultType.FAILED);
                                 return failedResult;
                             }
                         });
-                        futures.add(future);
+                        //futures.add(future);
                     }
-                    try {
-                        for (Future<Result<Mod>> f : futures) {
-                            modInfoFillOutResults.add(f.get());
-                        }
-                    } catch (RuntimeException e) {
-                        Result<Mod> failedResult = new Result<>();
-                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
-                        modInfoFillOutResults.add(failedResult);
+                    for (int i = 0; i < totalMods; i++) {
+                        Future<Result<Mod>> completedFuture = completionService.take();
+                        Result<Mod> result = completedFuture.get();
+
+                        modInfoFillOutResults.add(result);
+
+                        int done = completedMods.incrementAndGet();
+                        updateProgress(done, totalMods);
+                        updateMessage(String.format("Mods processed: %s / %s", done, totalMods));
                     }
+//                    try {
+//                        for (Future<Result<Mod>> f : futures) {
+//                            modInfoFillOutResults.add(f.get());
+//                        }
+//                    } catch (RuntimeException e) {
+//                        Result<Mod> failedResult = new Result<>();
+//                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
+//                        modInfoFillOutResults.add(failedResult);
+//                    }
                 }
                 return modInfoFillOutResults;
             }
         };
     }
 
-    public Result<Mod> fillOutModInformation(Mod mod, BiConsumer<Long, Long> progressUpdater, Consumer<String> messageUpdater) throws IOException, InterruptedException {
+    public Result<Mod> fillOutModInformation(Mod mod) throws IOException, InterruptedException {
         Result<String[]> scrapeResult = modInfoController.fillOutModInformation(mod);
         Result<Mod> infoFilloutResult = new Result<>();
 
@@ -475,10 +487,6 @@ public class UiService {
             infoFilloutResult.addAllMessages(scrapeResult);
         }
 
-        Platform.runLater(() -> {
-            modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
-            modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
-        });
         return infoFilloutResult;
     }
 
@@ -510,6 +518,7 @@ public class UiService {
      * @param modUrls List of Mod.io url's
      * @return The task to perform the conversion.
      */
+    //TODO: Refactor with the executor completion service if the test in mod scraping works.
     public Task<List<Result<String>>> convertModIoUrlListToIds(List<String> modUrls) {
         List<Result<String>> modIdResults = new ArrayList<>();
         return new Task<>() {

@@ -1,5 +1,9 @@
 package com.gearshiftgaming.se_mod_manager.frontend.view;
 
+import com.gearshiftgaming.se_mod_manager.AppContext;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.TarballArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.archive.ZipArchiveTool;
+import com.gearshiftgaming.se_mod_manager.backend.domain.tool.ToolManagerService;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModType;
@@ -21,10 +25,8 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.popup.ThreeButtonChoice;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.TutorialUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
-import javafx.animation.Animation;
-import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
+import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersionUtility;
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -64,6 +66,8 @@ import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -272,8 +276,13 @@ public class MasterManager {
         tutorialHighlightPanes = this.uiService.getHighlightPanes();
     }
 
-    public void initView(CheckMenuItem logToggle, CheckMenuItem modDescriptionToggle, int modTableCellSize,
-                         ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown, ComboBox<SaveProfile> saveProfileDropdown, TextField modTableSearchField) {
+    public void initView(CheckMenuItem logToggle,
+                         CheckMenuItem modDescriptionToggle,
+                         int modTableCellSize,
+                         ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown,
+                         ComboBox<SaveProfile> saveProfileDropdown,
+                         TextField modTableSearchField,
+                         Properties properties) throws IOException, InterruptedException {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
 
@@ -348,7 +357,63 @@ public class MasterManager {
         //TODO: Call the tool manager setup.
         //TODO: We want to grab the UI portion and overlay it on our center table, and also disable all buttons while download is in progress.
         // When the task is done call a standard fade and on the end of the transition remove it from the manager.
+        mainViewStack.getChildren().add(progressDisplay);
+        progressDisplay.setVisible(false);
+
+        //Download all the required tools we need for SEMM to function
+        uiService.log("Downloading required tools...", MessageType.INFO);
+
+        //Download SteamCMD.
+        if (Files.exists(Path.of(properties.getProperty("semm.steam.cmd.windows.localFolderPath")).getParent().resolve("steamcmd.exe")) ||
+                Files.exists(Path.of(properties.getProperty("semm.steam.cmd.linux.localFolderPath")).getParent().resolve("steamcmd.sh"))) {
+            uiService.log("SteamCMD already installed.", MessageType.INFO);
+        } else
+            setupTools(properties);
+
         uiService.logPrivate("Successfully initialized modlist manager.", MessageType.INFO);
+    }
+
+    private void setupTools(Properties properties) throws IOException, InterruptedException {
+        AppContext appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
+        ToolManagerService toolManagerService = new ToolManagerService(this.uiService,
+                appContext.isWindows() ? properties.getProperty("semm.steam.cmd.windows.localFolderPath") : properties.getProperty("semm.steam.cmd.linux.localFolderPath"),
+                appContext.isWindows() ? properties.getProperty("semm.steam.cmd.windows.download.source") : properties.getProperty("semm.steam.cmd.linux.download.source"),
+                Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.limit")),
+                Integer.parseInt(properties.getProperty("semm.steam.cmd.download.connection.timeout")),
+                Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout")),
+                Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.delay")),
+                appContext.isWindows() ? new ZipArchiveTool() : new TarballArchiveTool());
+        progressDisplay.getProgressTitle().setVisible(true);
+        progressDisplay.setVisible(true);
+        progressDisplay.getProgressTitle().setText("SteamCMD");
+
+        Task<Result<Void>> steamCmdSetupTask = toolManagerService.setupSteamCmd();
+        steamCmdSetupTask.setOnRunning(event -> {
+            disableUserInputElements(true);
+            progressDisplay.bindProgressAndUpdateValues(steamCmdSetupTask.messageProperty(), steamCmdSetupTask.progressProperty());
+        });
+
+        //When the task is finished log our result, display the last message from it, and fade it out.
+        steamCmdSetupTask.setOnSucceeded(event -> {
+            Result<Void> steamCmdSetupResult = steamCmdSetupTask.getValue();
+            uiService.log(steamCmdSetupResult);
+
+            if (steamCmdSetupResult.isFailure()) {
+                Popup.displayInfoMessageWithLink("Failed to download SteamCMD. SEMM requires SteamCMD to run. " +
+                                "Please submit your log file at the following link.",
+                        "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", stage, MessageType.ERROR);
+                Platform.exit();
+                return;
+            }
+
+            progressDisplay.setAllDownloadsCompleteState();
+            PauseTransition pauseTransition = new PauseTransition(Duration.millis(450));
+            pauseTransition.setOnFinished(event1 -> closeProgressDisplay());
+
+            pauseTransition.play();
+        });
+
+        Thread.ofVirtual().start(steamCmdSetupTask);
     }
 
     private void setupModTable(int modTableCellSize) {
@@ -726,19 +791,7 @@ public class MasterManager {
                     Popup.displaySimpleAlert("Could not add any of the mods in the modlist file. See the log for more information.", stage, MessageType.WARN);
                 }
 
-                //Reset our UI settings for the mod progress
-                modImportProgressWheel.setVisible(false);
-                FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-                fadeTransition.setFromValue(1d);
-                fadeTransition.setToValue(0d);
-
-                fadeTransition.setOnFinished(actionEvent -> {
-                    disableUserInputElements(false);
-                    modImportProgressWheel.setVisible(true);
-                    resetModImportProgressUi();
-                });
-
-                fadeTransition.play();
+                closeProgressDisplay();
             }
         });
 
@@ -1235,23 +1288,6 @@ public class MasterManager {
         return thread;
     }
 
-    private void resetUiOnInvalidCollectionModImportCount() {
-        Platform.runLater(() -> {
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> {
-                modImportSteamCollectionName.setVisible(false);
-                disableModImportUiText(false);
-                disableUserInputElements(false);
-                resetModImportProgressUi();
-            });
-
-            fadeTransition.play();
-        });
-    }
-
     private @NotNull Thread addSingleModIoModFromId(String modUrl) {
         final Task<Result<String>> TASK = uiService.convertModIoUrlToId(modUrl);
 
@@ -1283,18 +1319,7 @@ public class MasterManager {
                 uiService.log(modIdResult);
                 Popup.displaySimpleAlert(modIdResult, stage);
 
-                Platform.runLater(() -> {
-                    //Fadeout the UI if it doesn't succeed.
-                    FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), modImportProgressPanel);
-                    fadeTransition.setFromValue(1d);
-                    fadeTransition.setToValue(0d);
-
-                    fadeTransition.setOnFinished(actionEvent -> {
-                        disableUserInputElements(false);
-                        resetModImportProgressUi();
-                    });
-                    fadeTransition.play();
-                });
+                closeProgressDisplay();
             }
         });
 
@@ -1331,7 +1356,21 @@ public class MasterManager {
             }
 
             ModImportUtility.finishImportingMods(TASK.getValue(), uiService);
-            cleanupModImportUi();
+
+            if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
+                closeProgressDisplayWithCustomPostProcessing(() -> {
+                    List<String> tutorialMessages = new ArrayList<>();
+                    TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), modTable);
+                    tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
+                            "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
+                    tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
+                            "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
+                    Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Applying the Mod List");
+                    TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), applyModlist);
+                });
+            } else
+                closeProgressDisplay();
+
             //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping. So we give it a hint to collect garbage.
             //It really, truly is, not cleaning up when it should at this point. Trust me.
             //We've just finished scraping, the UI isn't doing anything other than having just finished a transition, and there's really nothing happening. It's a good time.
@@ -1341,32 +1380,6 @@ public class MasterManager {
         Thread thread = Thread.ofVirtual().unstarted(TASK);
         thread.setDaemon(true);
         return thread;
-    }
-
-    private void cleanupModImportUi() {
-        //Reset our UI settings for the mod progress
-        FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-        fadeTransition.setFromValue(1d);
-        fadeTransition.setToValue(0d);
-
-        fadeTransition.setOnFinished(actionEvent -> {
-            disableUserInputElements(false);
-            resetModImportProgressUi();
-            Platform.runLater(() -> {
-                if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
-                    List<String> tutorialMessages = new ArrayList<>();
-                    TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), modTable);
-                    tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
-                            "If you don't want to apply a mod to a save without removing it from the list click on the blue checkmark next to an item to deactivate it.");
-                    tutorialMessages.add("To apply the mods imported to your mod list to a save you need to press the \"Apply Mod List\" button. " +
-                            "This will overwrite any mods currently on that save, and if you apply a mod list that doesn't contain any active mods to a save it will remove all mods on a save.");
-                    Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Applying the Mod List");
-                    TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), applyModlist);
-                }
-            });
-        });
-
-        fadeTransition.play();
     }
 
     protected void disableUserInputElements(boolean shouldDisable) {
@@ -1383,20 +1396,38 @@ public class MasterManager {
         modTableSearchField.setDisable(shouldDisable);
     }
 
-    private void disableModImportUiText(boolean shouldDisable) {
-        modImportProgressActionName.setVisible(!shouldDisable);
-        modImportProgressNumerator.setVisible(!shouldDisable);
-        modImportProgressDivider.setVisible(!shouldDisable);
-        modImportProgressDenominator.setVisible(!shouldDisable);
+    private void closeProgressDisplay() {
+        progressDisplay.setItemNameVisible(false);
+        progressDisplay.unbindProgressAndUpdateValues();
+
+        Platform.runLater(() -> {
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), progressDisplay);
+            fadeTransition.setFromValue(1d);
+            fadeTransition.setToValue(0d);
+
+            fadeTransition.setOnFinished(actionEvent -> {
+                disableUserInputElements(false);
+                progressDisplay.setDefaultState();
+            });
+        });
     }
 
-    public void resetModImportProgressUi() {
-        modImportProgressPanel.setVisible(false);
-        modImportProgressPanel.setOpacity(1d);
-        uiService.getModImportProgressNumeratorProperty().setValue(0);
-        uiService.getModImportProgressDenominatorProperty().setValue(0);
-        uiService.getModImportProgressPercentageProperty().setValue(0d);
-        modImportProgressWheel.setVisible(true);
+    private void closeProgressDisplayWithCustomPostProcessing(Runnable runnable) {
+        progressDisplay.setItemNameVisible(false);
+        progressDisplay.unbindProgressAndUpdateValues();
+
+        Platform.runLater(() -> {
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), progressDisplay);
+            fadeTransition.setFromValue(1d);
+            fadeTransition.setToValue(0d);
+
+            fadeTransition.setOnFinished(actionEvent -> {
+                disableUserInputElements(false);
+                progressDisplay.setDefaultState();
+                if (runnable != null)
+                    runnable.run();
+            });
+        });
     }
 
     public void runTutorialModListManagementStep() {

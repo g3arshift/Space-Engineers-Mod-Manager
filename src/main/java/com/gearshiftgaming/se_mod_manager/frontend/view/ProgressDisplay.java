@@ -31,7 +31,7 @@ public class ProgressDisplay extends StackPane {
 
     @FXML
     @Getter
-    private Label itemName;
+    private Label progressTitle;
 
     @FXML
     private Label progressMessage;
@@ -52,8 +52,13 @@ public class ProgressDisplay extends StackPane {
         progressBar.progressProperty().bind(updateProgress);
     }
 
+    public void unbindProgressAndUpdateValues() {
+        progressMessage.textProperty().unbind();
+        progressBar.progressProperty().unbind();
+    }
+
     public void setToolNameText(String newToolName) {
-        itemName.setText(newToolName);
+        progressTitle.setText(newToolName);
     }
 
     public void setAllDownloadsCompleteState() {
@@ -66,6 +71,6 @@ public class ProgressDisplay extends StackPane {
     }
 
     public void setItemNameVisible(boolean visible) {
-        itemName.setVisible(visible);
+        progressTitle.setVisible(visible);
     }
 }
