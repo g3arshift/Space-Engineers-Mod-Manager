@@ -102,6 +102,8 @@ public class UiService {
     @Getter
     private final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
 
+    //TODO: We need to refactor to make the tasks update messages and progress for the progress panel in MasterManager.
+
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
     public UiService(Logger logger, @NotNull ObservableList<LogMessage> userLog, int userLogMaxSize,

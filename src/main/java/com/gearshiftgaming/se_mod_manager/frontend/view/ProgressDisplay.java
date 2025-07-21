@@ -8,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
-import lombok.Getter;
 
 import java.io.IOException;
 
@@ -30,7 +29,7 @@ public class ProgressDisplay extends StackPane {
     private ProgressIndicator progressWheel;
 
     @FXML
-    @Getter
+    //This variable holds the value of the message that can be optionally displayed above the progress bar.
     private Label progressTitle;
 
     @FXML
@@ -66,11 +65,23 @@ public class ProgressDisplay extends StackPane {
     }
 
     public void setDefaultState() {
-        setToolNameText("Tool Name");
+        setToolNameText("Title Name");
         progressWheel.setVisible(true);
+        this.setVisible(false);
+        setProgressTitleVisible(false);
+        unbindProgressAndUpdateValues();
+        this.setOpacity(1d);
     }
 
-    public void setItemNameVisible(boolean visible) {
+    public void setProgressTitleVisible(boolean visible) {
         progressTitle.setVisible(visible);
+    }
+
+    public void setProgressTitleName(String title) {
+        progressTitle.setText(title);
+    }
+
+    public void setProgressWheelVisible(boolean visible) {
+        progressWheel.setVisible(visible);
     }
 }

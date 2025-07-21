@@ -29,9 +29,7 @@ import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -162,11 +160,6 @@ public class MasterManager {
     @FXML
     private ListView<LogMessage> viewableLog;
 
-    @FXML
-    private Label modImportSteamCollectionName;
-
-    @FXML
-    private Label modIoUrlToIdName;
 
     private final UiService uiService;
 
@@ -344,21 +337,15 @@ public class MasterManager {
             }
         });
 
-        modImportSteamCollectionName.setVisible(false);
-
-        modIoUrlToIdName.setVisible(false);
-
         viewableLog.setFixedCellSize(35);
 
-        //This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it.
+        /* This is a dumb hack, but it swallows the drag events otherwise when we drag rows over it,
+         * so just sit there and do nothing when you're dragged over.*/
         modDescription.setOnDragOver(dragEvent -> {
         });
 
-        //TODO: Call the tool manager setup.
-        //TODO: We want to grab the UI portion and overlay it on our center table, and also disable all buttons while download is in progress.
-        // When the task is done call a standard fade and on the end of the transition remove it from the manager.
-        mainViewStack.getChildren().add(progressDisplay);
         progressDisplay.setVisible(false);
+        mainViewStack.getChildren().add(progressDisplay);
 
         //Download all the required tools we need for SEMM to function
         uiService.log("Downloading required tools...", MessageType.INFO);
@@ -383,14 +370,13 @@ public class MasterManager {
                 Integer.parseInt(properties.getProperty("semm.steam.cmd.download.read.timeout")),
                 Integer.parseInt(properties.getProperty("semm.steam.cmd.download.retry.delay")),
                 appContext.isWindows() ? new ZipArchiveTool() : new TarballArchiveTool());
-        progressDisplay.getProgressTitle().setVisible(true);
-        progressDisplay.setVisible(true);
-        progressDisplay.getProgressTitle().setText("SteamCMD");
 
         Task<Result<Void>> steamCmdSetupTask = toolManagerService.setupSteamCmd();
         steamCmdSetupTask.setOnRunning(event -> {
             disableUserInputElements(true);
-            progressDisplay.bindProgressAndUpdateValues(steamCmdSetupTask.messageProperty(), steamCmdSetupTask.progressProperty());
+            progressDisplay.setProgressTitleName("Downloading SteamCMD");
+            progressDisplay.setProgressTitleVisible(true);
+            showProgressDisplayWithValueBinding(steamCmdSetupTask.messageProperty(), steamCmdSetupTask.progressProperty());
         });
 
         //When the task is finished log our result, display the last message from it, and fade it out.
@@ -750,18 +736,11 @@ public class MasterManager {
         final Task<List<Result<String>>> TASK = uiService.convertModIoUrlListToIds(modUrls);
 
         TASK.setOnRunning(workerStateEvent -> {
-            modIoUrlToIdName.setVisible(true);
             disableUserInputElements(true);
-            modImportProgressDenominator.setVisible(false);
-            modImportProgressPanel.setVisible(true);
+            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
         });
 
         TASK.setOnSucceeded(workerStateEvent -> {
-            Platform.runLater(() -> {
-                modIoUrlToIdName.setVisible(false);
-                modImportProgressDenominator.setVisible(true);
-            });
-
             List<Result<String>> modIdResults = TASK.getValue();
             List<Mod> modList = new ArrayList<>();
 
@@ -796,7 +775,6 @@ public class MasterManager {
         });
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
-        thread.setDaemon(true);
         return thread;
     }
 
@@ -1217,9 +1195,7 @@ public class MasterManager {
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
             disableUserInputElements(true);
-            modImportProgressPanel.setVisible(true);
-            disableModImportUiText(true);
-            modImportSteamCollectionName.setVisible(true);
+            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
         });
 
         TASK.setOnSucceeded(workerStateEvent -> {
@@ -1241,13 +1217,11 @@ public class MasterManager {
                 }
 
 
-                if (duplicateModIds == steamCollectionModIds.size()) {
+                if (duplicateModIds == steamCollectionModIds.size())
                     Popup.displaySimpleAlert("All the mods in the collection are already in the modlist!", stage, MessageType.INFO);
-                    resetUiOnInvalidCollectionModImportCount();
-                } else if (modIdsSuccessfullyFound == 0) {
+                else if (modIdsSuccessfullyFound == 0)
                     Popup.displaySimpleAlert("Collection contained no mods. Items like scripts, blueprints, worlds, and other non-mod objects are not able to be imported.", stage, MessageType.WARN);
-                    resetUiOnInvalidCollectionModImportCount();
-                } else {
+                else {
                     int totalNumberOfMods = modIdsSuccessfullyFound + duplicateModIds;
                     String postCollectionScrapeMessage = totalNumberOfMods +
                             " mods had their ID's successfully pulled. " + duplicateModIds + " were duplicates. Add the remaining " +
@@ -1258,51 +1232,28 @@ public class MasterManager {
                     if (userChoice == TwoButtonChoice.YES) {
                         importModsFromList(successfullyFoundMods).start();
                     }
-
-                    Platform.runLater(() -> {
-                        modImportSteamCollectionName.setVisible(false);
-                        disableModImportUiText(false);
-
-                        if (userChoice != TwoButtonChoice.YES) {
-                            disableUserInputElements(false);
-                            resetModImportProgressUi();
-                        }
-                    });
                 }
+
+                closeProgressDisplay();
             } else {
                 Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), stage);
-                Platform.runLater(() -> {
-                    modImportSteamCollectionName.setVisible(false);
-                    disableModImportUiText(false);
-
-                    disableUserInputElements(false);
-                    resetModImportProgressUi();
-
-                });
+                closeProgressDisplay();
             }
 
         });
 
-        Thread thread = Thread.ofVirtual().unstarted(TASK);
-        thread.setDaemon(true);
-        return thread;
+        return Thread.ofVirtual().unstarted(TASK);
     }
 
     private @NotNull Thread addSingleModIoModFromId(String modUrl) {
         final Task<Result<String>> TASK = uiService.convertModIoUrlToId(modUrl);
 
         TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
-            modIoUrlToIdName.setVisible(true);
             disableUserInputElements(true);
-            modImportProgressDenominator.setVisible(false);
-            modImportProgressPanel.setVisible(true);
+            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
         }));
 
         TASK.setOnSucceeded(workerStateEvent -> {
-            Platform.runLater(() -> {
-                modIoUrlToIdName.setVisible(false);
-                modImportProgressDenominator.setVisible(true);
-            });
 
             Result<String> modIdResult = TASK.getValue();
             if (modIdResult.isSuccess()) {
@@ -1311,20 +1262,15 @@ public class MasterManager {
                 modList[0] = mod;
                 importModsFromList(List.of(modList)).start();
             } else {
-                //This gets set down in the mod addition thread too, but that won't ever get hit if we fail.
-                Platform.runLater(() -> {
-                    modImportProgressWheel.setVisible(false);
-                    uiService.getModImportProgressDenominatorProperty().setValue(1);
-                });
                 uiService.log(modIdResult);
                 Popup.displaySimpleAlert(modIdResult, stage);
 
+                //This gets done down in the mod addition thread too, but that won't ever get hit if we fail.
                 closeProgressDisplay();
             }
         });
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
-        thread.setDaemon(true);
         return thread;
     }
 
@@ -1339,11 +1285,12 @@ public class MasterManager {
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
             disableUserInputElements(true);
-            modImportProgressPanel.setVisible(true);
+            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
+            progressDisplay.setProgressWheelVisible(true);
         });
 
         TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-            modImportProgressWheel.setVisible(false);
+            progressDisplay.setProgressWheelVisible(false);
 
             Mod topMostMod = ModImportUtility.addModScrapeResultsToModlist(uiService, stage, TASK.getValue(), modList.size());
 
@@ -1378,7 +1325,6 @@ public class MasterManager {
         }));
 
         Thread thread = Thread.ofVirtual().unstarted(TASK);
-        thread.setDaemon(true);
         return thread;
     }
 
@@ -1396,9 +1342,15 @@ public class MasterManager {
         modTableSearchField.setDisable(shouldDisable);
     }
 
+    /*TODO: All the mod import/tool downloading stuff is gonna need to be looked at by Reaper again.
+    *  I probably missed something when replacing the UI elements, so we need to make sure it transitions properly and looks as it should. */
+    private void showProgressDisplayWithValueBinding(ReadOnlyStringProperty messageProperty, ReadOnlyDoubleProperty progressProperty) {
+        progressDisplay.bindProgressAndUpdateValues(messageProperty, progressProperty);
+        progressDisplay.setVisible(true);
+    }
+
     private void closeProgressDisplay() {
-        progressDisplay.setItemNameVisible(false);
-        progressDisplay.unbindProgressAndUpdateValues();
+        progressDisplay.setProgressTitleVisible(false);
 
         Platform.runLater(() -> {
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), progressDisplay);
@@ -1413,8 +1365,7 @@ public class MasterManager {
     }
 
     private void closeProgressDisplayWithCustomPostProcessing(Runnable runnable) {
-        progressDisplay.setItemNameVisible(false);
-        progressDisplay.unbindProgressAndUpdateValues();
+        progressDisplay.setProgressTitleVisible(false);
 
         Platform.runLater(() -> {
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), progressDisplay);
