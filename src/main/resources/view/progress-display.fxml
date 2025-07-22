@@ -19,7 +19,7 @@
                   <StackPane>
                      <children>
                         <ProgressBar fx:id="progressBar" maxWidth="1.7976931348623157E308" minWidth="100.0" prefHeight="16.0" prefWidth="200.0" progress="0.0" />
-                        <Label fx:id="progressMessage" text="0B/0B" />
+                        <Label fx:id="progressMessage" text="0/0" />
                      </children>
                   </StackPane>
                </children>

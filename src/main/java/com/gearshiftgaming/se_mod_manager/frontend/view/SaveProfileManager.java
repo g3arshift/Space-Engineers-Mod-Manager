@@ -19,7 +19,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.utility.*;
 import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowDressingUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowPositionUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.window.WindowTitleBarColorUtility;
-import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -35,7 +34,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Duration;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -80,28 +78,7 @@ public class SaveProfileManager {
     private Button closeWindow;
 
     @FXML
-    private StackPane modImportProgressPanel;
-
-    @FXML
-    private ProgressBar modImportProgressBar;
-
-    @FXML
-    private Label modImportProgressDenominator;
-
-    @FXML
-    private Label modImportProgressDivider;
-
-    @FXML
-    private Label modImportProgressNumerator;
-
-    @FXML
-    private Label modImportProgressActionName;
-
-    @FXML
-    private Label saveCopyMessage;
-
-    @FXML
-    private ProgressIndicator modImportProgressWheel;
+    private StackPane mainViewStack;
 
     private Stage stage;
 
@@ -117,12 +94,15 @@ public class SaveProfileManager {
 
     private final Pane[] TUTORIAL_HIGHLIGHT_PANES;
 
+    private final ProgressDisplay progressDisplay;
+
     public SaveProfileManager(UiService UI_SERVICE, SaveInput saveInput, SimpleInput simpleInput) {
         this.UI_SERVICE = UI_SERVICE;
         SAVE_PROFILES = UI_SERVICE.getSaveProfiles();
         this.SAVE_INPUT_VIEW = saveInput;
         this.PROFILE_INPUT_VIEW = simpleInput;
         TUTORIAL_HIGHLIGHT_PANES = UI_SERVICE.getHighlightPanes();
+        this.progressDisplay = new ProgressDisplay();
     }
 
     public void initView(Parent root, double minWidth, double minHeight, ModTableContextBar modTableContextBar) {
@@ -142,9 +122,7 @@ public class SaveProfileManager {
 
         saveList.setStyle("-fx-background-color: -color-bg-default;");
 
-        modImportProgressNumerator.textProperty().bind(UI_SERVICE.getModImportProgressNumeratorProperty().asString());
-        modImportProgressDenominator.textProperty().bind(UI_SERVICE.getModImportProgressDenominatorProperty().asString());
-        modImportProgressBar.progressProperty().bind(UI_SERVICE.getModImportProgressPercentageProperty());
+        mainViewStack.getChildren().add(progressDisplay);
 
         Scene scene = new Scene(root);
         stage.setScene(scene);
@@ -154,7 +132,6 @@ public class SaveProfileManager {
                 closeWindow();
         });
 
-        saveCopyMessage.setVisible(false);
 
         stage.setOnCloseRequest(windowEvent -> closeWindow());
 
@@ -368,31 +345,18 @@ public class SaveProfileManager {
 
         TASK.setOnRunning(workerStateEvent -> {
             disableUserInput(true);
-            modImportProgressPanel.setVisible(true);
+            progressDisplay.showWithMessageAndProgressBinding(TASK.messageProperty(), TASK.progressProperty());
         });
 
         TASK.setOnSucceeded(workerStateEvent -> {
             ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
 
             ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
-            cleanupModImportUi();
+            disableUserInput(false);
+            progressDisplay.close();
         });
 
-        Thread thread = Thread.ofVirtual().unstarted(TASK);
-        thread.setDaemon(true);
-        return thread;
-    }
-
-    private void cleanupModImportUi() {
-        Platform.runLater(() -> {
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> resetProgressUi());
-
-            fadeTransition.play();
-        });
+        return Thread.ofVirtual().unstarted(TASK);
     }
 
     @FXML
@@ -421,16 +385,11 @@ public class SaveProfileManager {
         };
 
         TASK.setOnRunning(workerStateEvent -> {
-            disableModImportBar(true);
-            disableSaveCopyBar(false);
-            modImportProgressPanel.setVisible(true);
             disableUserInput(true);
+            progressDisplay.showWithMessageAndProgressBinding(TASK.messageProperty(), TASK.progressProperty());
         });
 
         TASK.setOnSucceeded(event -> Platform.runLater(() -> {
-            saveCopyMessage.setText("Finished!");
-            UI_SERVICE.getModImportProgressPercentageProperty().setValue(1d);
-            modImportProgressWheel.setVisible(false);
             Result<SaveProfile> profileCopyResult = TASK.getValue();
 
             if (profileCopyResult.isSuccess()) {
@@ -446,17 +405,10 @@ public class SaveProfileManager {
                 Popup.displaySimpleAlert(saveResult);
             }
 
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), modImportProgressPanel);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> Platform.runLater(this::resetProgressUi));
-            fadeTransition.play();
+            progressDisplay.close();
         }));
 
-        Thread thread = Thread.ofVirtual().unstarted(TASK);
-        thread.setDaemon(true);
-        return thread;
+        return Thread.ofVirtual().unstarted(TASK);
     }
 
     @FXML
@@ -564,7 +516,7 @@ public class SaveProfileManager {
         } else {
             Platform.exitNestedEventLoop(stage, null);
             stage.close();
-            stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+            stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKeyboardButtonNavigationDisabler());
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
 
             //Reset the stage
@@ -598,36 +550,12 @@ public class SaveProfileManager {
         Platform.enterNestedEventLoop(stage);
     }
 
-    private void disableModImportBar(boolean shouldDisable) {
-        modImportProgressActionName.setVisible(!shouldDisable);
-        modImportProgressNumerator.setVisible(!shouldDisable);
-        modImportProgressDivider.setVisible(!shouldDisable);
-        modImportProgressDenominator.setVisible(!shouldDisable);
-    }
-
-    private void disableSaveCopyBar(boolean shouldDisable) {
-        saveCopyMessage.setVisible(!shouldDisable);
-    }
-
     private void disableUserInput(boolean shouldDisable) {
         addSave.setDisable(shouldDisable);
         copySave.setDisable(shouldDisable);
         removeSave.setDisable(shouldDisable);
         renameProfile.setDisable(shouldDisable);
         selectSave.setDisable(shouldDisable);
-    }
-
-    private void resetProgressUi() {
-        saveCopyMessage.setText("Copying save...");
-        modImportProgressWheel.setVisible(true);
-        disableModImportBar(false);
-        disableSaveCopyBar(true);
-        modImportProgressPanel.setVisible(false);
-        disableUserInput(false);
-        modImportProgressPanel.setOpacity(1d);
-        UI_SERVICE.getModImportProgressNumeratorProperty().setValue(0);
-        UI_SERVICE.getModImportProgressDenominatorProperty().setValue(0);
-        UI_SERVICE.getModImportProgressPercentageProperty().setValue(0d);
     }
 
     public void runTutorial(Stage parentStage) {
@@ -637,7 +565,7 @@ public class SaveProfileManager {
         stage = new Stage();
         stage.setScene(new Scene(root));
         stage.initStyle(StageStyle.UNDECORATED);
-        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKeyboardButtonNavigationDisabler());
 
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(TUTORIAL_HIGHLIGHT_PANES);
         addSave.requestFocus();

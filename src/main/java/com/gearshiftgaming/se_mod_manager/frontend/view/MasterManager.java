@@ -41,7 +41,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.input.*;
@@ -344,7 +343,8 @@ public class MasterManager {
         modDescription.setOnDragOver(dragEvent -> {
         });
 
-        progressDisplay.setVisible(false);
+        //TODO: We probably don't need this default hiding, but let's check.
+        //progressDisplay.hide();
         mainViewStack.getChildren().add(progressDisplay);
 
         //Download all the required tools we need for SEMM to function
@@ -376,7 +376,7 @@ public class MasterManager {
             disableUserInputElements(true);
             progressDisplay.setProgressTitleName("Downloading SteamCMD");
             progressDisplay.setProgressTitleVisible(true);
-            showProgressDisplayWithValueBinding(steamCmdSetupTask.messageProperty(), steamCmdSetupTask.progressProperty());
+            progressDisplay.showWithMessageAndProgressBinding(steamCmdSetupTask.messageProperty(), steamCmdSetupTask.progressProperty());
         });
 
         //When the task is finished log our result, display the last message from it, and fade it out.
@@ -392,9 +392,9 @@ public class MasterManager {
                 return;
             }
 
-            progressDisplay.setAllDownloadsCompleteState();
+            progressDisplay.setAllOperationsCompleteState();
             PauseTransition pauseTransition = new PauseTransition(Duration.millis(450));
-            pauseTransition.setOnFinished(event1 -> closeProgressDisplay());
+            pauseTransition.setOnFinished(event1 -> progressDisplay.close());
 
             pauseTransition.play();
         });
@@ -737,7 +737,7 @@ public class MasterManager {
 
         TASK.setOnRunning(workerStateEvent -> {
             disableUserInputElements(true);
-            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
+            progressDisplay.showWithMessageAndProgressBinding(TASK.messageProperty(), TASK.progressProperty());
         });
 
         TASK.setOnSucceeded(workerStateEvent -> {
@@ -770,7 +770,7 @@ public class MasterManager {
                     Popup.displaySimpleAlert("Could not add any of the mods in the modlist file. See the log for more information.", stage, MessageType.WARN);
                 }
 
-                closeProgressDisplay();
+                progressDisplay.close();
             }
         });
 
@@ -1195,7 +1195,7 @@ public class MasterManager {
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
             disableUserInputElements(true);
-            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
+            progressDisplay.showWithMessageBinding(TASK.messageProperty());
         });
 
         TASK.setOnSucceeded(workerStateEvent -> {
@@ -1234,10 +1234,10 @@ public class MasterManager {
                     }
                 }
 
-                closeProgressDisplay();
+                progressDisplay.close();
             } else {
                 Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), stage);
-                closeProgressDisplay();
+                progressDisplay.close();
             }
 
         });
@@ -1250,7 +1250,7 @@ public class MasterManager {
 
         TASK.setOnRunning(workerStateEvent -> Platform.runLater(() -> {
             disableUserInputElements(true);
-            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
+            progressDisplay.showWithMessageBinding(TASK.messageProperty());
         }));
 
         TASK.setOnSucceeded(workerStateEvent -> {
@@ -1266,12 +1266,11 @@ public class MasterManager {
                 Popup.displaySimpleAlert(modIdResult, stage);
 
                 //This gets done down in the mod addition thread too, but that won't ever get hit if we fail.
-                closeProgressDisplay();
+                progressDisplay.close();
             }
         });
 
-        Thread thread = Thread.ofVirtual().unstarted(TASK);
-        return thread;
+        return Thread.ofVirtual().unstarted(TASK);
     }
 
     /**
@@ -1285,7 +1284,7 @@ public class MasterManager {
         TASK.setOnRunning(workerStateEvent -> {
             //We lockout the user input here to prevent any problems from the user doing things while the modlist is modified.
             disableUserInputElements(true);
-            showProgressDisplayWithValueBinding(TASK.messageProperty(), TASK.progressProperty());
+            progressDisplay.showWithMessageAndProgressBinding(TASK.messageProperty(), TASK.progressProperty());
             progressDisplay.setProgressWheelVisible(true);
         });
 
@@ -1305,7 +1304,8 @@ public class MasterManager {
             ModImportUtility.finishImportingMods(TASK.getValue(), uiService);
 
             if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
-                closeProgressDisplayWithCustomPostProcessing(() -> {
+                progressDisplay.closeWithCustomPostProcessing(() -> {
+                    disableUserInputElements(false);
                     List<String> tutorialMessages = new ArrayList<>();
                     TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), modTable);
                     tutorialMessages.add("Mods that you import to a mod list will be active by default and applied to the save when you hit the \"Apply Mod List\" button. " +
@@ -1316,7 +1316,7 @@ public class MasterManager {
                     TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), applyModlist);
                 });
             } else
-                closeProgressDisplay();
+                progressDisplay.close();
 
             //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping. So we give it a hint to collect garbage.
             //It really, truly is, not cleaning up when it should at this point. Trust me.
@@ -1324,8 +1324,7 @@ public class MasterManager {
             System.gc();
         }));
 
-        Thread thread = Thread.ofVirtual().unstarted(TASK);
-        return thread;
+        return Thread.ofVirtual().unstarted(TASK);
     }
 
     protected void disableUserInputElements(boolean shouldDisable) {
@@ -1344,52 +1343,16 @@ public class MasterManager {
 
     /*TODO: All the mod import/tool downloading stuff is gonna need to be looked at by Reaper again.
     *  I probably missed something when replacing the UI elements, so we need to make sure it transitions properly and looks as it should. */
-    private void showProgressDisplayWithValueBinding(ReadOnlyStringProperty messageProperty, ReadOnlyDoubleProperty progressProperty) {
-        progressDisplay.bindProgressAndUpdateValues(messageProperty, progressProperty);
-        progressDisplay.setVisible(true);
-    }
-
-    private void closeProgressDisplay() {
-        progressDisplay.setProgressTitleVisible(false);
-
-        Platform.runLater(() -> {
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), progressDisplay);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> {
-                disableUserInputElements(false);
-                progressDisplay.setDefaultState();
-            });
-        });
-    }
-
-    private void closeProgressDisplayWithCustomPostProcessing(Runnable runnable) {
-        progressDisplay.setProgressTitleVisible(false);
-
-        Platform.runLater(() -> {
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), progressDisplay);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> {
-                disableUserInputElements(false);
-                progressDisplay.setDefaultState();
-                if (runnable != null)
-                    runnable.run();
-            });
-        });
-    }
 
     public void runTutorialModListManagementStep() {
-        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, uiService.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, uiService.getKeyboardButtonNavigationDisabler());
         TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), manageModProfiles);
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(tutorialHighlightPanes);
         manageModProfiles.requestFocus();
     }
 
     public void runTutorialAddModStep() {
-        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, uiService.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, uiService.getKeyboardButtonNavigationDisabler());
 
         if (modImportDropdown.getItems().size() > 2) {
             modImportDropdown.getItems().subList(2, modImportDropdown.getItems().size()).clear();
@@ -1415,7 +1378,7 @@ public class MasterManager {
     }
 
     public void runTutorialCleanup() {
-        stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, uiService.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+        stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, uiService.getKeyboardButtonNavigationDisabler());
         ((Pane) stage.getScene().getRoot()).getChildren().removeAll(tutorialHighlightPanes);
         modImportDropdown.getItems().addAll(
                 ModImportType.STEAM_COLLECTION.getName(),

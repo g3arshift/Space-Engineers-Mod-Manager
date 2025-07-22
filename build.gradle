@@ -173,3 +173,7 @@ tasks.register('remoteTest', Test) {
 }
 
 remoteTest.dependsOn generateVersionProperties
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add("-Xlint:deprecation")
+}

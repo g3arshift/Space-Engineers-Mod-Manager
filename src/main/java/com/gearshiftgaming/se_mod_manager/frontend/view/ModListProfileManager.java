@@ -355,7 +355,7 @@ public class ModListProfileManager {
         } else {
             stage.close();
             Platform.exitNestedEventLoop(stage, null);
-            stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+            stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKeyboardButtonNavigationDisabler());
             ((Pane) stage.getScene().getRoot()).getChildren().removeAll(TUTORIAL_HIGHLIGHT_PANES);
 
             //Reset the stage
@@ -418,7 +418,7 @@ public class ModListProfileManager {
         stage = new Stage();
         stage.setScene(new Scene(root));
         stage.initStyle(StageStyle.UNDECORATED);
-        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKEYBOARD_BUTTON_NAVIGATION_DISABLER());
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, UI_SERVICE.getKeyboardButtonNavigationDisabler());
 
         ((Pane) stage.getScene().getRoot()).getChildren().addAll(TUTORIAL_HIGHLIGHT_PANES);
         createNewProfile.requestFocus();
