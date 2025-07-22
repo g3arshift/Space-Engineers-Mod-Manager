@@ -54,7 +54,11 @@ public class ProgressDisplay extends StackPane {
         } catch (IOException e) {
             throw new FXMLLoadException("Failed to load ProgressDisplay FXML", e);
         }
-        this.setVisible(false);
+    }
+
+    @FXML
+    private void initialize() {
+        setDefaultState();
     }
 
     public void setDefaultState() {
@@ -65,6 +69,7 @@ public class ProgressDisplay extends StackPane {
         unbindProgressAndUpdateValues();
         this.setOpacity(1d);
         progressBar.setProgress(0);
+        progressTitle.setVisible(false);
     }
 
     public void bindProgressAndUpdateValues(ReadOnlyStringProperty updateMessage, ReadOnlyDoubleProperty updateProgress) {
@@ -121,23 +126,21 @@ public class ProgressDisplay extends StackPane {
     }
 
     public void close() {
-        this.setProgressTitleVisible(false);
-
         Platform.runLater(() -> {
+            this.setProgressTitleVisible(false);
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), this);
             fadeTransition.setFromValue(1d);
             fadeTransition.setToValue(0d);
 
-            fadeTransition.setOnFinished(actionEvent -> {
-                this.setDefaultState();
-            });
+            fadeTransition.setOnFinished(actionEvent -> this.setDefaultState());
+
+            fadeTransition.play();
         });
     }
 
     public void closeWithCustomPostProcessing(Runnable runnable) {
-        this.setProgressTitleVisible(false);
-
         Platform.runLater(() -> {
+            this.setProgressTitleVisible(false);
             FadeTransition fadeTransition = new FadeTransition(Duration.millis(1100), this);
             fadeTransition.setFromValue(1d);
             fadeTransition.setToValue(0d);
@@ -147,6 +150,8 @@ public class ProgressDisplay extends StackPane {
                 if (runnable != null)
                     runnable.run();
             });
+
+            fadeTransition.play();
         });
     }
 }

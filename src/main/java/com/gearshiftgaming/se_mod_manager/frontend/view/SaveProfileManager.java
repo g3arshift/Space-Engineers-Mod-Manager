@@ -389,24 +389,29 @@ public class SaveProfileManager {
             progressDisplay.showWithMessageAndProgressBinding(TASK.messageProperty(), TASK.progressProperty());
         });
 
-        TASK.setOnSucceeded(event -> Platform.runLater(() -> {
+        TASK.setOnSucceeded(event -> {
             Result<SaveProfile> profileCopyResult = TASK.getValue();
 
             if (profileCopyResult.isSuccess()) {
                 SAVE_PROFILES.add(profileCopyResult.getPayload());
             }
-
-            Popup.displaySimpleAlert(profileCopyResult, stage);
-
             UI_SERVICE.log(profileCopyResult);
-            Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
-            if (saveResult.isFailure()) {
-                UI_SERVICE.log(saveResult);
-                Popup.displaySimpleAlert(saveResult);
-            }
 
-            progressDisplay.close();
-        }));
+            Thread.startVirtualThread(() -> {
+                Result<Void> saveResult = UI_SERVICE.saveSaveProfile(profileCopyResult.getPayload());
+                UI_SERVICE.log(saveResult);
+
+                Platform.runLater(() -> {
+                    if (saveResult.isFailure())
+                        Popup.displaySimpleAlert(saveResult);
+                    else
+                        Popup.displaySimpleAlert(profileCopyResult, stage);
+
+                    progressDisplay.close();
+                    disableUserInput(false);
+                });
+            });
+        });
 
         return Thread.ofVirtual().unstarted(TASK);
     }

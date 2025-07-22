@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,7 +155,7 @@ public class SaveService {
 	}
 
 	private int[] getSessionNameIndexPositions(String sandboxConfig) {
-		int saveNameStartIndex = StringUtils.indexOf(sandboxConfig, "<SessionName>");
+		int saveNameStartIndex = Strings.CS.indexOf(sandboxConfig, "<SessionName>");
 		final int SESSION_NAME_LENGTH = 13;
 
 		if (saveNameStartIndex == -1) {

@@ -15,7 +15,7 @@
          <children>
             <VBox alignment="CENTER" translateY="-17.0">
                <children>
-                  <Label fx:id="itemName" text="Tool Name" />
+                  <Label fx:id="progressTitle" text="Tool Name" />
                   <StackPane>
                      <children>
                         <ProgressBar fx:id="progressBar" maxWidth="1.7976931348623157E308" minWidth="100.0" prefHeight="16.0" prefWidth="200.0" progress="0.0" />
