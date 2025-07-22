@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +62,7 @@ public class SandboxService {
 			List<Mod> modList = new ArrayList<>();
 			String sandboxFileContent = sandboxConfigResult.getPayload();
 			String modContent;
-			if (StringUtils.contains(sandboxFileContent, "<Mods>")) {
+			if (Strings.CS.contains(sandboxFileContent, "<Mods>")) {
 				modContent = StringUtils.substringBetween(sandboxFileContent, "<Mods>", "</Mods>");
 				String[] modConfig = modContent.split("</ModItem>");
 				for (String s : modConfig) {
@@ -80,7 +81,7 @@ public class SandboxService {
 				}
 				modListResult.addMessage("Retrieved " + modList.size() + " mods.", ResultType.SUCCESS);
 				modListResult.setPayload(modList);
-			} else if (StringUtils.contains(sandboxFileContent, "<Mods />")) {
+			} else if (Strings.CS.contains(sandboxFileContent, "<Mods />")) {
 				modListResult.addMessage("There are no mods in this save!", ResultType.INVALID);
 			} else {
 				modListResult.addMessage("No valid mod section found.", ResultType.FAILED);
@@ -116,10 +117,10 @@ public class SandboxService {
 		String[] preModSandboxContent;
 		String[] postModSandboxContent;
 
-		if (StringUtils.contains(sandboxFileContent, "<Mods />")) {
+		if (Strings.CS.contains(sandboxFileContent, "<Mods />")) {
 			preModSandboxContent = StringUtils.substringBefore(sandboxFileContent, "<Mods />").split(System.lineSeparator());
 			postModSandboxContent = StringUtils.substringAfter(sandboxFileContent, "<Mods />").split(System.lineSeparator());
-		} else if (StringUtils.contains(sandboxFileContent, "<Mods>")) {
+		} else if (Strings.CS.contains(sandboxFileContent, "<Mods>")) {
 			preModSandboxContent = StringUtils.substringBefore(sandboxFileContent, "<Mods>").split(System.lineSeparator());
 			postModSandboxContent = StringUtils.substringAfter(sandboxFileContent, "</Mods>").split(System.lineSeparator());
 		} else {

@@ -31,7 +31,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
  */
 public class ModImportUtility {
 
-    public static Mod addModScrapeResultsToModlist(final UiService UI_SERVICE, Stage stage, List<Result<Mod>> modInfoFillOutResults, int importedModlistSize) {
+    public static Mod addModScrapeResultsToModlist(final UiService uiService, Stage stage, List<Result<Mod>> modInfoFillOutResults, int importedModlistSize) {
         int successfulScrapes = 0;
         int failedScrapes = 0;
 
@@ -51,15 +51,15 @@ public class ModImportUtility {
                     Mod mod = currentModInfoFillOutResult.getPayload();
                     currentModInfoFillOutResult.addMessage("Mod \"" + mod.getFriendlyName() + "\" has been successfully added.", ResultType.SUCCESS);
                     mod.setActive(true);
-                    UI_SERVICE.modifyActiveModCount(mod);
-                    mod.setLoadPriority(UI_SERVICE.getCurrentModList().size() + 1);
-                    UI_SERVICE.getCurrentModList().add(mod);
+                    uiService.modifyActiveModCount(mod);
+                    mod.setLoadPriority(uiService.getCurrentModList().size() + 1);
+                    uiService.getCurrentModList().add(mod);
                     successfulScrapes++;
-                    UI_SERVICE.logPrivate(currentModInfoFillOutResult);
+                    uiService.logPrivate(currentModInfoFillOutResult);
                 }
             } else {
                 failedScrapes++;
-                UI_SERVICE.log(currentModInfoFillOutResult);
+                uiService.log(currentModInfoFillOutResult);
             }
         }
 
@@ -71,7 +71,7 @@ public class ModImportUtility {
             String modFillOutResultMessage = String.format("%d mods were successfully added. %d failed to be added.%s",
                     successfulScrapes, failedScrapes, failedScrapes > 0 ? " Check the log for more information for each specific mod." : "");
             Popup.displaySimpleAlert(modFillOutResultMessage, stage, MessageType.INFO);
-            UI_SERVICE.log(modFillOutResultMessage, MessageType.INFO);
+            uiService.log(modFillOutResultMessage, MessageType.INFO);
         }
 
         Mod topMostMod = null;
@@ -84,75 +84,71 @@ public class ModImportUtility {
     }
 
 
-    public static Result<List<Mod>> getModlistFromSandboxConfig(final UiService UI_SERVICE, final File selectedSave, final Stage STAGE) {
-        Result<List<Mod>> existingModlistResult = new Result<>();
-        try {
-            existingModlistResult = UI_SERVICE.getModlistFromSave(selectedSave);
-        } catch (IOException e) {
-            existingModlistResult.addMessage(getStackTrace(e), ResultType.FAILED);
-        }
+    public static Result<List<Mod>> getModlistFromSandboxConfig(final UiService uiService, final File selectedSave, final Stage STAGE) {
+        new Result<>();
+        Result<List<Mod>> existingModlistResult = uiService.getModlistFromSave(selectedSave);
 
         Popup.displaySimpleAlert(existingModlistResult, STAGE);
 
         return existingModlistResult;
     }
 
-    public static String createNewModProfile(final UiService UI_SERVICE, final Stage STAGE, final SimpleInput PROFILE_INPUT_VIEW) {
+    public static String createNewModProfile(final UiService uiService, final Stage STAGE, final SimpleInput profileInputView) {
         boolean duplicateProfileName;
         String newProfileName;
 
         do {
-            PROFILE_INPUT_VIEW.getInput().clear();
-            PROFILE_INPUT_VIEW.getInput().requestFocus();
-            PROFILE_INPUT_VIEW.show(STAGE);
-            newProfileName = PROFILE_INPUT_VIEW.getInput().getText();
+            profileInputView.getInput().clear();
+            profileInputView.getInput().requestFocus();
+            profileInputView.show(STAGE);
+            newProfileName = profileInputView.getInput().getText();
             //TODO: We need to prompt for SE version for this mod profile. For now it's stubbed.
             SpaceEngineersVersion spaceEngineersVersion = SpaceEngineersVersion.SPACE_ENGINEERS_ONE;
             ModListProfile newModListProfile = new ModListProfile(newProfileName, spaceEngineersVersion);
-            duplicateProfileName = profileNameExists(newProfileName.toLowerCase().trim(), UI_SERVICE);
+            duplicateProfileName = profileNameExists(newProfileName.toLowerCase().trim(), uiService);
 
             if (duplicateProfileName) {
                 Popup.displaySimpleAlert("Profile name already exists!", STAGE, MessageType.WARN);
-            } else if (!PROFILE_INPUT_VIEW.getInput().getText().isBlank()) {
-                UI_SERVICE.getModListProfileDetails().add(MutableTriple.of(newModListProfile.getId(), newProfileName, newModListProfile.getSpaceEngineersVersion()));
-                UI_SERVICE.log("Successfully created profile " + PROFILE_INPUT_VIEW.getInput().getText(), MessageType.INFO);
+            } else if (!profileInputView.getInput().getText().isBlank()) {
+                uiService.getModListProfileDetails().add(MutableTriple.of(newModListProfile.getId(), newProfileName, newModListProfile.getSpaceEngineersVersion()));
+                uiService.log("Successfully created profile " + profileInputView.getInput().getText(), MessageType.INFO);
 
-                PROFILE_INPUT_VIEW.getInput().clear();
+                profileInputView.getInput().clear();
                 //TODO: Swap out for saving just mod list profile.
-                UI_SERVICE.saveModListProfile(newModListProfile);
+                uiService.saveModListProfile(newModListProfile);
             }
         } while (duplicateProfileName);
 
         return newProfileName;
     }
 
-    private static boolean profileNameExists(String profileName, final UiService UI_SERVICE) {
-        return UI_SERVICE.getModListProfileDetails().stream()
+    private static boolean profileNameExists(String profileName, final UiService uiService) {
+        return uiService.getModListProfileDetails().stream()
                 .anyMatch(modProfileDetails -> modProfileDetails.getMiddle().toLowerCase().trim().equals(profileName));
     }
 
-    public static void finishImportingMods(List<Result<Mod>> scrapedMods, final UiService UI_SERVICE) {
+    public static void finishImportingMods(List<Result<Mod>> scrapedMods, final UiService uiService) {
         List<Mod> successfullyScrapedMods = new ArrayList<>();
         for (Result<Mod> modResult : scrapedMods) {
             if (modResult.isSuccess())
                 successfullyScrapedMods.add(modResult.getPayload());
         }
 
-        UI_SERVICE.getCurrentModListProfile().setModList(UI_SERVICE.getCurrentModList());
-        Result<Void> updateResult = UI_SERVICE.updateModInformation(successfullyScrapedMods);
+        uiService.getCurrentModListProfile().setModList(uiService.getCurrentModList());
+        Result<Void> updateResult = uiService.updateModInformation(successfullyScrapedMods);
         if (updateResult.isFailure()) {
-            UI_SERVICE.log(updateResult);
+            uiService.log(updateResult);
             Popup.displaySimpleAlert(updateResult);
             return;
         }
 
-        updateResult.addAllMessages(UI_SERVICE.saveCurrentModListProfile());
+        updateResult.addAllMessages(uiService.saveCurrentModListProfile());
         if (updateResult.isFailure()) {
-            UI_SERVICE.log(updateResult);
+            uiService.log(updateResult);
             Popup.displaySimpleAlert(updateResult);
             return;
         }
 
-        UI_SERVICE.logPrivate(updateResult);
+        uiService.logPrivate(updateResult);
 	}
 }

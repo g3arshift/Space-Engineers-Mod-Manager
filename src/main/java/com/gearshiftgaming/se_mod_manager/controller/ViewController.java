@@ -18,7 +18,6 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.input.SaveInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.input.SimpleInput;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
-import com.gearshiftgaming.se_mod_manager.operatingsystem.OperatingSystemVersion;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -53,7 +52,7 @@ import java.util.stream.Stream;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 public class ViewController {
-    private final Properties PROPERTIES;
+    private final Properties properties;
 
     private UiService uiService;
 
@@ -61,9 +60,9 @@ public class ViewController {
     public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InterruptedException {
         logger.info("Started application");
 
-        PROPERTIES = new Properties();
+        properties = new Properties();
         try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("SEMM.properties")) {
-            PROPERTIES.load(input);
+            properties.load(input);
         } catch (IOException | NullPointerException e) {
             logger.error("Could not load SEMM.properties. {}", e.getMessage());
             throw (e);
@@ -71,7 +70,7 @@ public class ViewController {
 
         //TODO: Something is bugging me about how this is all setup... It feels brittle.
         StorageController storageController = new StorageController(new SandboxConfigFileRepository(),
-                new UserDataSqliteRepository(PROPERTIES.getProperty("semm.userData.default.path") + ".db"),
+                new UserDataSqliteRepository(properties.getProperty("semm.userData.default.path") + ".db"),
                 new SaveFileRepository());
 
         Result<UserConfiguration> userConfigurationResult = storageController.loadStartupData();
@@ -121,9 +120,9 @@ public class ViewController {
                         logMessage.MESSAGE_TYPEProperty()
                 });
 
-        ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), PROPERTIES);
+        ModInfoController modInfoController = new ModInfoController(new ModlistFileRepository(), properties);
 
-        uiService = new UiService(logger, userLog, Integer.parseInt(PROPERTIES.getProperty("semm.ui.maxUserLogSize")), modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, PROPERTIES);
+        uiService = new UiService(logger, userLog, Integer.parseInt(properties.getProperty("semm.ui.maxUserLogSize")), modListProfileDetails, saveProfiles, storageController, modInfoController, userConfiguration, properties);
         uiService.log(userConfigurationResult);
 
         setupInterface(stage);
@@ -135,6 +134,8 @@ public class ViewController {
         //The reason we have the initView function however is because @FXML tagged variables are only injected *after* the constructor runs, so we initialize any FXML dependent items in initView.
         //For the constructors for each view, they need to have a value for whatever views that will be the "child" of that view, ie, they are only accessible in the UI through that view. Think of it as a hierarchical structure.
 
+        //TODO: Should probably redo this at some point to bind the FXML loading stuff inside the constructor of the objects. This is kinda... Dumb.
+        // Doing that should also let us move a LOT of logic and variables out of the master manager.
         //View for adding a new Save Profile
         final FXMLLoader saveListInputLoader = new FXMLLoader(getClass().getResource("/view/sandbox-save-input.fxml"));
         final SaveInput saveInputView = new SaveInput(uiService);
@@ -190,7 +191,7 @@ public class ViewController {
 
         //View for managing the actual mod lists. This is the center section of the main window
         final FXMLLoader masterManagerLoader = new FXMLLoader(getClass().getResource("/view/master-manager.fxml"));
-        final MasterManager masterManagerView = new MasterManager(uiService, stage, PROPERTIES, statusBarView, modListManagerView, saveManagerView, idAndUrlModImportInputView, saveInputView, generalFileInputView);
+        final MasterManager masterManagerView = new MasterManager(uiService, stage, properties, statusBarView, modListManagerView, saveManagerView, idAndUrlModImportInputView, saveInputView, generalFileInputView);
         masterManagerLoader.setController(masterManagerView);
         final Parent masterManagerRoot = masterManagerLoader.load();
 
@@ -201,21 +202,16 @@ public class ViewController {
         final Parent menuBarRoot = modTableContextBarLoader.load();
 
         //The mod and save manager are fully initialized down here as we only have all the references we need at this stage
-        modListManagerView.initView(modListManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
-        saveManagerView.initView(saveManagerRoot, Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(PROPERTIES.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
+        modListManagerView.initView(modListManagerRoot, Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
+        saveManagerView.initView(saveManagerRoot, Double.parseDouble(properties.getProperty("semm.profileView.resolution.minWidth")), Double.parseDouble(properties.getProperty("semm.profileView.resolution.minHeight")), modTableContextBarView);
 
-        //View for the tool manager that gets attached to the primary app window
-        final FXMLLoader toolManagerLoader = new FXMLLoader(getClass().getResource("/view/tool-manager.fxml"));
-        final ToolManager toolManagerView = new ToolManager();
-        toolManagerLoader.setController(toolManagerView);
-        toolManagerLoader.load();
 
         //View for the primary application window
         final FXMLLoader mainViewLoader = new FXMLLoader(getClass().getResource("/view/main-window.fxml"));
-        final MainWindow mainWindowView = new MainWindow(PROPERTIES, stage,
-                modTableContextBarView, masterManagerView, statusBarView, toolManagerView, uiService);
+        final MainWindow mainWindowView = new MainWindow(properties, stage,
+                modTableContextBarView, masterManagerView, statusBarView, uiService);
         mainViewLoader.setController(mainWindowView);
         final Parent mainViewRoot = mainViewLoader.load();
-        mainWindowView.initView(mainViewRoot, menuBarRoot, masterManagerRoot, statusBarRoot, saveManagerView, modListManagerView);
+        mainWindowView.initView(mainViewRoot, menuBarRoot, masterManagerRoot, statusBarRoot);
     }
 }

@@ -309,7 +309,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
     }
 
 	private void deleteMods(TableView<Mod> modTable) {
-		TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete these mods?", MODLIST_MANAGER_VIEW.getSTAGE(), MessageType.WARN);
+		TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete these mods?", MODLIST_MANAGER_VIEW.getStage(), MessageType.WARN);
 		if (choice == TwoButtonChoice.YES) {
 			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 

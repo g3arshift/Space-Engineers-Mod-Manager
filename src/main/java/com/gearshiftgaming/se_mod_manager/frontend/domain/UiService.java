@@ -16,10 +16,7 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,8 +26,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -47,10 +44,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
@@ -74,7 +69,7 @@ public class UiService {
     @Getter
     private final ObservableList<LogMessage> userLog;
 
-    private final int USER_LOG_MAX_SIZE;
+    private final int userLogMaxSize;
 
     @Getter
     private final ObservableList<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileDetails;
@@ -97,21 +92,10 @@ public class UiService {
     @Getter
     private final IntegerProperty activeModCount;
 
-    //TODO: In the future, rewrite the mod import stuff to be self-contained in another service class. See ToolManagerService as an example.
-    //TODO: This is done with updateProgress and updateMessage
-    @Setter
-    private IntegerProperty modImportProgressNumerator;
-
-    @Setter
-    private IntegerProperty modImportProgressDenominator;
-
-    @Setter
-    private DoubleProperty modImportProgressPercentage;
-
-    private final String MOD_DATE_FORMAT;
+    private final String modDateFormat;
 
     @Getter
-    private final javafx.event.EventHandler<KeyEvent> KEYBOARD_BUTTON_NAVIGATION_DISABLER;
+    private final javafx.event.EventHandler<KeyEvent> keyboardButtonNavigationDisabler;
 
     //TODO: Really oughta redo most of this into a function so we can reset the user config without restarting the app
     // Shouldn't be hard. Just need to reset the user config to default settings, drop existing data, and persist the new data.
@@ -122,20 +106,21 @@ public class UiService {
         this.logger = logger;
         this.modInfoController = modInfoController;
         this.userLog = userLog;
-        this.USER_LOG_MAX_SIZE = userLogMaxSize;
+        this.userLogMaxSize = userLogMaxSize;
         this.modListProfileDetails = modListProfileDetails;
         this.saveProfiles = saveProfiles;
         this.storageController = storageController;
         this.userConfiguration = userConfiguration;
 
-        this.MOD_DATE_FORMAT = properties.getProperty("semm.steam.mod.dateFormat");
+        this.modDateFormat = properties.getProperty("semm.steam.mod.dateFormat");
 
-        KEYBOARD_BUTTON_NAVIGATION_DISABLER = arrowKeyEvent -> {
+        keyboardButtonNavigationDisabler = arrowKeyEvent -> {
             switch (arrowKeyEvent.getCode()) {
                 case UP, DOWN, LEFT, RIGHT, TAB, ESCAPE:
                     arrowKeyEvent.consume();
                     break;
-                default: log("Failed to initialize UiService keyboard button navigation disabler.", MessageType.ERROR);
+                default:
+                    log("Failed to initialize UiService keyboard button navigation disabler.", MessageType.ERROR);
             }
         };
 
@@ -175,13 +160,14 @@ public class UiService {
         userLog.add(logMessage);
 
         //There's no observable queue in JavaFX so we're basically mimicking that here.
-        if (userLog.size() > USER_LOG_MAX_SIZE) {
+        if (userLog.size() > userLogMaxSize) {
             userLog.removeFirst();
         }
     }
 
     /**
      * Logs all messages in a result object.
+     *
      * @param result is the object we will be logging.
      */
     public <T> void log(@NotNull Result<T> result) {
@@ -295,7 +281,7 @@ public class UiService {
      */
     public void setUserSavedApplicationTheme(@NotNull List<CheckMenuItem> themeList) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         for (CheckMenuItem c : themeList) {
-            String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
+            String currentTheme = Strings.CS.removeEnd(c.getId(), "Theme");
             String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
             if (themeName.equals(StringUtils.deleteWhitespace(userConfiguration.getUserTheme()))) {
                 c.setSelected(true);
@@ -341,28 +327,7 @@ public class UiService {
         activeModCount.set(activeModCount.get() + numMods);
     }
 
-    //This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
-    // bars to work properly.
-    public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
-
-        List<Result<String>> steamCollectionModIds = modInfoController.scrapeSteamModCollectionModList(collectionId);
-
-        //Process the returned ID's and check for duplicates in our current mod list.
-        for (Result<String> modIdResult : steamCollectionModIds) {
-            if (modIdResult.isSuccess()) {
-                SteamMod duplicateSteamMod = ModListManagerHelper.findDuplicateSteamMod(modIdResult.getPayload(), currentModList);
-                if (duplicateSteamMod != null) {
-                    modIdResult.addMessage(String.format("\"%s\" is already in the modlist!", duplicateSteamMod.getFriendlyName()), ResultType.INVALID);
-                }
-            } else {
-                log(modIdResult);
-            }
-        }
-
-        return steamCollectionModIds;
-    }
-
-    public Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) throws IOException {
+    public Result<List<Mod>> getModlistFromSave(File sandboxConfigFile) {
         Result<List<Mod>> modListResult = storageController.getModlistFromSave(sandboxConfigFile);
 
         if (modListResult.isSuccess()) {
@@ -380,7 +345,52 @@ public class UiService {
         return modListResult;
     }
 
-    public Result<Mod> fillOutModInformation(Mod mod) throws IOException, InterruptedException {
+    public Task<List<Result<Mod>>> importModsFromList(List<Mod> modList) {
+        return new Task<>() {
+            @Override
+            protected List<Result<Mod>> call() {
+                List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+                AtomicInteger completedMods = new AtomicInteger(0);
+                int totalMods = modList.size();
+                updateMessage(String.format("Mods Processed: 0/%s", totalMods));
+                updateProgress(0, totalMods);
+
+                try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+                    CompletionService<Result<Mod>> completionService = new ExecutorCompletionService<>(executorService);
+                    Random random = new Random();
+                    for (Mod m : modList) {
+                        // Submit the task without waiting for it to finish
+                        completionService.submit(() -> {
+                            if (m instanceof ModIoMod && totalMods > 1) {
+                                Thread.sleep(random.nextInt(200, 600));
+                            }
+                            return fillOutModInformation(m);
+                        });
+                    }
+                    for (int i = 0; i < totalMods; i++) {
+                        Future<Result<Mod>> completedFuture;
+                        Result<Mod> result;
+                        try {
+                            completedFuture = completionService.take();
+                            result = completedFuture.get();
+                            modInfoFillOutResults.add(result);
+                        } catch (InterruptedException | ExecutionException e) {
+                            result = new Result<>();
+                            result.addMessage(getStackTrace(e), ResultType.FAILED);
+                            modInfoFillOutResults.add(result);
+                        }
+
+                        int done = completedMods.incrementAndGet();
+                        updateProgress(done, totalMods);
+                        updateMessage(String.format("Mods processed: %s/%s", done, totalMods));
+                    }
+                }
+                return modInfoFillOutResults;
+            }
+        };
+    }
+
+    public Result<Mod> fillOutModInformation(Mod mod) throws InterruptedException {
         Result<String[]> scrapeResult = modInfoController.fillOutModInformation(mod);
         Result<Mod> infoFilloutResult = new Result<>();
 
@@ -403,7 +413,7 @@ public class UiService {
                 if (mod instanceof SteamMod steamMod) {
                     formatter = new DateTimeFormatterBuilder()
                             .parseCaseInsensitive()
-                            .appendPattern(MOD_DATE_FORMAT)
+                            .appendPattern(modDateFormat)
                             .toFormatter(Locale.ENGLISH);
                     steamMod.setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
                     infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
@@ -435,91 +445,7 @@ public class UiService {
             infoFilloutResult.addAllMessages(scrapeResult);
         }
 
-        Platform.runLater(() -> {
-            modImportProgressNumerator.setValue(modImportProgressNumerator.get() + 1);
-            modImportProgressPercentage.setValue((double) modImportProgressNumerator.get() / (double) modImportProgressDenominator.get());
-        });
         return infoFilloutResult;
-    }
-
-    public IntegerProperty getModImportProgressNumeratorProperty() {
-        if (this.modImportProgressNumerator == null) {
-            this.modImportProgressNumerator = new SimpleIntegerProperty(0);
-        }
-        return this.modImportProgressNumerator;
-    }
-
-    public int getModImportProgressNumerator() {
-        return modImportProgressNumerator.get();
-    }
-
-    public IntegerProperty getModImportProgressDenominatorProperty() {
-        if (this.modImportProgressDenominator == null)
-            this.modImportProgressDenominator = new SimpleIntegerProperty(0);
-
-        return this.modImportProgressDenominator;
-    }
-
-    public int getModImportProgressDenominator() {
-        return modImportProgressDenominator.get();
-    }
-
-    public DoubleProperty getModImportProgressPercentageProperty() {
-        if (modImportProgressPercentage == null)
-            modImportProgressPercentage = new SimpleDoubleProperty(0d);
-        return modImportProgressPercentage;
-    }
-
-    public double getModImportProgressPercentage() {
-        return modImportProgressPercentage.get();
-    }
-
-    //TODO: We need to rewrite most of this stuff using the UI property values to work with updating progress instead. Doing it as it is now violates the architecture rules.
-    //TODO: Do the same for the actual UI message parts. We don't need labels for everything, just change the text via  updateMessage in the task.
-    public Task<List<Result<Mod>>> importModsFromList(List<Mod> modList) {
-        List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
-        return new Task<>() {
-            @Override
-            protected List<Result<Mod>> call() throws ExecutionException, InterruptedException {
-                Platform.runLater(() -> modImportProgressDenominator.setValue(modList.size()));
-                List<Future<Result<Mod>>> futures = new ArrayList<>(modList.size());
-                try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-                    Random random = new Random();
-                    for (Mod m : modList) {
-                        // Submit the task without waiting for it to finish
-                        Future<Result<Mod>> future = executorService.submit(() -> {
-                            try {
-                                if (m instanceof ModIoMod && modList.size() > 1) {
-                                    Thread.sleep(random.nextInt(200, 600));
-                                }
-                                return fillOutModInformation(m);
-                            } catch (IOException e) {
-                                Result<Mod> failedResult = new Result<>();
-                                if (e.toString().equals("java.net.UnknownHostException: steamcommunity.com")) {
-                                    failedResult.addMessage("Unable to reach the Steam Workshop. Please check your internet connection.", ResultType.FAILED);
-                                } else if (e.toString().equals("java.net.UnknownHostException: mod.io")) {
-                                    failedResult.addMessage("Unable to reach Mod.io. Please check your internet connection.", ResultType.FAILED);
-                                } else {
-                                    failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
-                                }
-                                return failedResult;
-                            }
-                        });
-                        futures.add(future);
-                    }
-                    try {
-                        for (Future<Result<Mod>> f : futures) {
-                            modInfoFillOutResults.add(f.get());
-                        }
-                    } catch (RuntimeException e) {
-                        Result<Mod> failedResult = new Result<>();
-                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
-                        modInfoFillOutResults.add(failedResult);
-                    }
-                }
-                return modInfoFillOutResults;
-            }
-        };
     }
 
     public Task<List<Result<String>>> importSteamCollection(String collectionId) {
@@ -527,6 +453,7 @@ public class UiService {
             @Override
             protected List<Result<String>> call() {
                 try {
+                    updateMessage("Processing Steam Collection...");
                     return scrapeSteamModCollectionModList(collectionId);
                 } catch (IOException e) {
                     List<Result<String>> failedResults = new ArrayList<>();
@@ -543,6 +470,27 @@ public class UiService {
         };
     }
 
+    //This isn't down in the ModlistService because we need to actually update the numerator on each and every single completed get call for the UI progress
+    // bars to work properly.
+    public List<Result<String>> scrapeSteamModCollectionModList(String collectionId) throws IOException {
+
+        List<Result<String>> steamCollectionModIds = modInfoController.scrapeSteamModCollectionModList(collectionId);
+
+        //Process the returned ID's and check for duplicates in our current mod list.
+        for (Result<String> modIdResult : steamCollectionModIds) {
+            if (modIdResult.isSuccess()) {
+                SteamMod duplicateSteamMod = ModListManagerHelper.findDuplicateSteamMod(modIdResult.getPayload(), currentModList);
+                if (duplicateSteamMod != null) {
+                    modIdResult.addMessage(String.format("\"%s\" is already in the modlist!", duplicateSteamMod.getFriendlyName()), ResultType.INVALID);
+                }
+            } else {
+                log(modIdResult);
+            }
+        }
+
+        return steamCollectionModIds;
+    }
+
 
     /**
      * Converts a list of Mod IO urls to their respective ID's.
@@ -550,16 +498,19 @@ public class UiService {
      * @param modUrls List of Mod.io url's
      * @return The task to perform the conversion.
      */
+    //TODO: Should this use the single call just below it?
     public Task<List<Result<String>>> convertModIoUrlListToIds(List<String> modUrls) {
-        List<Result<String>> modIdResults = new ArrayList<>();
         return new Task<>() {
             @Override
-            protected List<Result<String>> call() throws ExecutionException, InterruptedException {
-                List<Future<Result<String>>> futures = new ArrayList<>(modUrls.size());
+            protected List<Result<String>> call() throws InterruptedException {
+                List<Result<String>> modIdResults = new ArrayList<>();
+                AtomicInteger completedUrls = new AtomicInteger(0);
+                int totalUrls = modUrls.size();
                 try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-                    for (String modUrl : modUrls) {
+                    CompletionService<Result<String>> completionService = new ExecutorCompletionService<>(executorService);
 
-                        Future<Result<String>> future = executorService.submit(() -> {
+                    for (String modUrl : modUrls) {
+                        completionService.submit(() -> {
                             Result<String> idResult = new Result<>();
                             if (StringUtils.isNumeric(modUrl)) {
                                 idResult.addMessage(String.format("%s is already in Mod ID format.", modUrl), ResultType.SUCCESS);
@@ -576,16 +527,22 @@ public class UiService {
                             }
                             return idResult;
                         });
-                        futures.add(future);
                     }
-                    try {
-                        for (Future<Result<String>> f : futures) {
-                            modIdResults.add(f.get());
+                    for(int i = 0; i < totalUrls; i++) {
+                        Result<String> result;
+                        try {
+                            Future<Result<String>> completedFuture = completionService.take();
+                             result = completedFuture.get();
+                             modIdResults.add(result);
+                        } catch (InterruptedException | ExecutionException e) {
+                            result = new Result<>();
+                            result.addMessage(getStackTrace(e), ResultType.FAILED);
+                            modIdResults.add(result);
                         }
-                    } catch (RuntimeException e) {
-                        Result<String> failedResult = new Result<>();
-                        failedResult.addMessage(getStackTrace(e), ResultType.FAILED);
-                        modIdResults.add(failedResult);
+
+                        int done = completedUrls.incrementAndGet();
+                        updateProgress(done, totalUrls);
+                        updateMessage(String.format("URL's processed: %s/%s", done, totalUrls));
                     }
                 }
                 return modIdResults;
@@ -603,6 +560,7 @@ public class UiService {
         return new Task<>() {
             @Override
             protected Result<String> call() {
+                updateMessage("Converting Mod.io URL to ID...");
                 Result<String> urltoIdConversionResult = getModIoModIdFromUrlName(modUrl);
                 if (urltoIdConversionResult.isSuccess()) {
                     ModIoMod duplicateModIoMod = ModListManagerHelper.findDuplicateModIoMod(urltoIdConversionResult.getPayload(), currentModList);
@@ -721,7 +679,7 @@ public class UiService {
         log("Starting tutorial...", MessageType.INFO);
 
         stage.setResizable(false);
-        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, KEYBOARD_BUTTON_NAVIGATION_DISABLER);
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, keyboardButtonNavigationDisabler);
 
         List<String> tutorialMessages = new ArrayList<>();
         tutorialMessages.add("Welcome to Space Engineers Mod Manager (SEMM). " +

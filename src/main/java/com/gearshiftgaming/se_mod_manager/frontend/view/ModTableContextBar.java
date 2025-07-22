@@ -35,6 +35,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.MutableTriple;
 
 import java.awt.*;
@@ -305,11 +306,11 @@ public class ModTableContextBar {
 
         //Remove the "Theme" end tag from our caller and capitalize the first letter
         final CheckMenuItem SOURCE = (CheckMenuItem) event.getSource();
-        String caller = StringUtils.removeEnd(SOURCE.getId(), "Theme");
+        String caller = Strings.CS.removeEnd(SOURCE.getId(), "Theme");
         String selectedTheme = caller.substring(0, 1).toUpperCase() + caller.substring(1);
 
         for (CheckMenuItem c : THEME_LIST) {
-            String currentTheme = StringUtils.removeEnd(c.getId(), "Theme");
+            String currentTheme = Strings.CS.removeEnd(c.getId(), "Theme");
             String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
             if (!themeName.equals(selectedTheme)) {
                 c.setSelected(false);

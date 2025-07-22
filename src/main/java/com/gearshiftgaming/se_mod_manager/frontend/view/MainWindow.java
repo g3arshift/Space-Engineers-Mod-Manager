@@ -78,16 +78,10 @@ public class MainWindow {
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane
     private final StatusBar statusBarView;
 
-    //This is the service that handles the logic behind setting up the various tools we need for SEMM to function.
-    private final ToolManagerService toolManagerService;
-
-    //This is the reference for the UI portion of the tool manager.
-    private final ToolManager toolManagerView;
-
     private final AppContext appContext;
 
     //Initializes our controller while maintaining the empty constructor JavaFX expects
-    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, ToolManager toolManager, UiService uiService) throws IOException, InterruptedException {
+    public MainWindow(Properties properties, Stage stage, ModTableContextBar modTableContextBar, MasterManager masterManager, StatusBar statusBar, UiService uiService) throws IOException, InterruptedException {
         this.stage = stage;
         this.properties = properties;
         this.userConfiguration = uiService.getUserConfiguration();
@@ -95,32 +89,29 @@ public class MainWindow {
         this.contextBarView = modTableContextBar;
         this.masterManagerView = masterManager;
         this.statusBarView = statusBar;
-        this.toolManagerView = toolManager;
 
         appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
 
-        toolManagerService = new ToolManagerService(this.uiService,
-                appContext.isWindows() ? this.properties.getProperty("semm.steam.cmd.windows.localFolderPath") : this.properties.getProperty("semm.steam.cmd.linux.localFolderPath"),
-                appContext.isWindows() ? this.properties.getProperty("semm.steam.cmd.windows.download.source") : this.properties.getProperty("semm.steam.cmd.linux.download.source"),
-                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.limit")),
-                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.connection.timeout")),
-                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.read.timeout")),
-                Integer.parseInt(this.properties.getProperty("semm.steam.cmd.download.retry.delay")),
-                appContext.isWindows() ? new ZipArchiveTool() : new TarballArchiveTool());
+
     }
 
-    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot, SaveProfileManager saveProfileManager, ModListProfileManager modListProfileManager) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InterruptedException {
         //Prepare the UI
         setupWindow(mainViewRoot);
         contextBarView.initView();
-        masterManagerView.initView(contextBarView.getLogToggle(), contextBarView.getModDescriptionToggle(), Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
-                contextBarView.getModProfileDropdown(), contextBarView.getSaveProfileDropdown(), contextBarView.getModTableSearchField());
+        masterManagerView.initView(contextBarView.getLogToggle(),
+                contextBarView.getModDescriptionToggle(),
+                Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
+                contextBarView.getModProfileDropdown(),
+                contextBarView.getSaveProfileDropdown(),
+                contextBarView.getModTableSearchField(),
+                properties);
         statusBarView.initView();
         mainWindowLayout.setTop(menuBarRoot);
         mainWindowLayout.setCenter(modlistManagerRoot);
         mainWindowLayout.setBottom(statusBarRoot);
 
-        final ObservableList<SaveProfile> saveProfiles = uiService.getSaveProfiles();
+        ObservableList<SaveProfile> saveProfiles = uiService.getSaveProfiles();
 
         //Prompt the user to remove any saves that no longer exist on the file system.
         if (saveProfiles.size() != 1 &&
@@ -174,8 +165,6 @@ public class MainWindow {
             stage.setTitle("SEMM v" + versionProperties.getProperty("version"));
             WindowDressingUtility.appendStageIcon(stage);
 
-            setupRequiredTools();
-
             if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
                 TwoButtonChoice firstTimeSetupChoice = Popup.displayYesNoDialog("This seems to be your first time running SEMM. Do you want to take the tutorial?", stage, MessageType.INFO);
                 if (firstTimeSetupChoice == TwoButtonChoice.YES) {
@@ -186,64 +175,6 @@ public class MainWindow {
                 }
             }
         });
-    }
-
-    private void setupRequiredTools() {
-        //TODO: Add some check for if the files already exist.
-        // We want to skip the steps that exist. If they all exist, just skip this entirely.
-        //Download all the required tools we need for SEMM to function
-        uiService.log("Downloading required tools...", MessageType.INFO);
-
-        //Download SteamCMD.
-        //TODO: Genericize
-        if(Files.exists(Path.of(properties.getProperty("semm.steam.cmd.windows.localFolderPath")).getParent().resolve("steamcmd.exe"))) {
-            uiService.log("SteamCMD already installed.", MessageType.INFO);
-            return;
-        }
-
-        StackPane toolManagerWindow = toolManagerView.getToolDownloadProgressPanel();
-        masterManagerView.getMainViewStack().getChildren().add(toolManagerWindow);
-
-        //TODO: Wrap this in another task so we can just staple on additional tasks for additional tools.
-        Task<Result<Void>> toolSetupTask = toolManagerService.setupSteamCmd();
-        toolManagerView.setToolNameText("SteamCMD");
-
-        toolSetupTask.setOnRunning(event1 -> {
-            masterManagerView.disableUserInputElements(true);
-            toolManagerView.bindProgressAndUpdateValues(toolSetupTask.messageProperty(), toolSetupTask.progressProperty());
-        });
-        //When the task is finished log our result, display the last message from it, and fade it out.
-        toolSetupTask.setOnSucceeded(event1 -> {
-            Result<Void> steamCmdSetupResult = toolSetupTask.getValue();
-            uiService.log(steamCmdSetupResult);
-
-            if (steamCmdSetupResult.isFailure()) {
-                Popup.displayInfoMessageWithLink("Failed to download SteamCMD. SEMM requires SteamCMD to run. " +
-                                "Please submit your log file at the following link.",
-                        "https://bugreport.spaceengineersmodmanager.com", "ATTENTION!!!", stage, MessageType.ERROR);
-                Platform.exit();
-                return;
-            }
-
-            toolManagerView.setAllDownloadsCompleteState();
-            FadeTransition fadeTransition = new FadeTransition(Duration.millis(1200), toolManagerWindow);
-            fadeTransition.setFromValue(1d);
-            fadeTransition.setToValue(0d);
-
-            fadeTransition.setOnFinished(actionEvent -> {
-                masterManagerView.disableUserInputElements(false);
-                toolManagerView.setDefaultState();
-                masterManagerView.getMainViewStack().getChildren().remove(toolManagerWindow);
-            });
-
-            PauseTransition pauseTransition = new PauseTransition(Duration.millis(450));
-            pauseTransition.setOnFinished(event -> fadeTransition.play());
-
-            pauseTransition.play();
-        });
-
-        //Start the download on a background thread
-        Thread.ofVirtual().start(toolSetupTask);
     }
 
     /**
