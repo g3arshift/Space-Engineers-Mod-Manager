@@ -1286,9 +1286,9 @@ public class MasterManager {
         });
 
         TASK.setOnSucceeded(workerStateEvent -> Platform.runLater(() -> {
-            progressDisplay.setProgressWheelVisible(false);
-
-            Mod topMostMod = ModImportUtility.addModScrapeResultsToModlist(uiService, stage, TASK.getValue(), modList.size());
+            List<Result<Mod>> results = TASK.getValue();
+            Thread.startVirtualThread(() -> ModImportUtility.finishImportingMods(results, uiService));
+            Mod topMostMod = ModImportUtility.addModScrapeResultsToModlist(uiService, stage, results, modList.size());
 
             modTable.sort();
 
@@ -1298,8 +1298,7 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
-            //TODO: we're getting the UI locked up a bit here. Refactor. May be look at the copy function in SaveProfileManager?
-            ModImportUtility.finishImportingMods(TASK.getValue(), uiService);
+            progressDisplay.setProgressWheelVisible(false);
 
             if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
                 progressDisplay.closeWithCustomPostProcessing(() -> {
