@@ -394,7 +394,10 @@ public class MasterManager {
 
             progressDisplay.setAllOperationsCompleteState();
             PauseTransition pauseTransition = new PauseTransition(Duration.millis(450));
-            pauseTransition.setOnFinished(event1 -> progressDisplay.close());
+            pauseTransition.setOnFinished(event1 -> {
+                disableUserInputElements(false);
+                progressDisplay.close();
+            });
 
             pauseTransition.play();
         });
