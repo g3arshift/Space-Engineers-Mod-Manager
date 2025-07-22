@@ -774,8 +774,7 @@ public class MasterManager {
             }
         });
 
-        Thread thread = Thread.ofVirtual().unstarted(TASK);
-        return thread;
+        return Thread.ofVirtual().unstarted(TASK);
     }
 
     private String getSteamModLocationFromUser(boolean steamCollection) {
@@ -1233,8 +1232,6 @@ public class MasterManager {
                         importModsFromList(successfullyFoundMods).start();
                     }
                 }
-
-                progressDisplay.close();
             } else {
                 Popup.displaySimpleAlert(steamCollectionModIds.getFirst(), stage);
                 progressDisplay.close();
@@ -1301,6 +1298,7 @@ public class MasterManager {
                 modTable.scrollTo(modTable.getSelectionModel().getSelectedIndex());
             }
 
+            //TODO: we're getting the UI locked up a bit here. Refactor. May be look at the copy function in SaveProfileManager?
             ModImportUtility.finishImportingMods(TASK.getValue(), uiService);
 
             if (uiService.getUserConfiguration().isRunFirstTimeSetup()) {
@@ -1315,8 +1313,11 @@ public class MasterManager {
                     Popup.displayNavigationDialog(tutorialMessages, stage, MessageType.INFO, "Applying the Mod List");
                     TutorialUtility.tutorialElementHighlight(tutorialHighlightPanes, stage.getWidth(), stage.getHeight(), applyModlist);
                 });
-            } else
-                progressDisplay.close();
+            }
+
+            progressDisplay.close();
+            disableUserInputElements(false);
+
 
             //We call this here because it keeps far too many unnecessary references in memory without it right after the web scraping. So we give it a hint to collect garbage.
             //It really, truly is, not cleaning up when it should at this point. Trust me.

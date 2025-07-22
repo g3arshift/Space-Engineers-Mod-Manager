@@ -103,23 +103,19 @@ public class ProgressDisplay extends StackPane {
     }
 
     public void show() {
-        unbindProgressAndUpdateValues();
         this.setVisible(true);
     }
 
     public void hide() {
-        unbindProgressAndUpdateValues();
         this.setVisible(false);
     }
 
     public void showWithMessageAndProgressBinding(ReadOnlyStringProperty messageProperty, ReadOnlyDoubleProperty progressProperty) {
-        unbindProgressAndUpdateValues();
         this.bindProgressAndUpdateValues(messageProperty, progressProperty);
         this.setVisible(true);
     }
 
     public void showWithMessageBinding(ReadOnlyStringProperty updateMessage) {
-        unbindProgressAndUpdateValues();
         progressMessage.textProperty().bind(updateMessage);
         progressBar.setProgress(-1);
         this.setVisible(true);

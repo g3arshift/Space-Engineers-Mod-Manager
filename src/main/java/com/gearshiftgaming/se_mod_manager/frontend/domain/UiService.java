@@ -352,6 +352,8 @@ public class UiService {
                 List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
                 AtomicInteger completedMods = new AtomicInteger(0);
                 int totalMods = modList.size();
+                updateMessage(String.format("Mods Processed: 0/%s", totalMods));
+                updateProgress(0, totalMods);
 
                 try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
                     CompletionService<Result<Mod>> completionService = new ExecutorCompletionService<>(executorService);
