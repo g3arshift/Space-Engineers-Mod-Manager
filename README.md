@@ -3,7 +3,7 @@
 
 ### Currently in active development and bug testing, use at your own risk!
 
-When Space Engineers 2 adds modding, SEMM will support it!
+Currently only supports Space Engineers 1, but support is coming for Space Engineers 2!
 
 SEMM is designed to simplify the management of mods for Space Engineers. Developed with permission from Keen Software House it supports importing and exporting modlists for easy sharing, makes it easy to reorganize load orders, and maintains its modlists independently from the saves so it is easy to apply a common modlist across multiple saves. Mods can be imported from Steam Workshop URL's or ID's, Steam Workshop Collections, Mod.io URL's or ID's, existing Space Engineers saves, or from a list of URL's or mod ID's in a file.
 
