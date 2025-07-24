@@ -9,6 +9,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.ResultType;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -191,8 +192,8 @@ public class SaveServiceTest {
 		assertEquals("Successfully copied profile.", result.getMessages().get(1));
 
 		//Check the changes were written to the actual sandbox and sandbox_config file
-		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox_config.sbc")), "test_copy_directory (1)"));
-		assertNotEquals(-1, StringUtils.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox.sbc")), "test_copy_directory (1)"));
+		assertNotEquals(-1, Strings.CS.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox_config.sbc")), "test_copy_directory (1)"));
+		assertNotEquals(-1, Strings.CS.indexOf(Files.readString(Path.of(testDir + " (1)\\Sandbox.sbc")), "test_copy_directory (1)"));
 	}
 
 

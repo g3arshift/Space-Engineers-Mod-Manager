@@ -1,5 +1,7 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain.archive;
 
+import lombok.NoArgsConstructor;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,9 +15,9 @@ import java.util.zip.ZipInputStream;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ZipArchiveTool implements ArchiveTool{
 
-    public ZipArchiveTool(){}
+@NoArgsConstructor
+public class ZipArchiveTool implements ArchiveTool{
 
     /**
      * Checks the first four bytes of provided file to see if it's actually a zip file

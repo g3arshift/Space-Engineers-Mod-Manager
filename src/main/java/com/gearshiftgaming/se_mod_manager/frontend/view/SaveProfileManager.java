@@ -349,10 +349,12 @@ public class SaveProfileManager {
         });
 
         TASK.setOnSucceeded(workerStateEvent -> {
-            ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, TASK.getValue(), modList.size());
+            List<Result<Mod>> results = TASK.getValue();
+            ModImportUtility.addModScrapeResultsToModlist(UI_SERVICE, stage, results, modList.size());
 
-            ModImportUtility.finishImportingMods(TASK.getValue(), UI_SERVICE);
+            Thread.startVirtualThread(() -> ModImportUtility.finishImportingMods(results, UI_SERVICE));
             disableUserInput(false);
+            progressDisplay.setProgressWheelVisible(false);
             progressDisplay.close();
         });
 

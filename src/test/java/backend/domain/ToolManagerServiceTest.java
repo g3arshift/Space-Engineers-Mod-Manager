@@ -721,10 +721,10 @@ class ToolManagerServiceTest {
 
         //Verify the file downloaded properly.
         assertTrue(steamCmdDownload.exists());
-        assertEquals(steamCmdDownload.length(), new File(steamCmdZipPath).length());
+        assertEquals(steamCmdDownload.length(), new File(steamCmdTarPath).length());
 
         //Verify our tar file extracted properly
-        Path extractedTarPath = Path.of(Path.of(steamCmdTarPath).getParent() + "/steamcmd.exe");
+        Path extractedTarPath = Path.of(Path.of(steamCmdTarPath).getParent() + "/steamcmd.sh");
         assertTrue(Files.exists(extractedTarPath));
         assertTrue(isShellScript(new File(extractedTarPath.toString())));
     }

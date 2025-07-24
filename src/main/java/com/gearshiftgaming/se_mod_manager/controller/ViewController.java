@@ -56,6 +56,8 @@ public class ViewController {
 
     private UiService uiService;
 
+    //TODO: Look at implementing this as a singleton since we should NEVER have more than one instance of this or it will break things.
+
     //TODO: Check for file locks to prevent two copies of the app from running simultaneously
     public ViewController(Stage stage, Logger logger) throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InterruptedException {
         logger.info("Started application");

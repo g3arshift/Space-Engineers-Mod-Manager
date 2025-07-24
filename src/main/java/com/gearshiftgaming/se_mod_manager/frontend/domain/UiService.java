@@ -384,6 +384,7 @@ public class UiService {
                         updateProgress(done, totalMods);
                         updateMessage(String.format("Mods processed: %s/%s", done, totalMods));
                     }
+                    updateMessage("All mods processed!");
                 }
                 return modInfoFillOutResults;
             }

@@ -1,5 +1,6 @@
 package com.gearshiftgaming.se_mod_manager.backend.domain.archive;
 
+import lombok.NoArgsConstructor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -15,10 +16,9 @@ import java.nio.file.Path;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class TarballArchiveTool implements ArchiveTool {
 
-    public TarballArchiveTool() {
-    }
+@NoArgsConstructor
+public class TarballArchiveTool implements ArchiveTool {
 
     /**
      * Checks the first two bytes of provided file to see if it's actually a .tar.gz
@@ -59,9 +59,9 @@ public class TarballArchiveTool implements ArchiveTool {
              TarArchiveInputStream tarInput = new TarArchiveInputStream(gzipInput)) {
             TarArchiveEntry entry;
             while ((entry = tarInput.getNextEntry()) != null) {
+                Path entryPath = normalizedDestination.resolve(entry.getName()).normalize();
 
-                Path entryPath = destinationPath.resolve(entry.getName()).normalize();
-
+                //Prevent zip slip vulnerability (applies to tar too)
                 if (!entryPath.startsWith(normalizedDestination))
                     throw new IOException("Tar slip! Entry is outside of the target directory: " + entry.getName());
 
