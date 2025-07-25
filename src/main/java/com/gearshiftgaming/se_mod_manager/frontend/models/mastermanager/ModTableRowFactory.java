@@ -37,7 +37,6 @@ import java.util.List;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
 
-//TODO: Make the rows have a specific color with possible pattern like hatching or diagonal lines based on status or conflicts and stuff
 public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod>> {
 
     private final UiService uiService;

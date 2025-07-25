@@ -68,6 +68,10 @@ public class ModTableContextBar {
     private CheckMenuItem modDescriptionToggle;
 
     @FXML
+    @Getter
+    private CheckMenuItem conflictsToggle;
+
+    @FXML
     private MenuItem themes;
 
     @FXML
@@ -185,25 +189,25 @@ public class ModTableContextBar {
         saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
 
         ChangeListener<Number> saveProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-			String profileName = UI_SERVICE.getCurrentSaveProfile().getProfileName();
+            String profileName = UI_SERVICE.getCurrentSaveProfile().getProfileName();
             double cellWidth = saveProfileDropdown.getButtonCell().getWidth() - 5;
             ((SaveProfileDropdownButtonCell) saveProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
         };
 
-		ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-			String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
-			double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
-			((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
-		};
+        ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
+            String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
+            double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
+            ((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
+        };
 
         STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
-		STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
+        STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
         modProfileDropdown.setItems(UI_SERVICE.getModListProfileDetails());
         Result<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isSuccess())
-            for(MutableTriple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
-                if(details.getLeft().equals(UI_SERVICE.getUserConfiguration().getLastActiveModProfileId())) {
+            for (MutableTriple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
+                if (details.getLeft().equals(UI_SERVICE.getUserConfiguration().getLastActiveModProfileId())) {
                     modProfileDropdown.getSelectionModel().select(details);
                     break;
                 }
@@ -271,15 +275,15 @@ public class ModTableContextBar {
         TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
         Tab logTab = MASTER_MANAGER_VIEW.getLogTab();
 
-        if (!logToggle.isSelected()) {
+        if (!logToggle.isSelected())
             informationPane.getTabs().remove(logTab);
-        } else informationPane.getTabs().add(logTab);
+        else informationPane.getTabs().add(logTab);
 
-        if (informationPane.getTabs().isEmpty()) {
+        if (informationPane.getTabs().isEmpty())
             MASTER_MANAGER_VIEW.disableSplitPaneDivider();
-        } else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+        else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible())
             MASTER_MANAGER_VIEW.enableSplitPaneDivider();
-        }
+
     }
 
     @FXML
@@ -287,15 +291,31 @@ public class ModTableContextBar {
         TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
         Tab modDescriptionTab = MASTER_MANAGER_VIEW.getModDescriptionTab();
 
-        if (!modDescriptionToggle.isSelected()) {
+        if (!modDescriptionToggle.isSelected())
             informationPane.getTabs().remove(modDescriptionTab);
-        } else informationPane.getTabs().add(modDescriptionTab);
+        else informationPane.getTabs().add(modDescriptionTab);
 
-        if (informationPane.getTabs().isEmpty()) {
+        if (informationPane.getTabs().isEmpty())
             MASTER_MANAGER_VIEW.disableSplitPaneDivider();
-        } else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible()) {
+        else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible())
             MASTER_MANAGER_VIEW.enableSplitPaneDivider();
-        }
+
+    }
+
+    @FXML
+    private void toggleConflicts() {
+        TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
+        Tab conflictsTab = MASTER_MANAGER_VIEW.getConflictsTab();
+
+        if (!conflictsTab.isClosable())
+            informationPane.getTabs().remove(conflictsTab);
+        else informationPane.getTabs().add(conflictsTab);
+
+        if (informationPane.getTabs().isEmpty())
+            MASTER_MANAGER_VIEW.disableSplitPaneDivider();
+        else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible())
+            MASTER_MANAGER_VIEW.enableSplitPaneDivider();
+
     }
 
     /**
@@ -354,7 +374,7 @@ public class ModTableContextBar {
     @FXML
     private void selectSaveProfile() {
         Result<Void> saveSelectionResult = UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
-        if(saveSelectionResult.isFailure()) {
+        if (saveSelectionResult.isFailure()) {
             UI_SERVICE.log(saveSelectionResult);
             Popup.displaySimpleAlert("Failed to select save profile. See log for more details.", MessageType.ERROR);
         } else

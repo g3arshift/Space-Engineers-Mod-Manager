@@ -31,6 +31,7 @@
                      <items>
                          <CheckMenuItem fx:id="logToggle" mnemonicParsing="false" onAction="#toggleLog" selected="true" text="Log" />
                          <CheckMenuItem fx:id="modDescriptionToggle" mnemonicParsing="false" onAction="#toggleModDescription" selected="true" text="Mod Description" />
+                  <CheckMenuItem fx:id="conflictsToggle" mnemonicParsing="false" onAction="#toggleConflicts" selected="true" text="Conflicts" />
                          <Menu fx:id="themes" mnemonicParsing="false" text="Themes">
                              <items>
                                  <CheckMenuItem fx:id="primerLightTheme" mnemonicParsing="false" onAction="#setTheme" text="Primer Light" />

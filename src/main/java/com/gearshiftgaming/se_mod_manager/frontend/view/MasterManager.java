@@ -150,6 +150,10 @@ public class MasterManager {
     private Tab modDescriptionTab;
 
     @FXML
+    @Getter
+    private Tab conflictsTab;
+
+    @FXML
     private StackPane modDescriptionBackground;
 
     @FXML
@@ -187,6 +191,8 @@ public class MasterManager {
     private CheckMenuItem logToggle;
 
     private CheckMenuItem modDescriptionToggle;
+
+    private CheckMenuItem conflictsToggle;
 
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
     private final StatusBar statusBarView;
@@ -270,6 +276,7 @@ public class MasterManager {
 
     public void initView(CheckMenuItem logToggle,
                          CheckMenuItem modDescriptionToggle,
+                         CheckMenuItem conflictsToggle,
                          int modTableCellSize,
                          ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown,
                          ComboBox<SaveProfile> saveProfileDropdown,
@@ -277,6 +284,7 @@ public class MasterManager {
                          Properties properties) throws IOException, InterruptedException {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
+        this.conflictsToggle = conflictsToggle;
 
         this.modProfileDropdown = modProfileDropdown;
         this.saveProfileDropdown = saveProfileDropdown;
@@ -993,6 +1001,13 @@ public class MasterManager {
         if (informationPane.getTabs().isEmpty()) {
             disableSplitPaneDivider();
         }
+    }
+
+    @FXML
+    private void closeConflictsTab() {
+        conflictsToggle.setSelected(false);
+        if(informationPane.getTabs().isEmpty())
+            disableSplitPaneDivider();
     }
 
     protected void disableSplitPaneDivider() {

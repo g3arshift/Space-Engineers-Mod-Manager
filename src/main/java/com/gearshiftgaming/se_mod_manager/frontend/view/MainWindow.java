@@ -101,6 +101,7 @@ public class MainWindow {
         contextBarView.initView();
         masterManagerView.initView(contextBarView.getLogToggle(),
                 contextBarView.getModDescriptionToggle(),
+                contextBarView.getConflictsToggle(),
                 Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
                 contextBarView.getModProfileDropdown(),
                 contextBarView.getSaveProfileDropdown(),
