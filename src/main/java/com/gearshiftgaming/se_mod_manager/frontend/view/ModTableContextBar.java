@@ -262,7 +262,7 @@ public class ModTableContextBar {
 
         modTableSearchField.setOnMouseClicked(mouseEvent -> modTableSearchFieldPromptText.setVisible(false));
         modTableSearchField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
-            if (!newValue && modTableSearchField.getText().isBlank()) {
+            if (Boolean.TRUE.equals(!newValue) && modTableSearchField.getText().isBlank()) {
                 modTableSearchFieldPromptText.setVisible(true);
             }
         });

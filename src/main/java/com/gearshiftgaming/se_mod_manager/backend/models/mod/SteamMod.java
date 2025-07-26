@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -19,7 +20,6 @@ import java.util.List;
 @NoArgsConstructor
 public class SteamMod extends Mod {
 
-    //TODO: We need to store this as UTC in the DB.
     private LocalDateTime lastUpdated;
 
     public SteamMod(String id) {
@@ -33,8 +33,8 @@ public class SteamMod extends Mod {
         this.lastUpdated = mod.getLastUpdated();
     }
 
-    public SteamMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, LocalDateTime lastUpdated) {
-        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description);
+    public SteamMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, LocalDateTime lastUpdated, ModDownloadStatus downloadStatus) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description, downloadStatus);
         this.lastUpdated = lastUpdated;
     }
 
@@ -43,4 +43,16 @@ public class SteamMod extends Mod {
         this.lastUpdated = lastUpdated;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        SteamMod steamMod = (SteamMod) o;
+        return Objects.equals(lastUpdated, steamMod.lastUpdated);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), lastUpdated);
+    }
 }

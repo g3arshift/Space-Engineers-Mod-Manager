@@ -43,7 +43,10 @@ public abstract class Mod {
     @Setter
     private List<String> modifiedPaths = new ArrayList<>();
 
-    public Mod(String id) {
+    @Setter
+    private ModDownloadStatus modDownloadStatus;
+
+    protected Mod(String id) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
@@ -51,16 +54,17 @@ public abstract class Mod {
 
     //We are intentionally forgoing copying load priority as it is a generated field
     @SuppressWarnings("CopyConstructorMissesField")
-    public Mod(Mod mod) {
+    protected Mod(Mod mod) {
         this.id = mod.getId();
         this.friendlyName = mod.getFriendlyName();
         this.categories = new ArrayList<>(mod.getCategories());
         this.active = mod.isActive();
         this.description = mod.getDescription();
         this.modifiedPaths = mod.getModifiedPaths();
+        this.modDownloadStatus = mod.getModDownloadStatus();
     }
 
-    public Mod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description) {
+    protected Mod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, ModDownloadStatus modDownloadStatus) {
         this.id = id;
         this.friendlyName = friendlyName;
         this.publishedServiceName = publishedServiceName;
@@ -68,6 +72,7 @@ public abstract class Mod {
         this.categories = categories;
         this.active = active;
         this.description = description;
+        this.modDownloadStatus = modDownloadStatus;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.gearshiftgaming.se_mod_manager.backend.data.mappers;
 
 import com.gearshiftgaming.se_mod_manager.backend.data.utility.StringCodepressor;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModDownloadStatus;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.ModIoMod;
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.SteamMod;
 import org.jdbi.v3.core.mapper.RowMapper;
@@ -37,7 +38,8 @@ public class ModMapper implements RowMapper<Mod> {
                         StringCodepressor.decompressAndDecodeString(rs.getString("description")),
                         rs.getString("steam_mod_last_updated") != null ?
                                 Instant.ofEpochMilli(Long.parseLong(rs.getString("steam_mod_last_updated"))).atZone(ZoneId.systemDefault()).toLocalDateTime() :
-                        LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC));
+                        LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
+                        ModDownloadStatus.fromString(rs.getString("download_status")));
 
             } else {
                 mod = new ModIoMod(rs.getString("mod_id"),
@@ -49,7 +51,8 @@ public class ModMapper implements RowMapper<Mod> {
                         StringCodepressor.decompressAndDecodeString(rs.getString("description")),
                         rs.getString("last_updated_year") != null ? Year.parse(rs.getString("last_updated_year")) : Year.parse("1970"),
                         rs.getString("last_updated_month_day") != null ? MonthDay.parse(rs.getString("last_updated_month_day")) : null,
-                        rs.getString("last_updated_hour") != null ? LocalTime.parse(rs.getString("last_updated_hour")) : null);
+                        rs.getString("last_updated_hour") != null ? LocalTime.parse(rs.getString("last_updated_hour")) : null,
+                        ModDownloadStatus.fromString(rs.getString("download_status")));
             }
             return mod;
         } catch (IOException e) {

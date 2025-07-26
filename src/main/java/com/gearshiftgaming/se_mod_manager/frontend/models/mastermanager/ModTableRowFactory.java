@@ -50,6 +50,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
     private final ModListManagerHelper modlistManagerHelper;
 
+    //TODO: I think we need an object property here to define the mod download status. Mods also need to persist their status
     
     private enum RowBorderType {
         TOP,
