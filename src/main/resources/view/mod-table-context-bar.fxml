@@ -48,7 +48,6 @@
                  <Menu mnemonicParsing="false" text="Help">
                      <items>
                          <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
-                         <MenuItem fx:id="guide" mnemonicParsing="false" text="How to use" />
                          <MenuItem fx:id="faq" mnemonicParsing="false" text="FAQ" />
                   <MenuItem fx:id="reportBug" mnemonicParsing="false" onAction="#reportBug" text="Report a bug" />
                   <MenuItem fx:id="runTutorial" mnemonicParsing="false" onAction="#runTutorial" text="Run Tutorial" />

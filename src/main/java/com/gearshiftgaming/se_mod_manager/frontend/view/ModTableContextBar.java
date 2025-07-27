@@ -87,9 +87,6 @@ public class ModTableContextBar {
     private MenuItem about;
 
     @FXML
-    private MenuItem guide;
-
-    @FXML
     private MenuItem faq;
 
     @FXML
@@ -151,63 +148,63 @@ public class ModTableContextBar {
     @FXML
     private CheckMenuItem draculaTheme;
 
-    private final MasterManager MASTER_MANAGER_VIEW;
+    private final MasterManager masterManagerView;
 
-    private final StatusBar STATUS_BAR_VIEW;
+    private final StatusBar statusBarView;
 
-    private final List<CheckMenuItem> THEME_LIST = new ArrayList<>();
+    private final List<CheckMenuItem> themeList = new ArrayList<>();
 
-    private final UiService UI_SERVICE;
+    private final UiService uiService;
 
-    private final Stage STAGE;
+    private final Stage stage;
 
     public ModTableContextBar(UiService uiService, MasterManager masterManager, StatusBar statusBar, Stage stage) {
-        this.UI_SERVICE = uiService;
-        this.MASTER_MANAGER_VIEW = masterManager;
-        this.STATUS_BAR_VIEW = statusBar;
-        this.STAGE = stage;
+        this.uiService = uiService;
+        this.masterManagerView = masterManager;
+        this.statusBarView = statusBar;
+        this.stage = stage;
     }
 
     public void initView() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        THEME_LIST.add(primerLightTheme);
-        THEME_LIST.add(primerDarkTheme);
-        THEME_LIST.add(nordLightTheme);
-        THEME_LIST.add(nordDarkTheme);
-        THEME_LIST.add(cupertinoLightTheme);
-        THEME_LIST.add(cupertinoDarkTheme);
-        THEME_LIST.add(draculaTheme);
+        themeList.add(primerLightTheme);
+        themeList.add(primerDarkTheme);
+        themeList.add(nordLightTheme);
+        themeList.add(nordDarkTheme);
+        themeList.add(cupertinoLightTheme);
+        themeList.add(cupertinoDarkTheme);
+        themeList.add(draculaTheme);
 
-        saveProfileDropdown.setItems(UI_SERVICE.getSaveProfiles());
-        Optional<SaveProfile> lastActiveSaveProfile = UI_SERVICE.getLastActiveSaveProfile();
+        saveProfileDropdown.setItems(uiService.getSaveProfiles());
+        Optional<SaveProfile> lastActiveSaveProfile = uiService.getLastActiveSaveProfile();
         if (lastActiveSaveProfile.isPresent())
             saveProfileDropdown.getSelectionModel().select(lastActiveSaveProfile.get());
         else
             saveProfileDropdown.getSelectionModel().selectFirst();
 
-        saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(UI_SERVICE));
-        saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE));
-        saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(UI_SERVICE)));
+        saveProfileDropdown.setCellFactory(param -> new SaveProfileDropdownItemCell(uiService));
+        saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(uiService));
+        saveProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> saveProfileDropdown.setButtonCell(new SaveProfileDropdownButtonCell(uiService)));
 
         ChangeListener<Number> saveProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-            String profileName = UI_SERVICE.getCurrentSaveProfile().getProfileName();
+            String profileName = uiService.getCurrentSaveProfile().getProfileName();
             double cellWidth = saveProfileDropdown.getButtonCell().getWidth() - 5;
             ((SaveProfileDropdownButtonCell) saveProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
         };
 
         ChangeListener<Number> modlistProfileButtonCellWidthListener = (observable, oldValue, newValue) -> {
-            String profileName = UI_SERVICE.getCurrentModListProfile().getProfileName();
+            String profileName = uiService.getCurrentModListProfile().getProfileName();
             double cellWidth = modProfileDropdown.getButtonCell().getWidth() - 5;
             ((ModListDropdownButtonCell) modProfileDropdown.getButtonCell()).getPROFILE_NAME().setText(TextTruncationUtility.truncateWithEllipsisWithRealWidth(profileName, cellWidth));
         };
 
-        STAGE.widthProperty().addListener(saveProfileButtonCellWidthListener);
-        STAGE.widthProperty().addListener(modlistProfileButtonCellWidthListener);
+        stage.widthProperty().addListener(saveProfileButtonCellWidthListener);
+        stage.widthProperty().addListener(modlistProfileButtonCellWidthListener);
 
-        modProfileDropdown.setItems(UI_SERVICE.getModListProfileDetails());
-        Result<ModListProfile> lastActiveModlistProfile = UI_SERVICE.getLastActiveModlistProfile();
+        modProfileDropdown.setItems(uiService.getModListProfileDetails());
+        Result<ModListProfile> lastActiveModlistProfile = uiService.getLastActiveModlistProfile();
         if (lastActiveModlistProfile.isSuccess())
             for (MutableTriple<UUID, String, SpaceEngineersVersion> details : modProfileDropdown.getItems()) {
-                if (details.getLeft().equals(UI_SERVICE.getUserConfiguration().getLastActiveModProfileId())) {
+                if (details.getLeft().equals(uiService.getUserConfiguration().getLastActiveModProfileId())) {
                     modProfileDropdown.getSelectionModel().select(details);
                     break;
                 }
@@ -216,11 +213,11 @@ public class ModTableContextBar {
             modProfileDropdown.getSelectionModel().selectFirst();
 
 
-        modProfileDropdown.setCellFactory(param -> new ModListDropdownItemCell(UI_SERVICE));
-        modProfileDropdown.setButtonCell(new ModListDropdownButtonCell(UI_SERVICE));
-        modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModListDropdownButtonCell(UI_SERVICE)));
+        modProfileDropdown.setCellFactory(param -> new ModListDropdownItemCell(uiService));
+        modProfileDropdown.setButtonCell(new ModListDropdownButtonCell(uiService));
+        modProfileDropdown.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> modProfileDropdown.setButtonCell(new ModListDropdownButtonCell(uiService)));
 
-        UI_SERVICE.setUserSavedApplicationTheme(THEME_LIST);
+        uiService.setUserSavedApplicationTheme(themeList);
 
         //Makes it so the combo boxes will properly return strings in their menus instead of the objects
         saveProfileDropdown.setConverter(new StringConverter<>() {
@@ -249,13 +246,13 @@ public class ModTableContextBar {
         modTableSearchField.textProperty().addListener(observable -> {
             String filter = modTableSearchField.getText();
             if (filter == null || filter.isBlank()) {
-                MASTER_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> true);
+                masterManagerView.getFilteredModList().setPredicate(mod -> true);
             } else {
-                MASTER_MANAGER_VIEW.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
+                masterManagerView.getFilteredModList().setPredicate(mod -> mod.getFriendlyName().toLowerCase().contains(filter.toLowerCase())); // Case-insensitive check
             }
         });
 
-        activeModCount.textProperty().bind(UI_SERVICE.getActiveModCount().asString());
+        activeModCount.textProperty().bind(uiService.getActiveModCount().asString());
 
         activeModCountBox.setStroke(getThemeBoxColor());
         modConflictBox.setStroke(getThemeBoxColor());
@@ -267,54 +264,54 @@ public class ModTableContextBar {
             }
         });
 
-        UI_SERVICE.logPrivate("Successfully initialized context bar.", MessageType.INFO);
+        uiService.logPrivate("Successfully initialized context bar.", MessageType.INFO);
     }
 
     @FXML
     private void toggleLog() {
-        TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
-        Tab logTab = MASTER_MANAGER_VIEW.getLogTab();
+        TabPane informationPane = masterManagerView.getInformationPane();
+        Tab logTab = masterManagerView.getLogTab();
 
         if (!logToggle.isSelected())
             informationPane.getTabs().remove(logTab);
         else informationPane.getTabs().add(logTab);
 
         if (informationPane.getTabs().isEmpty())
-            MASTER_MANAGER_VIEW.disableSplitPaneDivider();
-        else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible())
-            MASTER_MANAGER_VIEW.enableSplitPaneDivider();
+            masterManagerView.disableSplitPaneDivider();
+        else if (!masterManagerView.isMainViewSplitDividerVisible())
+            masterManagerView.enableSplitPaneDivider();
 
     }
 
     @FXML
     private void toggleModDescription() {
-        TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
-        Tab modDescriptionTab = MASTER_MANAGER_VIEW.getModDescriptionTab();
+        TabPane informationPane = masterManagerView.getInformationPane();
+        Tab modDescriptionTab = masterManagerView.getModDescriptionTab();
 
         if (!modDescriptionToggle.isSelected())
             informationPane.getTabs().remove(modDescriptionTab);
         else informationPane.getTabs().add(modDescriptionTab);
 
         if (informationPane.getTabs().isEmpty())
-            MASTER_MANAGER_VIEW.disableSplitPaneDivider();
-        else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible())
-            MASTER_MANAGER_VIEW.enableSplitPaneDivider();
+            masterManagerView.disableSplitPaneDivider();
+        else if (!masterManagerView.isMainViewSplitDividerVisible())
+            masterManagerView.enableSplitPaneDivider();
 
     }
 
     @FXML
     private void toggleConflicts() {
-        TabPane informationPane = MASTER_MANAGER_VIEW.getInformationPane();
-        Tab conflictsTab = MASTER_MANAGER_VIEW.getConflictsTab();
+        TabPane informationPane = masterManagerView.getInformationPane();
+        Tab conflictsTab = masterManagerView.getConflictsTab();
 
         if (!conflictsTab.isClosable())
             informationPane.getTabs().remove(conflictsTab);
         else informationPane.getTabs().add(conflictsTab);
 
         if (informationPane.getTabs().isEmpty())
-            MASTER_MANAGER_VIEW.disableSplitPaneDivider();
-        else if (!MASTER_MANAGER_VIEW.isMainViewSplitDividerVisible())
-            MASTER_MANAGER_VIEW.enableSplitPaneDivider();
+            masterManagerView.disableSplitPaneDivider();
+        else if (!masterManagerView.isMainViewSplitDividerVisible())
+            masterManagerView.enableSplitPaneDivider();
 
     }
 
@@ -329,7 +326,7 @@ public class ModTableContextBar {
         String caller = Strings.CS.removeEnd(SOURCE.getId(), "Theme");
         String selectedTheme = caller.substring(0, 1).toUpperCase() + caller.substring(1);
 
-        for (CheckMenuItem c : THEME_LIST) {
+        for (CheckMenuItem c : themeList) {
             String currentTheme = Strings.CS.removeEnd(c.getId(), "Theme");
             String themeName = currentTheme.substring(0, 1).toUpperCase() + currentTheme.substring(1);
             if (!themeName.equals(selectedTheme)) {
@@ -340,26 +337,26 @@ public class ModTableContextBar {
                 Class<?> cls = Class.forName("atlantafx.base.theme." + selectedTheme);
                 Theme theme = (Theme) cls.getDeclaredConstructor().newInstance();
                 Application.setUserAgentStylesheet(theme.getUserAgentStylesheet());
-                UI_SERVICE.getUserConfiguration().setUserTheme(selectedTheme);
+                uiService.getUserConfiguration().setUserTheme(selectedTheme);
                 activeModCountBox.setStroke(getThemeBoxColor());
                 modConflictBox.setStroke(getThemeBoxColor());
 
                 String activeThemeName = StringUtils.substringAfter(Application.getUserAgentStylesheet(), "theme/");
-                MASTER_MANAGER_VIEW.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
+                masterManagerView.getModDescription().getEngine().setUserStyleSheetLocation(Objects.requireNonNull(getClass().getResource("/styles/mod-description_" + activeThemeName)).toString());
 
-                WindowTitleBarColorUtility.setWindowsTitleBar(STAGE);
+                WindowTitleBarColorUtility.setWindowsTitleBar(stage);
             }
         }
 
         //TODO: Replace with just the user config save.
-        Result<Void> savedUserTheme = UI_SERVICE.saveUserConfiguration();
+        Result<Void> savedUserTheme = uiService.saveUserConfiguration();
         //This fixes the selected row being the wrong color until we change selection
-        MASTER_MANAGER_VIEW.getModTable().refresh();
+        masterManagerView.getModTable().refresh();
         if (savedUserTheme.isSuccess()) {
-            UI_SERVICE.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
+            uiService.log("Successfully set user theme to " + selectedTheme + ".", MessageType.INFO);
         } else {
             savedUserTheme.addMessage("Failed to save theme to user configuration.", ResultType.FAILED);
-            UI_SERVICE.log(savedUserTheme);
+            uiService.log(savedUserTheme);
         }
     }
 
@@ -367,18 +364,18 @@ public class ModTableContextBar {
     private void selectModProfile() {
         clearSearchBox();
 
-        UI_SERVICE.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem().getLeft());
-        MASTER_MANAGER_VIEW.updateModTableContents();
+        uiService.setCurrentModListProfile(modProfileDropdown.getSelectionModel().getSelectedItem().getLeft());
+        masterManagerView.updateModTableContents();
     }
 
     @FXML
     private void selectSaveProfile() {
-        Result<Void> saveSelectionResult = UI_SERVICE.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
+        Result<Void> saveSelectionResult = uiService.setCurrentSaveProfile(saveProfileDropdown.getSelectionModel().getSelectedItem());
         if (saveSelectionResult.isFailure()) {
-            UI_SERVICE.log(saveSelectionResult);
+            uiService.log(saveSelectionResult);
             Popup.displaySimpleAlert("Failed to select save profile. See log for more details.", MessageType.ERROR);
         } else
-            STATUS_BAR_VIEW.loadStatusBarInfo();
+            statusBarView.loadStatusBarInfo();
     }
 
     @FXML
@@ -394,22 +391,22 @@ public class ModTableContextBar {
 
     @FXML
     private void updateModInformation() {
-        updateMods(UI_SERVICE.getCurrentModList()).start();
+        updateMods(uiService.getCurrentModList()).start();
     }
 
     @FXML
     private void resetConfig() {
-        TwoButtonChoice resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", STAGE, MessageType.INFO);
+        TwoButtonChoice resetChoice = Popup.displayYesNoDialog("Do you want to reset your SEMM configuration?", stage, MessageType.INFO);
 
         if (resetChoice == TwoButtonChoice.YES) {
-            resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", STAGE, MessageType.WARN);
+            resetChoice = Popup.displayYesNoDialog("Are you REALLY sure you want to reset it? This will remove all save configs (but not delete them from your saves folder), mod lists, and everything else. Are you CERTAIN you want to delete it?", stage, MessageType.WARN);
             if (resetChoice == TwoButtonChoice.YES) {
-                Result<Void> configResetResult = UI_SERVICE.resetData();
+                Result<Void> configResetResult = uiService.resetData();
                 if (configResetResult.isSuccess()) {
-                    Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", STAGE, MessageType.INFO);
+                    Popup.displaySimpleAlert("SEMM configuration successfully reset. The application will now close, and will be free of any configuration when you launch it next.", stage, MessageType.INFO);
                     Platform.exit();
                 } else {
-                    Popup.displaySimpleAlert(configResetResult, STAGE);
+                    Popup.displaySimpleAlert(configResetResult, stage);
                 }
             }
         }
@@ -422,10 +419,10 @@ public class ModTableContextBar {
 
     @FXML
     private void runTutorial() {
-        TwoButtonChoice runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", STAGE, MessageType.INFO);
+        TwoButtonChoice runTutorialChoice = Popup.displayYesNoDialog("Are you sure you want to run the tutorial?", stage, MessageType.INFO);
         if (runTutorialChoice == TwoButtonChoice.YES) {
-            UI_SERVICE.getUserConfiguration().setRunFirstTimeSetup(true);
-            UI_SERVICE.displayTutorial(STAGE, MASTER_MANAGER_VIEW);
+            uiService.getUserConfiguration().setRunFirstTimeSetup(true);
+            uiService.displayTutorial(stage, masterManagerView);
         }
     }
 
@@ -436,8 +433,8 @@ public class ModTableContextBar {
         TASK = new Task<>() {
             @Override
             protected Void call() {
-                UI_SERVICE.getCurrentModList().clear();
-                MASTER_MANAGER_VIEW.importModsFromList(modList).start();
+                uiService.getCurrentModList().clear();
+                masterManagerView.importModsFromList(modList).start();
                 return null;
             }
         };
@@ -448,7 +445,7 @@ public class ModTableContextBar {
     }
 
     private Color getThemeBoxColor() {
-        return switch (UI_SERVICE.getUserConfiguration().getUserTheme()) {
+        return switch (uiService.getUserConfiguration().getUserTheme()) {
             case "PrimerLight", "NordLight", "CupertinoLight":
                 yield Color.web("#000000");
             case "PrimerDark", "CupertinoDark":
