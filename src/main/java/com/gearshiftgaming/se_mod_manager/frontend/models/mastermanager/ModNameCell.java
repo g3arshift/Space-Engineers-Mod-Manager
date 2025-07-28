@@ -16,7 +16,6 @@ import javafx.scene.layout.HBox;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-//TODO: Save on mod activation status toggle
 public class ModNameCell extends TableCell<Mod, Mod> {
 	private final UiService UI_SERVICE;
 
@@ -45,7 +44,6 @@ public class ModNameCell extends TableCell<Mod, Mod> {
 			ACTIVATE_TOGGLE.setOnAction(actionEvent -> {
 				item.setActive(ACTIVATE_TOGGLE.isSelected());
 				UI_SERVICE.modifyActiveModCount(item);
-				//TODO: Swap this out for just updating active mods.
 				UI_SERVICE.updateModListActiveMods();
 			});
 			setGraphic(LAYOUT);

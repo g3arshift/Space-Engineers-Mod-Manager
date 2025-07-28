@@ -17,15 +17,15 @@ public enum ModImportType {
 	EXISTING_SAVE("Existing Save"),
 	FILE("Modlist File");
 
-	private final String name;
+	private final String displayName;
 
-	ModImportType(String name) {
-		this.name = name;
+	ModImportType(String displayName) {
+		this.displayName = displayName;
 	}
 
 	public static ModImportType fromString(String name) {
 		for (ModImportType b : ModImportType.values()) {
-			if (b.name.equalsIgnoreCase(name)) {
+			if (b.displayName.equalsIgnoreCase(name)) {
 				return b;
 			}
 		}

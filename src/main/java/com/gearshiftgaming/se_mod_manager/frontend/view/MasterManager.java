@@ -12,10 +12,7 @@ import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveProfile;
 import com.gearshiftgaming.se_mod_manager.backend.models.save.SaveStatus;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.*;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
-import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.LogCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.ModImportType;
-import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.ModNameCell;
-import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.ModTableRowFactory;
+import com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager.*;
 import com.gearshiftgaming.se_mod_manager.frontend.models.utility.ModImportUtility;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.input.GeneralFileInput;
@@ -135,6 +132,9 @@ public class MasterManager {
     private TableColumn<Mod, String> modCategory;
 
     @FXML
+    private TableColumn<Mod, Object> modStatus;
+
+    @FXML
     private HBox actions;
 
     @FXML
@@ -148,6 +148,10 @@ public class MasterManager {
     @FXML
     @Getter
     private Tab modDescriptionTab;
+
+    @FXML
+    @Getter
+    private Tab conflictsTab;
 
     @FXML
     private StackPane modDescriptionBackground;
@@ -187,6 +191,8 @@ public class MasterManager {
     private CheckMenuItem logToggle;
 
     private CheckMenuItem modDescriptionToggle;
+
+    private CheckMenuItem conflictsToggle;
 
     //This is the reference to the controller for the bar located in the bottom section of the main borderpane. We need everything in it so might as well get the whole reference.
     private final StatusBar statusBarView;
@@ -270,6 +276,7 @@ public class MasterManager {
 
     public void initView(CheckMenuItem logToggle,
                          CheckMenuItem modDescriptionToggle,
+                         CheckMenuItem conflictsToggle,
                          int modTableCellSize,
                          ComboBox<MutableTriple<UUID, String, SpaceEngineersVersion>> modProfileDropdown,
                          ComboBox<SaveProfile> saveProfileDropdown,
@@ -277,6 +284,7 @@ public class MasterManager {
                          Properties properties) throws IOException, InterruptedException {
         this.logToggle = logToggle;
         this.modDescriptionToggle = modDescriptionToggle;
+        this.conflictsToggle = conflictsToggle;
 
         this.modProfileDropdown = modProfileDropdown;
         this.saveProfileDropdown = saveProfileDropdown;
@@ -480,6 +488,9 @@ public class MasterManager {
 
         modTable.setFixedCellSize(modTableCellSize);
         setupColumnToggleMenu();
+
+        modStatus.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
+        modStatus.setCellFactory(param -> new ModStatusCell());
     }
 
     private void setupColumnToggleMenu() {
@@ -544,11 +555,11 @@ public class MasterManager {
 
         // Just do this by manually setting the selected item after we select an item. To actually call code, call one function on selection/action in the dropdown, that determines which function to call and do stuff in the rest of the code, then reset the selected item.
         modImportDropdown.getItems().addAll("Add mods from...",
-                ModImportType.STEAM_ID.getName(),
-                ModImportType.STEAM_COLLECTION.getName(),
-                ModImportType.MOD_IO.getName(),
-                ModImportType.EXISTING_SAVE.getName(),
-                ModImportType.FILE.getName());
+                ModImportType.STEAM_ID.getDisplayName(),
+                ModImportType.STEAM_COLLECTION.getDisplayName(),
+                ModImportType.MOD_IO.getDisplayName(),
+                ModImportType.EXISTING_SAVE.getDisplayName(),
+                ModImportType.FILE.getDisplayName());
 
         //TODO: Setup a function in ModList service to track conflicts.
     }
@@ -995,6 +1006,13 @@ public class MasterManager {
         }
     }
 
+    @FXML
+    private void closeConflictsTab() {
+        conflictsToggle.setSelected(false);
+        if(informationPane.getTabs().isEmpty())
+            disableSplitPaneDivider();
+    }
+
     protected void disableSplitPaneDivider() {
         for (Node node : mainViewSplit.lookupAll(".split-pane-divider")) {
             node.setVisible(false);
@@ -1384,10 +1402,10 @@ public class MasterManager {
         stage.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, uiService.getKeyboardButtonNavigationDisabler());
         ((Pane) stage.getScene().getRoot()).getChildren().removeAll(tutorialHighlightPanes);
         modImportDropdown.getItems().addAll(
-                ModImportType.STEAM_COLLECTION.getName(),
-                ModImportType.MOD_IO.getName(),
-                ModImportType.EXISTING_SAVE.getName(),
-                ModImportType.FILE.getName());
+                ModImportType.STEAM_COLLECTION.getDisplayName(),
+                ModImportType.MOD_IO.getDisplayName(),
+                ModImportType.EXISTING_SAVE.getDisplayName(),
+                ModImportType.FILE.getDisplayName());
         stage.setResizable(true);
     }
 }

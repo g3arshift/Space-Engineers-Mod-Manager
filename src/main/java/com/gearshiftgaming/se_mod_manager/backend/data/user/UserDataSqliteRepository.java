@@ -36,7 +36,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 public class UserDataSqliteRepository extends ModListProfileJaxbSerializer implements UserDataRepository {
 
     private static final Logger log = LogManager.getLogger(UserDataSqliteRepository.class);
-    private final Jdbi SQLITE_DB;
+    private final Jdbi sqliteDb;
     private final String databasePath;
 
     public UserDataSqliteRepository(String databasePath) throws IOException {
@@ -50,19 +50,19 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 Files.createDirectories(databaseLocation.getParent());
             }
             //We have to enable foreign keys on each connection for SQLite so we do it in our factory.
-            SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
+            sqliteDb = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
             createDatabase();
             initializeData();
         } else {
-            SQLITE_DB = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
+            sqliteDb = Jdbi.create(new SQLiteConnectionFactory("jdbc:sqlite:" + databasePath));
         }
     }
 
     private void createDatabase() {
         //If our DB doesn't exist, we create a new one. We want to enable WAL mode for performance, and setup a trigger for the mod_list_profile_mod table to cleanup unused mods.
         log.info("Creating database schema...");
-        SQLITE_DB.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
-        SQLITE_DB.useTransaction(handle -> {
+        sqliteDb.useHandle(handle -> handle.execute("PRAGMA journal_mode=WAL;"));
+        sqliteDb.useTransaction(handle -> {
             try (InputStream sqlStream = this.getClass().getClassLoader().getResourceAsStream("Database/semm_db_base.sql")) {
                 if (sqlStream == null) {
                     log.error("Could not find database schema.");
@@ -127,7 +127,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<UserConfiguration> loadStartupData() {
         Result<UserConfiguration> userProfileLoadResult = new Result<>();
         UserConfiguration userConfiguration;
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
             userConfiguration = handle.createQuery("SELECT * FROM user_configuration WHERE id = 1;")
                     .map(new UserConfigurationMapper())
                     .findFirst().orElse(null);
@@ -162,7 +162,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     //Loads all the mod list profile ID's, names, and the SE version of those profiles into our user configuration.
     private List<MutableTriple<UUID, String, SpaceEngineersVersion>> loadAllBasicModProfileInformation() {
         List<MutableTriple<UUID, String, SpaceEngineersVersion>> modListProfileIds;
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
             modListProfileIds = handle.createQuery("SELECT * from mod_list_profile;")
                     .map((rs, ctx) -> MutableTriple.of(UUID.fromString(rs.getString("mod_list_profile_id")),
                             rs.getString("profile_name"),
@@ -175,7 +175,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     //Loads all the save profiles from the DB
     private List<SaveProfile> loadSaveProfiles() {
         List<SaveProfile> saveProfiles;
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
             saveProfiles = handle.createQuery("SELECT * from save_profile;")
                     .map(new SaveProfileMapper())
                     .list();
@@ -188,28 +188,29 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> saveUserConfiguration(UserConfiguration userConfiguration) {
         Result<Void> saveResult = new Result<>();
         //Upsert our user_configuration row. We should only ever have one, so we set the row to the first one.
+        final String userConfigSaveSql = """
+                INSERT INTO user_configuration (
+                    id,
+                    user_theme,
+                    last_modified_save_profile_id,
+                    last_active_mod_profile_id,
+                    last_active_save_profile_id,
+                    run_first_time_setup)
+                VALUES (
+                    1,
+                    :userTheme,
+                    :lastModifiedSaveProfileId,
+                    :lastActiveModProfileId,
+                    :lastActiveSaveProfileId,
+                    :runFirstTimeSetup)
+                ON CONFLICT(id) DO UPDATE SET
+                    user_theme = excluded.user_theme,
+                    last_modified_save_profile_id = excluded.last_modified_save_profile_id,
+                    last_active_mod_profile_id = excluded.last_active_mod_profile_id,
+                    last_active_save_profile_id = excluded.last_active_save_profile_id,
+                    run_first_time_setup = excluded.run_first_time_setup;""";
         try {
-            SQLITE_DB.useTransaction(handle -> handle.createUpdate("""
-                            INSERT INTO user_configuration (
-                                id,
-                                user_theme,
-                                last_modified_save_profile_id,
-                                last_active_mod_profile_id,
-                                last_active_save_profile_id,
-                                run_first_time_setup)
-                            VALUES (
-                                1,
-                                :userTheme,
-                                :lastModifiedSaveProfileId,
-                                :lastActiveModProfileId,
-                                :lastActiveSaveProfileId,
-                                :runFirstTimeSetup)
-                            ON CONFLICT(id) DO UPDATE SET
-                                user_theme = excluded.user_theme,
-                                last_modified_save_profile_id = excluded.last_modified_save_profile_id,
-                                last_active_mod_profile_id = excluded.last_active_mod_profile_id,
-                                last_active_save_profile_id = excluded.last_active_save_profile_id,
-                                run_first_time_setup = excluded.run_first_time_setup;""")
+            sqliteDb.useTransaction(handle -> handle.createUpdate(userConfigSaveSql)
                     .bindBean(userConfiguration)
                     .execute());
             for (MutableTriple<UUID, String, SpaceEngineersVersion> details : userConfiguration.getModListProfilesBasicInfo()) {
@@ -231,7 +232,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<ModListProfile> loadModListProfileById(UUID modListProfileId) {
         Result<ModListProfile> modListProfileResult = new Result<>();
         Optional<ModListProfile> foundModListProfile;
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
             foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE mod_list_profile_id = :profileId")
                     .bind("profileId", modListProfileId)
                     .map(new ModListProfileMapper())
@@ -251,7 +252,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
         //Get our basic mod list profile information
         Result<ModListProfile> modListProfileResult = new Result<>();
         Optional<ModListProfile> foundModListProfile;
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
             foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile WHERE profile_name = :profileName")
                     .bind("profileName", profileName)
                     .map(new ModListProfileMapper())
@@ -270,7 +271,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<ModListProfile> loadFirstModListProfile() {
         Result<ModListProfile> modListProfileResult = new Result<>();
         Optional<ModListProfile> foundModListProfile;
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
             foundModListProfile = handle.createQuery("SELECT * FROM mod_list_profile LIMIT 1;")
                     .map(new ModListProfileMapper())
                     .findFirst();
@@ -297,7 +298,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
     private Result<List<Mod>> loadModListForProfileId(UUID modListProfileId) {
         Result<List<Mod>> modListLoadResult = new Result<>();
-        try (Handle handle = SQLITE_DB.open()) {
+        try (Handle handle = sqliteDb.open()) {
 
             List<String> modListIds = handle.createQuery("SELECT mod_id FROM mod_list_profile_mod WHERE mod_list_profile_id = :id")
                     .bind("id", modListProfileId.toString())
@@ -312,33 +313,35 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
 
             //Get all information for mods from the database for our mod list.
             // This will get us a map for all mod information where the modID is the key and the mod object the value.
-            List<Mod> modList = handle.createQuery("""
-                            WITH ModDetails AS (
-                                SELECT m.*,
-                                    modio.last_updated_year,
-                                    modio.last_updated_month_day,
-                                    modio.last_updated_hour,
-                                    steam.last_updated AS steam_mod_last_updated
-                                FROM mod m
-                                    LEFT JOIN modio_mod modio ON m.mod_id = modio.mod_id
-                                    LEFT JOIN steam_mod steam ON m.mod_id = steam.mod_id)
-                            SELECT mod_details.mod_id,
-                                mod_details.friendly_name,
-                                mod_details.published_service_name,
-                                mod_details.description,
-                                mod_details.last_updated_year,
-                                mod_details.last_updated_month_day,
-                                mod_details.last_updated_hour,
-                                mod_details.steam_mod_last_updated,
-                                mlpm.load_priority,
-                                mlpm.active,
-                                GROUP_CONCAT(DISTINCT mc.category) AS categories
-                            FROM ModDetails mod_details
-                                LEFT JOIN mod_category mc ON mod_details.mod_id = mc.mod_id
-                                LEFT JOIN mod_list_profile_mod mlpm ON mod_details.mod_id = mlpm.mod_id
-                            WHERE mod_details.mod_id IN (<modListIds>) AND mlpm.mod_list_profile_id = :modListProfileId
-                            GROUP BY mod_details.mod_id, mlpm.load_priority, mlpm.active
-                            ORDER BY mlpm.load_priority;""")
+            final String modInfoSql = """
+                    WITH ModDetails AS (
+                        SELECT m.*,
+                            modio.last_updated_year,
+                            modio.last_updated_month_day,
+                            modio.last_updated_hour,
+                            steam.last_updated AS steam_mod_last_updated
+                        FROM mod m
+                            LEFT JOIN modio_mod modio ON m.mod_id = modio.mod_id
+                            LEFT JOIN steam_mod steam ON m.mod_id = steam.mod_id)
+                        SELECT mod_details.mod_id,
+                            mod_details.friendly_name,
+                            mod_details.published_service_name,
+                            mod_details.description,
+                            mod_details.download_status,
+                            mod_details.last_updated_year,
+                            mod_details.last_updated_month_day,
+                            mod_details.last_updated_hour,
+                            mod_details.steam_mod_last_updated,
+                            mlpm.load_priority,
+                            mlpm.active,
+                        GROUP_CONCAT(DISTINCT mc.category) AS categories
+                        FROM ModDetails mod_details
+                            LEFT JOIN mod_category mc ON mod_details.mod_id = mc.mod_id
+                            LEFT JOIN mod_list_profile_mod mlpm ON mod_details.mod_id = mlpm.mod_id
+                        WHERE mod_details.mod_id IN (<modListIds>) AND mlpm.mod_list_profile_id = :modListProfileId
+                        GROUP BY mod_details.mod_id, mlpm.load_priority, mlpm.active
+                        ORDER BY mlpm.load_priority;""";
+            List<Mod> modList = handle.createQuery(modInfoSql)
                     .bind("modListProfileId", modListProfileId)
                     .bindList("modListIds", modListIds)
                     .map(new ModMapper())
@@ -382,24 +385,25 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<Void> saveModListProfileDetails(UUID modListProfileId, String modListProfileName, SpaceEngineersVersion spaceEngineersVersion) {
         Result<Void> modListProfileSaveResult = new Result<>();
+        final String modListProfileDetailSaveSql = """
+                INSERT INTO mod_list_profile (
+                    mod_list_profile_id,
+                    profile_name,
+                    space_engineers_version)
+                VALUES (
+                    :id,
+                    :profileName,
+                    :spaceEngineersVersion)
+                ON CONFLICT (mod_list_profile_id) DO UPDATE SET
+                    profile_name = CASE WHEN mod_list_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""";
         try {
-            SQLITE_DB.useTransaction(handle -> handle.createUpdate("""
-                            INSERT INTO mod_list_profile (
-                                mod_list_profile_id,
-                                profile_name,
-                                space_engineers_version)
-                                VALUES (
-                                    :id,
-                                    :profileName,
-                                    :spaceEngineersVersion)
-                                ON CONFLICT (mod_list_profile_id) DO UPDATE SET
-                                    profile_name = CASE WHEN mod_list_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE mod_list_profile.profile_name END;""")
+            sqliteDb.useTransaction(handle -> handle.createUpdate(modListProfileDetailSaveSql)
                     .bind("id", modListProfileId)
                     .bind("profileName", modListProfileName)
                     .bind("spaceEngineersVersion", spaceEngineersVersion)
                     .execute());
             //Update our user config bridge table to
-            SQLITE_DB.useTransaction(handle -> handle.createUpdate("""
+            sqliteDb.useTransaction(handle -> handle.createUpdate("""
                             INSERT OR IGNORE INTO user_configuration_mod_list_profile (user_configuration_id, mod_list_profile_id)
                                 values (1, :modListProfileId);""")
                     .bind("modListProfileId", modListProfileId)
@@ -440,7 +444,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> deleteModListProfile(UUID modListProfileId) {
         Result<Void> modListProfileDeleteResult = new Result<>();
         try {
-            SQLITE_DB.useTransaction(handle -> {
+            sqliteDb.useTransaction(handle -> {
                 int numDeletedRows = handle.createUpdate("DELETE FROM mod_list_profile WHERE mod_list_profile_id = :id")
                         .bind("id", modListProfileId)
                         .execute();
@@ -466,23 +470,24 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             return modListUpdateResult;
         }
 
+        final String modListProfileUpdateSql = """
+                INSERT INTO mod_list_profile_mod (
+                    mod_id,
+                    mod_list_profile_id,
+                    load_priority,
+                    active)
+                VALUES (
+                    :id,
+                    :modListProfileId,
+                    :loadPriority,
+                    :active)
+                ON CONFLICT (mod_id, mod_list_profile_id) DO UPDATE SET
+                    load_priority = CASE WHEN mod_list_profile_mod.load_priority IS DISTINCT FROM excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
+                    active = CASE WHEN mod_list_profile_mod.active IS DISTINCT FROM excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""";
         try {
-            SQLITE_DB.useTransaction(handle -> {
+            sqliteDb.useTransaction(handle -> {
                 //Update our bridge table to connect mod list profiles to mods. Ignore duplicates.
-                PreparedBatch modListProfileModBatch = handle.prepareBatch("""
-                        INSERT INTO mod_list_profile_mod (
-                            mod_id,
-                            mod_list_profile_id,
-                            load_priority,
-                            active)
-                            VALUES (
-                                :id,
-                                :modListProfileId,
-                                :loadPriority,
-                                :active)
-                            ON CONFLICT (mod_id, mod_list_profile_id) DO UPDATE SET
-                                load_priority = CASE WHEN mod_list_profile_mod.load_priority IS DISTINCT FROM excluded.load_priority THEN excluded.load_priority ELSE mod_list_profile_mod.load_priority END,
-                                active = CASE WHEN mod_list_profile_mod.active IS DISTINCT FROM excluded.active THEN excluded.active ELSE mod_list_profile_mod.active END;""");
+                PreparedBatch modListProfileModBatch = handle.prepareBatch(modListProfileUpdateSql);
                 for (Mod mod : modList) {
                     modListProfileModBatch.bind("id", mod.getId())
                             .bind("modListProfileId", modListProfileId)
@@ -510,7 +515,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     private Result<Void> deleteModProfileRemovedMods(UUID modListProfileId, List<Mod> modProfileModList) {
         Result<Void> modDeletionResult = new Result<>();
         try {
-            SQLITE_DB.useTransaction(handle -> {
+            sqliteDb.useTransaction(handle -> {
                 int deletedMods = handle.createUpdate("DELETE FROM mod_list_profile_mod WHERE mod_list_profile_id = :modListProfileId AND mod_id NOT IN (<currentModListIds>);")
                         .bind("modListProfileId", modListProfileId)
                         .bindList("currentModListIds", !modProfileModList.isEmpty() ? modProfileModList.stream().map(Mod::getId).toList() : List.of(-1))
@@ -528,7 +533,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> updateModListActiveMods(UUID modListProfileId, List<Mod> modList) {
         Result<Void> modListUpdateResult = new Result<>();
         try {
-            SQLITE_DB.useTransaction(handle -> {
+            sqliteDb.useTransaction(handle -> {
                 PreparedBatch updateActiveModsBatch = handle.prepareBatch("""
                         UPDATE mod_list_profile_mod
                         SET active = :active
@@ -564,7 +569,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> updateModListLoadPriority(UUID modListProfileId, List<Mod> modList) {
         Result<Void> modListUpdateResult = new Result<>();
         try {
-            SQLITE_DB.useTransaction(handle -> {
+            sqliteDb.useTransaction(handle -> {
                 PreparedBatch updateModsLoadPriorityBatch = handle.prepareBatch("""
                         UPDATE mod_list_profile_mod
                         SET load_priority = :loadPriority
@@ -598,41 +603,42 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     @Override
     public Result<Void> saveSaveProfile(SaveProfile saveProfile) {
         Result<Void> saveSaveProfileResult = new Result<>();
+        final String saveProfileSavingSql = """
+                INSERT INTO save_profile (
+                    save_profile_id,
+                    profile_name,
+                    save_name,
+                    save_path,
+                    last_used_mod_list_profile_id,
+                    last_save_status,
+                    last_saved,
+                    save_exists,
+                    space_engineers_version,
+                    save_type)
+                VALUES (
+                    :id,
+                    :profileName,
+                    :saveName,
+                    :savePath,
+                    :lastUsedModListProfileId,
+                    :lastSaveStatus,
+                    :lastSaved,
+                    :saveExists,
+                    :spaceEngineersVersion,
+                    :saveType)
+                ON CONFLICT (save_profile_id) DO UPDATE SET
+                    profile_name = CASE WHEN save_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
+                    last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id IS DISTINCT FROM excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
+                    last_save_status = CASE WHEN save_profile.last_save_status IS DISTINCT FROM excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
+                    last_saved = CASE WHEN save_profile.last_saved IS DISTINCT FROM excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
+                    save_exists = CASE WHEN save_profile.save_exists IS DISTINCT FROM excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""";
         try {
-            SQLITE_DB.useTransaction(handle -> {
-                handle.createUpdate("""
-                                INSERT INTO save_profile (
-                                    save_profile_id,
-                                    profile_name,
-                                    save_name,
-                                    save_path,
-                                    last_used_mod_list_profile_id,
-                                    last_save_status,
-                                    last_saved,
-                                    save_exists,
-                                    space_engineers_version,
-                                    save_type)
-                                VALUES (
-                                    :id,
-                                    :profileName,
-                                    :saveName,
-                                    :savePath,
-                                    :lastUsedModListProfileId,
-                                    :lastSaveStatus,
-                                    :lastSaved,
-                                    :saveExists,
-                                    :spaceEngineersVersion,
-                                    :saveType)
-                                ON CONFLICT (save_profile_id) DO UPDATE SET
-                                    profile_name = CASE WHEN save_profile.profile_name IS DISTINCT FROM excluded.profile_name THEN excluded.profile_name ELSE save_profile.profile_name END,
-                                    last_used_mod_list_profile_id = CASE WHEN save_profile.last_used_mod_list_profile_id IS DISTINCT FROM excluded.last_used_mod_list_profile_id THEN excluded.last_used_mod_list_profile_id  ELSE save_profile.last_used_mod_list_profile_id  END,
-                                    last_save_status = CASE WHEN save_profile.last_save_status IS DISTINCT FROM excluded.last_save_status THEN excluded.last_save_status ELSE save_profile.last_save_status END,
-                                    last_saved = CASE WHEN save_profile.last_saved IS DISTINCT FROM excluded.last_saved THEN excluded.last_saved ELSE save_profile.last_saved END,
-                                    save_exists = CASE WHEN save_profile.save_exists IS DISTINCT FROM excluded.save_exists THEN excluded.save_exists ELSE save_profile.save_exists END;""")
+            sqliteDb.useTransaction(handle -> {
+                handle.createUpdate(saveProfileSavingSql)
                         .bindBean(saveProfile)
                         .execute();
 
-                SQLITE_DB.useTransaction(handle1 -> handle.createUpdate("""
+                sqliteDb.useTransaction(handle1 -> handle.createUpdate("""
                                 INSERT OR IGNORE INTO user_configuration_save_profile (user_configuration_id, save_profile_id)
                                     VALUES (1, :saveProfileId);""")
                         .bind("saveProfileId", saveProfile.getId())
@@ -650,7 +656,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
     public Result<Void> deleteSaveProfile(SaveProfile saveProfile) {
         //Delete the removed save profiles
         Result<Void> saveResult = new Result<>();
-        SQLITE_DB.useTransaction(handle -> {
+        sqliteDb.useTransaction(handle -> {
             int countSaveProfilesDeleted = handle.createUpdate("DELETE FROM save_profile WHERE save_profile_id = :id")
                     .bind("id", saveProfile.getId())
                     .execute();
@@ -670,80 +676,90 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
             return modUpdateResult;
         }
 
+        //Upsert the mod table but only for info that's changed
+        final String modUpdateSql = """
+                INSERT INTO mod (
+                    mod_id,
+                    friendly_name,
+                    published_service_name,
+                    description,
+                    download_status)
+                    VALUES (
+                        :id,
+                        :friendlyName,
+                        :publishedServiceName,
+                        :description,
+                        :downloadStatus)
+                    ON CONFLICT (mod_id) DO UPDATE SET
+                        friendly_name = CASE WHEN mod.friendly_name IS DISTINCT FROM excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
+                        description = CASE WHEN mod.description IS DISTINCT FROM excluded.description THEN excluded.description ELSE mod.description END,
+                        download_status = excluded.download_status;""";
+
+        //Upsert the mod categories table but only for info that's changed
+        final String modCategoriesUpdateSql = """
+                INSERT INTO mod_category (
+                    mod_id,
+                    category)
+                VALUES (
+                    :id,
+                    :category)
+                ON CONFLICT (mod_id, category) DO UPDATE SET
+                    category = CASE WHEN mod_category.category IS DISTINCT FROM excluded.category THEN excluded.category ELSE mod_category.category END;""";
+
+        //Upsert the steam mods table but only for info that's changed
+        final String steamModsUpdateSql = """
+                INSERT INTO steam_mod (
+                    mod_id,
+                   last_updated)
+                VALUES (
+                    :id,
+                    :lastUpdated)
+                ON CONFLICT (mod_id) DO UPDATE SET
+                    last_updated = CASE WHEN steam_mod.last_updated IS DISTINCT FROM excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""";
+
+        //Upsert the mod io mods table but only for info that's changed
+        final String modIoModsUpdateSql = """
+                INSERT INTO modio_mod (
+                    mod_id,
+                    last_updated_year,
+                    last_updated_month_day,
+                    last_updated_hour)
+                VALUES (
+                    :id,
+                    :lastUpdatedYear,
+                    :lastUpdatedMonthDay,
+                    :lastUpdatedHour)
+                ON CONFLICT (mod_id) DO UPDATE SET
+                    last_updated_year = CASE WHEN modio_mod.last_updated_year IS DISTINCT FROM excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
+                    last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day IS DISTINCT FROM excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
+                    last_updated_hour = CASE WHEN modio_mod.last_updated_hour IS DISTINCT FROM last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""";
+
+        //Upsert the mod modified paths table but only for info that's changed
+        final String modifiedPathsUpdateSql = """
+                INSERT INTO mod_modified_path (
+                    mod_id,
+                    modified_path)
+                VALUES (
+                    :id,
+                    :modifiedPath)
+                ON CONFLICT (mod_id, modified_path) DO UPDATE SET
+                    modified_path = CASE WHEN mod_modified_path.modified_path IS DISTINCT FROM excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""";
         try {
-            SQLITE_DB.useTransaction(handle -> {
-                //Upsert the mod table but only for info that's changed
-                PreparedBatch modsBatch = handle.prepareBatch("""
-                        INSERT INTO mod (
-                            mod_id,
-                            friendly_name,
-                            published_service_name,
-                            description)
-                            VALUES (
-                                :id,
-                                :friendlyName,
-                                :publishedServiceName,
-                                :description)
-                            ON CONFLICT (mod_id) DO UPDATE SET
-                                friendly_name = CASE WHEN mod.friendly_name IS DISTINCT FROM excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
-                                description = CASE WHEN mod.description IS DISTINCT FROM excluded.description THEN excluded.description ELSE mod.description END;""");
+            sqliteDb.useTransaction(handle -> {
+                PreparedBatch modsBatch = handle.prepareBatch(modUpdateSql);
+                PreparedBatch modCategoriesBatch = handle.prepareBatch(modCategoriesUpdateSql);
+                PreparedBatch steamModsBatch = handle.prepareBatch(steamModsUpdateSql);
+                PreparedBatch modIoModsBatch = handle.prepareBatch(modIoModsUpdateSql);
+                PreparedBatch modifiedPathsBatch = handle.prepareBatch(modifiedPathsUpdateSql);
 
-                //Upsert the mod categories table but only for info that's changed
-                PreparedBatch modCategoriesBatch = handle.prepareBatch("""
-                        INSERT INTO mod_category (
-                            mod_id,
-                            category)
-                            VALUES (
-                                :id,
-                                :category)
-                            ON CONFLICT (mod_id, category) DO UPDATE SET
-                                category = CASE WHEN mod_category.category IS DISTINCT FROM excluded.category THEN excluded.category ELSE mod_category.category END;""");
-
-                //Upsert the steam mods table but only for info that's changed
-                PreparedBatch steamModsBatch = handle.prepareBatch("""
-                        INSERT INTO steam_mod (
-                            mod_id,
-                            last_updated)
-                            VALUES (
-                                :id,
-                                :lastUpdated)
-                            ON CONFLICT (mod_id) DO UPDATE SET
-                                last_updated = CASE WHEN steam_mod.last_updated IS DISTINCT FROM excluded.last_updated THEN excluded.last_updated ELSE steam_mod.last_updated END;""");
-
-                //Upsert the mod io mods table but only for info that's changed
-                PreparedBatch modIoModsBatch = handle.prepareBatch("""
-                        INSERT INTO modio_mod (
-                            mod_id,
-                            last_updated_year,
-                            last_updated_month_day,
-                            last_updated_hour)
-                            VALUES (
-                                :id,
-                                :lastUpdatedYear,
-                                :lastUpdatedMonthDay,
-                                :lastUpdatedHour)
-                            ON CONFLICT (mod_id) DO UPDATE SET
-                                last_updated_year = CASE WHEN modio_mod.last_updated_year IS DISTINCT FROM excluded.last_updated_year THEN excluded.last_updated_year ELSE modio_mod.last_updated_year END,
-                                last_updated_month_day = CASE WHEN modio_mod.last_updated_month_day IS DISTINCT FROM excluded.last_updated_month_day THEN excluded.last_updated_month_day ELSE modio_mod.last_updated_month_day END,
-                                last_updated_hour = CASE WHEN modio_mod.last_updated_hour IS DISTINCT FROM last_updated_hour THEN excluded.last_updated_hour ELSE modio_mod.last_updated_hour END;""");
-
-                //Upsert the mod modified paths table but only for info that's changed
-                PreparedBatch modifiedPathsBatch = handle.prepareBatch("""
-                        INSERT INTO mod_modified_path (
-                            mod_id,
-                            modified_path)
-                            VALUES (
-                                :id,
-                                :modifiedPath)
-                            ON CONFLICT (mod_id, modified_path) DO UPDATE SET
-                                modified_path = CASE WHEN mod_modified_path.modified_path IS DISTINCT FROM excluded.modified_path THEN excluded.modified_path ELSE mod_modified_path.modified_path END;""");
-
-                int countExpectedSteamModsUpdated = 0, countExpectedModIoModsUpdated = 0;
+                int countExpectedSteamModsUpdated = 0;
+                int countExpectedModIoModsUpdated = 0;
                 for (Mod mod : modList) {
                     modsBatch.bind("id", mod.getId())
                             .bind("friendlyName", mod.getFriendlyName())
                             .bind("publishedServiceName", mod.getPublishedServiceName())
                             .bind("description", StringCodepressor.compressandEncodeString(mod.getDescription()))
+                            .bind("downloadStatus", mod.getModDownloadStatus())
                             .add();
 
                     for (String category : mod.getCategories()) {

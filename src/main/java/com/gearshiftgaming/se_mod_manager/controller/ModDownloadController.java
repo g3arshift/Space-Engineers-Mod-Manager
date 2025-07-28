@@ -10,4 +10,6 @@ package com.gearshiftgaming.se_mod_manager.controller;
 public class ModDownloadController {
 
     //TODO: We need service classes for all three (four? SE1 and 2 for Mod.io...) mod types.
+
+    //TODO: Wrap downloadMod in a task.
 }

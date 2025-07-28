@@ -4,7 +4,8 @@ create table mod
         primary key,
     friendly_name          TEXT not null,
     published_service_name TEXT not null,
-    description            text
+    description            text,
+    download_status        text
 )
     strict;
 

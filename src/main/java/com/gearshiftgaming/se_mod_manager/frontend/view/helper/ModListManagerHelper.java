@@ -52,14 +52,10 @@ public class ModListManagerHelper {
 
     public String getSelectedCellBorderColor(UiService uiService) {
         return switch (uiService.getUserConfiguration().getUserTheme()) {
-            case "PrimerLight", "NordLight", "CupertinoLight":
-                yield "#24292f";
-            case "PrimerDark", "CupertinoDark":
-                yield "#f0f6fc";
-            case "NordDark":
-                yield "#ECEFF4";
-            default:
-                yield "#f8f8f2";
+            case "PrimerLight", "NordLight", "CupertinoLight" -> "#24292f";
+            case "PrimerDark", "CupertinoDark" -> "#f0f6fc";
+            case "NordDark" -> "#ECEFF4";
+            default -> "#f8f8f2";
         };
     }
 
@@ -68,11 +64,9 @@ public class ModListManagerHelper {
      */
     public static ModIoMod findDuplicateModIoMod(String modId, @NotNull List<Mod> modList) {
         for (Mod mod : modList) {
-            if (mod instanceof ModIoMod modIoMod) {
-                if (modIoMod.getId().equals(modId)) {
+            if (mod instanceof ModIoMod modIoMod && modIoMod.getId().equals(modId)) {
                     return modIoMod;
                 }
-            }
         }
         return null;
     }
@@ -82,11 +76,9 @@ public class ModListManagerHelper {
      */
     public static SteamMod findDuplicateSteamMod(String modId, @NotNull List<Mod> modList) {
         for (Mod mod : modList) {
-            if (mod instanceof SteamMod steamMod) {
-                if (steamMod.getId().equals(modId)) {
+            if (mod instanceof SteamMod steamMod && steamMod.getId().equals(modId)) {
                     return steamMod;
                 }
-            }
         }
         return null;
     }
@@ -129,7 +121,7 @@ public class ModListManagerHelper {
 		inputList.removeIf(m -> modHashMap.containsKey(m.getId()));
 	}
 
-    public static void exportModlistFile(final Stage STAGE, final UiService UI_SERVICE) {
+    public static void exportModlistFile(final Stage STAGE, final UiService uiService) {
         FileChooser exportChooser = new FileChooser();
         exportChooser.setTitle("Export Modlist");
         exportChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -137,8 +129,8 @@ public class ModListManagerHelper {
 
         File savePath = exportChooser.showSaveDialog(STAGE);
         if (savePath != null) {
-            Result<Void> exportModlistResult = UI_SERVICE.exportModListProfile(UI_SERVICE.getCurrentModListProfile(), savePath);
-            if (exportModlistResult.isFailure()) UI_SERVICE.log(exportModlistResult);
+            Result<Void> exportModlistResult = uiService.exportModListProfile(uiService.getCurrentModListProfile(), savePath);
+            if (exportModlistResult.isFailure()) uiService.log(exportModlistResult);
             Popup.displaySimpleAlert(exportModlistResult, STAGE);
         }
     }

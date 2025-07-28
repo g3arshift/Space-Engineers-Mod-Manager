@@ -91,8 +91,6 @@ public class MainWindow {
         this.statusBarView = statusBar;
 
         appContext = new AppContext(OperatingSystemVersionUtility.getOperatingSystemVersion());
-
-
     }
 
     public void initView(Parent mainViewRoot, Parent menuBarRoot, Parent modlistManagerRoot, Parent statusBarRoot) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InterruptedException {
@@ -101,6 +99,7 @@ public class MainWindow {
         contextBarView.initView();
         masterManagerView.initView(contextBarView.getLogToggle(),
                 contextBarView.getModDescriptionToggle(),
+                contextBarView.getConflictsToggle(),
                 Integer.parseInt(properties.getProperty("semm.modTable.cellSize")),
                 contextBarView.getModProfileDropdown(),
                 contextBarView.getSaveProfileDropdown(),
@@ -174,6 +173,8 @@ public class MainWindow {
                     uiService.saveUserConfiguration();
                 }
             }
+
+            //TODO: Start the download of any mods in our current mod list that are set to "in progress".
         });
     }
 

@@ -11,6 +11,7 @@ import java.time.LocalTime;
 import java.time.MonthDay;
 import java.time.Year;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -42,8 +43,18 @@ public class ModIoMod extends Mod {
         this.lastUpdatedHour = mod.getLastUpdatedHour();
     }
     
-    public ModIoMod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, Year lastUpdatedYear, MonthDay lastUpdatedMonthDay, LocalTime lastUpdatedHour) {
-        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description);
+    public ModIoMod(String id,
+                    String friendlyName,
+                    String publishedServiceName,
+                    int loadPriority,
+                    List<String> categories,
+                    boolean active,
+                    String description,
+                    Year lastUpdatedYear,
+                    MonthDay lastUpdatedMonthDay,
+                    LocalTime lastUpdatedHour,
+                    ModDownloadStatus downloadStatus) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description, downloadStatus);
         this.lastUpdatedYear = lastUpdatedYear;
         this.lastUpdatedMonthDay = lastUpdatedMonthDay;
         this.lastUpdatedHour = lastUpdatedHour;
@@ -62,5 +73,18 @@ public class ModIoMod extends Mod {
     @XmlJavaTypeAdapter(value = LocalTimeAdapter.class)
     public void setLastUpdatedHour(LocalTime lastUpdatedHour) {
         this.lastUpdatedHour = lastUpdatedHour;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ModIoMod modIoMod = (ModIoMod) o;
+        return Objects.equals(lastUpdatedYear, modIoMod.lastUpdatedYear) && Objects.equals(lastUpdatedMonthDay, modIoMod.lastUpdatedMonthDay) && Objects.equals(lastUpdatedHour, modIoMod.lastUpdatedHour);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), lastUpdatedYear, lastUpdatedMonthDay, lastUpdatedHour);
     }
 }
