@@ -18,7 +18,7 @@ import javafx.scene.layout.*;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class ModStatusCell extends TableCell<Mod, Object> {
+public class ModStatusCell extends TableCell<Mod, Mod> {
 
     private final HBox layout;
 
@@ -28,7 +28,9 @@ public class ModStatusCell extends TableCell<Mod, Object> {
 
     private final Label progressMessage;
 
-    private Task<Result<Void>> modDownloadTask;
+    private Task<Result<Void>> boundTask = null;
+
+    private static final String UNKNOWN_STATUS_MESSAGE = "Unknown";
 
     public ModStatusCell() {
         super();
@@ -45,52 +47,59 @@ public class ModStatusCell extends TableCell<Mod, Object> {
 
     //TODO: Set some display options based on the current mod status.
     @Override
-    protected void updateItem(Object item, boolean empty) {
+    protected void updateItem(Mod item, boolean empty) {
         super.updateItem(item, empty);
         if (empty || item == null) {
+            cleanupBindings();
             setGraphic(null);
             setStyle(null);
             return;
         }
-        ModDownloadStatus modDownloadStatus = ((Mod) item).getModDownloadStatus();
-        if (modDownloadStatus != null)
-            switch (modDownloadStatus) {
-                case DOWNLOADED -> cleanup();
-                case UNSTARTED, DOWNLOADING -> progressMessage.setText(modDownloadStatus.getDisplayName());
+
+        ModDownloadStatus modDownloadStatus = item.getModDownloadStatus();
+        ModTableRow row = (ModTableRow) getTableRow();
+        Task<Result<Void>> task = row.getTask();
+        if (task != null && !task.isDone()) {
+            if (task != boundTask) { //Only change it when the task is actually different, cause it'll screw things up otherwise
+                cleanupBindings();
+                boundTask = task;
+                if(!progressBar.isVisible())
+                    progressBar.setVisible(true);
+
+                progressBar.progressProperty().bind(task.progressProperty());
+                progressMessage.textProperty().bind(task.messageProperty());
+
+                task.setOnSucceeded(e -> Platform.runLater(() -> {
+                    if (boundTask == task) {
+                        cleanupBindings();
+                        progressMessage.setText(modDownloadStatus != null ? modDownloadStatus.getDisplayName() : UNKNOWN_STATUS_MESSAGE);
+                        if(progressBar.isVisible())
+                            progressBar.setVisible(false);
+                    }
+                }));
+
+                task.setOnFailed(e -> Platform.runLater(() -> {
+                    if (boundTask == task) {
+                        cleanupBindings();
+                        progressMessage.setText(modDownloadStatus != null ? modDownloadStatus.getDisplayName() : UNKNOWN_STATUS_MESSAGE);
+                        if(progressBar.isVisible())
+                            progressBar.setVisible(false);
+                    }
+                }));
             }
-        else
-            progressMessage.setText("Unknown");
+        } else {
+            progressMessage.setText(modDownloadStatus != null ? modDownloadStatus.getDisplayName() : UNKNOWN_STATUS_MESSAGE);
+            if(progressBar.isVisible())
+                progressBar.setVisible(false);
+        }
+
 
         setGraphic(layout);
     }
 
-    //TODO: Move this to the row factory. Also need to modify the factory and the tablview...
-    public void setModDownloadTask(Task<Result<Void>> task) {
-        this.modDownloadTask = task;
-
-        if (task != null) {
-            progressMessage.textProperty().bind(task.messageProperty());
-            progressBar.progressProperty().bind(task.progressProperty());
-
-            task.setOnSucceeded(event -> cleanup());
-            task.setOnFailed(event -> cleanup());
-            task.setOnCancelled(event -> cleanup());
-        }
-    }
-
-    private void cleanup() {
-        Platform.runLater(() -> {
-            unbindTask();
-            progressMessage.setText(getTableRow().getItem().getModDownloadStatus().getDisplayName());
-            progressLayout.getChildren().remove(progressBar);
-        });
-    }
-
-    private void unbindTask() {
-        if (modDownloadTask != null) {
-            progressBar.progressProperty().unbind();
-            progressMessage.textProperty().unbind();
-            modDownloadTask = null;
-        }
+    private void cleanupBindings() {
+        progressBar.progressProperty().unbind();
+        progressMessage.textProperty().unbind();
+        boundTask = null;
     }
 }
