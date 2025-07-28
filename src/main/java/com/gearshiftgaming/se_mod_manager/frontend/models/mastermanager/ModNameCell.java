@@ -16,7 +16,6 @@ import javafx.scene.layout.HBox;
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
 
  */
-//TODO: Save on mod activation status toggle
 public class ModNameCell extends TableCell<Mod, Mod> {
 	private final UiService UI_SERVICE;
 

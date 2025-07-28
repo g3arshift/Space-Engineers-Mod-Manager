@@ -28,7 +28,7 @@ import lombok.Getter;
  */
 @Getter
 public enum ModDownloadStatus {
-    UNSTARTED("Not started") {
+    UNSTARTED("Not Downloaded") {
         @Override
         public ModDownloadStatus nextState() {
             return DOWNLOADING;

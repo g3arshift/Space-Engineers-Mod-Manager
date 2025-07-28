@@ -29,12 +29,12 @@
                           <Label text="No Mods Installed" />
                       </placeholder>
                       <columns>
-                          <TableColumn fx:id="modName" prefWidth="200.0" text="Mod Name" />
-                          <TableColumn fx:id="loadPriority" maxWidth="85.0" prefWidth="55.0" text="Priority" />
-                          <TableColumn fx:id="modLastUpdated" prefWidth="115.0" text="Last Updated" />
-                          <TableColumn fx:id="modType" maxWidth="80.0" text="Source" />
+                          <TableColumn fx:id="modName" prefWidth="300.0" text="Mod Name" />
+                          <TableColumn fx:id="loadPriority" maxWidth="85.0" prefWidth="60.0" text="Priority" />
+                          <TableColumn fx:id="modLastUpdated" prefWidth="175.0" text="Last Updated" />
+                          <TableColumn fx:id="modType" text="Source" />
                           <TableColumn fx:id="modCategory" prefWidth="125.0" text="Category/Tags" />
-                     <TableColumn fx:id="modStatus" prefWidth="75.0" text="Status" />
+                     <TableColumn fx:id="modStatus" maxWidth="250.0" prefWidth="130.0" text="Download Status" />
                       </columns>
                       <columnResizePolicy>
                           <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

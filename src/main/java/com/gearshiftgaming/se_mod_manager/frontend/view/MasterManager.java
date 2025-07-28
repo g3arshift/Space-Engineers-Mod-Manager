@@ -489,6 +489,7 @@ public class MasterManager {
         modTable.setFixedCellSize(modTableCellSize);
         setupColumnToggleMenu();
 
+        modStatus.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
         modStatus.setCellFactory(param -> new ModStatusCell());
     }
 
