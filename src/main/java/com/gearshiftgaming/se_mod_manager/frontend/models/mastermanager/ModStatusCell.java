@@ -54,14 +54,17 @@ public class ModStatusCell extends TableCell<Mod, Object> {
         }
         ModDownloadStatus modDownloadStatus = ((Mod) item).getModDownloadStatus();
         if (modDownloadStatus != null)
-            progressMessage.setText(modDownloadStatus.getDisplayName());
+            switch (modDownloadStatus) {
+                case DOWNLOADED -> cleanup();
+                case UNSTARTED, DOWNLOADING -> progressMessage.setText(modDownloadStatus.getDisplayName());
+            }
         else
             progressMessage.setText("Unknown");
 
         setGraphic(layout);
     }
 
-    //TODO: Move this to the row factory. Also need to modify the factory and the tableview...
+    //TODO: Move this to the row factory. Also need to modify the factory and the tablview...
     public void setModDownloadTask(Task<Result<Void>> task) {
         this.modDownloadTask = task;
 
