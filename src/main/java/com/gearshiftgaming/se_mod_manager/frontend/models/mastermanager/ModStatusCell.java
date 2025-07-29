@@ -59,7 +59,7 @@ public class ModStatusCell extends TableCell<Mod, Mod> {
     protected void updateItem(Mod item, boolean empty) {
         super.updateItem(item, empty);
         if (empty || item == null) {
-            cleanupBindings();
+            unbindFromTask();
             setGraphic(null);
             setStyle(null);
             return;
