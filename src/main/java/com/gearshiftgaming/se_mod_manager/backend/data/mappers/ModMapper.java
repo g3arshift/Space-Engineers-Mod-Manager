@@ -39,7 +39,7 @@ public class ModMapper implements RowMapper<Mod> {
                         rs.getString("steam_mod_last_updated") != null ?
                                 Instant.ofEpochMilli(Long.parseLong(rs.getString("steam_mod_last_updated"))).atZone(ZoneId.systemDefault()).toLocalDateTime() :
                         LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
-                        ModDownloadStatus.fromString(rs.getString("download_status")));
+                        rs.getString("download_status") != null ? ModDownloadStatus.fromString(rs.getString("download_status")) : ModDownloadStatus.UNSTARTED);
 
             } else {
                 mod = new ModIoMod(rs.getString("mod_id"),
@@ -52,7 +52,7 @@ public class ModMapper implements RowMapper<Mod> {
                         rs.getString("last_updated_year") != null ? Year.parse(rs.getString("last_updated_year")) : Year.parse("1970"),
                         rs.getString("last_updated_month_day") != null ? MonthDay.parse(rs.getString("last_updated_month_day")) : null,
                         rs.getString("last_updated_hour") != null ? LocalTime.parse(rs.getString("last_updated_hour")) : null,
-                        ModDownloadStatus.fromString(rs.getString("download_status")));
+                        rs.getString("download_status") != null ? ModDownloadStatus.fromString(rs.getString("download_status")) : ModDownloadStatus.UNSTARTED);
             }
             return mod;
         } catch (IOException e) {

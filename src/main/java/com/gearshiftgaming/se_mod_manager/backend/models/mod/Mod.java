@@ -50,6 +50,7 @@ public abstract class Mod {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
         publishedServiceName = "UNKNOWN_SERVICE";
+        setModDownloadStatus(ModDownloadStatus.UNSTARTED);
     }
 
     //We are intentionally forgoing copying load priority as it is a generated field
