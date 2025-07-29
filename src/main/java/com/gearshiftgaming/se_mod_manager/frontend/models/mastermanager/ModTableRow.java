@@ -1,9 +1,13 @@
 package com.gearshiftgaming.se_mod_manager.frontend.models.mastermanager;
 
 import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
+import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
+import javafx.concurrent.Task;
 import javafx.scene.control.TableRow;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -15,11 +19,15 @@ import javafx.scene.control.TableRow;
  */
 public class ModTableRow extends TableRow<Mod> {
 
-	final private UiService UI_SERVICE;
+	private final UiService uiService;
+
+	@Setter
+    @Getter
+	private Task<Result<Void>> modDownloadTask;
 
 	public ModTableRow(UiService uiService) {
 		super();
-		this.UI_SERVICE = uiService;
+		this.uiService = uiService;
 	}
 
 	@Override
@@ -33,7 +41,7 @@ public class ModTableRow extends TableRow<Mod> {
 			if(this.isSelected()) {
 				setStyle("-color-cell-fg-selected: -color-fg-default;" +
 						"-color-cell-fg-selected-focused: -color-fg-default;" +
-						ListCellUtility.getSelectedCellColor(UI_SERVICE.getUserConfiguration().getUserTheme()));
+						ListCellUtility.getSelectedCellColor(uiService.getUserConfiguration().getUserTheme()));
 			} else {
 				StringBuilder styleBuilder = new StringBuilder();
 				if (getIndex() % 2 == 0) {

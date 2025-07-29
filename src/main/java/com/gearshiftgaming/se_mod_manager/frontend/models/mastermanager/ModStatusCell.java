@@ -58,7 +58,7 @@ public class ModStatusCell extends TableCell<Mod, Mod> {
 
         ModDownloadStatus modDownloadStatus = item.getModDownloadStatus();
         ModTableRow row = (ModTableRow) getTableRow();
-        Task<Result<Void>> task = row.getTask();
+        Task<Result<Void>> task = row.getModDownloadTask();
         if (task != null && !task.isDone()) {
             if (task != boundTask) { //Only change it when the task is actually different, cause it'll screw things up otherwise
                 cleanupBindings();

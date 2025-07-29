@@ -120,8 +120,7 @@ public class MasterManager {
 
     @FXML
     private TableColumn<Mod, String> modType;
-
-
+    
     @FXML
     private TableColumn<Mod, String> modLastUpdated;
 
@@ -132,7 +131,7 @@ public class MasterManager {
     private TableColumn<Mod, String> modCategory;
 
     @FXML
-    private TableColumn<Mod, Object> modStatus;
+    private TableColumn<Mod, Mod> modStatus;
 
     @FXML
     private HBox actions;
