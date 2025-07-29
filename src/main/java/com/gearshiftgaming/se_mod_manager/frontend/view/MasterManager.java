@@ -120,7 +120,7 @@ public class MasterManager {
 
     @FXML
     private TableColumn<Mod, String> modType;
-    
+
     @FXML
     private TableColumn<Mod, String> modLastUpdated;
 
@@ -350,8 +350,6 @@ public class MasterManager {
         modDescription.setOnDragOver(dragEvent -> {
         });
 
-        //TODO: We probably don't need this default hiding, but let's check.
-        //progressDisplay.hide();
         mainViewStack.getChildren().add(progressDisplay);
 
         //Download all the required tools we need for SEMM to function
@@ -488,6 +486,7 @@ public class MasterManager {
         modTable.setFixedCellSize(modTableCellSize);
         setupColumnToggleMenu();
 
+        //TODO: Probably need a custom comparator for the strings.
         modStatus.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
         modStatus.setCellFactory(param -> new ModStatusCell());
     }

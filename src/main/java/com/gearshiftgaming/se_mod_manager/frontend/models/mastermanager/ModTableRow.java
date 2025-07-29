@@ -4,10 +4,10 @@ import com.gearshiftgaming.se_mod_manager.backend.models.mod.Mod;
 import com.gearshiftgaming.se_mod_manager.backend.models.shared.Result;
 import com.gearshiftgaming.se_mod_manager.frontend.domain.UiService;
 import com.gearshiftgaming.se_mod_manager.frontend.view.utility.ListCellUtility;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
 import javafx.scene.control.TableRow;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Copyright (C) 2024 Gear Shift Gaming - All Rights Reserved
@@ -21,14 +21,14 @@ public class ModTableRow extends TableRow<Mod> {
 
 	private final UiService uiService;
 
-	@Setter
-    @Getter
-	private Task<Result<Void>> modDownloadTask;
+	private final ObjectProperty<Task<Result<Void>>> modDownloadTask;
 
 	public ModTableRow(UiService uiService) {
 		super();
 		this.uiService = uiService;
+		this.modDownloadTask = new SimpleObjectProperty<>();
 	}
+
 
 	@Override
 	protected void updateItem(Mod item, boolean empty) {
@@ -56,5 +56,17 @@ public class ModTableRow extends TableRow<Mod> {
 				setStyle(styleBuilder.toString());
 			}
 		}
+	}
+
+	public ObjectProperty<Task<Result<Void>>> getModDownloadTaskProperty() {
+		return modDownloadTask;
+	}
+
+	public void setModDownloadTask(Task<Result<Void>> task) {
+		modDownloadTask.set(task);
+	}
+
+	public Task<Result<Void>> getModDownloadTask() {
+		return modDownloadTask.get();
 	}
 }
