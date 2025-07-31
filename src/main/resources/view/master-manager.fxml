@@ -34,7 +34,7 @@
                           <TableColumn fx:id="modLastUpdated" prefWidth="175.0" text="Last Updated" />
                           <TableColumn fx:id="modType" text="Source" />
                           <TableColumn fx:id="modCategory" prefWidth="125.0" text="Category/Tags" />
-                     <TableColumn fx:id="modStatus" maxWidth="250.0" prefWidth="130.0" text="Download Status" />
+                     <TableColumn fx:id="modStatus" maxWidth="250.0" prefWidth="130.0" text="Status" />
                       </columns>
                       <columnResizePolicy>
                           <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
