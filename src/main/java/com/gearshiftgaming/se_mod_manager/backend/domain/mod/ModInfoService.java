@@ -369,7 +369,6 @@ public class ModInfoService {
                         //We shouldn't ever really reach this because it is a scenario where we SOMEHOW are encountering an error, but it's not getting us a value from the webpage.
                         retries++;
                 }
-                //webPage.waitForSelector(new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
                 webPage.waitForLoadState(LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(modIoScrapingTimeout));
                 pageSource = webPage.content();
             } catch (RateLimitException e) {

@@ -99,7 +99,6 @@ shadowJar {
     manifest {
         attributes 'Main-Class': 'com.gearshiftgaming.se_mod_manager.SpaceEngineersModManager'
     }
-    // You can also add exclusions or customizations here
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
