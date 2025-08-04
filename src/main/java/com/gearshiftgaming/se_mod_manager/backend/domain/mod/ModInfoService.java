@@ -54,6 +54,8 @@ public class ModInfoService {
 
     private final String steamModFirstPostedSelector;
 
+    private final String steamModSizeSelector;
+
     private final String steamModTagsSelector;
 
     private final String steamModDescriptionSelector;
@@ -74,23 +76,24 @@ public class ModInfoService {
 
     //TODO: Download mods using steamCMD to the user directory. Have some sort of UI indication they're downloading in the UI.
     // Once downloaded, get modified paths and modify conflict table.
-    public ModInfoService(ModlistRepository modlistRepository, Properties PROPERTIES) {
+    public ModInfoService(ModlistRepository modlistRepository, Properties properties) {
         this.modlistRepository = modlistRepository;
 
-        this.steamModTypeSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
-        this.steamModLastUpdatedSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
-        this.steamModFirstPostedSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
-        this.steamModTagsSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
-        this.steamModDescriptionSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
-        this.steamModVerificationSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
+        this.steamModTypeSelector = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
+        this.steamModLastUpdatedSelector = properties.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
+        this.steamModFirstPostedSelector = properties.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
+        this.steamModSizeSelector = properties.getProperty("semm.steam.modScraper.workshop.size.cssSelector");
+        this.steamModTagsSelector = properties.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
+        this.steamModDescriptionSelector = properties.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
+        this.steamModVerificationSelector = properties.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
 
-        this.steamModIdPattern = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
+        this.steamModIdPattern = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
 
-        this.steamCollectionGameNameSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
-        this.steamCollectionModIdSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
-        this.steamCollectionVerificationSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
+        this.steamCollectionGameNameSelector = properties.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
+        this.steamCollectionModIdSelector = properties.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
+        this.steamCollectionVerificationSelector = properties.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
-        this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
+        this.modIoScrapingTimeout = Integer.parseInt(properties.getProperty("semm.modio.modScraper.timeout"));
     }
 
     public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
@@ -248,8 +251,8 @@ public class ModInfoService {
             return modScrapeResult;
         }
 
-        //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
-        String[] modInfo = new String[4];
+        //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, fourth is last updated, and fifth is size.
+        String[] modInfo = new String[5];
         modInfo[0] = modName;
 
         Elements modTagElements = modPage.select(steamModTagsSelector);
@@ -312,6 +315,10 @@ public class ModInfoService {
             lastUpdated = String.format("%s %s, %s @ %s", month, day, year, time);
         }
         modInfo[3] = lastUpdated;
+
+        modInfo[4] = StringUtils.substringBetween(modPage.select(steamModSizeSelector).toString(),
+                "<div class=\"detailsStatRight\">\n ",
+                "\n</div>");
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);
