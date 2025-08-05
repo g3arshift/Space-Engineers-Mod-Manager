@@ -423,7 +423,7 @@ public class ModInfoService {
         // 3. Year
         // 4. Month + day
         // 5. Hour
-        String[] modInfo = new String[6];
+        String[] modInfo = new String[7];
         //Get mod name
         modInfo[0] = modPage.title().split(" for Space Engineers - mod.io")[0];
 
@@ -474,6 +474,9 @@ public class ModInfoService {
         modInfo[4] = String.format("--%s%s-%s%s", lastUpdated.getMonthValue() < 10 ? "0" : "", lastUpdated.getMonthValue(),
                 lastUpdated.getDayOfMonth() < 10 ? "0" : "", lastUpdated.getDayOfMonth());
         modInfo[5] = String.format("%s:%s:%s", lastUpdated.getHour(), lastUpdated.getMinute(), lastUpdated.getSecond());
+
+        //TODO: We need to get the mod size.
+        //modInfo[6] =
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);

@@ -5,7 +5,8 @@ create table mod
     friendly_name          TEXT not null,
     published_service_name TEXT not null,
     description            text,
-    download_status        text
+    download_status        text,
+    expected_size_bytes          integer
 )
     strict;
 
