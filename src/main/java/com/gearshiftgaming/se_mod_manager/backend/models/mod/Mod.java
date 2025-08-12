@@ -46,6 +46,9 @@ public abstract class Mod {
     @Setter
     private ModDownloadStatus modDownloadStatus;
 
+    @Setter
+    private long expectedSizeBytes;
+
     protected Mod(String id) {
         this.id = id;
         friendlyName = "UNKNOWN_NAME";
@@ -63,9 +66,10 @@ public abstract class Mod {
         this.description = mod.getDescription();
         this.modifiedPaths = mod.getModifiedPaths();
         this.modDownloadStatus = mod.getModDownloadStatus();
+        this.expectedSizeBytes = mod.expectedSizeBytes;
     }
 
-    protected Mod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, ModDownloadStatus modDownloadStatus) {
+    protected Mod(String id, String friendlyName, String publishedServiceName, int loadPriority, List<String> categories, boolean active, String description, ModDownloadStatus modDownloadStatus, long expectedSizeBytes) {
         this.id = id;
         this.friendlyName = friendlyName;
         this.publishedServiceName = publishedServiceName;
@@ -74,6 +78,7 @@ public abstract class Mod {
         this.active = active;
         this.description = description;
         this.modDownloadStatus = modDownloadStatus;
+        this.expectedSizeBytes = expectedSizeBytes;
     }
 
     @Override

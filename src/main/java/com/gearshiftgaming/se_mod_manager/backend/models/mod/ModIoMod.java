@@ -53,8 +53,9 @@ public class ModIoMod extends Mod {
                     Year lastUpdatedYear,
                     MonthDay lastUpdatedMonthDay,
                     LocalTime lastUpdatedHour,
-                    ModDownloadStatus downloadStatus) {
-        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description, downloadStatus);
+                    ModDownloadStatus downloadStatus,
+                    long expectedSizeBytes) {
+        super(id, friendlyName, publishedServiceName, loadPriority, categories, active, description, downloadStatus, expectedSizeBytes);
         this.lastUpdatedYear = lastUpdatedYear;
         this.lastUpdatedMonthDay = lastUpdatedMonthDay;
         this.lastUpdatedHour = lastUpdatedHour;

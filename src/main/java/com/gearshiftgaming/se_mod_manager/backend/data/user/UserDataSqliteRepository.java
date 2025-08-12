@@ -328,6 +328,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                             mod_details.published_service_name,
                             mod_details.description,
                             mod_details.download_status,
+                            mod_details.expected_size_bytes,
                             mod_details.last_updated_year,
                             mod_details.last_updated_month_day,
                             mod_details.last_updated_hour,
@@ -683,17 +684,20 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                     friendly_name,
                     published_service_name,
                     description,
-                    download_status)
+                    download_status,
+                    expected_size_bytes)
                     VALUES (
                         :id,
                         :friendlyName,
                         :publishedServiceName,
                         :description,
-                        :downloadStatus)
+                        :downloadStatus,
+                        :expectedSizeBytes)
                     ON CONFLICT (mod_id) DO UPDATE SET
                         friendly_name = CASE WHEN mod.friendly_name IS DISTINCT FROM excluded.friendly_name THEN excluded.friendly_name ELSE mod.friendly_name END,
                         description = CASE WHEN mod.description IS DISTINCT FROM excluded.description THEN excluded.description ELSE mod.description END,
-                        download_status = excluded.download_status;""";
+                        download_status = excluded.download_status,
+                        expected_size_bytes = excluded.expected_size_bytes;""";
 
         //Upsert the mod categories table but only for info that's changed
         final String modCategoriesUpdateSql = """
@@ -760,6 +764,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                             .bind("publishedServiceName", mod.getPublishedServiceName())
                             .bind("description", StringCodepressor.compressandEncodeString(mod.getDescription()))
                             .bind("downloadStatus", mod.getModDownloadStatus())
+                            .bind("expectedSizeBytes", mod.getExpectedSizeBytes())
                             .add();
 
                     for (String category : mod.getCategories()) {
@@ -793,6 +798,7 @@ public class UserDataSqliteRepository extends ModListProfileJaxbSerializer imple
                 }
 
                 modsBatch.execute();
+
                 modUpdateResult.addMessage("Mods updated.", ResultType.SUCCESS);
 
                 modCategoriesBatch.execute();

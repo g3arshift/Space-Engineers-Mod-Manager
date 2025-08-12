@@ -417,6 +417,7 @@ public class UiService {
                             .appendPattern(modDateFormat)
                             .toFormatter(Locale.ENGLISH);
                     steamMod.setLastUpdated(LocalDateTime.parse(modInfo[3], formatter));
+                    steamMod.setExpectedSizeBytes(getExpectedSteamModSizeFromString(modInfo[4]));
                     infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
                 } else {
                     ((ModIoMod) mod).setLastUpdatedYear(Year.parse(modInfo[3]));
@@ -428,6 +429,8 @@ public class UiService {
                     if (modInfo[5] != null) {
                         ((ModIoMod) mod).setLastUpdatedHour(LocalTime.parse(modInfo[5]));
                     }
+
+                    mod.setExpectedSizeBytes(getExpectedModIoModSizeFromString(modInfo[6]));
 
                     infoFilloutResult.addMessage("Successfully parsed last updated datetime for \"" + mod.getFriendlyName() + "\".", ResultType.SUCCESS);
                 }
@@ -447,6 +450,31 @@ public class UiService {
         }
 
         return infoFilloutResult;
+    }
+
+    public long getExpectedSteamModSizeFromString(String expectedSizeText) {
+        if(expectedSizeText == null || expectedSizeText.isEmpty())
+            return 0;
+
+        String size = expectedSizeText.substring(0, expectedSizeText.length() - 2);
+        return Long.parseLong(StringUtils.getDigits(size));
+    }
+
+    public long getExpectedModIoModSizeFromString(String expectedSizeText) {
+        if(expectedSizeText == null || expectedSizeText.isEmpty())
+            return 0;
+
+        String divisor = expectedSizeText.substring(expectedSizeText.length() - 2);
+        int multiplier = switch (divisor) {
+            case "KB" -> 1024;
+            case "MB" -> 1048576;
+            case "GB" -> 1073741824;
+            default ->
+                    throw new IllegalStateException("Unexpected value: " + divisor);
+        };
+
+        String size = expectedSizeText.substring(0, expectedSizeText.length() - 2);
+        return ((long) Math.ceil(Double.parseDouble(size) * multiplier));
     }
 
     public Task<List<Result<String>>> importSteamCollection(String collectionId) {

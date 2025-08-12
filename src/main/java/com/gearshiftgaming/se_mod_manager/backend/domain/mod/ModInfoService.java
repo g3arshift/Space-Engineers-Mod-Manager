@@ -14,6 +14,7 @@ import com.microsoft.playwright.options.LoadState;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -54,6 +55,8 @@ public class ModInfoService {
 
     private final String steamModFirstPostedSelector;
 
+    private final String steamModSizeSelector;
+
     private final String steamModTagsSelector;
 
     private final String steamModDescriptionSelector;
@@ -74,23 +77,24 @@ public class ModInfoService {
 
     //TODO: Download mods using steamCMD to the user directory. Have some sort of UI indication they're downloading in the UI.
     // Once downloaded, get modified paths and modify conflict table.
-    public ModInfoService(ModlistRepository modlistRepository, Properties PROPERTIES) {
+    public ModInfoService(ModlistRepository modlistRepository, Properties properties) {
         this.modlistRepository = modlistRepository;
 
-        this.steamModTypeSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
-        this.steamModLastUpdatedSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
-        this.steamModFirstPostedSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
-        this.steamModTagsSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
-        this.steamModDescriptionSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
-        this.steamModVerificationSelector = PROPERTIES.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
+        this.steamModTypeSelector = properties.getProperty("semm.steam.modScraper.workshop.type.cssSelector");
+        this.steamModLastUpdatedSelector = properties.getProperty("semm.steam.modScraper.workshop.lastUpdated.cssSelector");
+        this.steamModFirstPostedSelector = properties.getProperty("semm.steam.modScraper.workshop.firstPosted.cssSelector");
+        this.steamModSizeSelector = properties.getProperty("semm.steam.modScraper.workshop.size.cssSelector");
+        this.steamModTagsSelector = properties.getProperty("semm.steam.modScraper.workshop.tags.cssSelector");
+        this.steamModDescriptionSelector = properties.getProperty("semm.steam.modScraper.workshop.description.cssSelector");
+        this.steamModVerificationSelector = properties.getProperty("semm.steam.modScraper.workshop.workshopVerification.cssSelector");
 
-        this.steamModIdPattern = Pattern.compile(PROPERTIES.getProperty("semm.steam.mod.id.pattern"));
+        this.steamModIdPattern = Pattern.compile(properties.getProperty("semm.steam.mod.id.pattern"));
 
-        this.steamCollectionGameNameSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
-        this.steamCollectionModIdSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
-        this.steamCollectionVerificationSelector = PROPERTIES.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
+        this.steamCollectionGameNameSelector = properties.getProperty("semm.steam.collectionScraper.workshop.gameName.cssSelector");
+        this.steamCollectionModIdSelector = properties.getProperty("semm.steam.collectionScraper.workshop.collectionContents.cssSelector");
+        this.steamCollectionVerificationSelector = properties.getProperty("semm.steam.collectionScraper.workshop.collectionVerification.cssSelector");
 
-        this.modIoScrapingTimeout = Integer.parseInt(PROPERTIES.getProperty("semm.modio.modScraper.timeout"));
+        this.modIoScrapingTimeout = Integer.parseInt(properties.getProperty("semm.modio.modScraper.timeout"));
     }
 
     public List<String> getModIdsFromFile(File modlistFile, ModType modType) throws IOException {
@@ -248,8 +252,8 @@ public class ModInfoService {
             return modScrapeResult;
         }
 
-        //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, and fourth is last updated.
-        String[] modInfo = new String[4];
+        //The first item is mod name, second is a combined string of the tags, third is the raw HTML of the description, fourth is last updated, and fifth is size.
+        String[] modInfo = new String[5];
         modInfo[0] = modName;
 
         Elements modTagElements = modPage.select(steamModTagsSelector);
@@ -313,6 +317,10 @@ public class ModInfoService {
         }
         modInfo[3] = lastUpdated;
 
+        modInfo[4] = StringUtils.substringBetween(modPage.select(steamModSizeSelector).toString(),
+                "<div class=\"detailsStatRight\">\n ",
+                "\n</div>");
+
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);
 
@@ -369,7 +377,6 @@ public class ModInfoService {
                         //We shouldn't ever really reach this because it is a scenario where we SOMEHOW are encountering an error, but it's not getting us a value from the webpage.
                         retries++;
                 }
-                //webPage.waitForSelector(new Page.WaitForSelectorOptions().setTimeout(MOD_IO_SCRAPING_TIMEOUT));
                 webPage.waitForLoadState(LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(modIoScrapingTimeout));
                 pageSource = webPage.content();
             } catch (RateLimitException e) {
@@ -417,7 +424,7 @@ public class ModInfoService {
         // 3. Year
         // 4. Month + day
         // 5. Hour
-        String[] modInfo = new String[6];
+        String[] modInfo = new String[7];
         //Get mod name
         modInfo[0] = modPage.title().split(" for Space Engineers - mod.io")[0];
 
@@ -444,7 +451,6 @@ public class ModInfoService {
 
         //This is awful and terrible but Mod.io does some very annoying things with how it returns data.
         //Find the script tag that contains the JSON-LD for the news article, because for some reason that's where mod.io stuffed the lastUpdated tag.
-        //CSS style selector for the data we want
         Element newsArticleScript = modPage.selectFirst("script[type='application/ld+json']#NewsArticle");
 
         if (newsArticleScript == null || newsArticleScript.childNodeSize() == 0) {
@@ -469,8 +475,41 @@ public class ModInfoService {
                 lastUpdated.getDayOfMonth() < 10 ? "0" : "", lastUpdated.getDayOfMonth());
         modInfo[5] = String.format("%s:%s:%s", lastUpdated.getHour(), lastUpdated.getMinute(), lastUpdated.getSecond());
 
+        try {
+            modInfo[6] = findModSize(modPage);
+        } catch (ModInfoScrapeException e) {
+            modScrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
+            return;
+        }
+
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);
+    }
+
+    private String findModSize(Document modPage) {
+
+        Element sideBarContent = modPage.selectFirst("div.stats.tw-space-y-4.tw-mb-6.lg\\:tw-mb-0.lg\\:tw-sticky");
+
+        if(sideBarContent == null)
+            throw new ModInfoScrapeException("Could not find Mod.io sidebar.");
+
+        Element sizeContent = null;
+        for(int i = sideBarContent.childNodeSize() - 1; i >= 0; i--) {
+            if(!(sideBarContent.childNode(i) instanceof Comment)){
+                sizeContent = (Element) sideBarContent.childNode(i);
+                break;
+            }
+        }
+
+        if(sizeContent == null)
+            throw new ModInfoScrapeException("Could not find Mod.io file download content in sidebar.");
+
+        sizeContent = sizeContent.selectFirst(".tw-text-xs.tw-opacity-70");
+
+        if(sizeContent == null)
+            throw new ModInfoScrapeException("Could not find Mod.io size content in sidebar.");
+
+        return String.valueOf(sizeContent.lastChild()).trim();
     }
 
     @Nullable

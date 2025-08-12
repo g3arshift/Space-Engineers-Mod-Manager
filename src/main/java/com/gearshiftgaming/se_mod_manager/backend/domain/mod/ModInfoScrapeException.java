@@ -7,8 +7,8 @@ package com.gearshiftgaming.se_mod_manager.backend.domain.mod;
  * You should have received a copy of the GPL3 license with
  * this file. If not, please write to: gearshift@gearshiftgaming.com.
  */
-public class MissingModDownloadLocationException extends RuntimeException {
-    public MissingModDownloadLocationException(String message) {
+public class ModInfoScrapeException extends RuntimeException {
+    public ModInfoScrapeException(String message) {
         super(message);
     }
 }
