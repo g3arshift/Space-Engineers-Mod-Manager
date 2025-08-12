@@ -14,6 +14,7 @@ import com.microsoft.playwright.options.LoadState;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -450,7 +451,6 @@ public class ModInfoService {
 
         //This is awful and terrible but Mod.io does some very annoying things with how it returns data.
         //Find the script tag that contains the JSON-LD for the news article, because for some reason that's where mod.io stuffed the lastUpdated tag.
-        //CSS style selector for the data we want
         Element newsArticleScript = modPage.selectFirst("script[type='application/ld+json']#NewsArticle");
 
         if (newsArticleScript == null || newsArticleScript.childNodeSize() == 0) {
@@ -475,11 +475,41 @@ public class ModInfoService {
                 lastUpdated.getDayOfMonth() < 10 ? "0" : "", lastUpdated.getDayOfMonth());
         modInfo[5] = String.format("%s:%s:%s", lastUpdated.getHour(), lastUpdated.getMinute(), lastUpdated.getSecond());
 
-        //TODO: We need to get the mod size.
-        //modInfo[6] =
+        try {
+            modInfo[6] = findModSize(modPage);
+        } catch (ModInfoScrapeException e) {
+            modScrapeResult.addMessage(getStackTrace(e), ResultType.FAILED);
+            return;
+        }
 
         modScrapeResult.addMessage("Successfully scraped information for mod " + modId + "!", ResultType.SUCCESS);
         modScrapeResult.setPayload(modInfo);
+    }
+
+    private String findModSize(Document modPage) {
+
+        Element sideBarContent = modPage.selectFirst("div.stats.tw-space-y-4.tw-mb-6.lg\\:tw-mb-0.lg\\:tw-sticky");
+
+        if(sideBarContent == null)
+            throw new ModInfoScrapeException("Could not find Mod.io sidebar.");
+
+        Element sizeContent = null;
+        for(int i = sideBarContent.childNodeSize() - 1; i >= 0; i--) {
+            if(!(sideBarContent.childNode(i) instanceof Comment)){
+                sizeContent = (Element) sideBarContent.childNode(i);
+                break;
+            }
+        }
+
+        if(sizeContent == null)
+            throw new ModInfoScrapeException("Could not find Mod.io file download content in sidebar.");
+
+        sizeContent = sizeContent.selectFirst(".tw-text-xs.tw-opacity-70");
+
+        if(sizeContent == null)
+            throw new ModInfoScrapeException("Could not find Mod.io size content in sidebar.");
+
+        return String.valueOf(sizeContent.lastChild()).trim();
     }
 
     @Nullable

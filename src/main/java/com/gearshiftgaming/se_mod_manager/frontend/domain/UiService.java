@@ -474,7 +474,7 @@ public class UiService {
         };
 
         String size = expectedSizeText.substring(0, expectedSizeText.length() - 2);
-        return ((long) Integer.parseInt(size) * multiplier);
+        return ((long) Math.ceil(Double.parseDouble(size) * multiplier));
     }
 
     public Task<List<Result<String>>> importSteamCollection(String collectionId) {
