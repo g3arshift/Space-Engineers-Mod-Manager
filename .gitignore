@@ -80,3 +80,7 @@ build/
 /Graphics/
 /src/test/resources/DataStorage/
 /Tools/Test/
+/Schemaspy/
+/Database/.idea/.name
+/Database/.idea/data_source_mapping.xml
+/Database/.idea/sqldialects.xml

@@ -362,11 +362,12 @@ public class UiService {
                         // Submit the task without waiting for it to finish
                         completionService.submit(() -> {
                             if (m instanceof ModIoMod && totalMods > 1) {
-                                Thread.sleep(random.nextInt(200, 600));
+                                TimeUnit.MILLISECONDS.sleep(random.nextInt(200, 600));
                             }
                             return fillOutModInformation(m);
                         });
                     }
+
                     for (int i = 0; i < totalMods; i++) {
                         Future<Result<Mod>> completedFuture;
                         Result<Mod> result;

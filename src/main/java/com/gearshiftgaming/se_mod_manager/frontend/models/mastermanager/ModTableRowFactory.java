@@ -51,7 +51,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
     private final ModListManagerHelper modlistManagerHelper;
 
     //TODO: I think we need an object property here to define the mod download status. Mods also need to persist their status
-    
+
     private enum RowBorderType {
         TOP,
         BOTTOM
@@ -286,7 +286,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
             dragEvent.consume();
         });
 
-        //This is a dumb hack but I can't get the row's height any other way
+        //This is a dumb hack, but I can't get the row's height any other way
         if (modlistManagerView.getSingleTableRow() == null) modlistManagerView.setSingleTableRow(row);
 
         return row;

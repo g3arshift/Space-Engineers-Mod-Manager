@@ -14,6 +14,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -265,7 +266,7 @@ public class ToolManagerService {
                     messageUpdater.accept(String.format("Retrying... (%d/%d)", retryCount, maxRetries));
                     downloadResult.addMessage(String.format("%s download failed, retrying... Attempt %d", toolName, retryCount), ResultType.WARN);
                     //Wait the specified time of our retry delay before retrying the download.
-                    Thread.sleep(retryDelay);
+                    TimeUnit.MILLISECONDS.sleep(retryDelay);
                 } else {
                     Files.deleteIfExists(Path.of(steamCmdArchivePath));
                     downloadResult.addMessage(getStackTrace(e), ResultType.FAILED);
