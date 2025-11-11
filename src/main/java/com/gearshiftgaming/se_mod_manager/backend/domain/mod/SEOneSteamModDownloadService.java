@@ -128,6 +128,7 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
         HashMap<String, Object> steamInstallLocations = (HashMap<String, Object>) vdfParser.parseVdf(filePath).get("libraryfolders");
 
         //Go through every map and submap we have, which represents the hierarchy of a .vdf file, to find the SE 244850 app ID.
+        //We KNOW this hashmap will be the type we expect, and you can't do the check in a one line anyway, so we're using a raw
         for (Object diskBlockObj : steamInstallLocations.values()) {
             if (diskBlockObj instanceof HashMap diskBlock) {
                 Object appsObj = diskBlock.get("apps");
@@ -138,7 +139,6 @@ public class SEOneSteamModDownloadService implements ModDownloadService {
         }
         return "";
     }
-
 
     @Override
     public Result<Void> downloadMod(String modId, SaveProfileInfo saveProfileInfo) throws IOException, InterruptedException {

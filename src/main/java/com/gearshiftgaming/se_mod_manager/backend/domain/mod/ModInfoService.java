@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -383,7 +384,7 @@ public class ModInfoService {
                 retries++;
                 if (retries < MAX_RETRIES) {
                     //TODO: Tool around with the delay for retries AND for the separation between thread calls.
-                    Thread.sleep(delay);
+                    TimeUnit.MILLISECONDS.sleep(delay);
                     delay += random.nextInt(2000);
                     webPage.reload();
                 } else {

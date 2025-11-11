@@ -349,35 +349,35 @@ public class UiService {
         return new Task<>() {
             @Override
             protected List<Result<Mod>> call() {
-                List<Result<Mod>> modInfoFillOutResults = new ArrayList<>();
+                Map<Mod, Result<Mod>> resultsByMod = new IdentityHashMap<>();
                 AtomicInteger completedMods = new AtomicInteger(0);
                 int totalMods = modList.size();
                 updateMessage(String.format("Mods Processed: 0/%s", totalMods));
                 updateProgress(0, totalMods);
 
                 try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-                    CompletionService<Result<Mod>> completionService = new ExecutorCompletionService<>(executorService);
+                    CompletionService<Map.Entry<Mod, Result<Mod>>> completionService = new ExecutorCompletionService<>(executorService);
                     Random random = new Random();
                     for (Mod m : modList) {
-                        // Submit the task without waiting for it to finish
+                        // Submits the task without waiting for it to finish
                         completionService.submit(() -> {
                             if (m instanceof ModIoMod && totalMods > 1) {
-                                Thread.sleep(random.nextInt(200, 600));
+                                TimeUnit.MILLISECONDS.sleep(random.nextInt(200, 600));
                             }
-                            return fillOutModInformation(m);
+                            Result<Mod> result = fillOutModInformation(m);
+                            return Map.entry(m, result);
                         });
                     }
+
                     for (int i = 0; i < totalMods; i++) {
-                        Future<Result<Mod>> completedFuture;
-                        Result<Mod> result;
                         try {
-                            completedFuture = completionService.take();
-                            result = completedFuture.get();
-                            modInfoFillOutResults.add(result);
+                            Future<Map.Entry<Mod, Result<Mod>>> completedFuture = completionService.take();
+                            Map.Entry<Mod, Result<Mod>> entry = completedFuture.get();
+                            resultsByMod.put(entry.getKey(), entry.getValue());
                         } catch (InterruptedException | ExecutionException e) {
-                            result = new Result<>();
-                            result.addMessage(getStackTrace(e), ResultType.FAILED);
-                            modInfoFillOutResults.add(result);
+                            Result<Mod> fail = new Result<>();
+                            fail.addMessage(getStackTrace(e), ResultType.FAILED);
+                            resultsByMod.put(modList.get(i), fail);
                         }
 
                         int done = completedMods.incrementAndGet();
@@ -386,7 +386,14 @@ public class UiService {
                     }
                     updateMessage("All mods processed!");
                 }
-                return modInfoFillOutResults;
+
+                // Rebuild the list to the original order
+                List<Result<Mod>> orderedResults = new ArrayList<>(modList.size());
+                for (Mod m : modList) {
+                    orderedResults.add(resultsByMod.get(m));
+                }
+
+                return orderedResults;
             }
         };
     }
