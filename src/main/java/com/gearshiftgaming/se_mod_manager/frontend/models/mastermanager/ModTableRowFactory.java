@@ -9,7 +9,10 @@ import com.gearshiftgaming.se_mod_manager.frontend.view.MasterManager;
 import com.gearshiftgaming.se_mod_manager.frontend.view.helper.ModListManagerHelper;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.Popup;
 import com.gearshiftgaming.se_mod_manager.frontend.view.popup.TwoButtonChoice;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -96,10 +99,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         activateSelectedMods.setOnAction(actionEvent -> {
             final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
             for (Mod m : selectedMods) {
-				if(!m.isActive()) {
-					m.setActive(true);
-					uiService.modifyActiveModCount(m);
-				}
+                if (!m.isActive()) {
+                    m.setActive(true);
+                    uiService.modifyActiveModCount(m);
+                }
             }
             modTable.refresh();
             Result<Void> updateModListActiveStateResult = uiService.updateModListActiveMods();
@@ -110,10 +113,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         deactivateSelectedMods.setOnAction(actionEvent -> {
             final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
             for (Mod m : selectedMods) {
-				if(m.isActive()) {
-					m.setActive(false);
-					uiService.modifyActiveModCount(m);
-				}
+                if (m.isActive()) {
+                    m.setActive(false);
+                    uiService.modifyActiveModCount(m);
+                }
             }
             modTable.refresh();
             Result<Void> updateModListActiveStateResult = uiService.updateModListActiveMods();
@@ -124,8 +127,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         deleteSelectedMods.disableProperty().bind(Bindings.isEmpty(modTable.getSelectionModel().getSelectedItems()));
         deleteSelectedMods.setOnAction(actionEvent -> deleteMods(modTable));
 
-		final MenuItem selectAll = new MenuItem("Select all");
-		selectAll.setOnAction(event -> modTable.getSelectionModel().selectAll());
+        final MenuItem selectAll = new MenuItem("Select all");
+        selectAll.setOnAction(event -> modTable.getSelectionModel().selectAll());
 
         tableContextMenu.getItems().addAll(activateSelectedMods, deactivateSelectedMods, openSelectedModPages, deleteSelectedMods, selectAll);
 
@@ -137,8 +140,8 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         //Lets the user press the delete key to delete selected mods instead of having to right click every time.
         modTable.setOnKeyPressed(event -> {
             List<Mod> selectedItems = modTable.getSelectionModel().getSelectedItems();
-            if(event.getCode().equals(KeyCode.DELETE)) {
-                if(!selectedItems.isEmpty()) {
+            if (event.getCode().equals(KeyCode.DELETE)) {
+                if (!selectedItems.isEmpty()) {
                     deleteMods(modTable);
                 }
             }
@@ -169,12 +172,10 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
 
         row.setOnDragOver(dragEvent -> {
             Dragboard dragboard = dragEvent.getDragboard();
-            if (dragboard.hasContent(serializedMimeType)) {
-                if (row.getIndex() != ((Integer) dragboard.getContent(serializedMimeType))) {
+            if (dragboard.hasContent(serializedMimeType) && row.getIndex() != ((Integer) dragboard.getContent(serializedMimeType))) {
                     dragEvent.acceptTransferModes(TransferMode.COPY_OR_MOVE);
                     dragEvent.consume();
                 }
-            }
         });
 
         row.setOnDragEntered(dragEvent -> {
@@ -287,7 +288,18 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         });
 
         //This is a dumb hack, but I can't get the row's height any other way
-        if (modlistManagerView.getSingleTableRow() == null) modlistManagerView.setSingleTableRow(row);
+        if (modlistManagerView.getSingleTableRow() == null) {
+            ChangeListener<Number> rowHeightListener = new ChangeListener<Number>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    if (newValue.doubleValue() > 0) {
+                        modlistManagerView.setSingleTableRow(row);
+                        //row.heightProperty().removeListener(this);
+                    }
+                }
+            };
+            row.heightProperty().addListener(rowHeightListener);
+        }
 
         return row;
     }
@@ -309,46 +321,46 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
         }
     }
 
-	private void deleteMods(TableView<Mod> modTable) {
-		TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete these mods?", modlistManagerView.getStage(), MessageType.WARN);
-		if (choice == TwoButtonChoice.YES) {
-			final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
+    private void deleteMods(TableView<Mod> modTable) {
+        TwoButtonChoice choice = Popup.displayYesNoDialog("Are you sure you want to delete these mods?", modlistManagerView.getStage(), MessageType.WARN);
+        if (choice == TwoButtonChoice.YES) {
+            final List<Mod> selectedMods = new ArrayList<>(modTable.getSelectionModel().getSelectedItems());
 
-			//TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
-			uiService.getCurrentModList().removeAll(selectedMods);
-			uiService.getCurrentModListProfile().setModList(uiService.getCurrentModList());
+            //TODO: Look into why if we use getCurrentModProfile it returns null. Indicative of a deeper issue or misunderstanding just like in the droprow.
+            uiService.getCurrentModList().removeAll(selectedMods);
+            uiService.getCurrentModListProfile().setModList(uiService.getCurrentModList());
 
-			int previouslyActiveModCount = 0;
+            int previouslyActiveModCount = 0;
 
-			for (Mod m : selectedMods) {
-				if (m.isActive()) previouslyActiveModCount++;
-			}
+            for (Mod m : selectedMods) {
+                if (m.isActive()) previouslyActiveModCount++;
+            }
 
-			//Update the priority of our columns
-			uiService.getCurrentModList().sort(Comparator.comparing(Mod::getLoadPriority));
-			for (int i = 0; i < uiService.getCurrentModList().size(); i++) {
-				uiService.getCurrentModList().get(i).setLoadPriority(i + 1);
-			}
+            //Update the priority of our columns
+            uiService.getCurrentModList().sort(Comparator.comparing(Mod::getLoadPriority));
+            for (int i = 0; i < uiService.getCurrentModList().size(); i++) {
+                uiService.getCurrentModList().get(i).setLoadPriority(i + 1);
+            }
 
-			if (!modTable.getSortOrder().isEmpty()) {
-				TableColumn<Mod, ?> sortedColumn = modTable.getSortOrder().getFirst();
-				TableColumn.SortType sortedColumnSortType = modTable.getSortOrder().getFirst().getSortType();
-				sortedColumn.setSortType(null);
-				modTable.refresh();
-				sortedColumn.setSortType(sortedColumnSortType);
-			}
+            if (!modTable.getSortOrder().isEmpty()) {
+                TableColumn<Mod, ?> sortedColumn = modTable.getSortOrder().getFirst();
+                TableColumn.SortType sortedColumnSortType = modTable.getSortOrder().getFirst().getSortType();
+                sortedColumn.setSortType(null);
+                modTable.refresh();
+                sortedColumn.setSortType(sortedColumnSortType);
+            }
 
-			uiService.modifyActiveModCount(-previouslyActiveModCount);
-			Result<Void> updateResult = uiService.updateModListProfileModList();
-            if(updateResult.isFailure()) {
+            uiService.modifyActiveModCount(-previouslyActiveModCount);
+            Result<Void> updateResult = uiService.updateModListProfileModList();
+            if (updateResult.isFailure()) {
                 uiService.log(updateResult);
                 Popup.displaySimpleAlert("Failed to delete mod from modlist. See log for more information.", MessageType.ERROR);
             }
-		}
-	}
+        }
+    }
 
     private void checkResult(Result<?> result, String failMessage) {
-        if(result.isFailure()) {
+        if (result.isFailure()) {
             uiService.log(result);
             Popup.displaySimpleAlert(failMessage, MessageType.ERROR);
             throw new RuntimeException(result.getCurrentMessage());

@@ -1067,7 +1067,6 @@ public class MasterManager {
         double maxScrollValue = modTableVerticalScrollBar.getMax();
         double scrollAmount;
 
-        //Scroll up
         if (y < modTableTop && currentScrollValue > minScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) {
             scrollAmount = -SCROLL_SPEED;
         } else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) { //Scroll down
