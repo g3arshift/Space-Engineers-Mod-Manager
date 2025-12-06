@@ -294,7 +294,7 @@ public class ModTableRowFactory implements Callback<TableView<Mod>, TableRow<Mod
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     if (newValue.doubleValue() > 0) {
                         modlistManagerView.setSingleTableRow(row);
-                        //row.heightProperty().removeListener(this);
+                        row.heightProperty().removeListener(this);
                     }
                 }
             };
