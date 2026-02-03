@@ -71,8 +71,8 @@ dependencies {
     testImplementation libs.org.junit.jupiter.junit.jupiter
     testImplementation libs.org.testfx.testfx.core
     testImplementation libs.org.jetbrains.kotlin.kotlin.test
-    compileOnly libs.org.projectlombok.lombok
-    annotationProcessor libs.org.projectlombok.lombok
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
@@ -175,4 +175,12 @@ remoteTest.dependsOn generateVersionProperties
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.add("-Xlint:deprecation")
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs(
+            "--enable-native-access=javafx.graphics",
+            "--enable-native-access=javafx.web",
+            "--enable-native-access=ALL-UNNAMED"
+    )
 }
