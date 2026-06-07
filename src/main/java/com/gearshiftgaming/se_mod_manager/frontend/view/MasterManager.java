@@ -1059,11 +1059,8 @@ public class MasterManager {
         //These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
         if (modTableVerticalScrollBar == null)
             modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-
         if (headerRow == null)
             headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
-
-        //updateScroll(dragEvent, y, modTableTop, modTableBottom, TOTAL_ROW_HEIGHT, SCROLL_SPEED);
 
         dragInProgress = true;
         updateScroll(TOTAL_ROW_HEIGHT, SCROLL_SPEED);
@@ -1082,43 +1079,6 @@ public class MasterManager {
             dragEvent.acceptTransferModes(TransferMode.MOVE);
 
         dragEvent.consume();
-    }
-
-    private void updateScroll(@NotNull DragEvent dragEvent, double y, double modTableTop, double modTableBottom, double totalRowHeight, double scrollSpeed) {
-        double currentScrollValue = modTableVerticalScrollBar.getValue();
-        double minScrollValue = modTableVerticalScrollBar.getMin();
-        double maxScrollValue = modTableVerticalScrollBar.getMax();
-
-        if (y < modTableTop && currentScrollValue > minScrollValue && totalRowHeight > modTable.getHeight())
-            scrollAmount = -scrollSpeed;
-        else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && totalRowHeight > modTable.getHeight())  //Scroll down
-            scrollAmount = scrollSpeed;
-        else
-            scrollAmount = 0;
-
-        if (scrollAmount != 0) {
-            if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
-                //We disable the transfer mode here since we know that if we're scrolling we're outside the valid drop zone
-                dragEvent.acceptTransferModes(TransferMode.NONE);
-                scrollTimeline = new Timeline(
-                        new KeyFrame(Duration.millis(16), actionEvent -> { // 1000ms in a second, so we need 16ms here for a 60fps animation
-                            double newValue = modTableVerticalScrollBar.getValue() + scrollAmount;
-                            newValue = Math.max(minScrollValue, Math.min(maxScrollValue, newValue)); // Clamp the value
-                            modTableVerticalScrollBar.setValue(newValue);
-                        })
-                );
-                scrollTimeline.setCycleCount(60); //One second of animation is 60 cycles, so set this to 60 so we don't end up with infinite animations.
-                scrollTimeline.play(); // Start the scrolling animation
-            }
-        } else {
-            if (scrollTimeline != null) {
-                scrollTimeline.stop();
-            }
-        }
-
-        if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + actions.getHeight()) {
-            dragEvent.acceptTransferModes(TransferMode.MOVE);
-        }
     }
 
     private void updateScroll(double totalRowHeight, double scrollSpeed) {
