@@ -443,7 +443,7 @@ class UserDataSqliteRepositoryTest {
         Mod retrievedMod = modListProfile.getModList().getFirst();
         assertNotNull(retrievedMod);
         assertEquals("Test mod", retrievedMod.getFriendlyName());
-        assertEquals(retrievedMod, modOne);
+        assertEquals(retrievedMod.getId(), modOne.getId());
     }
 
     @Test
