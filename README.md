@@ -1,5 +1,5 @@
 
-![SEMM Fancy Logo - White](https://github.com/user-attachments/assets/d207fec1-080c-4f72-a8c0-2453f303a71a)
+![SEMM Fancy Logo - White](https://drive.usercontent.google.com/download?id=1AH3Wxx6Z3EloRYhSZfqSb7RZDoIqJNHu&authuser=0)
 
 ### Currently in active development and bug testing, use at your own risk!
 

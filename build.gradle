@@ -46,7 +46,8 @@ dependencies {
     implementation group: 'org.jdbi', name: 'jdbi3-sqlite', version: '3.48.0'
     // https://mvnrepository.com/artifact/info.picocli/picocli
     implementation group: 'info.picocli', name: 'picocli', version: '4.7.6'
-    api libs.org.mockito.mockito.core
+    // Source: https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation 'org.mockito:mockito-core:5.23.0'
     api libs.org.openjfx.javafx.controls
     api libs.org.openjfx.javafx.fxml
     api libs.org.openjfx.javafx.graphics
@@ -68,11 +69,17 @@ dependencies {
     implementation group: 'net.minidev', name: 'json-smart', version: '2.5.2'
     // We can't upgrade this, it breaks our wiremock hard.
     testImplementation group: 'org.wiremock', name: 'wiremock', version: '3.13.0'
-    testImplementation libs.org.junit.jupiter.junit.jupiter
+    testImplementation 'org.junit.jupiter:junit-jupiter:6.1.0'
+    // Source: https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.0'
+    // Source: https://mvnrepository.com/artifact/org.junit.platform/junit-platform-commons
+    testImplementation 'org.junit.platform:junit-platform-commons:6.1.0'
+    // Source: https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    testImplementation 'org.junit.platform:junit-platform-launcher:6.1.0'
     testImplementation libs.org.testfx.testfx.core
     testImplementation libs.org.jetbrains.kotlin.kotlin.test
-    compileOnly libs.org.projectlombok.lombok
-    annotationProcessor libs.org.projectlombok.lombok
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
 }
 
 group = 'com.gearshiftgaming.se_mod_manager'
@@ -175,4 +182,12 @@ remoteTest.dependsOn generateVersionProperties
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.add("-Xlint:deprecation")
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs(
+            "--enable-native-access=javafx.graphics",
+            "--enable-native-access=javafx.web",
+            "--enable-native-access=ALL-UNNAMED"
+    )
 }
