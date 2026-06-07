@@ -34,6 +34,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -62,6 +63,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -176,6 +178,9 @@ public class MasterManager {
 
     @Getter
     private Timeline scrollTimeline;
+
+    private volatile boolean dragInProgress;
+    private volatile double scrollAmount;
 
     private final List<Mod> selections;
 
@@ -300,6 +305,7 @@ public class MasterManager {
         actions.setOnDragDropped(this::handleTableActionsOnDragDrop);
         actions.setOnDragOver(this::handleTableActionsOnDragOver);
         actions.setOnDragExited(this::handleTableActionsOnDragExit);
+        actions.setOnDragDone(this::handleTableActionsOnDragDone);
 
         //Set up the mod description handlers
         modTable.getSelectionModel().selectedItemProperty().addListener((observableValue, mod, t1) -> {
@@ -1007,7 +1013,7 @@ public class MasterManager {
     @FXML
     private void closeConflictsTab() {
         conflictsToggle.setSelected(false);
-        if(informationPane.getTabs().isEmpty())
+        if (informationPane.getTabs().isEmpty())
             disableSplitPaneDivider();
     }
 
@@ -1041,7 +1047,8 @@ public class MasterManager {
     }
 
     /**
-     * Enables edge-scrolling on the table. When you drag a row above or below the visible rows, the table will automatically start to scroll.
+     * Enables edge-scrolling on the table. When you drag a row above or below the visible rows, and even outside the window, the table will automatically start to scroll.
+     * Note, this will NOT work if you drag a row sideways outside the window then up. This is intended behavior.
      */
     protected void handleModTableDragOver(@NotNull DragEvent dragEvent) {
         //This normalizes our scroll speed so small and large tables all scroll at the same speed.
@@ -1049,31 +1056,45 @@ public class MasterManager {
         final double SCROLL_SPEED_CONSTANT = 0.035;
         final double SCROLL_SPEED = SCROLL_SPEED_CONSTANT / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
 
+        //These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
+        if (modTableVerticalScrollBar == null)
+            modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
+
+        if (headerRow == null)
+            headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
+
+        //updateScroll(dragEvent, y, modTableTop, modTableBottom, TOTAL_ROW_HEIGHT, SCROLL_SPEED);
+
+        dragInProgress = true;
+        updateScroll(TOTAL_ROW_HEIGHT, SCROLL_SPEED);
+
+        if (scrollTimeline == null)
+            createScrollTimeline();
+
+        if (!scrollTimeline.getStatus().equals(Animation.Status.RUNNING))
+            scrollTimeline.play();
+
         double y = dragEvent.getY();
         double modTableTop = modTable.localToScene(modTable.getBoundsInLocal()).getMinY();
         double modTableBottom = modTable.localToScene(modTable.getBoundsInLocal()).getMaxY();
 
-        //These two if statements are here to reduce the actual amount of lookups we're doing since they're relatively expensive
-        if (modTableVerticalScrollBar == null) {
-            modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
-        }
+        if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + actions.getHeight())
+            dragEvent.acceptTransferModes(TransferMode.MOVE);
 
-        if (headerRow == null) {
-            headerRow = (TableHeaderRow) modTable.lookup("TableHeaderRow");
-        }
+        dragEvent.consume();
+    }
 
+    private void updateScroll(@NotNull DragEvent dragEvent, double y, double modTableTop, double modTableBottom, double totalRowHeight, double scrollSpeed) {
         double currentScrollValue = modTableVerticalScrollBar.getValue();
         double minScrollValue = modTableVerticalScrollBar.getMin();
         double maxScrollValue = modTableVerticalScrollBar.getMax();
-        double scrollAmount;
 
-        if (y < modTableTop && currentScrollValue > minScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) {
-            scrollAmount = -SCROLL_SPEED;
-        } else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && TOTAL_ROW_HEIGHT > modTable.getHeight()) { //Scroll down
-            scrollAmount = SCROLL_SPEED;
-        } else {
+        if (y < modTableTop && currentScrollValue > minScrollValue && totalRowHeight > modTable.getHeight())
+            scrollAmount = -scrollSpeed;
+        else if (y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && totalRowHeight > modTable.getHeight())  //Scroll down
+            scrollAmount = scrollSpeed;
+        else
             scrollAmount = 0;
-        }
 
         if (scrollAmount != 0) {
             if (scrollTimeline == null || !scrollTimeline.getStatus().equals(Animation.Status.RUNNING)) {
@@ -1098,19 +1119,73 @@ public class MasterManager {
         if (y > modTableTop + headerRow.getHeight() && y < modTableBottom + actions.getHeight()) {
             dragEvent.acceptTransferModes(TransferMode.MOVE);
         }
+    }
 
-        dragEvent.consume();
+    private void updateScroll(double totalRowHeight, double scrollSpeed) {
+        Point mouse = MouseInfo.getPointerInfo().getLocation();
+
+        Bounds tableBounds = modTable.localToScreen(modTable.getBoundsInLocal());
+
+        double modTableTop = tableBounds.getMinY();
+        double modTableBottom = tableBounds.getMaxY();
+
+        double currentScrollValue = modTableVerticalScrollBar.getValue();
+        double minScrollValue = modTableVerticalScrollBar.getMin();
+        double maxScrollValue = modTableVerticalScrollBar.getMax();
+
+        if (mouse.y < modTableTop && currentScrollValue > minScrollValue && totalRowHeight > modTable.getHeight())
+            scrollAmount = -scrollSpeed;
+        else if (mouse.y > modTableBottom + actions.getHeight() && currentScrollValue < maxScrollValue && totalRowHeight > modTable.getHeight())
+            scrollAmount = scrollSpeed;
+        else
+            scrollAmount = 0;
+    }
+
+    private void createScrollTimeline() {
+        scrollTimeline = new Timeline(
+                new KeyFrame(Duration.millis(16), actionEvent -> {
+                    if (!dragInProgress) {
+                        scrollTimeline.stop();
+                        return;
+                    }
+
+                    final double TOTAL_ROW_HEIGHT = uiService.getCurrentModList().size() * singleTableRow.getHeight();
+
+                    final double SCROLL_SPEED_CONSTANT = 0.035;
+                    final double SCROLL_SPEED = SCROLL_SPEED_CONSTANT / (TOTAL_ROW_HEIGHT / 100) * (modTable.getHeight() / 100);
+
+                    updateScroll(TOTAL_ROW_HEIGHT, SCROLL_SPEED);
+
+                    if (scrollAmount == 0) {
+                        scrollTimeline.stop();
+                        return;
+                    }
+
+                    double newValue = modTableVerticalScrollBar.getValue() + scrollAmount;
+
+                    newValue = Math.clamp(
+                            newValue,
+                            modTableVerticalScrollBar.getMin(),
+                            modTableVerticalScrollBar.getMax());
+
+                    modTableVerticalScrollBar.setValue(newValue);
+                }));
+        scrollTimeline.setCycleCount(Animation.INDEFINITE);
     }
 
     //This ensures that we properly allow dragging items to the bottom of the table even when we have a scrollable table.
     private void handleTableActionsOnDragDrop(@NotNull DragEvent dragEvent) {
+        dragInProgress = false;
+
+        if (scrollTimeline != null)
+            scrollTimeline.stop();
+
         Dragboard dragboard = dragEvent.getDragboard();
 
         actions.setBorder(null);
 
         if (dragboard.hasContent(serializedMimeType)) {
             //I'd love to get a class level reference of this, but we need to progressively get it as the view changes
-
             if (modTableVerticalScrollBar == null) {
                 modTableVerticalScrollBar = (ScrollBar) modTable.lookup(".scroll-bar:vertical");
             }
@@ -1162,6 +1237,13 @@ public class MasterManager {
 
     private void handleTableActionsOnDragExit(DragEvent dragEvent) {
         actions.setBorder(null);
+    }
+
+    private void handleTableActionsOnDragDone(DragEvent dragEvent) {
+        dragInProgress = false;
+
+        if (scrollTimeline != null)
+            scrollTimeline.stop();
     }
 
     //This is where we update the actual contents of the mod table when we want to set it, such as if we switch mod profiles.
@@ -1360,7 +1442,7 @@ public class MasterManager {
     }
 
     /*TODO: All the mod import/tool downloading stuff is gonna need to be looked at by Reaper again.
-    *  I probably missed something when replacing the UI elements, so we need to make sure it transitions properly and looks as it should. */
+     *  I probably missed something when replacing the UI elements, so we need to make sure it transitions properly and looks as it should. */
 
     public void runTutorialModListManagementStep() {
         stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, uiService.getKeyboardButtonNavigationDisabler());
